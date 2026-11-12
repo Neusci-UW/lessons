@@ -545,7 +545,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   <section class="card ghk" id="ghk-equation">
     <div class="deriv" id="ghk-intro">
       <h2>What sets the membrane potential</h2>
-      <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy (see tools/fetch_mathjax.py in Newt).</p>
+      <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
       <p>The voltage is a small charge \(Q\) held on the membrane capacitor, \(Q = C_m V_m\). Every ion that can cross pulls the membrane toward its own Nernst potential, and the more easily it crosses, the harder it pulls. The voltage settles where those pulls balance: where the currents of all the ions add up to zero. Two formulas describe that balance. The chord conductance formula treats each ion as a battery behind a resistor; the Goldman–Hodgkin–Katz (GHK) equation starts from ions diffusing and drifting through the membrane.</p>
     </div>
     <div class="eqs">
@@ -2160,7 +2160,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   new MutationObserver(() => setTimeout(calcGHK, 0)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   // ---------- lessons ----------
-  // What a lesson (web/lesson.js; lesson files in ../lessons/) may read, set up and hide on this page
+  // What a lesson (lesson.js; lesson files in questions/) may read, set up and hide on this page
   let lessonSrc = 'P';                        // which calculator sliders a lesson set last: P or G
   const calcControl = (id, label, unit) => ({ label, unit, get: () => num(id), set: v => { setG(id, +v); if (gGIds.includes(id)) lessonSrc = 'G'; } });
   const calcRead = (id, label) => ({ label, unit: 'mV', get: () => parseFloat($(id).textContent.replace('−', '-')) });

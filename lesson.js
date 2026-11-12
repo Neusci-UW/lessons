@@ -6,7 +6,7 @@ student works through the simulation one part at a time.
 
 A page takes part by setting window.LESSON_ADAPTER before loading this file. The adapter
 says which lessons the page has and what a lesson may use:
-  lessons   lesson file names, in ../lessons/<name>.js
+  lessons   lesson file names, in questions/<name>.js
   values    { key: { label, unit, get() } }            numbers a question can read
   controls  { key: { label, unit, get(), set(v) } }    settings a question can set up
   afterSet  called after a question has set controls, to update the page
@@ -14,15 +14,15 @@ says which lessons the page has and what a lesson may use:
   actions   { pause() }                                optional
 Lesson files call ArgusLesson.define({...}). They are written with the editor: open the
 page with ?edit (or press Edit lesson in Argus), right-click the page and choose
-"Insert question here" or "Make this a region". Argus saves into the lessons folder; a
-browser downloads the file, to be put in the lessons folder by hand.
+"Insert question here" or "Make this a region". Argus saves into the questions folder; a
+browser downloads the file, to be put in the questions folder by hand.
 
 Progress is kept in the browser (localStorage). Locking parts of the page steers
 attention; it isn't security: anyone can read a lesson file. */
 (() => {
   const A = window.LESSON_ADAPTER;
   if (!A || window.ArgusLesson) return;
-  const DIR = A.lessonDir || '../lessons/';
+  const DIR = A.lessonDir || 'questions/';
   const params = new URLSearchParams(location.search);
   const ID_RE = /^[a-z0-9_-]{1,64}$/;
   const TYPES = { mc: 'Multiple choice', num: 'Number', predict: 'Predict, then check', goal: 'Reach a goal' };
@@ -563,7 +563,7 @@ html.ls-editing body{padding-right:420px}
       mk('p', 'hint', 'Right-click the page to insert a question or to make a part of the page a region that stays hidden or locked until chosen questions are answered.'));
     panel.append(field('Title', tag(input(L.title, v => { L.title = v; }), 'title')));
     const idIn = tag(input(L.id, v => { if (ID_RE.test(v)) { delete lessons[L.id]; L.id = v; lessons[v] = L; } }), 'id');
-    panel.append(field('File name', idIn, `Saved as lessons/${esc(L.id)}.js. Lower-case letters, digits, - and _ only. Add it to the page’s lesson list to show it.`));
+    panel.append(field('File name', idIn, `Saved as questions/${esc(L.id)}.js. Lower-case letters, digits, - and _ only. Add it to the page’s lesson list to show it.`));
     const st = mk('p', 'ls-status', esc(status));
     panel.append(mk('div', 'btns'));
     panel.lastChild.append(
@@ -705,14 +705,14 @@ html.ls-editing body{padding-right:420px}
 
   function fileText() {
     const clean = JSON.parse(JSON.stringify(L));   // drops undefined fields
-    return `// Argus lesson "${(L.title || L.id).replace(/[\r\n]/g, ' ')}". Edit it on its simulation page: open the page with ?edit,\n// or press Edit lesson in Argus. See web/lesson.js for the format.\nArgusLesson.define(${JSON.stringify(clean, null, 2)});\n`;
+    return `// Argus lesson "${(L.title || L.id).replace(/[\r\n]/g, ' ')}". Edit it on its simulation page: open the page with ?edit,\n// or press Edit lesson in Argus. See lesson.js for the format.\nArgusLesson.define(${JSON.stringify(clean, null, 2)});\n`;
   }
   function save() {
     if (!ID_RE.test(L.id)) { status = 'The file name can only use lower-case letters, digits, - and _.'; drawPanel(); return; }
     const text = fileText();
     if (bridge) {
       status = 'Saving…'; drawPanel();
-      bridge.save(L.id, text, err => { status = err ? 'Couldn’t save: ' + err : `Saved lessons/${L.id}.js`; drawPanel(); });
+      bridge.save(L.id, text, err => { status = err ? 'Couldn’t save: ' + err : `Saved questions/${L.id}.js`; drawPanel(); });
       return;
     }
     const a = document.createElement('a');
@@ -720,7 +720,7 @@ html.ls-editing body{padding-right:420px}
     a.download = L.id + '.js';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    status = `Downloaded ${L.id}.js. Put it in the lessons folder (src/neusci_daq/lessons/) to keep it.`;
+    status = `Downloaded ${L.id}.js. Put it in the lessons repo's questions folder to keep it.`;
     drawPanel();
   }
 

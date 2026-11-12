@@ -1,11 +1,12 @@
-"""Download MathJax next to the membrane potential page, so its equations render on
-computers without internet. Run once from the repo root (needs internet this one time):
+"""Download MathJax next to the lesson pages, so their equations render on computers
+without internet. Run once from the lessons folder (needs internet this one time):
 
     python tools/fetch_mathjax.py
 
-It writes src/neusci_daq/web/vendor/mathjax/tex-svg.js (about 2 MB). The page uses that
-copy when it exists and the online copy otherwise. Reinstall afterwards
-(pip install -e ".[web]") if you installed without -e, so the file is packaged.
+It writes vendor/mathjax/tex-svg.js (about 2 MB). The pages use that copy when it exists
+and the online copy otherwise. In Newt, where this folder is the src/neusci_daq/lessons
+submodule, reinstall afterwards (pip install -e ".[web]") if you installed without -e, so
+the file is packaged.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ from pathlib import Path
 
 VERSION = "3.2.2"
 URL = f"https://cdn.jsdelivr.net/npm/mathjax@{VERSION}/es5/tex-svg.js"
-DEST = Path(__file__).resolve().parents[1] / "src" / "neusci_daq" / "web" / "vendor" / "mathjax" / "tex-svg.js"
+DEST = Path(__file__).resolve().parents[1] / "vendor" / "mathjax" / "tex-svg.js"
 
 
 def main() -> int:
