@@ -10,6 +10,7 @@ and shows the pages on its Lessons tabs.
 | `index.html` | Landing page: links to the lessons in order |
 | `membrane_potential.html` | Exploring the membrane potential: ions crossing a membrane one by one, Q = C·V, Nernst, chord conductance and GHK, with a GHK calculator |
 | `rc_membrane.html` | Charging a membrane: the membrane as an RC circuit, then the same thing ion by ion, with an RC calculator |
+| `action_potential.html` | The action potential travelling along an axon: a cell body and axon built from Hodgkin–Huxley patches joined by the cytoplasm, with a menu of real cells (motor neuron, pain fibre, frog nerve, squid giant axon), myelin, electrodes and a cable calculator |
 
 ## Running a page
 
