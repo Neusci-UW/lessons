@@ -213,7 +213,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><button class="chip" data-aptry="weak">2 · Too weak</button> A smaller pulse only charges the membrane a little, like the RC circuit, and the voltage leaks away again.</li>
         <li><button class="chip" data-aptry="ttx">3 · Block the Na⁺ channels</button> With g<sub>Na</sub> at zero (what the toxin TTX does), the same pulse goes nowhere.</li>
         <li><button class="chip" data-aptry="demyel">4 · Lose some myelin</button> A stretch of the motor axon loses its myelin, as in multiple sclerosis: the spike stops there.</li>
-        <li><button class="chip" data-aptry="highk">5 · Raise K⁺ outside</button> As in lesson 1, E<sub>K</sub> moves up and the resting voltage follows it. At 10 mM a weaker stimulus fires the cell; at 12 mM nothing does.</li>
+        <li><button class="chip" data-aptry="highk">5 · Raise K⁺ outside</button> As in lesson 1, E<sub>K</sub> moves up and the resting voltage follows it. At 10 mM a weaker stimulus fires the cell; at 16 mM nothing does.</li>
         <li><button class="chip" data-aptry="cfib">6 · A pain fibre</button> Thin and bare: the same spike crawls along at about 2 m/s instead of 80.</li>
       </ol>
     </section>
@@ -440,7 +440,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p><b>Try it</b></p>
       <p><button class="chip" data-aptry="lower-na">Lower Na⁺ outside</button> With less Na⁺ outside, E<sub>Na</sub> falls and so does the peak of the spike.</p>
       <p><button class="chip" data-aptry="weak">Too weak</button> A small pulse decays away. Use the Stimulus slider to find the threshold.</p>
-      <p><button class="chip" data-aptry="highk">Raise K⁺ outside</button> At 10 mM the resting voltage rises toward threshold and a weaker stimulus fires the cell. <button class="chip" data-aptry="blockk">12 mM</button> The Na⁺ channels inactivate at rest and nothing fires.</p>
+      <p><button class="chip" data-aptry="highk">Raise K⁺ outside</button> At 10 mM the resting voltage rises toward threshold and a weaker stimulus fires the cell. <button class="chip" data-aptry="blockk">16 mM</button> The Na⁺ channels inactivate at rest and nothing fires.</p>
     </aside>
   </div>
 
@@ -622,13 +622,14 @@ function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), 
 // Concentrations are mM [K⁺, Na⁺, Cl⁻]. Geometry: cell body and axon diameters in µm, length in mm.
 // nodeNa, nodeK: channel density at nodes of Ranvier (and the initial segment), as multiples of the squid
 // axon's, and nodeKL their always-open K⁺ (leak) channels, as multiples of the Cl⁻ leak; axNa, axK: the same
-// for bare axon membrane. Real nodes are packed with Na⁺ channels, and K⁺ leak channels keep them steady at rest.
+// for bare axon membrane. Real nodes are packed with Na⁺ channels; K⁺ channels (voltage-gated and leak) keep them
+// steady, with one resting state, so a node can't get stuck depolarized after a spike.
 const MAMMAL = { cin: [140, 14, 10.5], cout: [5, 143.5, 148.5] };   // lesson 1's defaults
 const CELLS = [
-  { id: 'motor', name: 'Human motor neuron (Aα fibre)', T: 37, ...MAMMAL, somaD: 60, d: 12, myel: true, len: 1000, nodeNa: 20, nodeK: 2, nodeKL: 20, axNa: 3, axK: 1,
+  { id: 'motor', name: 'Human motor neuron (Aα fibre)', T: 37, ...MAMMAL, somaD: 60, d: 12, myel: true, len: 1000, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
     stim: 20, speed: 1, win: 15,
     note: 'From the spinal cord to a muscle in the foot: about a metre of myelinated axon, 12 µm wide. Real conduction velocity 70–120 m/s.' },
-  { id: 'cfib', name: 'Pain fibre (C fibre, unmyelinated)', T: 37, ...MAMMAL, somaD: 25, d: 1, myel: false, len: 30, nodeNa: 20, nodeK: 2, nodeKL: 20, axNa: 3, axK: 1,
+  { id: 'cfib', name: 'Pain fibre (C fibre, unmyelinated)', T: 37, ...MAMMAL, somaD: 25, d: 1, myel: false, len: 30, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
     stim: 5, speed: 4, win: 60,
     note: 'Thin and unmyelinated: it carries slow, burning pain. Real conduction velocity 0.5–2 m/s. Its cell body sits in a dorsal root ganglion beside the spinal cord (drawn here as an ordinary cell body).' },
   { id: 'frog', name: 'Frog sciatic nerve fibre (myelinated)', T: 20, cin: [120, 10, 10], cout: [2.5, 110, 112], somaD: 40, d: 12, myel: true, len: 100, nodeNa: 5, nodeK: 2, nodeKL: 5, axNa: 1, axK: 1,
@@ -648,7 +649,7 @@ const DEFAULT_CELL = 'motor';
 const RI = 35.4, CM = 1, GNA = 120, GK = 36, GCL = 0.3;   // Ω·cm, µF/cm², mS/cm²: Hodgkin and Huxley's values
 const SOMA_DENS = 0.25, MYELIN_CUT = 0.005, IS_LEN = 30, NODE_LEN = 1, BARE_DENS = 0.05;   // IS, node: µm
 const P = { T: 37, cin: [...MAMMAL.cin], cout: [...MAMMAL.cout], gNaPct: 100, gKPct: 100, somaD: 60, d: 12, myel: true, damage: false, len: 1000,
-  nodeNa: 20, nodeK: 2, nodeKL: 20, axNa: 3, axK: 1, stim: 20, xa: 0.25, xb: 0.75 };
+  nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1, stim: 20, xa: 0.25, xb: 0.75 };
 const RTF = () => 8.314 * (P.T + 273.15) / 96485 * 1000;   // mV
 const E = () => ({ K: RTF() * Math.log(P.cout[0] / P.cin[0]), Na: RTF() * Math.log(P.cout[1] / P.cin[1]), Cl: -RTF() * Math.log(P.cout[2] / P.cin[2]) });
 const phi = () => Math.pow(3, (P.T - 6.3) / 10);           // the gates speed up 3× for every 10 °C (Q10 = 3)
@@ -706,7 +707,9 @@ function build() {
 function restAll() {   // every piece at its own resting state, then let the whole cell settle
   const s = restState(SOMA_DENS, SOMA_DENS), a = P.myel ? restState(P.nodeNa, P.nodeK, P.nodeKL) : restState(P.axNa, P.axK);
   for (let i = 0; i < M.n; i++) { const q = i ? a : s; M.V[i] = q.V; M.mm[i] = q.m; M.h[i] = q.h; M.nn[i] = q.n; }
-  const dt = stepDt(); for (let k = 0; k < 2 / dt; k++) step(dt, 0);   // 2 ms to let the pieces agree
+  // let the pieces agree (myelin and nodes rest at different voltages): 10 ms in big steps, which the
+  // semi-implicit step allows when nothing is changing quickly
+  for (let k = 0; k < 40; k++) step(0.25, 0);
   M.t = 0;
 }
 const stepDt = () => clamp(0.025 / phi(), 0.002, 0.01);
@@ -1202,7 +1205,7 @@ requestAnimationFrame(loop);
     if (w === 'demyel') check('sDamage', true);
     if (w === 'nomyel') check('sMyel', false);
     if (w === 'highk') set('sKo', 10);
-    if (w === 'blockk') set('sKo', 12);
+    if (w === 'blockk') set('sKo', 16);
     if (w === 'lower-na') set('sNao', 90);
     if (w === 'bigsoma') set('sSoma', Math.log10(150));
     go();
