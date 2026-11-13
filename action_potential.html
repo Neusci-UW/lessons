@@ -84,7 +84,7 @@ header p{max-width:90ch}
 .gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
 .gion:first-child{border-top:0;padding-top:0}
 .gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
-.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 78px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .gr input[type=range]{width:100%;accent-color:var(--accent)}
 .gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .calc{display:flex;flex-direction:column;gap:12px}
@@ -212,7 +212,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><button class="chip" data-aptry="spike">1 · Fire a spike</button> A pulse of current into the cell body, like synaptic input, starts a spike at the start of the axon. It travels away down the axon, and electrodes A and B record it as it passes.</li>
         <li><button class="chip" data-aptry="weak">2 · Too weak</button> A smaller pulse only charges the membrane a little, like the RC circuit, and the voltage leaks away again.</li>
         <li><button class="chip" data-aptry="ttx">3 · Block the Na⁺ channels</button> With g<sub>Na</sub> at zero (what the toxin TTX does), the same pulse goes nowhere.</li>
-        <li><button class="chip" data-aptry="demyel">4 · Lose some myelin</button> A stretch of the motor axon loses its myelin, as in multiple sclerosis: the spike stops there.</li>
+        <li><button class="chip" data-aptry="nomyel">4 · Take the myelin off</button> The same motor axon without its insulation: the spike slows from about 80 m/s to about 7.</li>
         <li><button class="chip" data-aptry="highk">5 · Raise K⁺ outside</button> As in lesson 1, E<sub>K</sub> moves up and the resting voltage follows it. At 10 mM a weaker stimulus fires the cell; at 16 mM nothing does.</li>
         <li><button class="chip" data-aptry="cfib">6 · A pain fibre</button> Thin and bare: the same spike crawls along at about 2 m/s instead of 80.</li>
       </ol>
@@ -254,8 +254,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <span class="ctl"><label for="sLen" class="runlab">Length</label>
         <input type="range" id="sLen" min="0" max="3" step="0.01" value="3">
         <output id="sLeno" for="sLen"></output></span>
-        <span class="ctl"><label class="check" for="sMyel"><input type="checkbox" id="sMyel">Myelin</label>
-        <label class="check" for="sDamage"><input type="checkbox" id="sDamage">Myelin lost in the middle</label></span>
+        <span class="ctl"><label class="check" for="sMyel"><input type="checkbox" id="sMyel">Myelin</label></span>
       </div>
       <p class="caption">A 0.5 ms pulse of current goes into the cell body. Click or drag along the axon to move the nearer recording electrode, A or B.</p>
       <div class="legend">
@@ -318,7 +317,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li>Watch the Currents chart during a spike: first I<sub>C</sub> charges the capacitor, then I<sub>Na</sub> rushes in and takes over, then I<sub>K</sub> carries the voltage back down. The Gates chart shows why: m opens fast, then h closes and n opens more slowly.</li>
         <li>In the Currents along the axon chart, the capacitor current is positive just ahead of the spike. That is the next patch being charged, the same charging as lesson 2, by current that came along the inside of the axon. The Na⁺ current there is still almost zero: the charging comes first, then the channels open.</li>
         <li>Compare the cells. The motor axon is 12 µm wide and myelinated; the pain fibre is 1 µm and bare. Their speeds differ about a hundredfold, which is why a stubbed toe hurts twice: a sharp first pain, then a slow burning one.</li>
-        <li>Take the myelin off the motor axon, or lose it in the middle (as in multiple sclerosis or Guillain–Barré syndrome). Bare internodes have almost no Na⁺ channels, so the spike slows or stops there.</li>
+        <li>Take the myelin off the motor axon, as diseases like multiple sclerosis and Guillain–Barré syndrome do in patches. The bare axon has to charge far more membrane, so the spike slows about tenfold.</li>
         <li>Raise K⁺ outside. The resting voltage follows E<sub>K</sub> up (lesson 1). A little makes the cell easier to fire; more leaves the Na⁺ channels inactivated (h closed) at rest, and no stimulus can fire it. This is why high blood potassium is dangerous for nerves and the heart.</li>
         <li>Set g<sub>Na</sub> to 0 (the toxin TTX, or a local anaesthetic). No spike, only a small bump that fades away with distance: passive spread, set by τ and the length constant λ.</li>
         <li>Fire twice quickly. The second spike fails if it comes too soon: the Na⁺ gates are still inactivated (h is low).</li>
@@ -507,7 +506,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p>Wrapping the axon in insulation makes the membrane act like a much thicker one: the capacitance falls and the leak falls, both by a large factor. Less capacitance means less charge to move to change V, so each patch charges faster (smaller τ for the same current). Less leak means a much larger λ, so current spreads much farther before it fades. Na⁺ channels sit only at the bare nodes, and the spike jumps from node to node, called <b>saltatory conduction</b>. The nodes are the only places where energy is spent on pumping ions back out, so myelin is cheaper too.</p>
       <p>On the motor neuron here, taking the myelin off the same 12 µm axon slows it from about 80 m/s to about 7 m/s. This is why a 12 µm myelinated axon is faster than a half-millimetre squid axon, and why diseases that damage myelin (multiple sclerosis, Guillain–Barré syndrome) slow or stop conduction: a bare internode has almost no Na⁺ channels, so the current from the last node leaks away charging it.</p>
       <details class="fullderiv"><summary>How the simulation models myelin</summary>
-        <p>Internodes are 100 axon diameters long (1.2 mm for a 12 µm axon), with the capacitance and leak cut to 0.5% of bare membrane and no voltage-gated channels. Nodes are 1 µm long, with 20 times the squid axon's Na⁺ channels and always-open K⁺ channels, roughly as real mammalian nodes have. The first 30 µm of axon, the initial segment, is built like a node. A damaged stretch is bare membrane with few channels.</p>
+        <p>Internodes are 100 axon diameters long (1.2 mm for a 12 µm axon), with the capacitance and leak cut to 0.5% of bare membrane and no voltage-gated channels. Nodes are 1 µm long, with 20 times the squid axon's Na⁺ channels and always-open K⁺ channels, roughly as real mammalian nodes have. The first 30 µm of axon, the initial segment, is built like a node.</p>
       </details>
     </div>
     <aside class="try">
@@ -619,7 +618,8 @@ function fillSub(c, text, x, y) {
 function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
 
 // ---------- cells: known neurons, as the Membrane potential page has known cells ----------
-// Concentrations are mM [K⁺, Na⁺, Cl⁻]. Geometry: cell body and axon diameters in µm, length in mm.
+// Concentrations are mM [K⁺, Na⁺, Cl⁻]. Geometry: cell body and axon diameters in µm, length in mm. win: the shortest
+// sweep of the time charts, ms.
 // nodeNa, nodeK: channel density at nodes of Ranvier (and the initial segment), as multiples of the squid
 // axon's, and nodeKL their always-open K⁺ (leak) channels, as multiples of the Cl⁻ leak; axNa, axK: the same
 // for bare axon membrane. Real nodes are packed with Na⁺ channels; K⁺ channels (voltage-gated and leak) keep them
@@ -627,16 +627,16 @@ function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), 
 const MAMMAL = { cin: [140, 14, 10.5], cout: [5, 143.5, 148.5] };   // lesson 1's defaults
 const CELLS = [
   { id: 'motor', name: 'Human motor neuron (Aα fibre)', T: 37, ...MAMMAL, somaD: 60, d: 12, myel: true, len: 1000, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
-    stim: 20, speed: 1, win: 15,
+    stim: 20, speed: 1, win: 3,
     note: 'From the spinal cord to a muscle in the foot: about a metre of myelinated axon, 12 µm wide. Real conduction velocity 70–120 m/s.' },
   { id: 'cfib', name: 'Pain fibre (C fibre, unmyelinated)', T: 37, ...MAMMAL, somaD: 25, d: 1, myel: false, len: 30, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
-    stim: 5, speed: 4, win: 60,
+    stim: 5, speed: 4, win: 10,
     note: 'Thin and unmyelinated: it carries slow, burning pain. Real conduction velocity 0.5–2 m/s. Its cell body sits in a dorsal root ganglion beside the spinal cord (drawn here as an ordinary cell body).' },
   { id: 'frog', name: 'Frog sciatic nerve fibre (myelinated)', T: 20, cin: [120, 10, 10], cout: [2.5, 110, 112], somaD: 40, d: 12, myel: true, len: 100, nodeNa: 5, nodeK: 2, nodeKL: 5, axNa: 1, axK: 1,
-    stim: 10, speed: 0.5, win: 10,
+    stim: 10, speed: 0.5, win: 4,
     note: 'The classic preparation for studying myelinated nerve, at room temperature in frog Ringer’s solution (typical concentrations). Real conduction velocity about 20–40 m/s.' },
   { id: 'squid', name: 'Squid giant axon', T: 6.3, cin: [400, 50, 52], cout: [20, 440, 560], somaD: 200, d: 476, myel: false, len: 80, nodeNa: 1, nodeK: 1, nodeKL: 1, axNa: 1, axK: 1,
-    stim: 5000, speed: 4, win: 20,
+    stim: 5000, speed: 4, win: 12,
     note: 'Where Hodgkin and Huxley measured the channels this model uses, at the temperature of their experiments and with the measured concentrations. Half a millimetre wide, for a fast escape jet. Real conduction velocity about 20 m/s at 18 °C.' },
 ];
 const DEFAULT_CELL = 'motor';
@@ -647,8 +647,8 @@ const DEFAULT_CELL = 'motor';
 // with lesson 1's Nernst batteries. Units: cm, µF, mS, µA, mV, ms (densities per cm² of membrane).
 // The step is semi-implicit (a tridiagonal solve), so tiny nodes and thin myelin stay stable.
 const RI = 35.4, CM = 1, GNA = 120, GK = 36, GCL = 0.3;   // Ω·cm, µF/cm², mS/cm²: Hodgkin and Huxley's values
-const SOMA_DENS = 0.25, MYELIN_CUT = 0.005, IS_LEN = 30, NODE_LEN = 1, BARE_DENS = 0.05;   // IS, node: µm
-const P = { T: 37, cin: [...MAMMAL.cin], cout: [...MAMMAL.cout], gNaPct: 100, gKPct: 100, somaD: 60, d: 12, myel: true, damage: false, len: 1000,
+const SOMA_DENS = 0.25, MYELIN_CUT = 0.005, IS_LEN = 30, NODE_LEN = 1;   // IS, node: µm
+const P = { T: 37, cin: [...MAMMAL.cin], cout: [...MAMMAL.cout], gNaPct: 100, gKPct: 100, somaD: 60, d: 12, myel: true, len: 1000,
   nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1, stim: 20, xa: 0.25, xb: 0.75 };
 const RTF = () => 8.314 * (P.T + 273.15) / 96485 * 1000;   // mV
 const E = () => ({ K: RTF() * Math.log(P.cout[0] / P.cin[0]), Na: RTF() * Math.log(P.cout[1] / P.cin[1]), Cl: -RTF() * Math.log(P.cout[2] / P.cin[2]) });
@@ -684,8 +684,7 @@ function build() {
     parts.push({ type: 'node', l: IS_LEN * 1e-4 });
     const inter = 100 * P.d * 1e-4;            // internodes are about 100 diameters long
     for (let x = IS_LEN * 1e-4; x < L; x += inter + NODE_LEN * 1e-4) {
-      const bare = P.damage && x > L * 0.4 && x < L * 0.6;
-      for (let k = 0; k < 3; k++) parts.push({ type: bare ? 'bare' : 'int', l: inter / 3 });
+      for (let k = 0; k < 3; k++) parts.push({ type: 'int', l: inter / 3 });
       parts.push({ type: 'node', l: NODE_LEN * 1e-4 });
     }
   }
@@ -695,7 +694,7 @@ function build() {
   let x = 0;
   parts.forEach((p, i) => {
     m.l[i] = p.l; m.x[i] = x * 10; m.xc[i] = (x + p.l / 2) * 10; x += p.l;   // mm from the cell body
-    const dens = { soma: [SOMA_DENS, SOMA_DENS, 1, 1], ax: [P.axNa, P.axK, 1, 1], node: [P.nodeNa, P.nodeK, 1, 1], int: [0, 0, MYELIN_CUT, MYELIN_CUT], bare: [BARE_DENS, BARE_DENS, 1, 1] }[p.type];
+    const dens = { soma: [SOMA_DENS, SOMA_DENS, 1, 1], ax: [P.axNa, P.axK, 1, 1], node: [P.nodeNa, P.nodeK, 1, 1], int: [0, 0, MYELIN_CUT, MYELIN_CUT] }[p.type];
     m.A[i] = p.type === 'soma' ? Math.PI * (P.somaD * 1e-4) ** 2 : 2 * Math.PI * r * p.l;
     m.cm[i] = CM * dens[2] * m.A[i];
     m.gNa[i] = GNA * P.gNaPct / 100 * dens[0] * m.A[i]; m.gK[i] = GK * P.gKPct / 100 * dens[1] * m.A[i]; m.gCl[i] = GCL * dens[3] * m.A[i];
@@ -739,7 +738,7 @@ function step(dt, Istim) {   // Istim in µA, into the cell body
 
 // ---------- recording: what the electrodes see ----------
 const PULSE = 0.5;                         // ms
-let WINDOW = 15, hist = [], nextSample = 0, stimT0 = -1, stims = [], tA = null, tB = null;
+let WINDOW = 3, sweep = 3, hist = [], nextSample = 0, stimT0 = -1, stims = [], tA = null, tB = null;
 // the piece under an electrode: on a myelinated axon, the nearest node, where the voltage-gated channels are
 function idx(frac) {
   const xm = clamp(frac, 0, 1) * P.len; let best = 1, bd = 1e9;
@@ -748,10 +747,10 @@ function idx(frac) {
 }
 let iA = 1, iB = 1;
 function placeElectrodes() { iA = idx(P.xa); iB = idx(P.xb); hist = []; tA = tB = null; }
-function fire() { stimT0 = M.t; tA = tB = null; stims.push(M.t); }
-function resetAxon() { build(); restAll(); placeElectrodes(); hist = []; stims = []; nextSample = 0; stimT0 = -1; }
+function fire() { stimT0 = M.t; tA = tB = null; stims.push(M.t); sweep = WINDOW; }
+function resetAxon() { build(); restAll(); placeElectrodes(); hist = []; stims = []; nextSample = 0; stimT0 = -1; sweep = WINDOW; }
 function advance(ms, budgetMs) {   // budgetMs: stop early (a long axon is slow to compute) rather than freeze the page
-  const dt = stepDt(), t0 = performance.now(), sample = WINDOW / 1500;
+  const dt = stepDt(), t0 = performance.now(), sample = Math.max(WINDOW, sweep) / 1500;
   for (let s = Math.max(1, Math.round(ms / dt)), k = 0; k < s; k++) {
     if (budgetMs && (k & 3) === 3 && performance.now() - t0 > budgetMs) break;
     const on = stimT0 >= 0 && M.t - stimT0 < PULSE, va0 = M.V[iA], vb0 = M.V[iB];
@@ -764,7 +763,7 @@ function advance(ms, budgetMs) {   // budgetMs: stop early (a long axon is slow 
     if (M.t >= nextSample) {
       nextSample = M.t + sample;
       hist.push({ t: M.t, VS: M.V[0], VA: M.V[iA], VB: M.V[iB], INa: M.INa[iA], IK: M.IK[iA], ICl: M.ICl[iA], IC: M.IC[iA], m: M.mm[iA], h: M.h[iA], n: M.nn[iA] });
-      while (hist.length && hist[0].t < M.t - WINDOW * 1.1) hist.shift();
+      while (hist.length && hist[0].t < M.t - Math.max(WINDOW, sweep) * 1.3) hist.shift();
     }
   }
 }
@@ -845,7 +844,7 @@ function drawAxon() {
   c.beginPath(); c.moveTo(AL, YC - half); c.lineTo(xe, YC - half); c.moveTo(AL, YC + half); c.lineTo(xe, YC + half); c.stroke();
 
   // myelin: translucent sheaths over the internodes, so the voltage still shows through. Drawn one by one when
-  // they are wide enough to see; otherwise as one sheath with faint lines at the nodes. Damaged stretches are bare.
+  // they are wide enough to see; otherwise as one sheath with faint lines at the nodes. 
   if (P.myel) {
     const mh = half + 5, mg = c.createLinearGradient(0, YC - mh, 0, YC + mh), wInt = mmx(100 * P.d / 1000) - mmx(0);
     mg.addColorStop(0, C.mem); mg.addColorStop(0.3, shade(rgb(C.mem), 0.3)); mg.addColorStop(1, C.memdark);
@@ -865,13 +864,6 @@ function drawAxon() {
       c.globalAlpha = 0.35; c.beginPath();
       for (let i = 2; i < n; i++) if (M.type[i] === 'node' && M.type[i - 1] === 'int') { const x = px0(i); c.moveTo(x, YC - mh); c.lineTo(x, YC + mh); }
       c.stroke(); c.globalAlpha = 1;
-    }
-    if (P.damage) {   // the damaged stretch: ragged remains of the sheath
-      const a = mmx(P.len * 0.4), b = mmx(P.len * 0.6);
-      c.strokeStyle = C.memdark; c.setLineDash([3, 5]); c.lineWidth = 1.2;
-      c.strokeRect(a, YC - mh, b - a, 2 * mh); c.setLineDash([]);
-      c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = C.memdark;
-      c.fillText('myelin lost', (a + b) / 2, YC + mh + 10);
     }
   }
 
@@ -1000,6 +992,16 @@ function plot(c, o) {
 const Vrefs = () => { const e = E(); return [{ v: e.Na, color: C.na, label: 'E_Na' }, { v: e.K, color: C.k, label: 'E_K' }, { v: e.Cl, color: C.cl, label: 'E_Cl' }]; };
 const topFor = pk => [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000].find(v => v >= pk * 1.1) || 50000;
 let iview = 'i';
+// The time charts sweep like an oscilloscope triggered by the stimulus: they start just before it and stretch
+// until the spike has finished, however long the axon and however slow the fibre. With no stimulus they scroll.
+function timeAxis() {
+  if (stimT0 < 0) { const t1 = Math.max(WINDOW, M.t); return [t1 - WINDOW, t1]; }
+  const x0 = () => stimT0 - 0.1 * sweep;
+  let busy = M.t - stimT0 < PULSE;
+  for (let i = 0; i < M.n && !busy; i++) busy = M.V[i] > -50;
+  if (busy && M.t > x0() + 0.9 * sweep) sweep = Math.min(2000, (M.t - stimT0) / 0.75);
+  return M.t > x0() + sweep ? [M.t - sweep, M.t] : [x0(), x0() + sweep];
+}
 function drawCharts() {
   const n = M.n, big = P.len >= 1000, xsc = big ? 0.001 : 1, xlab = 'distance from the cell body (' + (big ? 'm' : 'mm') + ')';
   // along the axon: every piece (on a myelinated axon, the nodes, where the channels are)
@@ -1007,7 +1009,7 @@ function drawCharts() {
   const xsA = along.map(i => M.xc[i]);
   plot(xc, { x0: 0, x1: P.len, xscale: xsc, y0: -100, y1: 70, ystep: 50, xlabel: xlab, ylabel: 'V (mV)', refs: Vrefs(),
     vlines: [{ x: M.xc[iA], color: C.ink }, { x: M.xc[iB], color: C.accent }], series: [{ xs: xsA, ys: along.map(i => M.V[i]), color: C.ink, width: 2.4 }] });
-  const t1 = Math.max(WINDOW, M.t), t0 = t1 - WINDOW, h = hist.filter(p => p.t >= t0), ts = h.map(p => p.t);
+  const [t0, t1] = timeAxis(), h = hist.filter(p => p.t >= t0), ts = h.map(p => p.t);
   const spans = stims.map(t => [t, t + PULSE]), tlab = 'time (ms)';
   const cross = (t, col) => ({ x: t != null && t >= t0 ? t : null, color: col });
   plot(tc, { x0: t0, x1: t1, y0: -100, y1: 70, ystep: 50, xlabel: tlab, ylabel: 'V (mV)', refs: Vrefs(), spans, vlines: [cross(tA, C.ink), cross(tB, C.accent)],
@@ -1072,19 +1074,19 @@ function readControls() {
   P.stim = logv('sStim'); speed = logv('sSpeed'); P.d = logv('sD'); P.len = logv('sLen'); P.somaD = logv('sSoma');
   P.gNaPct = +$('sGNa').value; P.gKPct = +$('sGK').value; P.T = +$('sT').value;
   P.cout[1] = +$('sNao').value; P.cout[0] = +$('sKo').value; P.xa = +$('sXA').value / 100; P.xb = +$('sXB').value / 100;
-  P.myel = $('sMyel').checked; P.damage = P.myel && $('sDamage').checked; $('sDamage').disabled = !P.myel;
+  P.myel = $('sMyel').checked;
 }
 function writeControls() {
   setLog('sStim', P.stim); setLog('sSpeed', speed); setLog('sD', P.d); setLog('sLen', P.len); setLog('sSoma', P.somaD);
   $('sGNa').value = P.gNaPct; $('sGK').value = P.gKPct; $('sT').value = P.T; $('sNao').value = P.cout[1]; $('sKo').value = P.cout[0];
   $('sXA').value = Math.round(P.xa * 100); $('sXB').value = Math.round(P.xb * 100);
-  $('sMyel').checked = P.myel; $('sDamage').checked = P.damage; $('sDamage').disabled = !P.myel;
+  $('sMyel').checked = P.myel;
   showOut();
 }
 function setElectrode(k, f) { P[k] = f; $(k === 'xa' ? 'sXA' : 'sXB').value = Math.round(f * 100); showOut(); placeElectrodes(); }
 // controls that change the cell rebuild it; the rest only change how it is run or watched
-const REBUILD = ['sD', 'sLen', 'sSoma', 'sGNa', 'sGK', 'sT', 'sNao', 'sKo', 'sMyel', 'sDamage'];
-REBUILD.forEach(id => $(id).addEventListener(id === 'sMyel' || id === 'sDamage' ? 'change' : 'input', () => { readControls(); showOut(); markCustom(); resetAxon(); }));
+const REBUILD = ['sD', 'sLen', 'sSoma', 'sGNa', 'sGK', 'sT', 'sNao', 'sKo', 'sMyel'];
+REBUILD.forEach(id => $(id).addEventListener(id === 'sMyel' ? 'change' : 'input', () => { readControls(); showOut(); markCustom(); resetAxon(); }));
 ['sStim', 'sSpeed'].forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); }));
 ['sXA', 'sXB'].forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); placeElectrodes(); }));
 $('apFire').addEventListener('click', fire);
@@ -1097,7 +1099,7 @@ const cellSel = $('apCell'), cellNote = $('apCellNote');
 cellSel.innerHTML = CELLS.map(c => `<option value="${c.id}">${c.name}</option>`).join('') + '<option value="custom">Custom (your settings)</option>';
 function applyCell(id) {
   const c = CELLS.find(c => c.id === id); if (!c) return;
-  Object.assign(P, { T: c.T, cin: [...c.cin], cout: [...c.cout], somaD: c.somaD, d: c.d, myel: c.myel, damage: false, len: c.len,
+  Object.assign(P, { T: c.T, cin: [...c.cin], cout: [...c.cout], somaD: c.somaD, d: c.d, myel: c.myel, len: c.len,
     nodeNa: c.nodeNa, nodeK: c.nodeK, nodeKL: c.nodeKL, axNa: c.axNa, axK: c.axK, stim: c.stim, gNaPct: 100, gKPct: 100, xa: 0.25, xb: 0.75 });
   speed = c.speed; WINDOW = c.win;
   cellSel.value = id; cellNote.textContent = c.note;
@@ -1202,7 +1204,6 @@ requestAnimationFrame(loop);
     applyCell(w === 'cfib' ? 'cfib' : 'motor');   // each starts from a known cell
     if (w === 'weak') set('sStim', Math.log10(P.stim / 20));
     if (w === 'ttx') set('sGNa', 0);
-    if (w === 'demyel') check('sDamage', true);
     if (w === 'nomyel') check('sMyel', false);
     if (w === 'highk') set('sKo', 10);
     if (w === 'blockk') set('sKo', 16);
@@ -1213,5 +1214,7 @@ requestAnimationFrame(loop);
   }));
 })();
 </script>
+<!-- Fill-in boxes: type a value into any slider's readout -->
+<script src="sliders.js"></script>
 </body>
 </html>

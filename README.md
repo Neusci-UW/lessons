@@ -22,6 +22,7 @@ then go to http://localhost:8000/ for the list of lessons.
 
 ## Files
 
+- `sliders.js`: fill-in boxes for every slider: click a slider's readout and type a value. Each page loads it last.
 - `lesson.js`: the lesson system. A page that sets `window.LESSON_ADAPTER` and loads it
   can show questions, and lock or hide parts of the page until they are answered.
 - `questions/`: lesson question files, one per lesson (`ArgusLesson.define({...})`). Write
