@@ -7,6 +7,7 @@ and shows the pages on its Lessons tabs.
 
 | Page | What it covers |
 |---|---|
+| `index.html` | Landing page: links to the lessons in order |
 | `membrane_potential.html` | Exploring the membrane potential: ions crossing a membrane one by one, Q = C·V, Nernst, chord conductance and GHK, with a GHK calculator |
 | `rc_membrane.html` | Charging a membrane: the membrane as an RC circuit, then the same thing ion by ion, with an RC calculator |
 
@@ -16,7 +17,7 @@ Open the HTML file in a browser, or serve the folder so the lesson questions loa
 
     python -m http.server 8000
 
-then go to http://localhost:8000/membrane_potential.html.
+then go to http://localhost:8000/ for the list of lessons.
 
 ## Files
 
