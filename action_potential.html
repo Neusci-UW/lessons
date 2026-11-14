@@ -178,7 +178,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 #axon{cursor:default;touch-action:pan-y}
 .chartrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:900px){.chartrow{grid-template-columns:1fr}}
-.dot.cl{background:var(--cl)}.dot.ea{background:var(--ink)}.dot.eb{background:var(--accent)}
+.dot.cl{background:var(--cl)}.dot.esoma{background:var(--a)}.dot.ea{background:var(--ink)}.dot.eb{background:var(--accent)}
 .stimflash{color:var(--na);font-weight:600}
 .cellbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 .cellbar select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
@@ -190,6 +190,9 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 .ctl output{min-width:72px}
 .ctl.stack{flex-wrap:wrap}
 .ctl.stack .sub{flex-basis:100%;font-size:13px;color:var(--muted)}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -233,11 +236,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <select id="apCell"></select>
         <p class="caption" id="apCellNote"></p>
       </div>
-      <canvas id="axon" aria-label="A neuron coloured by its membrane potential, with a stimulating electrode in the cell body and two recording electrodes on the axon"></canvas>
+      <canvas id="axon" aria-label="A neuron coloured by its membrane potential, with electrode A in the cell body and electrodes B and C on the axon"></canvas>
       <div class="runbar">
         <span class="ctl"><label for="sStim" class="runlab">Stimulus</label>
         <input type="range" id="sStim" min="-1" max="4" step="0.01" value="1.3">
         <output id="sStimo" for="sStim"></output></span>
+        <span class="ctl btns" role="group" aria-label="Stimulating electrodes"><span class="runlab">at</span>
+        <button class="chip" data-stimel="A" aria-pressed="true">A</button><button class="chip" data-stimel="B" aria-pressed="false">B</button><button class="chip" data-stimel="C" aria-pressed="false">C</button></span>
         <span class="ctl btns"><button id="apFire" class="primary">Stimulate</button>
         <button id="apPlay">Pause</button>
         <button id="apReset">Reset</button></span>
@@ -255,14 +260,17 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <span class="ctl stack"><label for="sLen" class="runlab">Length</label>
         <input type="range" id="sLen" min="0" max="3" step="0.01" value="3">
         <output id="sLeno" for="sLen"></output>
-        <label class="check sub" for="sFixLen"><input type="checkbox" id="sFixLen">Fix length across cells</label></span>
+        <label class="check sub" for="sFixLen"><input type="checkbox" id="sFixLen">Fix length across cells</label>
+        <span class="sub" id="sLenNote" hidden></span></span>
       </div>
-      <p class="caption">A 0.5 ms pulse of current goes into the cell body. Click or drag along the axon to move the nearer recording electrode, A or B.</p>
+      <p class="caption">A 0.5 ms pulse of current goes in at each stimulating electrode (choose any of A, B and C); the others record. Click or drag along the axon to move the nearer of B and C.</p>
       <div class="legend">
         <span><i class="dot neg"></i>resting (inside negative)</span>
         <span><i class="dot pos"></i>depolarized (inside positive)</span>
-        <span><i class="dot ea"></i>electrode A</span>
-        <span><i class="dot eb"></i>electrode B</span>
+        <span><i class="dot esoma"></i>electrode A (cell body)</span>
+        <span><i class="dot ea"></i>electrode B</span>
+        <span><i class="dot eb"></i>electrode C</span>
+        <span><i class="dot na"></i>stimulating</span>
       </div>
       <p class="sect-title">Along the axon, right now</p>
       <div class="chartrow">
@@ -281,20 +289,20 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <div class="chartrow">
         <div class="ccol">
           <p class="sect-title">Voltage at the electrodes</p>
-          <canvas id="tChart" aria-label="Membrane potential at the cell body and electrodes A and B against time"></canvas>
-          <p class="caption">The same spike, seen from fixed places: it shows up at A first and B later; the grey line is the cell body. Shaded: stimulus on. The delay between A and B and the distance between them give the conduction velocity.</p>
+          <canvas id="tChart" aria-label="Membrane potential at electrodes A (cell body), B and C against time"></canvas>
+          <p class="caption">The same spike, seen from fixed places: A is the cell body (grey), B and C are on the axon. Shaded: stimulus on. The delay between B and C and the distance between them give the conduction velocity.</p>
         </div>
         <div class="ccol">
-          <div class="charthead"><p class="sect-title">At electrode A</p>
+          <div class="charthead"><p class="sect-title">At electrode B</p>
             <div class="btns"><button class="chip" data-iview="i" aria-pressed="true">Currents</button><button class="chip" data-iview="g" aria-pressed="false">Gates</button></div></div>
-          <canvas id="iChart" aria-label="Membrane currents or channel gates at electrode A against time"></canvas>
+          <canvas id="iChart" aria-label="Membrane currents or channel gates at electrode B against time"></canvas>
           <p class="caption" id="iCap"></p>
         </div>
       </div>
     </div>
     <div class="help" role="tabpanel" id="pane-axhelp" aria-labelledby="tab-axhelp" hidden>
       <ul>
-        <li><b>The drawing:</b> a neuron coloured by its membrane potential, blue at rest and red at the top of a spike. The stimulating electrode is in the cell body, at the left, and the axon runs away from it to its terminals at the right. A and B are recording electrodes; drag them, or use the sliders under Settings.</li>
+        <li><b>The drawing:</b> a neuron coloured by its membrane potential, blue at rest and red at the top of a spike. Electrode A is in the cell body, at the left, and the axon runs away from it to its terminals at the right; B and C are on the axon (drag them, or use the sliders under Settings). Choose which electrodes stimulate with the A, B and C buttons by the Stimulus slider, one or several at once; the rest record. A stimulating electrode is drawn orange.</li>
         <li><b>Cell:</b> each choice sets the temperature, the ion concentrations (as on the Membrane potential page), the sizes and whether the axon is myelinated. Change any setting and the menu says Custom.</li>
         <li><b>Initiation site:</b> the orange bracket marks the start of the axon, just past the cell body. This is where the spike starts: the first membrane with enough voltage-gated channels to reach threshold.</li>
         <li><b>The model:</b> the cell body and each short piece of axon is a patch of membrane like the one in lesson 2: Na⁺, K⁺ and Cl⁻ channels, each a resistor with its Nernst battery, and a capacitor. Neighbouring patches are joined by the cytoplasm, which acts as a resistor. The cell body has a quarter of the axon's voltage-gated channels, so it fires only because the axon next to it does.</li>
@@ -327,11 +335,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
   </section>
   <aside class="card panel wide">
     <div class="vbox">
-      <span class="sect-title">At electrode A</span>
+      <span class="sect-title">At electrode B</span>
       <span class="vnum" id="vV">—</span>
-      <div class="vrow"><span>cell body voltage</span><b id="vS">—</b></div>
-      <div class="vrow"><span>conduction velocity (A → B)</span><b id="vVel">—</b></div>
-      <div class="vrow"><span>delay A → B</span><b id="vDelay">—</b></div>
+      <div class="vrow"><span>electrode A (cell body)</span><b id="vS">—</b></div>
+      <div class="vrow"><span>electrode C</span><b id="vC">—</b></div>
+      <div class="vrow"><span>conduction velocity (between B and C)</span><b id="vVel">—</b></div>
+      <div class="vrow"><span>delay between B and C</span><b id="vDelay">—</b></div>
       <div class="vrow"><span>resting voltage (chord conductance, lesson 1)</span><b id="vRest">—</b></div>
       <div class="vrow"><span>time constant at rest, τ = C / Σg</span><b id="vTau">—</b></div>
       <div class="vrow"><span>length constant at rest, λ</span><b id="vLam">—</b></div>
@@ -357,8 +366,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <span class="hint">diameter. A bigger cell body has more capacitance to charge, so needs more current</span></div>
       </div>
       <div class="sgroup">
-        <div class="row"><label for="sXA"><i class="dot ea"></i>Electrode A</label><input type="range" id="sXA" min="0" max="100" step="1" value="25"><output id="sXAo" for="sXA"></output></div>
-        <div class="row"><label for="sXB"><i class="dot eb"></i>Electrode B</label><input type="range" id="sXB" min="0" max="100" step="1" value="75"><output id="sXBo" for="sXB"></output></div>
+        <div class="row"><label for="sXB"><i class="dot ea"></i>Electrode B</label><input type="range" id="sXB" min="0" max="100" step="1" value="25"><output id="sXBo" for="sXB"></output></div>
+        <div class="row"><label for="sXC"><i class="dot eb"></i>Electrode C</label><input type="range" id="sXC" min="0" max="100" step="1" value="75"><output id="sXCo" for="sXC"></output></div>
       </div>
     </fieldset>
   </aside>
@@ -367,7 +376,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 <section class="introbox" aria-labelledby="startTitle">
   <span class="sect-title" id="startTitle">Start here</span>
   <ol class="steps">
-    <li><button class="chip" data-aptry="spike">1 · Fire a spike</button> A pulse of current into the cell body, like synaptic input, starts a spike at the start of the axon. It travels away down the axon, and electrodes A and B record it as it passes.</li>
+    <li><button class="chip" data-aptry="spike">1 · Fire a spike</button> A pulse of current into the cell body, like synaptic input, starts a spike at the start of the axon. It travels away down the axon, and electrodes B and C record it as it passes.</li>
     <li><button class="chip" data-aptry="weak">2 · Too weak</button> A smaller pulse only charges the membrane a little, like the RC circuit, and the voltage leaks away again.</li>
     <li><button class="chip" data-aptry="ttx">3 · Block the Na⁺ channels</button> With g<sub>Na</sub> at zero (what the toxin TTX does), the same pulse goes nowhere.</li>
     <li><button class="chip" data-aptry="nomyel">4 · Take the myelin off</button> The same motor axon without its insulation: the spike slows from about 80 m/s to about 7.</li>
@@ -413,6 +422,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Spreading along the axon</button>
     <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">One direction only</button>
     <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Speed: diameter and myelin</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
   </div>
 
   <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
@@ -489,7 +499,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     </div>
     <aside class="try">
       <p><b>Try it</b></p>
-      <p><button class="chip" data-aptry="ttx">Block Na⁺ channels</button> Then compare electrodes A and B: the same pulse arrives smaller, farther away.</p>
+      <p><button class="chip" data-aptry="ttx">Block Na⁺ channels</button> Then compare electrodes B and C: the same pulse arrives smaller, farther away.</p>
     </aside>
   </div>
 
@@ -503,7 +513,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li>It limits how often a neuron can fire, which is the highest firing rate of the cell.</li>
         <li>It explains why a local anaesthetic or TTX that blocks Na⁺ channels stops the signal: with no inward current there is nothing to regenerate.</li>
       </ul>
-      <p>A spike started in the middle of an axon does travel both ways, because there is no refractory patch on either side to begin with. Here the spike starts next to the cell body, so it can only go down the axon, plus a little way back into the cell body, which has no further to go.</p>
+      <p>A spike started in the middle of an axon does travel both ways, because there is no refractory patch on either side to begin with. Stimulate at B or C instead of A to see it: one spike runs on to the terminals and another runs back toward the cell body. Whether that one gets in depends on the cell body's size. A big cell body is a large capacitor for the thin axon to charge, so on the motor neuron the backward spike stalls at the start of the axon and the cell body hardly moves; shrink the Cell body slider to 20 µm and it gets through and fires the cell body. Real motor neurons show the same thing. Stimulate at two electrodes at once and the spikes running toward each other meet and stop, each running into the other's refractory wake.</p>
     </div>
     <aside class="try">
       <p><b>Try it</b></p>
@@ -527,6 +537,26 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p><button class="chip" data-aptry="nomyel">Take the myelin off</button> The motor axon without myelin: check the velocity readout.</p>
       <p><button class="chip" data-aptry="cfib">Pain fibre</button> 1 µm and bare: about 2 m/s.</p>
     </aside>
+  </div>
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first within each idea. Most are free to read through the DOI links.</p>
+      <ol class="reflist">
+        <li><b>Hodgkin AL, Huxley AF (1939).</b> Action potentials recorded from inside a nerve fibre. <i>Nature</i> 144:710–711. <a href="https://doi.org/10.1038/144710a0" target="_blank" rel="noopener">doi:10.1038/144710a0</a><br><span class="why">The first recording from inside an axon: the spike overshoots zero, so the inside briefly becomes positive.</span></li>
+        <li><b>Hodgkin AL, Katz B (1949).</b> The effect of sodium ions on the electrical activity of the giant axon of the squid. <i>Journal of Physiology</i> 108:37–77. <a href="https://doi.org/10.1113/jphysiol.1949.sp004310" target="_blank" rel="noopener">doi:10.1113/jphysiol.1949.sp004310</a><br><span class="why">The Goldman–Hodgkin–Katz voltage equation, and the sodium hypothesis: the spike is a brief rise in Na⁺ permeability.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lesson 3 are theirs, including the 3× speed-up per 10 °C.</span></li>
+        <li><b>Hodgkin AL, Rushton WAH (1946).</b> The electrical constants of a crustacean nerve fibre. <i>Proceedings of the Royal Society of London B</i> 133:444–479. <a href="https://doi.org/10.1098/rspb.1946.0024" target="_blank" rel="noopener">doi:10.1098/rspb.1946.0024</a><br><span class="why">Cable theory for an axon: membrane resistance and capacitance, the time constant τ and the length constant λ.</span></li>
+        <li><b>Hursh JB (1939).</b> Conduction velocity and diameter of nerve fibers. <i>American Journal of Physiology</i> 127:131–139. <a href="https://doi.org/10.1152/ajplegacy.1939.127.1.131" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1939.127.1.131</a><br><span class="why">In myelinated fibres, conduction velocity rises in proportion to fibre diameter (about 6 m/s per µm).</span></li>
+        <li><b>Tasaki I (1939).</b> The electro-saltatory transmission of the nerve impulse and the effect of narcosis upon the nerve fiber. <i>American Journal of Physiology</i> 127:211–227. <a href="https://doi.org/10.1152/ajplegacy.1939.127.2.211" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1939.127.2.211</a><br><span class="why">Saltatory conduction: the impulse jumps from node to node and can skip a blocked node.</span></li>
+        <li><b>Huxley AF, Stämpfli R (1949).</b> Evidence for saltatory conduction in peripheral myelinated nerve fibres. <i>Journal of Physiology</i> 108:315–339. <a href="https://doi.org/10.1113/jphysiol.1949.sp004335" target="_blank" rel="noopener">doi:10.1113/jphysiol.1949.sp004335</a><br><span class="why">Current measured at nodes and internodes: the spike regenerates only at the nodes of Ranvier.</span></li>
+        <li><b>Rushton WAH (1951).</b> A theory of the effects of fibre size in medullated nerve. <i>Journal of Physiology</i> 115:101–122. <a href="https://doi.org/10.1113/jphysiol.1951.sp004655" target="_blank" rel="noopener">doi:10.1113/jphysiol.1951.sp004655</a><br><span class="why">Why velocity grows with diameter in myelinated fibres but only with its square root in bare ones.</span></li>
+        <li><b>Narahashi T, Moore JW, Scott WR (1964).</b> Tetrodotoxin blockage of sodium conductance increase in lobster giant axons. <i>Journal of General Physiology</i> 47:965–974. <a href="https://doi.org/10.1085/jgp.47.5.965" target="_blank" rel="noopener">doi:10.1085/jgp.47.5.965</a><br><span class="why">Tetrodotoxin (TTX) blocks the Na⁺ conductance and leaves the K⁺ conductance alone.</span></li>
+        <li><b>Coombs JS, Curtis DR, Eccles JC (1957).</b> The interpretation of spike potentials of motoneurones. <i>Journal of Physiology</i> 139:198–231. <a href="https://doi.org/10.1113/jphysiol.1957.sp005887" target="_blank" rel="noopener">doi:10.1113/jphysiol.1957.sp005887</a><br><span class="why">In motor neurons the spike starts in the initial segment of the axon, and one arriving backwards up the axon can fail to invade the large cell body.</span></li>
+        <li><b>Ritchie JM, Rogart RB (1977).</b> Density of sodium channels in mammalian myelinated nerve fibers and nature of the axonal membrane under the myelin sheath. <i>Proceedings of the National Academy of Sciences USA</i> 74:211–215. <a href="https://doi.org/10.1073/pnas.74.1.211" target="_blank" rel="noopener">doi:10.1073/pnas.74.1.211</a><br><span class="why">Na⁺ channels are packed at the nodes of Ranvier, about 12,000 per µm², with very few under the myelin.</span></li>
+        <li><b>Nernst W (1889).</b> Die elektromotorische Wirksamkeit der Ionen. <i>Zeitschrift für physikalische Chemie</i> 4:129–181.<br><span class="why">The Nernst equation: the voltage at which an ion's concentration difference is balanced.</span></li>
+      </ol>
+    </div>
   </div>
 </section>
 
@@ -660,7 +690,7 @@ const SOMA_DENS = 0.25, IS_LEN = 30, NODE_LEN = 1, WRAPS = 100;   // IS, node: �
 // divided by 2 × wraps (100 wraps: 0.5%). No wraps is no myelin.
 const myelinCut = () => 1 / (2 * P.wraps);
 const P = { T: 37, cin: [...MAMMAL.cin], cout: [...MAMMAL.cout], gNaPct: 100, gKPct: 100, somaD: 60, d: 12, myel: true, wraps: WRAPS, len: 1000,
-  nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1, stim: 20, xa: 0.25, xb: 0.75 };
+  nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1, stim: 20, xb: 0.25, xc: 0.75, stimAt: ['A'] };   // stimAt: the stimulating electrodes
 const RTF = () => 8.314 * (P.T + 273.15) / 96485 * 1000;   // mV
 const E = () => ({ K: RTF() * Math.log(P.cout[0] / P.cin[0]), Na: RTF() * Math.log(P.cout[1] / P.cin[1]), Cl: -RTF() * Math.log(P.cout[2] / P.cin[2]) });
 const phi = () => Math.pow(3, (P.T - 6.3) / 10);           // the gates speed up 3× for every 10 °C (Q10 = 3)
@@ -686,10 +716,25 @@ function restState(na = 1, k = 1, kl = 0) {
 }
 const lambdaCm = g => Math.sqrt((P.d * 1e-4 / 2) / (2 * RI * g * 1e-3));   // λ² = a / (2 R_i g_m)
 let M = null;   // the built axon
+// A bare axon is cut into pieces no longer than λ/8, so a thin one needs many: a 1 µm pain fibre a metre long would
+// need about 18,000, too many to run (and its spike would take half a second to cross). So a bare axon is limited to
+// MAX_PIECES pieces, which sets how long it can be. A myelinated axon is built from internodes and has no such limit.
+const MAX_PIECES = 4000;
+function maxLen() {   // mm
+  return P.myel ? 1000 : Math.min(1000, MAX_PIECES * lambdaCm(restState(P.axNa, P.axK).g) / 8 * 10);
+}
+function clampLen() {
+  const m = maxLen(), over = P.len > m * 1.0001, note = $('sLenNote');
+  if (over) P.len = m;
+  note.hidden = !over;
+  note.textContent = over ? `A bare ${fmtLen(P.d / 1000)} axon can be at most ${fmtLen(m)} long here: a longer one needs too many pieces to run.` : '';
+  return over;
+}
 function build() {
   const r = P.d * 1e-4 / 2, L = P.len / 10, parts = [{ type: 'soma', l: 0 }];
   if (!P.myel) {
-    const dx = Math.max(lambdaCm(restState(P.axNa, P.axK).g) / 8, L / 3000), n = Math.ceil(L / dx);
+    // pieces no longer than λ/8, or the spike's speed and threshold come out wrong (see maxLen)
+    const dx = lambdaCm(restState(P.axNa, P.axK).g) / 8, n = Math.min(MAX_PIECES, Math.ceil(L / dx));
     for (let i = 0; i < n; i++) parts.push({ type: 'ax', l: L / n });
   } else {
     parts.push({ type: 'node', l: IS_LEN * 1e-4 });
@@ -723,7 +768,7 @@ function restAll() {   // every piece at its own resting state, then let the who
   M.t = 0;
 }
 const stepDt = () => clamp(0.025 / phi(), 0.002, 0.01);
-function step(dt, Istim) {   // Istim in µA, into the cell body
+function step(dt, Istim) {   // Istim in µA, into each stimulating electrode's piece
   const m = M, n = m.n, V = m.V, e = E(), f = phi();
   for (let i = 0; i < n; i++) {
     const r = rates(V[i], f), g = (al, be, x) => { const tau = 1 / (al + be), xi = al * tau; return xi + (x - xi) * Math.exp(-dt / tau); };
@@ -731,7 +776,7 @@ function step(dt, Istim) {   // Istim in µA, into the cell body
     const gNa = m.gNa[i] * m.mm[i] ** 3 * m.h[i], gK = m.gK[i] * m.nn[i] ** 4 + m.gKL[i], gCl = m.gCl[i];
     const gl = i > 0 ? m.G[i - 1] : 0, gr = i < n - 1 ? m.G[i] : 0;
     m.lo[i] = gl; m.b[i] = m.cm[i] / dt + gNa + gK + gCl + gl + gr;
-    m.rr[i] = m.cm[i] / dt * V[i] + gNa * e.Na + gK * e.K + gCl * e.Cl + (i === 0 ? Istim : 0);
+    m.rr[i] = m.cm[i] / dt * V[i] + gNa * e.Na + gK * e.K + gCl * e.Cl + (stimSet.has(i) ? Istim : 0);
     m.INa[i] = gNa; m.IK[i] = gK; m.ICl[i] = gCl;   // conductances for now; currents once V is known
   }
   const { lo, b, rr, cp, dp, Vn, G } = m;
@@ -749,36 +794,39 @@ function step(dt, Istim) {   // Istim in µA, into the cell body
 
 // ---------- recording: what the electrodes see ----------
 const PULSE = 0.5;                         // ms
-// Every chart has fixed axes, the same for every cell, wide enough for all of them: time charts show the last
-// 30 ms (the C fibre's spike takes about 20 ms to pass both electrodes), distance charts the longest axon, 1 m,
-// and current charts ±70,000 µA/cm², about twice what the default cell reaches (the motor neuron's nodes, about
-// 34,000), so its currents fill about half the chart. Beyond them, lines are clipped.
-const WINDOW = 30, X_MAX = 1000, I_TOP = 70000;
-let hist = [], nextSample = 0, stimT0 = -1, stims = [], tA = null, tB = null;
+// Fixed axes, the same for every cell: time charts show the last 30 ms (the C fibre's spike takes about 20 ms to
+// pass both electrodes), and current charts ±70,000 µA/cm², about twice what the default cell reaches (the motor
+// neuron's nodes, about 34,000), so its currents fill about half the chart. Beyond them, lines are clipped. The
+// distance charts follow the Length slider.
+const WINDOW = 30, I_TOP = 70000;
+let hist = [], nextSample = 0, stimT0 = -1, stims = [], tB = null, tC = null;
 // the piece under an electrode: on a myelinated axon, the nearest node, where the voltage-gated channels are
 function idx(frac) {
   const xm = clamp(frac, 0, 1) * P.len; let best = 1, bd = 1e9;
   for (let i = 1; i < M.n; i++) { if (P.myel && M.type[i] !== 'node') continue; const d = Math.abs(M.xc[i] - xm); if (d < bd) { bd = d; best = i; } }
   return best;
 }
-let iA = 1, iB = 1;
-function placeElectrodes() { iA = idx(P.xa); iB = idx(P.xb); hist = []; tA = tB = null; }
-function fire() { stimT0 = M.t; tA = tB = null; stims.push(M.t); }
+// Three electrodes: A in the cell body (piece 0), B and C on the axon. Any of them can stimulate; the rest record.
+let iB = 1, iC = 1, stimSet = new Set([0]);
+const elIndex = e => e === 'A' ? 0 : e === 'B' ? iB : iC;
+function stimSites() { stimSet = new Set(P.stimAt.map(elIndex)); }
+function placeElectrodes() { iB = idx(P.xb); iC = idx(P.xc); stimSites(); hist = []; tB = tC = null; }
+function fire() { stimT0 = M.t; tB = tC = null; stims.push(M.t); }
 function resetAxon() { build(); restAll(); placeElectrodes(); hist = []; stims = []; nextSample = 0; stimT0 = -1; }
 function advance(ms, budgetMs) {   // budgetMs: stop early (a long axon is slow to compute) rather than freeze the page
   const dt = stepDt(), t0 = performance.now(), sample = WINDOW / 1500;
   for (let s = Math.max(1, Math.round(ms / dt)), k = 0; k < s; k++) {
     if (budgetMs && (k & 3) === 3 && performance.now() - t0 > budgetMs) break;
-    const on = stimT0 >= 0 && M.t - stimT0 < PULSE, va0 = M.V[iA], vb0 = M.V[iB];
+    const on = stimT0 >= 0 && M.t - stimT0 < PULSE, va0 = M.V[iB], vb0 = M.V[iC];
     step(dt, on ? P.stim * 1e-3 : 0);
     // when each electrode first sees the spike (crossing −20 mV going up)
     if (stimT0 >= 0) {
-      if (tA === null && va0 < -20 && M.V[iA] >= -20) tA = M.t;
-      if (tB === null && vb0 < -20 && M.V[iB] >= -20) tB = M.t;
+      if (tB === null && va0 < -20 && M.V[iB] >= -20) tB = M.t;
+      if (tC === null && vb0 < -20 && M.V[iC] >= -20) tC = M.t;
     }
     if (M.t >= nextSample) {
       nextSample = M.t + sample;
-      hist.push({ t: M.t, VS: M.V[0], VA: M.V[iA], VB: M.V[iB], INa: M.INa[iA], IK: M.IK[iA], ICl: M.ICl[iA], IC: M.IC[iA], m: M.mm[iA], h: M.h[iA], n: M.nn[iA] });
+      hist.push({ t: M.t, VA: M.V[0], VB: M.V[iB], VC: M.V[iC], INa: M.INa[iB], IK: M.IK[iB], ICl: M.ICl[iB], IC: M.IC[iB], m: M.mm[iB], h: M.h[iB], n: M.nn[iB] });
       while (hist.length && hist[0].t < M.t - WINDOW * 1.1) hist.shift();
     }
   }
@@ -891,8 +939,8 @@ function drawAxon() {
   tips.forEach(([dx, dy]) => { c.beginPath(); c.arc(xe + dx, YC + dy, 5.5, 0, 6.283); c.fillStyle = tcol; c.fill(); c.strokeStyle = edge; c.lineWidth = 1.5; c.stroke(); });
   c.lineCap = 'butt';
 
-  // where the spike starts: the first stretch of axon, next to the cell body
-  {
+  // where the spike starts when the cell body is stimulated: the first stretch of axon, next to the cell body
+  if (P.stimAt.includes('A')) {
     const yb = YC + half + (P.myel ? 11 : 7), x1 = AL + 24;
     c.strokeStyle = C.na; c.fillStyle = C.na; c.lineWidth = 2;
     c.beginPath(); c.moveTo(AL, yb - 5); c.lineTo(AL, yb); c.lineTo(x1, yb); c.lineTo(x1, yb - 5); c.stroke();
@@ -925,29 +973,34 @@ function drawAxon() {
     if (hot) { c.strokeStyle = C.na; c.lineWidth = 1.5; [7, 12, 17].forEach((r, k) => { c.globalAlpha = 0.9 - k * 0.28; c.beginPath(); c.arc(0, 0, r, 0, 6.283); c.stroke(); }); c.globalAlpha = 1; }
     c.restore();
   }
-  const recPin = (i, col, name) => {
-    const tx = mmx(M.xc[i]), ty = YC - half * 0.35;
-    pipette(tx, ty, 0.22, -1, 56, 3.5, col, false);
-    c.font = '600 13px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = col;
-    c.fillText(name, tx + 21, ty - 62);
-  };
-  recPin(iA, C.ink, 'A'); recPin(iB, C.accent, 'B');
-  // the stimulating electrode, its tip inside the cell body
+  // electrodes: a stimulating one is orange, with rings while the pulse is on; the others record
   const on = stimT0 >= 0 && M.t - stimT0 < PULSE;
-  pipette(SX + sr * 0.15, YC - sr * 0.3, 0.45, -1, 70, 5, C.na, on);
-  c.font = '600 12px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = on ? C.na : C.muted;
-  c.fillText(on ? '⚡ stimulating electrode' : 'stimulating electrode', SX + 62, 12);
+  const tag = (name, col, stim, x, y) => {
+    c.font = '600 13px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = stim ? C.na : col;
+    c.fillText(name, x, y);
+    if (stim) { const w = c.measureText(name).width; c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillText(on ? '⚡ stimulating' : 'stimulating', x + w + 6, y); }
+  };
+  const axonPin = (e, i, col) => {
+    const tx = mmx(M.xc[i]), ty = YC - half * 0.35, stim = P.stimAt.includes(e);
+    pipette(tx, ty, 0.22, -1, 56, 3.5, stim ? C.na : col, stim && on);
+    tag(e, col, stim, tx + 21, ty - 62);
+  };
+  axonPin('B', iB, C.ink); axonPin('C', iC, C.accent);
+  // electrode A, its tip inside the cell body
+  const stimA = P.stimAt.includes('A');
+  pipette(SX + sr * 0.15, YC - sr * 0.3, 0.45, -1, 70, 5, stimA ? C.na : C.a, stimA && on);
+  tag('A', C.a, stimA, SX + 62, 12);
 
   c.textAlign = 'right'; c.fillStyle = C.ink; c.font = '500 12px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
   c.fillText('t = ' + fmtTime(M.t), AW - 8, 14);
 }
-// move electrodes A and B: press anywhere along the axon and the nearer one jumps there; drag to keep moving it
+// move electrodes B and C: press anywhere along the axon and the nearer one jumps there; drag to keep moving it
 {
   const cv = $('axon'); let drag = null;
   const lx = e => { const r = cv.getBoundingClientRect(); return (e.clientX - r.left) / r.width * AW; };
   const frac = x => clamp((x - AL) / (AW - AL - AR), 0, 1);
   const onAxon = x => x >= AL - 6 && x <= AW - AR + 6;
-  const nearer = x => Math.abs(x - mmx(M.xc[iA])) <= Math.abs(x - mmx(M.xc[iB])) ? 'xa' : 'xb';
+  const nearer = x => Math.abs(x - mmx(M.xc[iB])) <= Math.abs(x - mmx(M.xc[iC])) ? 'xb' : 'xc';
   cv.addEventListener('pointerdown', e => {
     const x = lx(e); if (!onAxon(x)) return;
     drag = nearer(x); cv.setPointerCapture(e.pointerId); setElectrode(drag, frac(x)); e.preventDefault();
@@ -1016,20 +1069,21 @@ let iview = 'i';
 // the time charts: the last WINDOW ms, scrolling
 function timeAxis() { const t1 = Math.max(WINDOW, M.t); return [t1 - WINDOW, t1]; }
 function drawCharts() {
-  const n = M.n, xsc = 0.001, xlab = 'distance from the cell body (m)';
+  // the distance charts span the axon as long as it is set (in m from 1 m up, otherwise mm)
+  const n = M.n, big = P.len >= 1000, xsc = big ? 0.001 : 1, xlab = 'distance from the cell body (' + (big ? 'm' : 'mm') + ')';
   // along the axon: every piece (on a myelinated axon, the nodes, where the channels are)
   const along = []; for (let i = 1; i < n; i++) if (!P.myel || M.type[i] === 'node' || n < 1500) along.push(i);
   const xsA = along.map(i => M.xc[i]);
-  plot(xc, { x0: 0, x1: X_MAX, xscale: xsc, y0: -100, y1: 70, ystep: 50, xlabel: xlab, ylabel: 'V (mV)', refs: Vrefs(),
-    vlines: [{ x: M.xc[iA], color: C.ink }, { x: M.xc[iB], color: C.accent }], series: [{ xs: xsA, ys: along.map(i => M.V[i]), color: C.ink, width: 2.4 }] });
+  plot(xc, { x0: 0, x1: P.len, xscale: xsc, y0: -100, y1: 70, ystep: 50, xlabel: xlab, ylabel: 'V (mV)', refs: Vrefs(),
+    vlines: [{ x: M.xc[iB], color: C.ink }, { x: M.xc[iC], color: C.accent }], series: [{ xs: xsA, ys: along.map(i => M.V[i]), color: C.ink, width: 2.4 }] });
   const [t0, t1] = timeAxis(), h = hist.filter(p => p.t >= t0), ts = h.map(p => p.t);
   const spans = stims.map(t => [t, t + PULSE]), tlab = 'time (ms)';
   const cross = (t, col) => ({ x: t != null && t >= t0 ? t : null, color: col });
-  plot(tc, { scrolls: true, x0: t0, x1: t1, y0: -100, y1: 70, ystep: 50, xlabel: tlab, ylabel: 'V (mV)', refs: Vrefs(), spans, vlines: [cross(tA, C.ink), cross(tB, C.accent)],
-    series: [{ xs: ts, ys: h.map(p => p.VS), color: C.a, width: 2, label: 'soma' }, { xs: ts, ys: h.map(p => p.VA), color: C.ink, width: 2.4, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.accent, width: 2.4, label: 'B' }] });
+  plot(tc, { scrolls: true, x0: t0, x1: t1, y0: -100, y1: 70, ystep: 50, xlabel: tlab, ylabel: 'V (mV)', refs: Vrefs(), spans, vlines: [cross(tB, C.ink), cross(tC, C.accent)],
+    series: [{ xs: ts, ys: h.map(p => p.VA), color: C.a, width: 2, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.ink, width: 2.4, label: 'B' }, { xs: ts, ys: h.map(p => p.VC), color: C.accent, width: 2.4, label: 'C' }] });
   {
     const pick = a => along.map(i => a[i]);
-    plot(xic, { x0: 0, x1: X_MAX, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: xlab, ylabel: 'I (µA/cm², outward +)',
+    plot(xic, { x0: 0, x1: P.len, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: xlab, ylabel: 'I (µA/cm², outward +)',
       series: [{ xs: xsA, ys: pick(M.INa), color: C.na, label: 'I_Na' }, { xs: xsA, ys: pick(M.IK), color: C.k, label: 'I_K' }, { xs: xsA, ys: pick(M.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: xsA, ys: pick(M.IC), color: C.pos, label: 'I_C', width: 2.4 },
                { xs: xsA, ys: along.map(i => M.INa[i] + M.IK[i] + M.ICl[i] + M.IC[i]), color: C.accent, dash: [6, 4], label: 'sum' }] });
   }
@@ -1044,7 +1098,7 @@ function drawCharts() {
 }
 const CAPS = {
   i: 'Positive outward as in lesson 2. Na⁺ (orange) flows in (negative) as the spike starts and K⁺ (purple) flows out (positive) as it ends; the Cl⁻ leak (green) stays small. The red line, I<sub>C</sub> = C dV/dt, charges the capacitor: positive while V rises, negative while it falls. Shaded: stimulus on.',
-  g: 'The fraction of gates open at electrode A. m (solid orange) opens fast, h (dashed orange) closes more slowly and shuts the Na⁺ channels, and n (purple) opens slowly and carries the K⁺ current. After the spike, h takes a while to recover: that is the refractory period.',
+  g: 'The fraction of gates open at electrode B. m (solid orange) opens fast, h (dashed orange) closes more slowly and shuts the Na⁺ channels, and n (purple) opens slowly and carries the K⁺ current. After the spike, h takes a while to recover: that is the refractory period.',
 };
 function setView(v) {
   iview = v;
@@ -1058,15 +1112,17 @@ function membraneAtRest() {   // the membrane that carries the current along the
   return P.myel ? { g: GCL * myelinCut(), c: CM * myelinCut() } : { g: r.g, c: CM };
 }
 function readouts() {
-  $('vV').textContent = mv(M.V[iA]); $('vS').textContent = mv(M.V[0]);
+  $('vV').textContent = mv(M.V[iB]); $('vS').textContent = mv(M.V[0]); $('vC').textContent = mv(M.V[iC]);
   const e = E(), mr = membraneAtRest();
   $('vRest').textContent = mv((P.myel ? restState(P.nodeNa, P.nodeK, P.nodeKL) : restState(P.axNa, P.axK)).V);
   $('vTau').textContent = fmtTime(mr.c / mr.g);
   $('vLam').textContent = fmtLen(lambdaCm(mr.g) * 10);
   $('eNa').textContent = sgn(Math.round(e.Na)) + ' mV'; $('eK').textContent = sgn(Math.round(e.K)) + ' mV'; $('eCl').textContent = sgn(Math.round(e.Cl)) + ' mV';
-  if (tA != null && tB != null && iB > iA && tB > tA) {
-    $('vDelay').textContent = fmtTime(tB - tA);
-    $('vVel').textContent = fmt3((M.xc[iB] - M.xc[iA]) / (tB - tA)) + ' m/s';
+  // The spike can pass B and C in either order (stimulating C sends it back toward B). With more than one
+  // electrode stimulating, spikes start in several places, so there is no single trip to time.
+  if (tB != null && tC != null && iB !== iC && tB !== tC && P.stimAt.length === 1) {
+    $('vDelay').textContent = fmtTime(Math.abs(tC - tB));
+    $('vVel').textContent = fmt3(Math.abs(M.xc[iC] - M.xc[iB]) / Math.abs(tC - tB)) + ' m/s';
   } else { $('vDelay').textContent = '—'; $('vVel').textContent = '—'; }
 }
 
@@ -1080,29 +1136,37 @@ const OUT = {
   sD: () => fmtLen(P.d / 1000), sLen: () => fmtLen(P.len), sSoma: () => fmtLen(P.somaD / 1000),
   sGNa: () => P.gNaPct + ' %', sGK: () => P.gKPct + ' %', sT: () => P.T.toFixed(1) + ' °C',
   sNao: () => fmt3(P.cout[1]) + ' mM', sKo: () => fmt3(P.cout[0]) + ' mM',
-  sXA: () => fmtLen(P.xa * P.len), sXB: () => fmtLen(P.xb * P.len), sMyel: () => P.myel ? P.wraps + (P.wraps === 1 ? ' wrap' : ' wraps') : 'none',
+  sXB: () => fmtLen(P.xb * P.len), sXC: () => fmtLen(P.xc * P.len), sMyel: () => P.myel ? P.wraps + (P.wraps === 1 ? ' wrap' : ' wraps') : 'none',
 };
 const showOut = () => Object.keys(OUT).forEach(id => { $(id + 'o').textContent = OUT[id](); });
 function readControls() {
   P.stim = logv('sStim'); speed = logv('sSpeed'); P.d = logv('sD'); P.len = logv('sLen'); P.somaD = logv('sSoma');
   P.gNaPct = +$('sGNa').value; P.gKPct = +$('sGK').value; P.T = +$('sT').value;
-  P.cout[1] = +$('sNao').value; P.cout[0] = +$('sKo').value; P.xa = +$('sXA').value / 100; P.xb = +$('sXB').value / 100;
+  P.cout[1] = +$('sNao').value; P.cout[0] = +$('sKo').value; P.xb = +$('sXB').value / 100; P.xc = +$('sXC').value / 100;
   P.wraps = +$('sMyel').value; P.myel = P.wraps > 0;
+  if (clampLen()) setLog('sLen', P.len);
 }
 function writeControls() {
   setLog('sStim', P.stim); setLog('sSpeed', speed); setLog('sD', P.d); setLog('sLen', P.len); setLog('sSoma', P.somaD);
   $('sGNa').value = P.gNaPct; $('sGK').value = P.gKPct; $('sT').value = P.T; $('sNao').value = P.cout[1]; $('sKo').value = P.cout[0];
-  $('sXA').value = Math.round(P.xa * 100); $('sXB').value = Math.round(P.xb * 100);
+  $('sXB').value = Math.round(P.xb * 100); $('sXC').value = Math.round(P.xc * 100);
   $('sMyel').value = P.myel ? P.wraps : 0;
   showOut();
 }
-function setElectrode(k, f) { P[k] = f; $(k === 'xa' ? 'sXA' : 'sXB').value = Math.round(f * 100); showOut(); placeElectrodes(); }
+function setElectrode(k, f) { P[k] = f; $(k === 'xb' ? 'sXB' : 'sXC').value = Math.round(f * 100); showOut(); placeElectrodes(); }
 // controls that change the cell rebuild it; the rest only change how it is run or watched
 const REBUILD = ['sD', 'sLen', 'sSoma', 'sGNa', 'sGK', 'sT', 'sNao', 'sKo', 'sMyel'];
 REBUILD.forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); markCustom(); resetAxon(); }));
 ['sStim', 'sSpeed'].forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); }));
-['sXA', 'sXB'].forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); placeElectrodes(); }));
+['sXB', 'sXC'].forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); placeElectrodes(); }));
 $('apFire').addEventListener('click', fire);
+function showStimAt() { document.querySelectorAll('[data-stimel]').forEach(b => b.setAttribute('aria-pressed', String(P.stimAt.includes(b.dataset.stimel)))); }
+document.querySelectorAll('[data-stimel]').forEach(b => b.addEventListener('click', () => {
+  const e = b.dataset.stimel, has = P.stimAt.includes(e);
+  if (has && P.stimAt.length === 1) return;   // one always stays on
+  P.stimAt = has ? P.stimAt.filter(x => x !== e) : ['A', 'B', 'C'].filter(x => x === e || P.stimAt.includes(x));
+  showStimAt(); stimSites(); tB = tC = null;
+}));
 $('apReset').addEventListener('click', resetAxon);
 $('apPlay').addEventListener('click', () => { running = !running; $('apPlay').textContent = running ? 'Pause' : 'Play'; });
 document.querySelectorAll('[data-iview]').forEach(b => b.addEventListener('click', () => setView(b.dataset.iview)));
@@ -1113,7 +1177,8 @@ cellSel.innerHTML = CELLS.map(c => `<option value="${c.id}">${c.name}</option>`)
 function applyCell(id) {
   const c = CELLS.find(c => c.id === id); if (!c) return;
   Object.assign(P, { T: c.T, cin: [...c.cin], cout: [...c.cout], somaD: c.somaD, d: c.d, myel: c.myel, wraps: c.myel ? WRAPS : 0, len: $('sFixLen').checked ? P.len : c.len,   // a fixed length stays as it is
-    nodeNa: c.nodeNa, nodeK: c.nodeK, nodeKL: c.nodeKL, axNa: c.axNa, axK: c.axK, stim: c.stim, gNaPct: 100, gKPct: 100, xa: 0.25, xb: 0.75 });
+    nodeNa: c.nodeNa, nodeK: c.nodeK, nodeKL: c.nodeKL, axNa: c.axNa, axK: c.axK, stim: c.stim, gNaPct: 100, gKPct: 100, xb: 0.25, xc: 0.75, stimAt: ['A'] });
+  showStimAt(); clampLen();
   speed = c.speed;
   cellSel.value = id; cellNote.textContent = c.note;
   writeControls(); resetAxon();

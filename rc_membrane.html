@@ -185,6 +185,9 @@ button.latch[aria-pressed=true]{background:var(--on,var(--accent));border-color:
 table.map{width:100%;border-collapse:collapse;font-size:14px}
 table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -452,6 +455,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">How fast: the time constant</button>
     <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Where it ends up</button>
     <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Circuit and membrane</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
   </div>
 
   <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
@@ -543,6 +547,21 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
   </table>
       <h3>In the particle model</h3>
       <p>The same rule is a count. Each net ion that crosses adds one charge to the membrane, which moves V by a fixed step: about 2 mV at the default Membrane C (the bilayer's capacitance in series with the charge layers in the solution). On the Ions moved chart, "on membrane" is that net count, and the voltage trace follows its shape.</p>
+    </div>
+  </div>
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first within each idea. Most are free to read through the DOI links.</p>
+      <ol class="reflist">
+        <li><b>Lapicque L (1907).</b> Recherches quantitatives sur l'excitation électrique des nerfs traitée comme une polarisation. <i>Journal de Physiologie et de Pathologie Générale</i> 9:620–635.<br><span class="why">The membrane as a capacitor charged by a stimulus current through a leak: the first RC model of a nerve.</span></li>
+        <li><b>Fricke H (1925).</b> The electric capacity of suspensions with special reference to blood. <i>Journal of General Physiology</i> 9:137–152. <a href="https://doi.org/10.1085/jgp.9.2.137" target="_blank" rel="noopener">doi:10.1085/jgp.9.2.137</a><br><span class="why">The first measurement of a cell membrane's capacitance, about 1 µF/cm², and from it the membrane's thinness.</span></li>
+        <li><b>Cole KS, Curtis HJ (1938).</b> Transverse electric impedance of the squid giant axon. <i>Journal of General Physiology</i> 21:757–765. <a href="https://doi.org/10.1085/jgp.21.6.757" target="_blank" rel="noopener">doi:10.1085/jgp.21.6.757</a><br><span class="why">The squid axon membrane as a capacitor of about 1 µF/cm² in parallel with a resistance.</span></li>
+        <li><b>Cole KS, Curtis HJ (1939).</b> Electric impedance of the squid giant axon during activity. <i>Journal of General Physiology</i> 22:649–670. <a href="https://doi.org/10.1085/jgp.22.5.649" target="_blank" rel="noopener">doi:10.1085/jgp.22.5.649</a><br><span class="why">During a spike the membrane's conductance rises about forty-fold while its capacitance stays the same.</span></li>
+        <li><b>Hodgkin AL, Rushton WAH (1946).</b> The electrical constants of a crustacean nerve fibre. <i>Proceedings of the Royal Society of London B</i> 133:444–479. <a href="https://doi.org/10.1098/rspb.1946.0024" target="_blank" rel="noopener">doi:10.1098/rspb.1946.0024</a><br><span class="why">Cable theory for an axon: membrane resistance and capacitance, the time constant τ and the length constant λ.</span></li>
+        <li><b>Nernst W (1889).</b> Die elektromotorische Wirksamkeit der Ionen. <i>Zeitschrift für physikalische Chemie</i> 4:129–181.<br><span class="why">The Nernst equation: the voltage at which an ion's concentration difference is balanced.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lesson 3 are theirs, including the 3× speed-up per 10 °C.</span></li>
+      </ol>
     </div>
   </div>
 </section>

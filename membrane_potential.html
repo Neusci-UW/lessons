@@ -263,6 +263,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 .notes ul{margin:0;padding-left:18px}
 .notes li{margin-bottom:6px;max-width:68ch}
 .notes li::marker{color:var(--muted)}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -565,6 +568,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       <div class="tabs" role="tablist" aria-label="Theory">
         <button type="button" role="tab" id="tab-charge" aria-controls="pane-charge" aria-selected="true">Charge and capacitance</button>
         <button type="button" role="tab" id="tab-steady" aria-controls="pane-steady" aria-selected="false" tabindex="-1">Steady-state membrane potential</button>
+        <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
       </div>
 
       <div class="tabpane" role="tabpanel" id="pane-charge" aria-labelledby="tab-charge">
@@ -771,6 +775,23 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           <p><button class="chip" data-try="pump">Turn on the pump</button> The Pump current tab beside the voltage trace counts the charge the pump carries out and the charge the leak channels carry back in. At rest they climb together: the leak current is equal and opposite to the pump current.</p>
         </aside>
       </div>
+      </div>
+      <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+        <div class="deriv wide">
+          <h3>Where these ideas come from</h3>
+          <p>The original papers behind this lesson, oldest first within each idea. Most are free to read through the DOI links.</p>
+          <ol class="reflist">
+        <li><b>Nernst W (1889).</b> Die elektromotorische Wirksamkeit der Ionen. <i>Zeitschrift für physikalische Chemie</i> 4:129–181.<br><span class="why">The Nernst equation: the voltage at which an ion's concentration difference is balanced.</span></li>
+        <li><b>Bernstein J (1902).</b> Untersuchungen zur Thermodynamik der bioelektrischen Ströme. <i>Pflügers Archiv</i> 92:521–562. <a href="https://doi.org/10.1007/BF01790181" target="_blank" rel="noopener">doi:10.1007/BF01790181</a><br><span class="why">The membrane theory: the resting potential comes from a membrane permeable mainly to K⁺.</span></li>
+        <li><b>Fricke H (1925).</b> The electric capacity of suspensions with special reference to blood. <i>Journal of General Physiology</i> 9:137–152. <a href="https://doi.org/10.1085/jgp.9.2.137" target="_blank" rel="noopener">doi:10.1085/jgp.9.2.137</a><br><span class="why">The first measurement of a cell membrane's capacitance, about 1 µF/cm², and from it the membrane's thinness.</span></li>
+        <li><b>Debye P, Hückel E (1923).</b> Zur Theorie der Elektrolyte. I. Gefrierpunktserniedrigung und verwandte Erscheinungen. <i>Physikalische Zeitschrift</i> 24:185–206.<br><span class="why">How ions in solution screen a charge: the Debye length, the thickness of the charge layers at the membrane.</span></li>
+        <li><b>Cole KS, Curtis HJ (1938).</b> Transverse electric impedance of the squid giant axon. <i>Journal of General Physiology</i> 21:757–765. <a href="https://doi.org/10.1085/jgp.21.6.757" target="_blank" rel="noopener">doi:10.1085/jgp.21.6.757</a><br><span class="why">The squid axon membrane as a capacitor of about 1 µF/cm² in parallel with a resistance.</span></li>
+        <li><b>Goldman DE (1943).</b> Potential, impedance, and rectification in membranes. <i>Journal of General Physiology</i> 27:37–60. <a href="https://doi.org/10.1085/jgp.27.1.37" target="_blank" rel="noopener">doi:10.1085/jgp.27.1.37</a><br><span class="why">The constant-field current equation for ions crossing a membrane.</span></li>
+        <li><b>Hodgkin AL, Katz B (1949).</b> The effect of sodium ions on the electrical activity of the giant axon of the squid. <i>Journal of Physiology</i> 108:37–77. <a href="https://doi.org/10.1113/jphysiol.1949.sp004310" target="_blank" rel="noopener">doi:10.1113/jphysiol.1949.sp004310</a><br><span class="why">The Goldman–Hodgkin–Katz voltage equation, and the sodium hypothesis: the spike is a brief rise in Na⁺ permeability.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lesson 3 are theirs, including the 3× speed-up per 10 °C.</span></li>
+        <li><b>Skou JC (1957).</b> The influence of some cations on an adenosine triphosphatase from peripheral nerves. <i>Biochimica et Biophysica Acta</i> 23:394–401. <a href="https://doi.org/10.1016/0006-3002(57)90343-8" target="_blank" rel="noopener">doi:10.1016/0006-3002(57)90343-8</a><br><span class="why">The discovery of the Na⁺/K⁺ ATPase, the pump that keeps up the concentration differences.</span></li>
+          </ol>
+        </div>
       </div>
     </div>
 
