@@ -51,9 +51,10 @@ header p{margin:0;color:var(--muted);max-width:90ch}
 .introbox li::marker{color:var(--muted)}
 .steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
 .steps .chip{margin-right:6px}
-/* The simulation with the tabbed settings panel under it, and the two charts. Narrow: stacked, charts side by
-   side. Wide: the charts get their own column, as wide as the window height lets both fit stacked; the
-   simulation is capped so it also fits on screen, and the panel sits below it. */
+/* The simulation, its tabbed settings panel and the two charts. Narrow: stacked, charts side by side. Wide:
+   three columns, settings (with Start here and Units under them) | simulation | charts. The simulation is capped
+   so it fits on screen; the charts take the width that is left (up to 820 px), so they are big enough to read
+   and a wide window isn't left empty at the sides. */
 .lab{display:grid;gap:20px;align-items:start;grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "side" "charts"}
 #sim-stage{grid-area:stage}
 .sidecol{grid-area:side;display:flex;flex-direction:column;gap:20px;min-width:0}
@@ -61,8 +62,8 @@ header p{margin:0;color:var(--muted);max-width:90ch}
 .charts{grid-area:charts;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
 @media (max-width:820px){.charts{grid-template-columns:1fr}}
 @media (min-width:1500px){
-  .lab{grid-template-columns:minmax(0,calc((100vh - 430px) * 1.78)) clamp(380px,calc((100vh - 550px) * 0.8),860px);
-       grid-template-areas:"stage charts" "side charts";grid-template-rows:auto 1fr;justify-content:center}
+  .lab{grid-template-columns:clamp(320px,20vw,420px) minmax(0,calc((100vh - 430px) * 1.78)) minmax(420px,820px);
+       grid-template-areas:"side stage charts";justify-content:center}
   .charts{grid-template-columns:1fr}
 }
 .prow{display:flex;flex-wrap:wrap;gap:12px 32px;align-items:flex-start}
@@ -262,9 +263,21 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 .notes ul{margin:0;padding-left:18px}
 .notes li{margin-bottom:6px;max-width:68ch}
 .notes li::marker{color:var(--muted)}
+/* Reset ions, Pause and Speed, always in reach: they stay in the corner while the page scrolls */
+.floatbar{position:fixed;right:20px;bottom:20px;z-index:50;display:flex;align-items:center;gap:8px 10px;padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.22);font-size:13px}
+.floatbar input[type=range]{width:130px}
+.floatbar output{font-family:var(--font-mono);font-size:12.5px;min-width:86px;font-variant-numeric:tabular-nums}
+@media print{.floatbar{display:none}}
 </style>
 </head>
 <body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="resetFloat" class="primary" title="Start the ion simulation again">Reset ions</button>
+  <button type="button" id="playFloat">Pause</button>
+  <label for="speedFloat" class="runlab">Speed</label>
+  <input type="range" id="speedFloat" min="0" max="100" value="87">
+  <output id="speedFloato" for="speedFloat"></output>
+</div>
 <div class="wrap">
 <header>
   <h1>Exploring the membrane potential</h1>
@@ -345,24 +358,23 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   <div class="charts">
     <section class="card stage" id="sim-profile">
       <div class="tabs" role="tablist" aria-label="Charge chart">
-        <button type="button" role="tab" id="tab-prof" aria-controls="pane-prof" aria-selected="true">Charge and potential</button>
+        <button type="button" role="tab" id="tab-prof" aria-controls="pane-prof" aria-selected="true">Charge</button>
         <button type="button" role="tab" id="tab-profhelp" aria-controls="pane-profhelp" aria-selected="false" tabindex="-1">How to read</button>
       </div>
       <div class="stage" role="tabpanel" id="pane-prof" aria-labelledby="tab-prof">
-        <canvas id="profile" aria-label="Net charge per column and electric potential across the simulation"></canvas>
+        <canvas id="profile" aria-label="Net charge per column across the simulation"></canvas>
         <div class="qbar" aria-label="Charge in each diffuse layer">
           <span class="qlab"><span>Q<sub>in</sub></span> <b id="qInLab">—</b></span>
           <div class="qtrack"><span class="qfill" id="qInBar"></span><span class="qfill" id="qOutBar"></span></div>
           <span class="qlab"><b id="qOutLab">—</b> <span>Q<sub>out</sub></span></span>
         </div>
-        <p class="caption">Across the membrane. Bars: net charge. Curves and bar above: each layer's Q. Line: potential.</p>
+        <p class="caption">Across the membrane. Bars: net charge. Curves and bar above: each layer's Q.</p>
       </div>
       <div class="help" role="tabpanel" id="pane-profhelp" aria-labelledby="tab-profhelp" hidden>
         <ul>
           <li><b>Bars:</b> net charge in the solution in each 16 px column, averaged over recent steps. Red is extra positive charge, blue extra negative. The hatched bar over the membrane is the charge held inside the channels (mostly K⁺ near their inner end).</li>
           <li><b>Curves:</b> an exponential with the Debye length λ (scale bar at the bottom), scaled so its shaded area equals the charge measured out to 3λ (dashed lines). That area is each layer's charge Q.</li>
           <li><b>Q bar:</b> the two layers' charges side by side, inside to the left and outside to the right. At rest they are equal and opposite.</li>
-          <li><b>Line:</b> electric potential, with the extracellular side at 0 mV. Most of the drop is the steep straight section across the membrane.</li>
           <li><b>Tinted band:</b> the part of the box shown in the simulation view when you zoom in.</li>
         </ul>
       </div>
@@ -492,7 +504,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         <div class="row"><label for="qmv">Membrane C</label><input type="range" id="qmv" min="3" max="40" step="1" value="11"><output id="qmvo" for="qmv"></output>
           <span class="hint">capacitance per 100 px of membrane</span></div>
         <label class="check" for="tint"><input type="checkbox" id="tint" checked>Show charge density map</label>
-        <div class="row"><label for="blur">Charge blur σ</label><input type="range" id="blur" min="6" max="40" step="2" value="20"><output id="bluro" for="blur"></output>
+        <div class="row"><label for="blur">Charge blur σ</label><input type="range" id="blur" min="6" max="40" step="2" value="10"><output id="bluro" for="blur"></output>
           <span class="hint">on-screen width of each ion's Gaussian; scales with zoom</span></div>
         <div class="row"><label for="dtau">Map averaging</label><input type="range" id="dtau" min="0" max="100" value="88"><output id="dtauo" for="dtau"></output>
           <span class="hint">0 = instantaneous charge; higher averages over more steps</span></div>
@@ -726,7 +738,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         <aside class="try">
           <span class="sect-title">Try it</span>
           <p><button class="chip" data-try="model:ghk">GHK model in the calculator</button> Drag [K⁺]ₒ up and watch the K⁺ curve: its bend flips as K⁺ outside overtakes K⁺ inside.</p>
-          <p><button class="chip" data-try="show:sim-profile">Charge and potential profile</button> The potential line drops steeply across the membrane, close to the constant field GHK assumes.</p>
+          <p><button class="chip" data-try="show:sim-profile">Charge profile</button> The charge sits in two thin layers, one on each face of the membrane, with none inside it. Between two such sheets the field is uniform, the constant field GHK assumes.</p>
           <p class="caption">In the simulation every channel is always open, so each ion's permeability is proportional to its number of channels. The simulation never uses the formula to move ions; it only draws the dotted GHK line on the trace.</p>
         </aside>
       </div>
@@ -1363,7 +1375,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   // ---------- 2D Gaussian charge density ----------
   let CG = 8, GX = 0, GY = 0, qgrid, tmpg, rowAcc, dens = new Float32Array(1), dImg;
   const dCanvas = document.createElement('canvas'), dctx = dCanvas.getContext('2d');
-  let blurSigma = 16, kern = null, kR = 0, dScale = 0.02;
+  let blurSigma = 10, kern = null, kR = 0, dScale = 0.02;
   function allocDensity(keep) {
     const old = dens, oGX = GX, oGY = GY, oCG = CG;
     CG = Math.max(2, Math.min(8, Math.round(sigEff() / 2)));
@@ -1558,8 +1570,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
   // ---------- charge profile ----------
   let rScale = 6, qScale = 10;
-  const phi = new Float32Array(W + 1);   // potential profile, reused every frame
-  const PT = 34, PB = 34, PL = 50, PR = 58;
+  const PT = 34, PB = 34, PL = 50, PR = 16;
   const psx = x => PL + x / W * (PW - PL - PR);
   function drawProfile() {
     const c = pctx, h = PRH - PT - PB, y0 = PT + h / 2;
@@ -1624,28 +1635,14 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       c.moveTo(psx(XOUT + lambda), yb - 4); c.lineTo(psx(XOUT + lambda), yb + 4); c.stroke();
       c.font = '11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'left'; c.fillText('λ', psx(XOUT + lambda) + 4, yb);
     }
-    // potential (bath = 0)
-    let acc = 0;
-    for (let i = W; i >= 0; i--) { acc += Esm[i]; phi[i] = KT * acc; }
-    const base = phi[REF_OUT];
-    const PMIN = -120, PMAX = 60, py = v => PT + (PMAX - Math.max(PMIN, Math.min(PMAX, v))) / (PMAX - PMIN) * h;
-    c.setLineDash([2, 4]); c.strokeStyle = C.line;
-    for (const v of [-100, -50, 50]) { c.beginPath(); c.moveTo(PL, py(v)); c.lineTo(PW - PR, py(v)); c.stroke(); }
-    c.setLineDash([]);
-    c.strokeStyle = C.ink; c.lineWidth = 2.2; c.lineJoin = 'round'; c.beginPath();
-    for (let i = 0; i <= W; i += 2) { const x = psx(i), y = py(phi[i] - base); i ? c.lineTo(x, y) : c.moveTo(x, y); }
-    c.stroke();
     // axes
     c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
     c.textAlign = 'right';
     c.fillStyle = C.pos; c.fillText('+' + rScale.toFixed(0) + ' e', PL - 6, PT + 6);
     c.fillStyle = C.muted; c.fillText('0 e', PL - 6, y0);
     c.fillStyle = C.neg; c.fillText('−' + rScale.toFixed(0) + ' e', PL - 6, PT + h - 6);
-    c.fillStyle = C.muted; c.textAlign = 'left';
-    for (const v of [PMAX, 0, -50, -100]) c.fillText((v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' mV', PW - PR + 6, py(v));
     c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted;
-    c.textAlign = 'left'; c.fillText('NET CHARGE (bars)', PL, 16);
-    c.textAlign = 'right'; c.fillText('POTENTIAL φ (line)', PW - PR, 16);
+    c.textAlign = 'left'; c.fillText('NET CHARGE', PL, 16);
     c.font = '500 11.5px "IBM Plex Sans", sans-serif';
     c.textAlign = 'left'; c.fillText('intracellular', PL, PRH - 14);
     c.textAlign = 'center'; c.fillText('membrane', psx(MX), PRH - 14);
@@ -1848,10 +1845,16 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   setDensityUI();
 
   const playBtn = $('play');
-  const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
+  const setRunning = r => { running = r; playBtn.textContent = $('playFloat').textContent = r ? 'Pause' : 'Play'; };
   playBtn.addEventListener('click', () => setRunning(!running));
   $('stepBtn').addEventListener('click', () => { setRunning(false); ox.set(px.subarray(0, N)); oy.set(py.subarray(0, N)); step(); stepAcc = 0.999; refreshAll(); });
   $('reset').addEventListener('click', () => { reset(); refreshAll(); });
+  // the copies that float in the corner work through the page's own Reset and Speed, and follow them
+  $('resetFloat').addEventListener('click', () => $('reset').click());
+  $('playFloat').addEventListener('click', () => playBtn.click());
+  const speedMirror = () => { $('speedFloat').value = $('speed').value; $('speedFloato').textContent = $('speedo').textContent; };
+  $('speedFloat').addEventListener('input', () => { $('speed').value = $('speedFloat').value; $('speed').dispatchEvent(new Event('input')); });
+  $('speed').addEventListener('input', speedMirror); speedMirror();
 
   function refs() {
     return [
@@ -2192,7 +2195,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     regions: {
       sim: { label: 'Simulation', sel: '#sim-stage' },
       simControls: { label: 'Simulation controls', sel: '#sim-controls' },
-      profile: { label: 'Charge and potential profile', sel: '#sim-profile' },
+      profile: { label: 'Charge profile', sel: '#sim-profile' },
       trace: { label: 'Voltage trace', sel: '#sim-trace' },
       ghkIntro: { label: 'Membrane potential equations', sel: '#ghk-intro' },
       calc: { label: 'GHK calculator', sel: '#ghk-calc' },
