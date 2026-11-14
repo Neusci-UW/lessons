@@ -188,6 +188,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 .ctl.btns{flex:0 0 auto}
 .ctl input[type=range]{flex:1 1 120px;min-width:100px}
 .ctl output{min-width:72px}
+.ctl.stack{flex-wrap:wrap}
+.ctl.stack .sub{flex-basis:100%;font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -247,10 +249,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <span class="ctl"><label for="sD" class="runlab">Axon diameter</label>
         <input type="range" id="sD" min="-0.3" max="3" step="0.01" value="1.08">
         <output id="sDo" for="sD"></output></span>
-        <span class="ctl"><label for="sLen" class="runlab">Length</label>
+        <span class="ctl"><label for="sMyel" class="runlab">Myelin wraps</label>
+        <input type="range" id="sMyel" min="0" max="200" step="1" value="100">
+        <output id="sMyelo" for="sMyel"></output></span>
+        <span class="ctl stack"><label for="sLen" class="runlab">Length</label>
         <input type="range" id="sLen" min="0" max="3" step="0.01" value="3">
-        <output id="sLeno" for="sLen"></output></span>
-        <span class="ctl"><label class="check" for="sMyel"><input type="checkbox" id="sMyel">Myelin</label></span>
+        <output id="sLeno" for="sLen"></output>
+        <label class="check sub" for="sFixLen"><input type="checkbox" id="sFixLen">Fix length across cells</label></span>
       </div>
       <p class="caption">A 0.5 ms pulse of current goes into the cell body. Click or drag along the axon to move the nearer recording electrode, A or B.</p>
       <div class="legend">
@@ -293,7 +298,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Cell:</b> each choice sets the temperature, the ion concentrations (as on the Membrane potential page), the sizes and whether the axon is myelinated. Change any setting and the menu says Custom.</li>
         <li><b>Initiation site:</b> the orange bracket marks the start of the axon, just past the cell body. This is where the spike starts: the first membrane with enough voltage-gated channels to reach threshold.</li>
         <li><b>The model:</b> the cell body and each short piece of axon is a patch of membrane like the one in lesson 2: Na⁺, K⁺ and Cl⁻ channels, each a resistor with its Nernst battery, and a capacitor. Neighbouring patches are joined by the cytoplasm, which acts as a resistor. The cell body has a quarter of the axon's voltage-gated channels, so it fires only because the axon next to it does.</li>
-        <li><b>Myelin:</b> insulation wrapped around the axon in sections about 100 diameters long. Only the bare gaps between them, the nodes of Ranvier (1 µm), have voltage-gated channels, packed far more densely than on a bare axon.</li>
+        <li><b>Myelin:</b> insulation wrapped around the axon in sections about 100 diameters long. The Myelin wraps slider sets how many times the membrane is wrapped (0 is none); more wraps insulate better and are drawn thicker. Too few and the spike fails: on the motor axon it needs about 25 wraps to get through. Only the bare gaps between them, the nodes of Ranvier (1 µm), have voltage-gated channels, packed far more densely than on a bare axon.</li>
         <li><b>Currents at A:</b> positive is outward, as in lesson 2. I<sub>Na</sub> goes negative (inward) at the start of the spike and I<sub>K</sub> goes positive (outward) after it. I<sub>Cl</sub> is the small, always-open Cl⁻ leak. I<sub>C</sub> = C dV/dt is the current charging the membrane capacitor: positive while V rises.</li>
         <li><b>Gates at A:</b> the fraction of Na⁺ activation gates open (m), Na⁺ inactivation gates still open (h) and K⁺ gates open (n). The conductances are g<sub>Na</sub>m³h and g<sub>K</sub>n⁴.</li>
       </ul>
@@ -512,9 +517,9 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p>A wider axon has a wider cytoplasm, so \(r_i\) is smaller and current spreads farther ahead of the spike. The patch ahead charges faster, so the spike moves faster. The membrane area (and so the capacitance and leak) grows with the diameter too, so the net effect is that velocity rises with the square root of the diameter, \(v \propto \sqrt{d}\). Squid have giant axons for their escape jet for this reason. But it is an expensive way to be fast: a human nerve full of squid-sized axons would be metres wide.</p>
       <h3>Myelin</h3>
       <p>Wrapping the axon in insulation makes the membrane act like a much thicker one: the capacitance falls and the leak falls, both by a large factor. Less capacitance means less charge to move to change V, so each patch charges faster (smaller τ for the same current). Less leak means a much larger λ, so current spreads much farther before it fades. Na⁺ channels sit only at the bare nodes, and the spike jumps from node to node, called <b>saltatory conduction</b>. The nodes are the only places where energy is spent on pumping ions back out, so myelin is cheaper too.</p>
-      <p>On the motor neuron here, taking the myelin off the same 12 µm axon slows it from about 80 m/s to about 7 m/s. This is why a 12 µm myelinated axon is faster than a half-millimetre squid axon, and why diseases that damage myelin (multiple sclerosis, Guillain–Barré syndrome) slow or stop conduction: a bare internode has almost no Na⁺ channels, so the current from the last node leaks away charging it.</p>
+      <p>On the motor neuron here, taking the myelin off the same 12 µm axon slows it from about 80 m/s to about 7 m/s. Thinner myelin is slower too, and below about 25 wraps the current leaks away through the sheath before the next node reaches threshold, so the spike stops. This is why a 12 µm myelinated axon is faster than a half-millimetre squid axon, and why diseases that damage myelin (multiple sclerosis, Guillain–Barré syndrome) slow or stop conduction: a bare internode has almost no Na⁺ channels, so the current from the last node leaks away charging it.</p>
       <details class="fullderiv"><summary>How the simulation models myelin</summary>
-        <p>Internodes are 100 axon diameters long (1.2 mm for a 12 µm axon), with the capacitance and leak cut to 0.5% of bare membrane and no voltage-gated channels. Nodes are 1 µm long, with 20 times the squid axon's Na⁺ channels and always-open K⁺ channels, roughly as real mammalian nodes have. The first 30 µm of axon, the initial segment, is built like a node.</p>
+        <p>Internodes are 100 axon diameters long (1.2 mm for a 12 µm axon), with the capacitance and leak of bare membrane divided by 2 × the number of wraps (set with the Myelin wraps slider; 100 wraps, the default, is 0.5%) and no voltage-gated channels. Nodes are 1 µm long, with 20 times the squid axon's Na⁺ channels and always-open K⁺ channels, roughly as real mammalian nodes have. The first 30 µm of axon, the initial segment, is built like a node.</p>
       </details>
     </div>
     <aside class="try">
@@ -540,7 +545,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="gh">Axon</div>
         <div class="gr"><label for="kD">d</label><input type="range" id="kD" min="-0.3" max="3" step="0.01" value="1.08"><output id="kDo" for="kD"></output></div>
         <div class="gr"><label for="kRi">R<sub>i</sub></label><input type="range" id="kRi" min="20" max="200" step="1" value="35"><output id="kRio" for="kRi"></output></div>
-        <span class="caption">diameter, and the resistivity of the cytoplasm inside it</span>
+        <div class="gr" id="kWrapsRow" hidden><label for="kWraps">Myelin</label><input type="range" id="kWraps" min="1" max="200" step="1" value="100"><output id="kWrapso" for="kWraps"></output></div>
+        <span class="caption">diameter, the resistivity of the cytoplasm inside it, and (myelinated) how many times myelin wraps it</span>
       </div>
       <div class="gion">
         <div class="gh">Membrane at rest</div>
@@ -654,8 +660,11 @@ const DEFAULT_CELL = 'motor';
 // with lesson 1's Nernst batteries. Units: cm, µF, mS, µA, mV, ms (densities per cm² of membrane).
 // The step is semi-implicit (a tridiagonal solve), so tiny nodes and thin myelin stay stable.
 const RI = 35.4, CM = 1, GNA = 120, GK = 36, GCL = 0.3;   // Ω·cm, µF/cm², mS/cm²: Hodgkin and Huxley's values
-const SOMA_DENS = 0.25, MYELIN_CUT = 0.005, IS_LEN = 30, NODE_LEN = 1;   // IS, node: µm
-const P = { T: 37, cin: [...MAMMAL.cin], cout: [...MAMMAL.cout], gNaPct: 100, gKPct: 100, somaD: 60, d: 12, myel: true, len: 1000,
+const SOMA_DENS = 0.25, IS_LEN = 30, NODE_LEN = 1, WRAPS = 100;   // IS, node: µm; WRAPS: a myelinated cell's sheath
+// Each wrap of myelin adds two membranes in series, so the sheath's capacitance and leak are those of bare membrane
+// divided by 2 × wraps (100 wraps: 0.5%). No wraps is no myelin.
+const myelinCut = () => 1 / (2 * P.wraps);
+const P = { T: 37, cin: [...MAMMAL.cin], cout: [...MAMMAL.cout], gNaPct: 100, gKPct: 100, somaD: 60, d: 12, myel: true, wraps: WRAPS, len: 1000,
   nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1, stim: 20, xa: 0.25, xb: 0.75 };
 const RTF = () => 8.314 * (P.T + 273.15) / 96485 * 1000;   // mV
 const E = () => ({ K: RTF() * Math.log(P.cout[0] / P.cin[0]), Na: RTF() * Math.log(P.cout[1] / P.cin[1]), Cl: -RTF() * Math.log(P.cout[2] / P.cin[2]) });
@@ -701,7 +710,7 @@ function build() {
   let x = 0;
   parts.forEach((p, i) => {
     m.l[i] = p.l; m.x[i] = x * 10; m.xc[i] = (x + p.l / 2) * 10; x += p.l;   // mm from the cell body
-    const dens = { soma: [SOMA_DENS, SOMA_DENS, 1, 1], ax: [P.axNa, P.axK, 1, 1], node: [P.nodeNa, P.nodeK, 1, 1], int: [0, 0, MYELIN_CUT, MYELIN_CUT] }[p.type];
+    const dens = { soma: [SOMA_DENS, SOMA_DENS, 1, 1], ax: [P.axNa, P.axK, 1, 1], node: [P.nodeNa, P.nodeK, 1, 1], int: [0, 0, myelinCut(), myelinCut()] }[p.type];
     m.A[i] = p.type === 'soma' ? Math.PI * (P.somaD * 1e-4) ** 2 : 2 * Math.PI * r * p.l;
     m.cm[i] = CM * dens[2] * m.A[i];
     m.gNa[i] = GNA * P.gNaPct / 100 * dens[0] * m.A[i]; m.gK[i] = GK * P.gKPct / 100 * dens[1] * m.A[i]; m.gCl[i] = GCL * dens[3] * m.A[i];
@@ -858,7 +867,8 @@ function drawAxon() {
   // myelin: translucent sheaths over the internodes, so the voltage still shows through. Drawn one by one when
   // they are wide enough to see; otherwise as one sheath with faint lines at the nodes. 
   if (P.myel) {
-    const mh = half + 5, mg = c.createLinearGradient(0, YC - mh, 0, YC + mh), wInt = mmx(100 * P.d / 1000) - mmx(0);
+    const mh = half + 2 + 8 * Math.sqrt(P.wraps / 200), mg =   // thicker with more wraps
+      c.createLinearGradient(0, YC - mh, 0, YC + mh), wInt = mmx(100 * P.d / 1000) - mmx(0);
     mg.addColorStop(0, C.mem); mg.addColorStop(0.3, shade(rgb(C.mem), 0.3)); mg.addColorStop(1, C.memdark);
     c.fillStyle = mg; c.strokeStyle = C.memdark; c.lineWidth = 0.8;
     const runs = [];   // [first, last] piece of each stretch of myelin
@@ -991,11 +1001,13 @@ function plot(c, o) {
   for (const s of o.series) {
     if (s.xs.length < 2) continue;
     c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round'; c.beginPath();
-    // dashed by its own x values, so the dashes scroll with the line rather than crawling along it
-    const per = s.dash ? (s.dash[0] + s.dash[1]) * (o.x1 - o.x0) / pwid : 0, frac = s.dash ? s.dash[0] / (s.dash[0] + s.dash[1]) : 1;
+    // On a scrolling chart (o.scrolls), dashed by its own x values, so the dashes scroll with the line rather than
+    // crawling along it. Elsewhere, ordinary dashes, which stay even on steep stretches.
+    if (s.dash && !o.scrolls) c.setLineDash(s.dash);
+    const per = s.dash && o.scrolls ? (s.dash[0] + s.dash[1]) * (o.x1 - o.x0) / pwid : 0, frac = per ? s.dash[0] / (s.dash[0] + s.dash[1]) : 1;
     const drawn = x => !per || ((x / per) % 1 + 1) % 1 < frac;
     s.xs.forEach((x, i) => { const X = sx(x), Y = sy(s.ys[i]); i && drawn(s.xs[i - 1]) ? c.lineTo(X, Y) : c.moveTo(X, Y); });
-    c.stroke();
+    c.stroke(); c.setLineDash([]);
     if (s.label) tags.push({ y: sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color });
   }
   c.restore();
@@ -1018,7 +1030,7 @@ function drawCharts() {
   const [t0, t1] = timeAxis(), h = hist.filter(p => p.t >= t0), ts = h.map(p => p.t);
   const spans = stims.map(t => [t, t + PULSE]), tlab = 'time (ms)';
   const cross = (t, col) => ({ x: t != null && t >= t0 ? t : null, color: col });
-  plot(tc, { x0: t0, x1: t1, y0: -100, y1: 70, ystep: 50, xlabel: tlab, ylabel: 'V (mV)', refs: Vrefs(), spans, vlines: [cross(tA, C.ink), cross(tB, C.accent)],
+  plot(tc, { scrolls: true, x0: t0, x1: t1, y0: -100, y1: 70, ystep: 50, xlabel: tlab, ylabel: 'V (mV)', refs: Vrefs(), spans, vlines: [cross(tA, C.ink), cross(tB, C.accent)],
     series: [{ xs: ts, ys: h.map(p => p.VS), color: C.a, width: 2, label: 'soma' }, { xs: ts, ys: h.map(p => p.VA), color: C.ink, width: 2.4, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.accent, width: 2.4, label: 'B' }] });
   {
     const pick = a => along.map(i => a[i]);
@@ -1027,10 +1039,10 @@ function drawCharts() {
                { xs: xsA, ys: along.map(i => M.INa[i] + M.IK[i] + M.ICl[i] + M.IC[i]), color: C.accent, dash: [6, 4], label: 'sum' }] });
   }
   if (iview === 'g') {
-    plot(ic, { x0: t0, x1: t1, y0: 0, y1: 1, ystep: 0.25, plus: true, spans, xlabel: tlab, ylabel: 'fraction of gates open at A',
+    plot(ic, { scrolls: true, x0: t0, x1: t1, y0: 0, y1: 1, ystep: 0.25, plus: true, spans, xlabel: tlab, ylabel: 'fraction of gates open at A',
       series: [{ xs: ts, ys: h.map(p => p.m), color: C.na, label: 'm' }, { xs: ts, ys: h.map(p => p.h), color: C.na, dash: [6, 4], label: 'h' }, { xs: ts, ys: h.map(p => p.n), color: C.k, label: 'n' }] });
   } else {
-    plot(ic, { x0: t0, x1: t1, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: tlab, ylabel: 'I (µA/cm², outward +)', spans,
+    plot(ic, { scrolls: true, x0: t0, x1: t1, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: tlab, ylabel: 'I (µA/cm², outward +)', spans,
       series: [{ xs: ts, ys: h.map(p => p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => p.IC), color: C.pos, label: 'I_C', width: 2.4 },
                { xs: ts, ys: h.map(p => p.INa + p.IK + p.ICl + p.IC), color: C.accent, dash: [6, 4], label: 'sum' }] });
   }
@@ -1048,7 +1060,7 @@ function setView(v) {
 // ---------- readouts ----------
 function membraneAtRest() {   // the membrane that carries the current along the axon: bare axon, or myelin
   const r = P.myel ? null : restState(P.axNa, P.axK);
-  return P.myel ? { g: GCL * MYELIN_CUT, c: CM * MYELIN_CUT } : { g: r.g, c: CM };
+  return P.myel ? { g: GCL * myelinCut(), c: CM * myelinCut() } : { g: r.g, c: CM };
 }
 function readouts() {
   $('vV').textContent = mv(M.V[iA]); $('vS').textContent = mv(M.V[0]);
@@ -1073,26 +1085,26 @@ const OUT = {
   sD: () => fmtLen(P.d / 1000), sLen: () => fmtLen(P.len), sSoma: () => fmtLen(P.somaD / 1000),
   sGNa: () => P.gNaPct + ' %', sGK: () => P.gKPct + ' %', sT: () => P.T.toFixed(1) + ' °C',
   sNao: () => fmt3(P.cout[1]) + ' mM', sKo: () => fmt3(P.cout[0]) + ' mM',
-  sXA: () => fmtLen(P.xa * P.len), sXB: () => fmtLen(P.xb * P.len),
+  sXA: () => fmtLen(P.xa * P.len), sXB: () => fmtLen(P.xb * P.len), sMyel: () => P.myel ? P.wraps + (P.wraps === 1 ? ' wrap' : ' wraps') : 'none',
 };
 const showOut = () => Object.keys(OUT).forEach(id => { $(id + 'o').textContent = OUT[id](); });
 function readControls() {
   P.stim = logv('sStim'); speed = logv('sSpeed'); P.d = logv('sD'); P.len = logv('sLen'); P.somaD = logv('sSoma');
   P.gNaPct = +$('sGNa').value; P.gKPct = +$('sGK').value; P.T = +$('sT').value;
   P.cout[1] = +$('sNao').value; P.cout[0] = +$('sKo').value; P.xa = +$('sXA').value / 100; P.xb = +$('sXB').value / 100;
-  P.myel = $('sMyel').checked;
+  P.wraps = +$('sMyel').value; P.myel = P.wraps > 0;
 }
 function writeControls() {
   setLog('sStim', P.stim); setLog('sSpeed', speed); setLog('sD', P.d); setLog('sLen', P.len); setLog('sSoma', P.somaD);
   $('sGNa').value = P.gNaPct; $('sGK').value = P.gKPct; $('sT').value = P.T; $('sNao').value = P.cout[1]; $('sKo').value = P.cout[0];
   $('sXA').value = Math.round(P.xa * 100); $('sXB').value = Math.round(P.xb * 100);
-  $('sMyel').checked = P.myel;
+  $('sMyel').value = P.myel ? P.wraps : 0;
   showOut();
 }
 function setElectrode(k, f) { P[k] = f; $(k === 'xa' ? 'sXA' : 'sXB').value = Math.round(f * 100); showOut(); placeElectrodes(); }
 // controls that change the cell rebuild it; the rest only change how it is run or watched
 const REBUILD = ['sD', 'sLen', 'sSoma', 'sGNa', 'sGK', 'sT', 'sNao', 'sKo', 'sMyel'];
-REBUILD.forEach(id => $(id).addEventListener(id === 'sMyel' ? 'change' : 'input', () => { readControls(); showOut(); markCustom(); resetAxon(); }));
+REBUILD.forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); markCustom(); resetAxon(); }));
 ['sStim', 'sSpeed'].forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); }));
 ['sXA', 'sXB'].forEach(id => $(id).addEventListener('input', () => { readControls(); showOut(); placeElectrodes(); }));
 $('apFire').addEventListener('click', fire);
@@ -1105,7 +1117,7 @@ const cellSel = $('apCell'), cellNote = $('apCellNote');
 cellSel.innerHTML = CELLS.map(c => `<option value="${c.id}">${c.name}</option>`).join('') + '<option value="custom">Custom (your settings)</option>';
 function applyCell(id) {
   const c = CELLS.find(c => c.id === id); if (!c) return;
-  Object.assign(P, { T: c.T, cin: [...c.cin], cout: [...c.cout], somaD: c.somaD, d: c.d, myel: c.myel, len: c.len,
+  Object.assign(P, { T: c.T, cin: [...c.cin], cout: [...c.cout], somaD: c.somaD, d: c.d, myel: c.myel, wraps: c.myel ? WRAPS : 0, len: $('sFixLen').checked ? P.len : c.len,   // a fixed length stays as it is
     nodeNa: c.nodeNa, nodeK: c.nodeK, nodeKL: c.nodeKL, axNa: c.axNa, axK: c.axK, stim: c.stim, gNaPct: 100, gKPct: 100, xa: 0.25, xb: 0.75 });
   speed = c.speed;
   cellSel.value = id; cellNote.textContent = c.note;
@@ -1135,7 +1147,11 @@ requestAnimationFrame(loop);
   const val = () => ({ d: Math.pow(10, +$('kD').value), Ri: +$('kRi').value, g: Math.pow(10, +$('kG').value), c: +$('kC').value });
   const lam = (d, Ri, g) => Math.sqrt(d * 1e-4 / (4 * Ri * g * 1e-3)) * 10;   // mm, from µm, Ω·cm, mS/cm²
   function update() {
-    const v = val(), f = myel ? MYELIN_CUT : 1, g = v.g * f, c = v.c * f;
+    // each wrap of myelin adds two membranes in series, so its capacitance and leak both fall as 1 / (2 × wraps);
+    // the simulation's 0.5% is 100 wraps
+    const wraps = +$('kWraps').value, cut = 1 / (2 * wraps);
+    const v = val(), f = myel ? cut : 1, g = v.g * f, c = v.c * f;
+    $('kWrapso').textContent = wraps + (wraps === 1 ? ' wrap' : ' wraps');
     const L = lam(v.d, v.Ri, g), Lbare = lam(v.d, v.Ri, v.g), tau = c / g;
     $('kDo').textContent = fmtLen(v.d / 1000); $('kRio').textContent = v.Ri + ' Ω·cm';
     $('kGo').textContent = fmt3(v.g) + ' mS/cm²'; $('kCo').textContent = v.c.toFixed(2) + ' µF/cm²';
@@ -1143,10 +1159,10 @@ requestAnimationFrame(loop);
     $('kLeft').textContent = (100 * Math.exp(-1 / L)).toPrecision(2) + ' %';
     const riL = v.Ri / (Math.PI * (v.d * 1e-4 / 2) ** 2) / 10 / 1e6;   // MΩ per mm
     $('kRiL').textContent = fmt3(riL) + ' MΩ/mm';
-    const gm = myel ? `${fmt3(v.g)} × ${MYELIN_CUT}` : fmt3(v.g);
+    const gm = myel ? `${fmt3(v.g)} / ${2 * wraps}` : fmt3(v.g);
     $('kFormula').innerHTML =
       `λ = √( d / (4 R<sub>i</sub> g<sub>m</sub>) ) = √( ${fmt3(v.d)} µm / (4 × ${v.Ri} Ω·cm × ${gm} mS/cm²) ) = <span class="res">${fmtLen(L)}</span><br>` +
-      `τ = C<sub>m</sub> / g<sub>m</sub> = ${myel ? `(${v.c.toFixed(2)} × ${MYELIN_CUT}) / (${gm})` : `${v.c.toFixed(2)} / ${gm}`} = <span class="res">${fmtTime(tau)}</span>`;
+      `τ = C<sub>m</sub> / g<sub>m</sub> = ${myel ? `(${v.c.toFixed(2)} / ${2 * wraps}) / (${gm})` : `${v.c.toFixed(2)} / ${gm}`} = <span class="res">${fmtTime(tau)}</span>`;
     $('kCap').innerHTML = `A steady voltage change falls to 37% after λ = ${fmtLen(L)} and to 5% after 3λ = ${fmtLen(3 * L)}. ` +
       (myel ? `Myelin makes λ ${fmt3(L / Lbare)} times longer than on the bare axon, while τ stays the same.` : 'Four times the diameter doubles λ; so does a quarter of the leak.');
     // spread with distance
@@ -1164,16 +1180,18 @@ requestAnimationFrame(loop);
   function setMode(m) {
     myel = m;
     $('kMode-bare').setAttribute('aria-pressed', String(!m)); $('kMode-myel').setAttribute('aria-pressed', String(m));
-    $('kMemCap').textContent = m ? `bare-membrane values; myelin cuts both to ${MYELIN_CUT * 100}%, as in the simulation` : 'all the channels open at rest (Σg, lesson 1), and the capacitance, per cm² of bare membrane';
+    $('kMemCap').textContent = m ? 'bare-membrane values; each wrap of myelin (set under Axon) adds two membranes in series, so it divides both by 2 × wraps' : 'all the channels open at rest (Σg, lesson 1), and the capacitance, per cm² of bare membrane';
+    $('kWrapsRow').hidden = !m;
     update();
   }
   $('kMode-bare').addEventListener('click', () => setMode(false));
   $('kMode-myel').addEventListener('click', () => setMode(true));
-  ['kD', 'kRi', 'kG', 'kC'].forEach(id => $(id).addEventListener('input', update));
+  ['kD', 'kRi', 'kG', 'kC', 'kWraps'].forEach(id => $(id).addEventListener('input', update));
   $('kFromSim').addEventListener('click', () => {
     $('kD').value = Math.log10(P.d); $('kRi').value = RI;
     // under myelin there are no voltage-gated channels, only the leak
     $('kG').value = Math.log10(P.myel ? GCL : restState(P.axNa, P.axK).g); $('kC').value = CM;
+    $('kWraps').value = P.myel ? P.wraps : WRAPS;
     setMode(P.myel);
   });
   const recolor = () => setTimeout(() => { readColors(); update(); }, 0);
@@ -1212,7 +1230,7 @@ requestAnimationFrame(loop);
     applyCell(w === 'cfib' ? 'cfib' : 'motor');   // each starts from a known cell
     if (w === 'weak') set('sStim', Math.log10(P.stim / 20));
     if (w === 'ttx') set('sGNa', 0);
-    if (w === 'nomyel') check('sMyel', false);
+    if (w === 'nomyel') set('sMyel', 0);
     if (w === 'highk') set('sKo', 10);
     if (w === 'blockk') set('sKo', 16);
     if (w === 'lower-na') set('sNao', 90);
