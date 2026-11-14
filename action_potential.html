@@ -533,10 +533,6 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 <section class="card calc" id="cable-calc">
   <div class="calc-head">
     <span class="sect-title">Cable calculator</span>
-    <div class="seg" role="group" aria-label="Membrane">
-      <button type="button" id="kMode-bare" aria-pressed="true">Bare axon</button>
-      <button type="button" id="kMode-myel" aria-pressed="false">Myelinated (internode)</button>
-    </div>
   </div>
   <p class="caption">How far a voltage change spreads along an axon (λ) and how fast the membrane charges (τ, as in lesson 2). Together they set how quickly each patch ahead of a spike is brought to threshold.</p>
   <div class="calc-body">
@@ -545,14 +541,14 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="gh">Axon</div>
         <div class="gr"><label for="kD">d</label><input type="range" id="kD" min="-0.3" max="3" step="0.01" value="1.08"><output id="kDo" for="kD"></output></div>
         <div class="gr"><label for="kRi">R<sub>i</sub></label><input type="range" id="kRi" min="20" max="200" step="1" value="35"><output id="kRio" for="kRi"></output></div>
-        <div class="gr" id="kWrapsRow" hidden><label for="kWraps">Myelin</label><input type="range" id="kWraps" min="1" max="200" step="1" value="100"><output id="kWrapso" for="kWraps"></output></div>
+        <div class="gr" id="kWrapsRow"><label for="kWraps">Myelin</label><input type="range" id="kWraps" min="0" max="200" step="1" value="100"><output id="kWrapso" for="kWraps"></output></div>
         <span class="caption">diameter, the resistivity of the cytoplasm inside it, and (myelinated) how many times myelin wraps it</span>
       </div>
       <div class="gion">
         <div class="gh">Membrane at rest</div>
         <div class="gr"><label for="kG">g<sub>m</sub></label><input type="range" id="kG" min="-1.5" max="1" step="0.01" value="-0.4"><output id="kGo" for="kG"></output></div>
         <div class="gr"><label for="kC">C<sub>m</sub></label><input type="range" id="kC" min="0.3" max="2" step="0.05" value="1"><output id="kCo" for="kC"></output></div>
-        <span class="caption" id="kMemCap">all the channels open at rest (Σg, lesson 1), and the capacitance, per cm² of bare membrane</span>
+        <span class="caption" id="kMemCap">all the channels open at rest (Σg, lesson 1) and the capacitance, per cm² of bare membrane. Each wrap of myelin adds two membranes in series, so it divides both by 2 × wraps</span>
       </div>
     </div>
     <div class="calc-out">
@@ -575,7 +571,6 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <ul>
           <li><b>Black curve:</b> a steady voltage change held at x = 0, as a percentage of its size there: V(x) = V<sub>0</sub>e<sup>−x/λ</sup>. Current leaks out through the membrane all along the way, so less is left the farther you go.</li>
           <li><b>Dot:</b> one length constant along, where 37% is left. By 3λ only 5% is left.</li>
-          <li><b>Grey curve:</b> the bare axon of the same width, for comparison when myelinated is chosen.</li>
         </ul>
         <h4>Charging over time</h4>
         <ul>
@@ -1142,16 +1137,16 @@ requestAnimationFrame(loop);
 // ---------- cable calculator: λ and τ of a passive axon, solved exactly ----------
 // λ = √(d / (4 R_i g_m)) and τ = C_m / g_m. Myelin cuts g_m and C_m by the same factor as the simulation.
 (() => {
-  let myel = false;
   const kc = setupCanvas($('kXChart'), CW, CH), tk = setupCanvas($('kTChart'), CW, CH);
   const val = () => ({ d: Math.pow(10, +$('kD').value), Ri: +$('kRi').value, g: Math.pow(10, +$('kG').value), c: +$('kC').value });
   const lam = (d, Ri, g) => Math.sqrt(d * 1e-4 / (4 * Ri * g * 1e-3)) * 10;   // mm, from µm, Ω·cm, mS/cm²
   function update() {
     // each wrap of myelin adds two membranes in series, so its capacitance and leak both fall as 1 / (2 × wraps);
     // the simulation's 0.5% is 100 wraps
-    const wraps = +$('kWraps').value, cut = 1 / (2 * wraps);
-    const v = val(), f = myel ? cut : 1, g = v.g * f, c = v.c * f;
-    $('kWrapso').textContent = wraps + (wraps === 1 ? ' wrap' : ' wraps');
+    // (no wraps: a bare axon)
+    const wraps = +$('kWraps').value, myel = wraps > 0, cut = myel ? 1 / (2 * wraps) : 1;
+    const v = val(), f = cut, g = v.g * f, c = v.c * f;
+    $('kWrapso').textContent = myel ? wraps + (wraps === 1 ? ' wrap' : ' wraps') : 'none';
     const L = lam(v.d, v.Ri, g), Lbare = lam(v.d, v.Ri, v.g), tau = c / g;
     $('kDo').textContent = fmtLen(v.d / 1000); $('kRio').textContent = v.Ri + ' Ω·cm';
     $('kGo').textContent = fmt3(v.g) + ' mS/cm²'; $('kCo').textContent = v.c.toFixed(2) + ' µF/cm²';
@@ -1169,7 +1164,6 @@ requestAnimationFrame(loop);
     const x1 = 100, N = 200,   // fixed: 0–100 mm covers every cell's λ (the motor axon's myelin, about 24 mm)
       xs = Array.from({ length: N + 1 }, (_, k) => k / N * x1);
     const series = [{ xs, ys: xs.map(x => 100 * Math.exp(-x / L)), color: C.ink, width: 2.4 }];
-    if (myel) series.unshift({ xs, ys: xs.map(x => 100 * Math.exp(-x / Lbare)), color: C.muted, width: 1.6, dash: [5, 4], label: 'bare' });
     plot(kc, { x0: 0, x1, y0: 0, y1: 100, ystep: 25, plus: true, xlabel: 'distance (mm)', ylabel: 'V, % of V₀', series, refs: [{ v: 37, color: C.accent, label: '37%' }], vlines: [{ x: L, color: C.accent }] });
     // charging over time
     const t1 = 15, ts =   // fixed: 0–15 ms, about five τ for every cell
@@ -1177,22 +1171,13 @@ requestAnimationFrame(loop);
     plot(tk, { x0: 0, x1: t1, y0: 0, y1: 100, ystep: 25, plus: true, xlabel: 'time (ms)', ylabel: 'V, % of the way there',
       series: [{ xs: ts, ys: ts.map(t => 100 * (1 - Math.exp(-t / tau))), color: C.ink, width: 2.4 }], refs: [{ v: 63, color: C.accent, label: '63%' }], vlines: [{ x: tau, color: C.accent }] });
   }
-  function setMode(m) {
-    myel = m;
-    $('kMode-bare').setAttribute('aria-pressed', String(!m)); $('kMode-myel').setAttribute('aria-pressed', String(m));
-    $('kMemCap').textContent = m ? 'bare-membrane values; each wrap of myelin (set under Axon) adds two membranes in series, so it divides both by 2 × wraps' : 'all the channels open at rest (Σg, lesson 1), and the capacitance, per cm² of bare membrane';
-    $('kWrapsRow').hidden = !m;
-    update();
-  }
-  $('kMode-bare').addEventListener('click', () => setMode(false));
-  $('kMode-myel').addEventListener('click', () => setMode(true));
   ['kD', 'kRi', 'kG', 'kC', 'kWraps'].forEach(id => $(id).addEventListener('input', update));
   $('kFromSim').addEventListener('click', () => {
     $('kD').value = Math.log10(P.d); $('kRi').value = RI;
     // under myelin there are no voltage-gated channels, only the leak
     $('kG').value = Math.log10(P.myel ? GCL : restState(P.axNa, P.axK).g); $('kC').value = CM;
-    $('kWraps').value = P.myel ? P.wraps : WRAPS;
-    setMode(P.myel);
+    $('kWraps').value = P.myel ? P.wraps : 0;
+    update();
   });
   const recolor = () => setTimeout(() => { readColors(); update(); }, 0);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
