@@ -1086,16 +1086,14 @@ function drawCharts() {
   {
     const pick = a => along.map(i => a[i]);
     plot(xic, { x0: 0, x1: P.len, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, yscale: I_SCALE, xlabel: xlab, ylabel: 'I (mA/cm², outward +)',
-      series: [{ xs: xsA, ys: pick(M.INa), color: C.na, label: 'I_Na' }, { xs: xsA, ys: pick(M.IK), color: C.k, label: 'I_K' }, { xs: xsA, ys: pick(M.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: xsA, ys: pick(M.IC), color: C.pos, label: 'I_C', width: 2.4 },
-               { xs: xsA, ys: along.map(i => M.INa[i] + M.IK[i] + M.ICl[i] + M.IC[i]), color: C.accent, dash: [6, 4], label: 'sum' }] });
+      series: [{ xs: xsA, ys: pick(M.INa), color: C.na, label: 'I_Na' }, { xs: xsA, ys: pick(M.IK), color: C.k, label: 'I_K' }, { xs: xsA, ys: pick(M.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: xsA, ys: pick(M.IC), color: C.pos, label: 'I_C', width: 2.4 }] });
   }
   if (iview === 'g') {
     plot(ic, { scrolls: true, x0: t0, x1: t1, y0: 0, y1: 1, ystep: 0.25, plus: true, spans, xlabel: tlab, ylabel: 'fraction of gates open at A',
       series: [{ xs: ts, ys: h.map(p => p.m), color: C.na, label: 'm' }, { xs: ts, ys: h.map(p => p.h), color: C.na, dash: [6, 4], label: 'h' }, { xs: ts, ys: h.map(p => p.n), color: C.k, label: 'n' }] });
   } else {
     plot(ic, { scrolls: true, x0: t0, x1: t1, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, yscale: I_SCALE, xlabel: tlab, ylabel: 'I (mA/cm², outward +)', spans,
-      series: [{ xs: ts, ys: h.map(p => p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => p.IC), color: C.pos, label: 'I_C', width: 2.4 },
-               { xs: ts, ys: h.map(p => p.INa + p.IK + p.ICl + p.IC), color: C.accent, dash: [6, 4], label: 'sum' }] });
+      series: [{ xs: ts, ys: h.map(p => p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => p.IC), color: C.pos, label: 'I_C', width: 2.4 }] });
   }
 }
 const CAPS = {
