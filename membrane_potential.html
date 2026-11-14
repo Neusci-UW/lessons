@@ -263,20 +263,15 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 .notes ul{margin:0;padding-left:18px}
 .notes li{margin-bottom:6px;max-width:68ch}
 .notes li::marker{color:var(--muted)}
-/* Reset ions, Pause and Speed, always in reach: they stay in the corner while the page scrolls */
-.floatbar{position:fixed;right:20px;bottom:20px;z-index:50;display:flex;align-items:center;gap:8px 10px;padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.22);font-size:13px}
-.floatbar input[type=range]{width:130px}
-.floatbar output{font-family:var(--font-mono);font-size:12.5px;min-width:86px;font-variant-numeric:tabular-nums}
-@media print{.floatbar{display:none}}
 </style>
 </head>
 <body>
 <div class="floatbar" role="group" aria-label="Simulation">
-  <button type="button" id="resetFloat" class="primary" title="Start the ion simulation again">Reset ions</button>
-  <button type="button" id="playFloat">Pause</button>
+  <button type="button" data-copy="reset" class="primary"></button>
+  <button type="button" data-copy="play"></button>
   <label for="speedFloat" class="runlab">Speed</label>
-  <input type="range" id="speedFloat" min="0" max="100" value="87">
-  <output id="speedFloato" for="speedFloat"></output>
+  <input type="range" id="speedFloat" data-copy="speed">
+  <output for="speedFloat"></output>
 </div>
 <div class="wrap">
 <header>
@@ -318,12 +313,11 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     <canvas id="sim" aria-label="Particle simulation of ions on both sides of a membrane"></canvas>
     <div class="runbar">
       <button id="play" class="primary">Pause</button>
-      <button id="stepBtn">Step</button>
       <button id="reset">Reset ions</button>
       <label for="speed" class="runlab">Speed</label>
       <input type="range" id="speed" min="0" max="100" value="87">
       <output id="speedo" for="speed"></output>
-      <span class="runhint">slide left for slow motion: below 1 step per frame, ions glide between steps</span>
+      <span class="runhint">Reset ions, Pause and Speed are in the bar at the bottom right. Slide Speed left for slow motion: below 1 step per frame, ions glide between steps.</span>
     </div>
     </div>
     <div class="help" role="tabpanel" id="pane-simhelp" aria-labelledby="tab-simhelp" hidden>
@@ -1569,7 +1563,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   }
 
   // ---------- charge profile ----------
-  let rScale = 6, qScale = 10;
+  // Fixed scales, wide enough for every preset (the largest is K⁺ only with squid concentrations: bars up to 21 e,
+  // a layer up to 50 e). Settings beyond the presets can run off the edge; the scale never moves.
+  const rScale = 24, qScale = 55;
   const PT = 34, PB = 34, PL = 50, PR = 16;
   const psx = x => PL + x / W * (PW - PL - PR);
   function drawProfile() {
@@ -1587,11 +1583,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     let qi = 0, qo = 0;
     for (let k = 0; k < nb; k++) { if (bIn - k >= 0) qi += rhoSm[bIn - k]; if (bOut + k < NB) qo += rhoSm[bOut + k]; }
     const norm = BIN / (lambda * (1 - Math.exp(-3)));   // the exponential's height at the face, per bin, per unit Q
-    // bars (the scale also fits the exponentials' peaks)
-    let mx = Math.max(Math.abs(qi), Math.abs(qo)) * norm; for (let b = 0; b < NB; b++) mx = Math.max(mx, Math.abs(rhoSm[b]));
-    rScale += (Math.max(4, mx * 1.15) - rScale) * 0.05;
+    // bars, cut off at the frame if a setting pushes them past the fixed scale
     for (let b = 0; b < NB; b++) {
-      const r = rhoSm[b], bh = r / rScale * (h / 2), xa = psx(b * BIN), xb = psx((b + 1) * BIN);
+      const r = rhoSm[b], bh = Math.max(-1, Math.min(1, r / rScale)) * (h / 2), xa = psx(b * BIN), xb = psx((b + 1) * BIN);
       c.fillStyle = r > 0 ? C.pos : C.neg;
       c.fillRect(xa + 0.75, r > 0 ? y0 - bh : y0, xb - xa - 1.5, Math.abs(bh));
     }
@@ -1623,7 +1617,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         c.setLineDash([3, 3]); c.lineWidth = 1; c.beginPath(); c.moveTo(psx(xEnd), PT + 4); c.lineTo(psx(xEnd), PT + h - 4); c.stroke(); c.setLineDash([]);
       });
       // each layer's Q as a diverging bar under the chart: inside grows left, outside grows right
-      qScale += (Math.max(5, 1.15 * Math.max(Math.abs(qi), Math.abs(qo))) - qScale) * 0.05;
       [['qInBar', 'qInLab', qi], ['qOutBar', 'qOutLab', qo]].forEach(([bar, lab, q]) => {
         const b = $(bar); b.style.width = Math.min(50, 50 * Math.abs(q) / qScale) + '%'; b.style.background = q < 0 ? C.neg : C.pos;
         $(lab).textContent = fmtQ(q);
@@ -1692,20 +1685,23 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     if ($('tallyBox').hidden) return;   // drawn only while its tab is showing
     const h = tally.hist.concat([[tally.steps, tally.pump, tally.leak]]);
     const L = 56, R = 14, T = 12, B = 26, pw = YW - L - R, ph = YH - T - B;
-    // the leak total dips below 0 if the membrane was still charging when the pump started
-    const sMax = Math.max(SAMPLE * 50, tally.steps), qMax = Math.max(5, tally.pump, tally.leak) * 1.1;
-    const qMin = Math.min(0, ...h.map(r => r[2])) * 1.1;
-    const X = s => L + s / sMax * pw, Y = q => T + (qMax - q) / (qMax - qMin) * ph;
+    // A fixed scale: the last 50,000 steps (as on the voltage trace) and 40 e of height, enough for the default pump
+    // rate over that time. The totals only grow, so the window slides up to keep the newest values in view, without
+    // changing its size. (The leak total dips below 0 if the membrane was still charging when the pump started.)
+    const S_WIN = 50000, Q_SPAN = 40, s0 = Math.max(0, tally.steps - S_WIN);
+    const seen = h.filter(r => r[0] >= s0), top = Math.max(0, ...seen.map(r => Math.max(r[1], r[2])));
+    const qMin = Math.max(-10, top - Q_SPAN + 5), qMax = qMin + Q_SPAN;
+    const X = s => L + (s - s0) / S_WIN * pw, Y = q => T + (qMax - q) / (qMax - qMin) * ph;
     yctx.fillStyle = C.surface; yctx.fillRect(0, 0, YW, YH);
     yctx.font = '11px "IBM Plex Mono", monospace'; yctx.textBaseline = 'middle';
-    const span = qMax - qMin, tick = Math.pow(10, Math.floor(Math.log10(span / 2)));
-    const qStep = span / tick > 10 ? tick * 5 : span / tick > 4 ? tick * 2 : tick;
+    const qStep = 10;
     for (let q = Math.ceil(qMin / qStep) * qStep; q <= qMax; q += qStep) {
       yctx.strokeStyle = C.line; yctx.lineWidth = q === 0 ? 1.2 : 0.8;
       yctx.beginPath(); yctx.moveTo(L, Y(q)); yctx.lineTo(YW - R, Y(q)); yctx.stroke();
       yctx.fillStyle = C.muted; yctx.textAlign = 'right'; yctx.fillText(q + ' e', L - 6, Y(q));
     }
     yctx.textAlign = 'left'; yctx.fillText(tally.steps.toLocaleString() + ' steps since the pump was turned on', L, YH - 8);
+    yctx.save(); yctx.beginPath(); yctx.rect(L, T, pw, ph); yctx.clip();
     yctx.fillStyle = C.accent; yctx.globalAlpha = 0.22; yctx.beginPath();
     h.forEach(([s, p], k) => k ? yctx.lineTo(X(s), Y(p)) : yctx.moveTo(X(s), Y(p)));
     for (let k = h.length - 1; k >= 0; k--) yctx.lineTo(X(h[k][0]), Y(h[k][2]));
@@ -1715,6 +1711,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       h.forEach((r, k) => k ? yctx.lineTo(X(r[0]), Y(r[col])) : yctx.moveTo(X(r[0]), Y(r[col]))); yctx.stroke(); yctx.setLineDash([]);
     };
     line(1, C.accent, 2.5, []); line(2, C.ink, 2, [6, 4]);
+    yctx.restore();
     yctx.textBaseline = 'alphabetic';
     $('tPump').textContent = tally.pump + ' e'; $('tLeak').textContent = tally.leak + ' e'; $('tGap').textContent = (tally.pump - tally.leak) + ' e';
     // rates over the recent stretch (about the last quarter of the record)
@@ -1845,16 +1842,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   setDensityUI();
 
   const playBtn = $('play');
-  const setRunning = r => { running = r; playBtn.textContent = $('playFloat').textContent = r ? 'Pause' : 'Play'; };
+  const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
   playBtn.addEventListener('click', () => setRunning(!running));
-  $('stepBtn').addEventListener('click', () => { setRunning(false); ox.set(px.subarray(0, N)); oy.set(py.subarray(0, N)); step(); stepAcc = 0.999; refreshAll(); });
   $('reset').addEventListener('click', () => { reset(); refreshAll(); });
-  // the copies that float in the corner work through the page's own Reset and Speed, and follow them
-  $('resetFloat').addEventListener('click', () => $('reset').click());
-  $('playFloat').addEventListener('click', () => playBtn.click());
-  const speedMirror = () => { $('speedFloat').value = $('speed').value; $('speedFloato').textContent = $('speedo').textContent; };
-  $('speedFloat').addEventListener('input', () => { $('speed').value = $('speedFloat').value; $('speed').dispatchEvent(new Event('input')); });
-  $('speed').addEventListener('input', speedMirror); speedMirror();
 
   function refs() {
     return [
@@ -1946,9 +1936,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     const gT = G[0] + G[1] + G[2];
     const L_ = 56, R_ = 14, T_ = 16, B_ = 34, pw = GW - L_ - R_, ph = GH - T_ - B_;
     const VMIN_ = -120, VMAX_ = 80, lx = v => L_ + (v - VMIN_) / (VMAX_ - VMIN_) * pw;
-    let imax = 1e-9;
-    for (let V = VMIN_; V <= VMAX_; V += 5) { for (let s = 0; s < 3; s++) if (on(s)) imax = Math.max(imax, Math.abs(ionI(s, V))); imax = Math.max(imax, Math.abs(totI(V))); }
-    imax *= 1.08;
+    // a fixed current range, the same for every cell in the menu and both models (the largest is the red blood
+    // cell, about 1,430); curves beyond it run off the edge
+    const imax = 1500;
     const ly = i => T_ + ph / 2 - (i / imax) * (ph / 2);
     const trace = fn => { gx.beginPath(); for (let V = VMIN_; V <= VMAX_; V += 2) { const y = ly(fn(V)); V === VMIN_ ? gx.moveTo(lx(V), y) : gx.lineTo(lx(V), y); } gx.stroke(); };
     gx.fillStyle = C.surface; gx.fillRect(0, 0, GW, GH);
@@ -1966,7 +1956,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       gx.fillStyle = cols[s]; gx.beginPath(); gx.arc(lx(Es[s]), ly(0), 3.5, 0, 6.283); gx.fill();
     }
     if (gT > 0) {
-      gx.strokeStyle = C.ink; gx.lineWidth = 3; trace(totI);
+      gx.strokeStyle = C.accent; gx.lineWidth = 2.2; gx.setLineDash([6, 4]); trace(totI); gx.setLineDash([]);   // the sum, dashed as on the other lessons' charts
       gx.setLineDash([3, 4]); gx.lineWidth = 1; gx.strokeStyle = C.accent; gx.beginPath(); gx.moveTo(lx(Vr), T_); gx.lineTo(lx(Vr), T_ + ph); gx.stroke(); gx.setLineDash([]);
       gx.fillStyle = C.surface; gx.strokeStyle = C.ink; gx.lineWidth = 2; gx.beginPath(); gx.arc(lx(Vr), ly(0), 5, 0, 6.283); gx.fill(); gx.stroke();
     }
@@ -1975,7 +1965,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     gx.textAlign = 'left'; gx.font = '600 11px "IBM Plex Sans", sans-serif';
     const tags = [];
     for (let s = 0; s < 3; s++) if (on(s)) tags.push({ y: ly(ionI(s, VMAX_)), t: 'I_' + names[s], c: cols[s] });
-    if (gT > 0) tags.push({ y: ly(totI(VMAX_)), t: 'sum', c: C.ink });
+    if (gT > 0) tags.push({ y: ly(totI(VMAX_)), t: 'sum', c: C.accent });
     tags.forEach(t => t.y = Math.max(T_ + 6, Math.min(T_ + ph - 6, t.y)));
     tags.sort((a, b) => a.y - b.y);
     for (let k = 1; k < tags.length; k++) if (tags[k].y - tags[k - 1].y < 12) tags[k].y = tags[k - 1].y + 12;
@@ -2245,7 +2235,8 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 </script>
 <!-- Lessons: questions on this page and parts of it locked until they are answered (lessons folder). Delete this line to turn them off. -->
 <script src="lesson.js"></script>
-<!-- Fill-in boxes: type a value into any slider's readout -->
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
 <script src="sliders.js"></script>
 </body>
 </html>

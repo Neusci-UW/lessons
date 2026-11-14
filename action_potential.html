@@ -191,6 +191,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 </style>
 </head>
 <body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" data-copy="apFire" class="primary"></button>
+  <button type="button" data-copy="apPlay"></button>
+  <label for="sSpeedFloat" class="runlab">Speed</label>
+  <input type="range" id="sSpeedFloat" data-copy="sSpeed">
+  <output for="sSpeedFloat"></output>
+</div>
 <div class="wrap">
 <header>
   <h1>Sending a signal: the action potential travels</h1>
@@ -619,8 +626,7 @@ function fillSub(c, text, x, y) {
 function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
 
 // ---------- cells: known neurons, as the Membrane potential page has known cells ----------
-// Concentrations are mM [K⁺, Na⁺, Cl⁻]. Geometry: cell body and axon diameters in µm, length in mm. win: the shortest
-// sweep of the time charts, ms.
+// Concentrations are mM [K⁺, Na⁺, Cl⁻]. Geometry: cell body and axon diameters in µm, length in mm.
 // nodeNa, nodeK: channel density at nodes of Ranvier (and the initial segment), as multiples of the squid
 // axon's, and nodeKL their always-open K⁺ (leak) channels, as multiples of the Cl⁻ leak; axNa, axK: the same
 // for bare axon membrane. Real nodes are packed with Na⁺ channels; K⁺ channels (voltage-gated and leak) keep them
@@ -628,16 +634,16 @@ function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), 
 const MAMMAL = { cin: [140, 14, 10.5], cout: [5, 143.5, 148.5] };   // lesson 1's defaults
 const CELLS = [
   { id: 'motor', name: 'Human motor neuron (Aα fibre)', T: 37, ...MAMMAL, somaD: 60, d: 12, myel: true, len: 1000, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
-    stim: 20, speed: 1, win: 3,
+    stim: 20, speed: 1,
     note: 'From the spinal cord to a muscle in the foot: about a metre of myelinated axon, 12 µm wide. Real conduction velocity 70–120 m/s.' },
   { id: 'cfib', name: 'Pain fibre (C fibre, unmyelinated)', T: 37, ...MAMMAL, somaD: 25, d: 1, myel: false, len: 30, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
-    stim: 5, speed: 4, win: 10,
+    stim: 5, speed: 4,
     note: 'Thin and unmyelinated: it carries slow, burning pain. Real conduction velocity 0.5–2 m/s. Its cell body sits in a dorsal root ganglion beside the spinal cord (drawn here as an ordinary cell body).' },
   { id: 'frog', name: 'Frog sciatic nerve fibre (myelinated)', T: 20, cin: [120, 10, 10], cout: [2.5, 110, 112], somaD: 40, d: 12, myel: true, len: 100, nodeNa: 5, nodeK: 2, nodeKL: 5, axNa: 1, axK: 1,
-    stim: 10, speed: 0.5, win: 4,
+    stim: 10, speed: 0.5,
     note: 'The classic preparation for studying myelinated nerve, at room temperature in frog Ringer’s solution (typical concentrations). Real conduction velocity about 20–40 m/s.' },
   { id: 'squid', name: 'Squid giant axon', T: 6.3, cin: [400, 50, 52], cout: [20, 440, 560], somaD: 200, d: 476, myel: false, len: 80, nodeNa: 1, nodeK: 1, nodeKL: 1, axNa: 1, axK: 1,
-    stim: 5000, speed: 4, win: 12,
+    stim: 5000, speed: 4,
     note: 'Where Hodgkin and Huxley measured the channels this model uses, at the temperature of their experiments and with the measured concentrations. Half a millimetre wide, for a fast escape jet. Real conduction velocity about 20 m/s at 18 °C.' },
 ];
 const DEFAULT_CELL = 'motor';
@@ -739,7 +745,11 @@ function step(dt, Istim) {   // Istim in µA, into the cell body
 
 // ---------- recording: what the electrodes see ----------
 const PULSE = 0.5;                         // ms
-let WINDOW = 3, sweep = 3, hist = [], nextSample = 0, stimT0 = -1, stims = [], tA = null, tB = null;
+// Every chart has fixed axes, the same for every cell, wide enough for all of them: time charts show the last
+// 30 ms (the C fibre's spike takes about 20 ms to pass both electrodes), distance charts the longest axon, 1 m,
+// and current charts ±35,000 µA/cm² (the motor neuron's nodes reach about 34,000). Beyond them, lines are clipped.
+const WINDOW = 30, X_MAX = 1000, I_TOP = 35000;
+let hist = [], nextSample = 0, stimT0 = -1, stims = [], tA = null, tB = null;
 // the piece under an electrode: on a myelinated axon, the nearest node, where the voltage-gated channels are
 function idx(frac) {
   const xm = clamp(frac, 0, 1) * P.len; let best = 1, bd = 1e9;
@@ -748,10 +758,10 @@ function idx(frac) {
 }
 let iA = 1, iB = 1;
 function placeElectrodes() { iA = idx(P.xa); iB = idx(P.xb); hist = []; tA = tB = null; }
-function fire() { stimT0 = M.t; tA = tB = null; stims.push(M.t); sweep = WINDOW; }
-function resetAxon() { build(); restAll(); placeElectrodes(); hist = []; stims = []; nextSample = 0; stimT0 = -1; sweep = WINDOW; }
+function fire() { stimT0 = M.t; tA = tB = null; stims.push(M.t); }
+function resetAxon() { build(); restAll(); placeElectrodes(); hist = []; stims = []; nextSample = 0; stimT0 = -1; }
 function advance(ms, budgetMs) {   // budgetMs: stop early (a long axon is slow to compute) rather than freeze the page
-  const dt = stepDt(), t0 = performance.now(), sample = Math.max(WINDOW, sweep) / 1500;
+  const dt = stepDt(), t0 = performance.now(), sample = WINDOW / 1500;
   for (let s = Math.max(1, Math.round(ms / dt)), k = 0; k < s; k++) {
     if (budgetMs && (k & 3) === 3 && performance.now() - t0 > budgetMs) break;
     const on = stimT0 >= 0 && M.t - stimT0 < PULSE, va0 = M.V[iA], vb0 = M.V[iB];
@@ -764,7 +774,7 @@ function advance(ms, budgetMs) {   // budgetMs: stop early (a long axon is slow 
     if (M.t >= nextSample) {
       nextSample = M.t + sample;
       hist.push({ t: M.t, VS: M.V[0], VA: M.V[iA], VB: M.V[iB], INa: M.INa[iA], IK: M.IK[iA], ICl: M.ICl[iA], IC: M.IC[iA], m: M.mm[iA], h: M.h[iA], n: M.nn[iA] });
-      while (hist.length && hist[0].t < M.t - Math.max(WINDOW, sweep) * 1.3) hist.shift();
+      while (hist.length && hist[0].t < M.t - WINDOW * 1.1) hist.shift();
     }
   }
 }
@@ -991,24 +1001,15 @@ function plot(c, o) {
   tags.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, W - R + 6, Math.max(T + 5, Math.min(T + ph - 2, l.y))); });
 }
 const Vrefs = () => { const e = E(); return [{ v: e.Na, color: C.na, label: 'E_Na' }, { v: e.K, color: C.k, label: 'E_K' }, { v: e.Cl, color: C.cl, label: 'E_Cl' }]; };
-const topFor = pk => [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000].find(v => v >= pk * 1.1) || 50000;
 let iview = 'i';
-// The time charts sweep like an oscilloscope triggered by the stimulus: they start just before it and stretch
-// until the spike has finished, however long the axon and however slow the fibre. With no stimulus they scroll.
-function timeAxis() {
-  if (stimT0 < 0) { const t1 = Math.max(WINDOW, M.t); return [t1 - WINDOW, t1]; }
-  const x0 = () => stimT0 - 0.1 * sweep;
-  let busy = M.t - stimT0 < PULSE;
-  for (let i = 0; i < M.n && !busy; i++) busy = M.V[i] > -50;
-  if (busy && M.t > x0() + 0.9 * sweep) sweep = Math.min(2000, (M.t - stimT0) / 0.75);
-  return M.t > x0() + sweep ? [M.t - sweep, M.t] : [x0(), x0() + sweep];
-}
+// the time charts: the last WINDOW ms, scrolling
+function timeAxis() { const t1 = Math.max(WINDOW, M.t); return [t1 - WINDOW, t1]; }
 function drawCharts() {
-  const n = M.n, big = P.len >= 1000, xsc = big ? 0.001 : 1, xlab = 'distance from the cell body (' + (big ? 'm' : 'mm') + ')';
+  const n = M.n, xsc = 0.001, xlab = 'distance from the cell body (m)';
   // along the axon: every piece (on a myelinated axon, the nodes, where the channels are)
   const along = []; for (let i = 1; i < n; i++) if (!P.myel || M.type[i] === 'node' || n < 1500) along.push(i);
   const xsA = along.map(i => M.xc[i]);
-  plot(xc, { x0: 0, x1: P.len, xscale: xsc, y0: -100, y1: 70, ystep: 50, xlabel: xlab, ylabel: 'V (mV)', refs: Vrefs(),
+  plot(xc, { x0: 0, x1: X_MAX, xscale: xsc, y0: -100, y1: 70, ystep: 50, xlabel: xlab, ylabel: 'V (mV)', refs: Vrefs(),
     vlines: [{ x: M.xc[iA], color: C.ink }, { x: M.xc[iB], color: C.accent }], series: [{ xs: xsA, ys: along.map(i => M.V[i]), color: C.ink, width: 2.4 }] });
   const [t0, t1] = timeAxis(), h = hist.filter(p => p.t >= t0), ts = h.map(p => p.t);
   const spans = stims.map(t => [t, t + PULSE]), tlab = 'time (ms)';
@@ -1017,17 +1018,17 @@ function drawCharts() {
     series: [{ xs: ts, ys: h.map(p => p.VS), color: C.a, width: 2, label: 'soma' }, { xs: ts, ys: h.map(p => p.VA), color: C.ink, width: 2.4, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.accent, width: 2.4, label: 'B' }] });
   {
     const pick = a => along.map(i => a[i]);
-    const top = topFor(Math.max(50, ...along.map(i => Math.max(Math.abs(M.INa[i]), Math.abs(M.IK[i]), Math.abs(M.IC[i])))));
-    plot(xic, { x0: 0, x1: P.len, xscale: xsc, y0: -top, y1: top, ystep: top / 2, xlabel: xlab, ylabel: 'I (µA/cm², outward +)',
-      series: [{ xs: xsA, ys: pick(M.INa), color: C.na, label: 'I_Na' }, { xs: xsA, ys: pick(M.IK), color: C.k, label: 'I_K' }, { xs: xsA, ys: pick(M.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: xsA, ys: pick(M.IC), color: C.pos, label: 'I_C', width: 2.4 }] });
+    plot(xic, { x0: 0, x1: X_MAX, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: xlab, ylabel: 'I (µA/cm², outward +)',
+      series: [{ xs: xsA, ys: pick(M.INa), color: C.na, label: 'I_Na' }, { xs: xsA, ys: pick(M.IK), color: C.k, label: 'I_K' }, { xs: xsA, ys: pick(M.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: xsA, ys: pick(M.IC), color: C.pos, label: 'I_C', width: 2.4 },
+               { xs: xsA, ys: along.map(i => M.INa[i] + M.IK[i] + M.ICl[i] + M.IC[i]), color: C.accent, dash: [6, 4], label: 'sum' }] });
   }
   if (iview === 'g') {
     plot(ic, { x0: t0, x1: t1, y0: 0, y1: 1, ystep: 0.25, plus: true, spans, xlabel: tlab, ylabel: 'fraction of gates open at A',
       series: [{ xs: ts, ys: h.map(p => p.m), color: C.na, label: 'm' }, { xs: ts, ys: h.map(p => p.h), color: C.na, dash: [6, 4], label: 'h' }, { xs: ts, ys: h.map(p => p.n), color: C.k, label: 'n' }] });
   } else {
-    const top = topFor(Math.max(50, ...h.map(p => Math.max(Math.abs(p.INa), Math.abs(p.IK), Math.abs(p.IC)))));
-    plot(ic, { x0: t0, x1: t1, y0: -top, y1: top, ystep: top / 2, xlabel: tlab, ylabel: 'I (µA/cm², outward +)', spans,
-      series: [{ xs: ts, ys: h.map(p => p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => p.IC), color: C.pos, label: 'I_C', width: 2.4 }] });
+    plot(ic, { x0: t0, x1: t1, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: tlab, ylabel: 'I (µA/cm², outward +)', spans,
+      series: [{ xs: ts, ys: h.map(p => p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => p.IC), color: C.pos, label: 'I_C', width: 2.4 },
+               { xs: ts, ys: h.map(p => p.INa + p.IK + p.ICl + p.IC), color: C.accent, dash: [6, 4], label: 'sum' }] });
   }
 }
 const CAPS = {
@@ -1102,7 +1103,7 @@ function applyCell(id) {
   const c = CELLS.find(c => c.id === id); if (!c) return;
   Object.assign(P, { T: c.T, cin: [...c.cin], cout: [...c.cout], somaD: c.somaD, d: c.d, myel: c.myel, len: c.len,
     nodeNa: c.nodeNa, nodeK: c.nodeK, nodeKL: c.nodeKL, axNa: c.axNa, axK: c.axK, stim: c.stim, gNaPct: 100, gKPct: 100, xa: 0.25, xb: 0.75 });
-  speed = c.speed; WINDOW = c.win;
+  speed = c.speed;
   cellSel.value = id; cellNote.textContent = c.note;
   writeControls(); resetAxon();
 }
@@ -1145,12 +1146,14 @@ requestAnimationFrame(loop);
     $('kCap').innerHTML = `A steady voltage change falls to 37% after λ = ${fmtLen(L)} and to 5% after 3λ = ${fmtLen(3 * L)}. ` +
       (myel ? `Myelin makes λ ${fmt3(L / Lbare)} times longer than on the bare axon, while τ stays the same.` : 'Four times the diameter doubles λ; so does a quarter of the leak.');
     // spread with distance
-    const x1 = niceStep(L) * 4, N = 200, xs = Array.from({ length: N + 1 }, (_, k) => k / N * x1);
+    const x1 = 100, N = 200,   // fixed: 0–100 mm covers every cell's λ (the motor axon's myelin, about 24 mm)
+      xs = Array.from({ length: N + 1 }, (_, k) => k / N * x1);
     const series = [{ xs, ys: xs.map(x => 100 * Math.exp(-x / L)), color: C.ink, width: 2.4 }];
     if (myel) series.unshift({ xs, ys: xs.map(x => 100 * Math.exp(-x / Lbare)), color: C.muted, width: 1.6, dash: [5, 4], label: 'bare' });
     plot(kc, { x0: 0, x1, y0: 0, y1: 100, ystep: 25, plus: true, xlabel: 'distance (mm)', ylabel: 'V, % of V₀', series, refs: [{ v: 37, color: C.accent, label: '37%' }], vlines: [{ x: L, color: C.accent }] });
     // charging over time
-    const t1 = niceStep(5 * tau / 4) * 4, ts = Array.from({ length: N + 1 }, (_, k) => k / N * t1);
+    const t1 = 15, ts =   // fixed: 0–15 ms, about five τ for every cell
+      Array.from({ length: N + 1 }, (_, k) => k / N * t1);
     plot(tk, { x0: 0, x1: t1, y0: 0, y1: 100, ystep: 25, plus: true, xlabel: 'time (ms)', ylabel: 'V, % of the way there',
       series: [{ xs: ts, ys: ts.map(t => 100 * (1 - Math.exp(-t / tau))), color: C.ink, width: 2.4 }], refs: [{ v: 63, color: C.accent, label: '63%' }], vlines: [{ x: tau, color: C.accent }] });
   }
@@ -1215,7 +1218,8 @@ requestAnimationFrame(loop);
   }));
 })();
 </script>
-<!-- Fill-in boxes: type a value into any slider's readout -->
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
 <script src="sliders.js"></script>
 </body>
 </html>

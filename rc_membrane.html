@@ -108,6 +108,14 @@ header p{max-width:90ch}
 .cgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
 @media (max-width:900px){.cgrid{grid-template-columns:1fr}}
 .ccol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.qbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.qlab{white-space:nowrap}
+.qlab b{color:var(--ink);font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums;display:inline-block;min-width:5ch}
+.qlab:first-child b{text-align:right}
+.qtrack{position:relative;height:16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);overflow:hidden}
+.qtrack::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid var(--muted)}
+.qfill{position:absolute;top:0;bottom:0;width:0}
+#iProfile{max-width:900px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
 .stage{display:flex;flex-direction:column;gap:12px}
 canvas{display:block;width:100%;height:auto;border-radius:6px}
@@ -159,7 +167,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--s
 .deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
 .mj-fail{display:none}
 .no-mathjax .mj-fail{display:block;color:var(--pos)}
-/* on/off switch for the Na⁺ channels (or the current source): label, track, state in words */
+/* on/off switch for the ion simulation's Na⁺ channels: label, track, state in words */
 button.toggle{display:inline-flex;align-items:center;gap:10px;border:0;background:none;padding:4px 2px;font-weight:600}
 button.toggle .track{width:42px;height:24px;border-radius:12px;background:var(--muted);position:relative;transition:background .15s;flex:none}
 button.toggle .thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:left .15s}
@@ -167,6 +175,8 @@ button.toggle[aria-checked="true"] .track{background:var(--on,var(--na))}
 button.toggle[aria-checked="true"] .thumb{left:21px}
 button.toggle .tstate{font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--muted);min-width:52px;text-align:left}
 @media (prefers-reduced-motion:reduce){button.toggle .track,button.toggle .thumb{transition:none}}
+/* a button that stays down while it is on (the circuit's current, or its Na⁺ channels), filled in its colour */
+button.latch[aria-pressed=true]{background:var(--on,var(--accent));border-color:var(--on,var(--accent));color:var(--surface);font-weight:500}
 .chip{font-size:13px;padding:5px 10px;border-radius:999px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -177,6 +187,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 </style>
 </head>
 <body>
+<div class="floatbar" role="group" aria-label="Circuit and ion simulation">
+  <button type="button" id="fbSwitch" data-copy="cSwitch gate" data-copy-also="gate"></button>
+  <button type="button" data-copy="cPlay play"></button>
+  <label for="cSpeedFloat" class="runlab">Speed</label>
+  <input type="range" id="cSpeedFloat" data-copy="cSpeed speed">
+  <output for="cSpeedFloat"></output>
+</div>
 <div class="wrap">
 <header>
   <h1>Charging a membrane: the RC circuit and the ions</h1>
@@ -212,9 +229,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <div class="ccol">
         <canvas id="circ" aria-label="Circuit diagram with moving charges"></canvas>
         <div class="runbar">
-          <button id="cSwitch" class="toggle" role="switch" aria-checked="false" aria-labelledby="cSwitchLab"><span id="cSwitchLab">Na⁺ channels</span><span class="track"><span class="thumb"></span></span><span class="tstate" id="cSwitchState">closed</span></button>
+          <button id="cSwitch" class="latch" aria-pressed="false"><span id="cSwitchLab">Current on</span></button>
           <button id="cPlay" class="primary">Pause</button>
-          <button id="cReset">Reset</button>
           <label for="cSpeed" class="runlab">Speed</label>
           <input type="range" id="cSpeed" min="0" max="100" value="40">
           <output id="cSpeedo" for="cSpeed"></output>
@@ -238,7 +254,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     </div>
     <div class="help" role="tabpanel" id="pane-circhelp" aria-labelledby="tab-circhelp" hidden>
       <ul>
-        <li><b>The drawing:</b> the top wire is the inside of the cell, the bottom wire the outside (ground). Each ion channel is a branch: a resistor (1/g) in series with a battery, that ion's Nernst potential E. The capacitor on the right is the lipid bilayer.</li>
+        <li><b>The drawing:</b> the bottom wire is the inside of the cell (intracellular), the top wire the outside (extracellular, ground). Each ion channel is a branch: a resistor (1/g) in series with a battery, that ion's Nernst potential E. The capacitor on the right is the lipid bilayer.</li>
         <li><b>Current injection</b> replaces the channels with a current source and one resistor, like an electrode pushing current into the cell.</li>
         <li><b>Dots:</b> moving positive charge (conventional current), coloured by the branch it went through. Each dot carries the same charge as one + or − mark on the capacitor plates, so you can watch dots arriving at a plate turn into marks. Current is positive when it flows from inside to outside, the usual sign for membrane currents.</li>
         <li><b>Membrane potential chart:</b> the black line is V; the shading marks when the switch is closed. The dotted line is V<sub>∞</sub>, where V is heading.</li>
@@ -353,6 +369,28 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <li>Ion counts are tiny compared with a real cell, so the particle traces are noisy; the voltage is averaged over many steps. Time is in simulation steps, not milliseconds.</li>
       <li>Real Na⁺ channels open with voltage and then inactivate, which gives an action potential. Here they only open and close when you tell them to.</li>
     </ul>
+    </div>
+  </section>
+  <section class="card stage" id="ion-profile">
+    <div class="tabs" role="tablist" aria-label="Charge chart">
+      <button type="button" role="tab" id="tab-iprof" aria-controls="pane-iprof" aria-selected="true">Charge across the membrane</button>
+      <button type="button" role="tab" id="tab-iprofhelp" aria-controls="pane-iprofhelp" aria-selected="false" tabindex="-1">How to read</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-iprof" aria-labelledby="tab-iprof">
+      <canvas id="iProfile" aria-label="Net charge per column across the particle simulation"></canvas>
+      <div class="qbar" aria-label="Charge in each diffuse layer">
+        <span class="qlab"><span>Q<sub>in</sub></span> <b id="iqInLab">—</b></span>
+        <div class="qtrack"><span class="qfill" id="iqInBar"></span><span class="qfill" id="iqOutBar"></span></div>
+        <span class="qlab"><b id="iqOutLab">—</b> <span>Q<sub>out</sub></span></span>
+      </div>
+      <p class="caption">The same chart as on the Membrane potential page. Bars: net charge across the simulation. Curves and the bar under the chart: each layer's Q. Open the Na⁺ channels and watch Na⁺ build up as positive charge just inside the membrane.</p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-iprofhelp" aria-labelledby="tab-iprofhelp" hidden>
+      <ul>
+        <li><b>Bars:</b> net charge in the solution in each 16 px column, averaged over recent steps. Red is extra positive charge, blue extra negative. The hatched bar over the membrane is the charge held inside the channels.</li>
+        <li><b>Curves:</b> an exponential with the Debye length λ (scale bar at the bottom), scaled so its shaded area equals the charge measured out to 3λ (dashed lines). That area is each layer's charge Q.</li>
+        <li><b>Q bar:</b> the two layers' charges side by side, inside to the left and outside to the right. At rest they are equal and opposite: the charge on the capacitor.</li>
+      </ul>
     </div>
   </section>
   <aside class="card panel wide">
@@ -640,24 +678,14 @@ function fillSub(c, text, x, y) {
 function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
 
 // A line chart: series share an x array; shade marks spans where `on` is true; refs are horizontal lines.
-// The y range grows to fit and shrinks slowly, so it doesn't jump around with every frame.
+// The y range is fixed (o.fixed), so the scale never moves; values beyond it run along the edge.
 const CHW = 640, CHH = 340;
 function drawChart(c, o) {
   const W = o.w || CHW, H = o.h || CHH;   // logical size; defaults to CHW × CHH
   const key = o.key || 11;                // font size of the series labels at the right
   const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
   c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
-  let lo = o.fixed ? o.fixed[0] : 0, hi = o.fixed ? o.fixed[1] : 0;
-  if (!o.fixed) {
-    for (const s of o.series) for (const v of s.ys) if (isFinite(v)) { if (v < lo) lo = v; if (v > hi) hi = v; }
-    for (const r of o.refs || []) if (isFinite(r.v)) { lo = Math.min(lo, r.v); hi = Math.max(hi, r.v); }
-    const pad = (hi - lo || 1) * 0.08; lo -= pad; hi += pad;
-    const st = o.state;   // remembered range
-    if (st.lo == null) { st.lo = lo; st.hi = hi; }
-    st.lo = lo < st.lo ? lo : st.lo + (lo - st.lo) * 0.02; st.hi = hi > st.hi ? hi : st.hi + (hi - st.hi) * 0.02;
-    lo = st.lo; hi = st.hi;
-    if (hi - lo < (o.minSpan || 1)) { const m = (hi + lo) / 2; lo = m - (o.minSpan || 1) / 2; hi = m + (o.minSpan || 1) / 2; }
-  }
+  const [lo, hi] = o.fixed;               // every chart has a fixed y range
   const x0 = o.x0, x1 = o.x1;
   const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
   // shading
@@ -723,8 +751,13 @@ function chipGroup(attr, onPick) {
   const cv = $('circ'), CWd = 780, CHd = 470, c = setupCanvas(cv, CWd, CHd);
   const CW = 480, CH = 300;              // charts sit beside the circuit, so draw them smaller to keep text legible
   const I_RANGE = [-120, 120];           // fixed current axis (µA/cm²): fits the default Na⁺ step; larger g clips
+  // fixed voltage and charge axes: wide enough for the presets (g_Na up to 3 mS/cm²); beyond them lines run off the
+  // edge. Charge since the switch keeps growing while channels stay open, so it fits about one window after a change.
+  const V_RANGE = [-110, 90], Q_RANGE = [-3000, 3000];
   const vc = setupCanvas($('cVchart'), CW, CH), ic = setupCanvas($('cIchart'), CW, CH);
-  const TOP = 70, BOT = 410, MID = 240, XS = [140, 400, 640];
+  // TOP is the inside rail and BOT the outside (ground) rail. The circuit is drawn with the outside on top and the
+  // inside at the bottom, so TOP sits low on the canvas and BOT high.
+  const TOP = 410, BOT = 70, MID = 240, XS = [140, 400, 640];
   const SP = 20, Q0 = 4;                // dot spacing (px); charge per dot and per plate mark (nC/cm²)
   const KPX = SP / Q0;                   // px a dot moves per nC/cm² of charge through its wire
   let mode = 'inj', sw = false, t = 0, V = 0, speed = 1;   // starts on current injection
@@ -733,7 +766,6 @@ function chipGroup(attr, onPick) {
   const hist = { t: [], V: [], i1: [], i2: [], iC: [], q1: [], q2: [], qC: [], on: [] };
   const WIN = 40, SAMPLE_MS = 0.04;      // chart window and sample interval (ms)
   let sampleAcc = 0, cview = 'i';
-  const vState = {}, iState = {};
 
   function currents(v) {      // [branch 1, branch 2], inside → outside
     if (mode === 'inj') return [sw ? -p.I : 0, p.gL * v];
@@ -747,14 +779,13 @@ function chipGroup(attr, onPick) {
   function restV() { return mode === 'inj' ? 0 : p.EK; }
   function switchText() {
     const g = mode === 'g';
-    $('cSwitchLab').textContent = g ? 'Na⁺ channels' : 'Current source';
-    $('cSwitchState').textContent = g ? (sw ? 'open' : 'closed') : (sw ? 'on' : 'off');
-    $('cSwitch').style.setProperty('--on', g ? 'var(--na)' : 'var(--ink)');
+    $('cSwitchLab').textContent = g ? 'Na⁺ channels' : 'Current on';   // as the particle simulation's: orange when open
+    $('cSwitch').style.setProperty('--on', g ? 'var(--na)' : 'var(--accent)');   // the same teal as Stimulate on lesson 3
   }
   function setSwitch(on) {
     if (on === sw) return;
     sw = on; cum = [0, 0, 0];
-    $('cSwitch').setAttribute('aria-checked', String(sw));
+    $('cSwitch').setAttribute('aria-pressed', String(sw));
     switchText();
   }
   // Exact exponential step toward V∞ (the circuit is linear), in small pieces for the dots and charts.
@@ -793,7 +824,7 @@ function chipGroup(attr, onPick) {
     segs.length = 0;
     const isG = mode === 'g';
     SB = [
-      seg(XS[0], TOP, XS[0], BOT, isG ? 'na' : 'pos', isG ? [[MID - 112, MID - 72]] : [[MID - 26, MID + 26]]),
+      seg(XS[0], TOP, XS[0], BOT, isG ? 'na' : 'pos', isG ? [[MID + 72, MID + 112]] : [[MID - 26, MID + 26]]),
       seg(XS[1], TOP, XS[1], BOT, isG ? 'k' : 'pos'),
       seg(XS[2], TOP, XS[2], BOT, 'pos', [[MID - 8, MID + 8]]),
     ];
@@ -825,7 +856,7 @@ function chipGroup(attr, onPick) {
   }
   function battery(x, yc, E, col) {
     blank(x, yc - 8, yc + 8);
-    const up = E >= 0;   // the long (+) plate faces the side it makes positive
+    const up = E < 0;   // the long (+) plate faces the side it makes positive: the inside is below
     c.strokeStyle = col; c.lineCap = 'round';
     c.lineWidth = 2.4; wire(x - 20, up ? yc - 6 : yc + 6, x + 20, up ? yc - 6 : yc + 6);
     c.lineWidth = 4.5; wire(x - 10, up ? yc + 6 : yc - 6, x + 10, up ? yc + 6 : yc - 6);
@@ -842,7 +873,7 @@ function chipGroup(attr, onPick) {
   function source(x, yc) {
     blank(x, yc - 26, yc + 26);
     c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath(); c.arc(x, yc, 24, 0, 6.283); c.stroke();
-    const up = p.I >= 0;
+    const up = p.I < 0;   // positive current flows into the cell, which is below
     c.beginPath(); c.moveTo(x, yc + (up ? 13 : -13)); c.lineTo(x, yc + (up ? -13 : 13)); c.stroke();
     c.beginPath(); c.moveTo(x - 6, yc + (up ? -6 : 6)); c.lineTo(x, yc + (up ? -13 : 13)); c.lineTo(x + 6, yc + (up ? -6 : 6)); c.stroke();
   }
@@ -852,12 +883,12 @@ function chipGroup(attr, onPick) {
     wire(x - 52, yc - 6, x + 52, yc - 6); wire(x - 52, yc + 6, x + 52, yc + 6);
     // charge on the plates: one mark per Q0
     const q = p.C * V, n = Math.min(84, Math.round(Math.abs(q) / Q0));
-    const topCol = q >= 0 ? C.pos : C.neg, botCol = q >= 0 ? C.neg : C.pos;
+    const topCol = q >= 0 ? C.neg : C.pos, botCol = q >= 0 ? C.pos : C.neg;   // the bottom plate is the inside
     c.font = '700 12px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
     for (let k = 0; k < n; k++) {
       const row = Math.floor(k / 10), col = k % 10, xx = x - 45 + col * 10;
-      c.fillStyle = topCol; c.fillText(q >= 0 ? '+' : '−', xx, yc - 16 - row * 11);
-      c.fillStyle = botCol; c.fillText(q >= 0 ? '−' : '+', xx, yc + 17 + row * 11);
+      c.fillStyle = topCol; c.fillText(q >= 0 ? '−' : '+', xx, yc - 16 - row * 11);
+      c.fillStyle = botCol; c.fillText(q >= 0 ? '+' : '−', xx, yc + 17 + row * 11);
     }
     c.textBaseline = 'alphabetic';
   }
@@ -876,7 +907,7 @@ function chipGroup(attr, onPick) {
   }
   function arrowLabel(x, I, name, col) {
     // a small arrow showing the direction of the branch current, and its value
-    const y = MID + 112, up = I < 0, a = Math.min(1, Math.abs(I) / 5);
+    const y = MID - 118, up = I > 0, a = Math.min(1, Math.abs(I) / 5);   // outward (positive) points up, to the outside
     c.globalAlpha = 0.25 + 0.75 * a; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 2;
     if (Math.abs(I) > 0.05) { c.beginPath(); c.moveTo(x + 18, y - 10 * (up ? -1 : 1)); c.lineTo(x + 18, y + 10 * (up ? -1 : 1)); c.stroke();
       c.beginPath(); c.moveTo(x + 13, y + (up ? -4 : 4)); c.lineTo(x + 18, y + (up ? -11 : 11)); c.lineTo(x + 23, y + (up ? -4 : 4)); c.stroke(); }
@@ -890,8 +921,18 @@ function chipGroup(attr, onPick) {
     wire(XS[0], TOP, XS[2], TOP); wire(XS[0], BOT, XS[2], BOT);
     XS.forEach(x => wire(x, TOP, x, BOT));
     c.fillStyle = C.ink; XS.forEach(x => { c.beginPath(); c.arc(x, TOP, 4, 0, 6.283); c.arc(x, BOT, 4, 0, 6.283); c.fill(); });
-    label('INSIDE', 20, TOP - 22, C.muted, 'left', '700 13px "IBM Plex Sans", sans-serif');
-    label('OUTSIDE (ground)', 20, BOT + 34, C.muted, 'left', '700 13px "IBM Plex Sans", sans-serif');
+    // the same labels as the particle simulations: dark plates
+    const plate = (t, y0) => {
+      c.font = '700 18px "IBM Plex Sans", sans-serif';
+      const w = c.measureText(t).width + 22, h = 32;
+      c.fillStyle = C.ink; c.beginPath(); c.roundRect(14, y0, w, h, 6); c.fill();
+      c.fillStyle = C.surface; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, 14 + w / 2, y0 + h / 2 + 1);
+      c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+      return 14 + w;
+    };
+    const xg = plate('EXTRACELLULAR', BOT - 52);
+    label('ground', xg + 10, BOT - 31, C.muted, 'left', '600 13px "IBM Plex Sans", sans-serif');
+    plate('INTRACELLULAR', TOP + 20);
     // voltmeter on the right
     c.strokeStyle = C.muted; c.lineWidth = 1.2; c.setLineDash([3, 4]);
     wire(XS[2], TOP, 740, TOP); wire(XS[2], BOT, 740, BOT); wire(740, TOP, 740, MID - 22); wire(740, MID + 22, 740, BOT); c.setLineDash([]);
@@ -901,11 +942,11 @@ function chipGroup(attr, onPick) {
     dots();
     const I = currents(V), iC = -(I[0] + I[1]);
     if (mode === 'g') {
-      switchSym(XS[0], MID - 92, sw, C.na); label(sw ? 'Na⁺ channels open' : 'Na⁺ channels closed', XS[0] + 30, MID - 88, C.na);
+      switchSym(XS[0], MID + 92, sw, C.na); label(sw ? 'Na⁺ channels open' : 'Na⁺ channels closed', XS[0] + 30, MID + 96, C.na);
       resistor(XS[0], MID, C.na); label(`g_Na ${p.gNa.toFixed(2)} mS/cm²`, XS[0] + 26, MID + 4, C.na);
-      battery(XS[0], MID + 72, p.ENa, C.na); label(`E_Na ${fmtSigned(p.ENa, 0)}`, XS[0] + 30, MID + 77, C.na);
+      battery(XS[0], MID - 72, p.ENa, C.na); label(`E_Na ${fmtSigned(p.ENa, 0)}`, XS[0] + 30, MID - 67, C.na);
       resistor(XS[1], MID, C.k); label(`g_K ${p.gK.toFixed(2)} mS/cm²`, XS[1] + 26, MID + 4, C.k);
-      battery(XS[1], MID + 72, p.EK, C.k); label(`E_K ${fmtSigned(p.EK, 0)}`, XS[1] + 30, MID + 77, C.k);
+      battery(XS[1], MID - 72, p.EK, C.k); label(`E_K ${fmtSigned(p.EK, 0)}`, XS[1] + 30, MID - 67, C.k);
       arrowLabel(XS[0], I[0], 'I_Na', C.na); arrowLabel(XS[1], I[1], 'I_K', C.k);
     } else {
       source(XS[0], MID); label(sw ? `I_inj ${fmtSigned(p.I, 0, '')}` : 'source off', XS[0] + 32, MID + 4, C.ink);
@@ -921,13 +962,14 @@ function chipGroup(attr, onPick) {
     const refs = mode === 'g'
       ? [{ v: p.EK, color: C.k, label: 'E_K' }, { v: p.ENa, color: C.na, label: 'E_Na' }, { v: Vinf, color: C.accent, dash: [2, 3], width: 2, label: 'V∞' }]
       : [{ v: Vinf, color: C.accent, dash: [2, 3], width: 2, label: 'V∞' }];
-    drawChart(vc, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, w: CW, h: CH, key: 15, state: vState, minSpan: 20,
+    drawChart(vc, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, w: CW, h: CH, key: 15, fixed: V_RANGE,
       series: [{ ys: hist.V, color: C.ink, width: 2.4 }], refs, ylabel: 'mV', xlabel: `last ${WIN} ms` });
     // Conductance change: the two channel currents and I_C. Current injection: I_R, I_C and their sum,
     // which is the injected current (the source line itself is left out).
     const sum = (a, b) => a.map((v, k) => v + b[k]);
     const iSeries = mode === 'g'
-      ? [{ ys: hist.i1, color: C.na, label: 'I_Na' }, { ys: hist.i2, color: C.k, label: 'I_K' }, { ys: hist.iC, color: C.pos, width: 2.6, label: 'I_C' }]
+      ? [{ ys: hist.i1, color: C.na, label: 'I_Na' }, { ys: hist.i2, color: C.k, label: 'I_K' }, { ys: hist.iC, color: C.pos, width: 2.6, label: 'I_C' },
+         { ys: sum(sum(hist.i1, hist.i2), hist.iC), color: C.accent, dash: [6, 4], label: 'sum' }]
       : [{ ys: hist.i2, color: C.ink, label: 'I_R' }, { ys: hist.iC, color: C.pos, width: 2.6, label: 'I_C' },
          { ys: sum(hist.i2, hist.iC), color: C.accent, dash: [6, 4], label: 'I_R + I_C' }];
     const qSeries = mode === 'g'
@@ -936,7 +978,7 @@ function chipGroup(attr, onPick) {
          { ys: sum(hist.q2, hist.qC), color: C.accent, dash: [6, 4], label: 'R + C' }];
     if (cview === 'i') drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, w: CW, h: CH, key: 15, fixed: I_RANGE,
       series: iSeries, ylabel: 'µA/cm², outward +', xlabel: `last ${WIN} ms` });
-    else drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, restart: true, w: CW, h: CH, key: 15, state: iState, minSpan: 10,
+    else drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, restart: true, w: CW, h: CH, key: 15, fixed: Q_RANGE,
       series: qSeries, ylabel: 'nC/cm² since the switch', xlabel: `last ${WIN} ms` });
   }
   function readouts() {
@@ -962,14 +1004,12 @@ function chipGroup(attr, onPick) {
   function reset() {
     sw = true; setSwitch(false); V = restV(); t = 0; cum = [0, 0, 0]; sampleAcc = 0;
     for (const k in hist) hist[k].length = 0;
-    vState.lo = iState.lo = null;
     buildSegs();
   }
 
   chipGroup('mode', m => { mode = m; reset(); captions(); });
-  chipGroup('cview', v => { cview = v; iState.lo = null; captions(); });
+  chipGroup('cview', v => { cview = v; captions(); });
   $('cSwitch').addEventListener('click', () => setSwitch(!sw));
-  $('cReset').addEventListener('click', reset);
   const speedFrom = v => Math.pow(10, -1 + v * 0.02);   // ms of model time per second: 0.1 to 10
   bindRange('cSpeed', v => { const s = speedFrom(v); return (s < 1 ? s.toFixed(2) : s.toFixed(1)) + ' ms/s'; }, v => speed = speedFrom(v));
   bindRange('cC', v => v.toFixed(1) + ' µF/cm²', v => p.C = v);
@@ -1029,6 +1069,8 @@ function chipGroup(attr, onPick) {
   const REF_IN = CLAMP_IN + 10, REF_OUT = CLAMP_X - 10;
   const MAXN = 20000, density = 0.5, MM_PER_RHO = 92500;
   const BIN = 16, NB = W / BIN;
+  const rhoSm = new Float32Array(NB);   // net charge in solution per column, smoothed (ions inside channels excluded)
+  let poreQSm = 0;                      // net charge held inside the channels, smoothed
 
   const px = new Float32Array(MAXN), py = new Float32Array(MAXN);
   const sp = new Uint8Array(MAXN), pore = new Int16Array(MAXN), side = new Int8Array(MAXN);
@@ -1129,7 +1171,7 @@ function chipGroup(attr, onPick) {
     setMembraneCharge(Math.round(cEff * KT * Math.log(COUT[0] / CIN[0])));
     steps = 0; stepAcc = 0; sampleAcc = 0; vSum = 0; cross.fill(0); cumNaIn = cumKOut = 0; iSm = [0, 0, 0];
     for (const k in tr) tr[k].length = 0;
-    crossings.length = 0; dens.fill(0);
+    crossings.length = 0; dens.fill(0); rhoSm.fill(0); poreQSm = 0;
     sanitize(); binAndField(); countIn();
     vAvg = V;
     $('patchInfo').textContent = `Simulated patch: ${H.toLocaleString()} px of membrane (zoom and drag the view to look around it), ${N.toLocaleString()} ions. Each channel lets only its own ion through; the Na⁺ channels have a gate on their inner mouth.`;
@@ -1302,8 +1344,8 @@ function chipGroup(attr, onPick) {
   clampView();
   const chartW = 480, chartH = 360;      // charts sit beside the simulation, as in part 1; taller to match its height
   const I_RANGE = [-30, 30];             // fixed current axis (ions per 1000 steps): fits 24 of each channel
+  const Q_RANGE = [-250, 250];           // fixed: ions moved over one chart window after a change, at the defaults
   const vc = setupCanvas($('pVchart'), chartW, chartH), ic = setupCanvas($('pIchart'), chartW, chartH);
-  const vState = {}, iState = {};
   let pview = 'i', tint = [], lipid = '';
   colorHooks.push(() => { tint = [C.k, C.na].map(c => mixc(c, C.surface, 0.24)); lipid = mixc(C.mem, C.surface, 0.45); lutDark = null; });
   tint = [C.k, C.na].map(c => mixc(c, C.surface, 0.24)); lipid = mixc(C.mem, C.surface, 0.45);
@@ -1413,14 +1455,14 @@ function chipGroup(attr, onPick) {
     // labels
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const region = (t, x, align) => {
-      ctx.font = '700 18px "IBM Plex Sans", sans-serif';
-      const w = ctx.measureText(t).width + 22, h = 32, y0 = 12, bx = align === 'left' ? x : x - w;
-      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(bx, y0, w, h, 6); ctx.fill();
+      ctx.font = '700 26px "IBM Plex Sans", sans-serif';
+      const w = ctx.measureText(t).width + 28, h = 42, y0 = 14, bx = align === 'left' ? x : x - w;
+      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(bx, y0, w, h, 7); ctx.fill();
       ctx.fillStyle = C.surface; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, bx + w / 2, y0 + h / 2 + 1);
       ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
     };
-    if (x0 < MX) region('INSIDE', 12, 'left');
-    if (x1 > MX) region('OUTSIDE', CW - 12, 'right');
+    if (x0 < MX) region('INTRACELLULAR', 16, 'left');
+    if (x1 > MX) region('EXTRACELLULAR', CW - 16, 'right');
   }
   function drawCharts() {
     const x1 = Math.max(TRACE_LEN * SAMPLE / 1000, steps / 1000), x0 = x1 - TRACE_LEN * SAMPLE / 1000;
@@ -1429,11 +1471,12 @@ function chipGroup(attr, onPick) {
       refs: [{ v: nernst(0), color: C.k, label: 'E_K' }, { v: nernst(1), color: C.na, label: 'E_Na' },
              { v: ghk(nCh[0], naOpen ? nCh[1] : 0), color: C.accent, dash: [2, 3], width: 2, label: 'GHK' }],
       ylabel: 'mV', xlabel: 'thousands of steps' });
-    if (pview === 'q') drawChart(ic, { w: chartW, h: chartH, key: 15, r: 128, xs: tr.x, x0, x1, on: tr.on, restart: true, state: iState, minSpan: 20,
+    if (pview === 'q') drawChart(ic, { w: chartW, h: chartH, key: 15, r: 128, xs: tr.x, x0, x1, on: tr.on, restart: true, fixed: Q_RANGE,
       series: [{ ys: tr.qNa, color: C.na, label: 'Na⁺ in' }, { ys: tr.qK, color: C.k, label: 'K⁺ out' }, { ys: tr.qC, color: C.pos, width: 2.6, label: 'on membrane' }],
       ylabel: 'ions since the last change', xlabel: 'thousands of steps' });
     else drawChart(ic, { w: chartW, h: chartH, key: 15, xs: tr.x, x0, x1, on: tr.on, fixed: I_RANGE,
-      series: [{ ys: tr.iNa, color: C.na, label: 'I_Na' }, { ys: tr.iK, color: C.k, label: 'I_K' }, { ys: tr.iC, color: C.pos, width: 2.6, label: 'I_C' }],
+      series: [{ ys: tr.iNa, color: C.na, label: 'I_Na' }, { ys: tr.iK, color: C.k, label: 'I_K' }, { ys: tr.iC, color: C.pos, width: 2.6, label: 'I_C' },
+               { ys: tr.iNa.map((v, k) => v + tr.iK[k] + tr.iC[k]), color: C.accent, dash: [6, 4], label: 'sum' }],
       ylabel: 'ions per 1000 steps, outward +', xlabel: 'thousands of steps' });
   }
   function captions() {
@@ -1455,14 +1498,102 @@ function chipGroup(attr, onPick) {
   const playBtn = $('play');
   const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
   playBtn.addEventListener('click', () => setRunning(!running));
-  $('reset').addEventListener('click', () => { setGate(false); reset(); iState.lo = null; });
-  chipGroup('pview', v => { pview = v; iState.lo = null; captions(); });
+  $('reset').addEventListener('click', () => { setGate(false); reset(); });
+  chipGroup('pview', v => { pview = v; captions(); });
   colorHooks.push(() => { drawSim(); drawCharts(); });
 
   // ---------- loop ----------
   buildChannels(); reset(); captions();
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
   const FRAME_MS = 24; let restMs = 4, frame = 0;
+  // ---------- charge profile: chart B of the Membrane potential page ----------
+  function smoothProfile(alpha) {
+    const rho = new Float32Array(NB); let pq = 0;
+    for (let i = 0; i < N; i++) {
+      const z = Z[sp[i]];
+      if (pore[i] >= 0) { pq += z; continue; }
+      rho[Math.max(0, Math.min(NB - 1, (px[i] / BIN) | 0))] += z;
+    }
+    for (let b = 0; b < NB; b++) rhoSm[b] += (rho[b] - rhoSm[b]) * alpha;
+    poreQSm += (pq - poreQSm) * alpha;
+  }
+  // fixed scales, the same as on the Membrane potential page; beyond them bars are cut off at the frame
+  const rScale = 24, qScale = 55, PW = 640, PRH = 400, PT = 34, PB = 34, PL = 50, PR = 16;
+  const pctx = setupCanvas($('iProfile'), PW, PRH);
+  const psx = x => PL + x / W * (PW - PL - PR);
+  const fmtQ = q => (q < 0 ? '−' : q > 0 ? '+' : '') + Math.abs(q).toFixed(0) + ' e';
+  function drawProfile() {
+    const c = pctx, h = PRH - PT - PB, y0 = PT + h / 2;
+    c.fillStyle = C.surface; c.fillRect(0, 0, PW, PRH);
+    c.fillStyle = C.mem; c.globalAlpha = 0.7; c.fillRect(psx(XIN), PT, Math.max(3, psx(XOUT) - psx(XIN)), h); c.globalAlpha = 1;
+    // frame + zero line
+    c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(PL + 0.5, PT + 0.5, PW - PL - PR - 1, h - 1);
+    c.beginPath(); c.moveTo(PL, y0); c.lineTo(PW - PR, y0); c.stroke();
+    // each diffuse layer's Q: the charge in the bins out to 3λ from the membrane face
+    const nb = Math.ceil(3 * lambda / BIN), bIn = Math.floor((XIN - 1) / BIN), bOut = Math.floor(XOUT / BIN);
+    let qi = 0, qo = 0;
+    for (let k = 0; k < nb; k++) { if (bIn - k >= 0) qi += rhoSm[bIn - k]; if (bOut + k < NB) qo += rhoSm[bOut + k]; }
+    const norm = BIN / (lambda * (1 - Math.exp(-3)));   // the exponential's height at the face, per bin, per unit Q
+    // bars, cut off at the frame if a setting pushes them past the fixed scale
+    for (let b = 0; b < NB; b++) {
+      const r = rhoSm[b], bh = Math.max(-1, Math.min(1, r / rScale)) * (h / 2), xa = psx(b * BIN), xb = psx((b + 1) * BIN);
+      c.fillStyle = r > 0 ? C.pos : C.neg;
+      c.fillRect(xa + 0.75, r > 0 ? y0 - bh : y0, xb - xa - 1.5, Math.abs(bh));
+    }
+    // charge held inside the channels: its own hatched bar over the membrane
+    {
+      const q = poreQSm, bh = Math.min(h / 2, Math.abs(q) / rScale * (h / 2));
+      const xa = psx(XIN - BW), xb = psx(XOUT + BW), ytop = q > 0 ? y0 - bh : y0;
+      c.save(); c.beginPath(); c.rect(xa, ytop, xb - xa, bh); c.clip();
+      c.fillStyle = C.surface; c.fillRect(xa, ytop, xb - xa, bh);
+      c.strokeStyle = q > 0 ? C.pos : C.neg; c.lineWidth = 1.5;
+      c.beginPath();
+      for (let t = -h; t < h; t += 5) { c.moveTo(xa, ytop + t); c.lineTo(xb, ytop + t + (xb - xa)); }
+      c.stroke();
+      c.restore();
+      c.strokeStyle = q > 0 ? C.pos : C.neg; c.lineWidth = 1.2; c.strokeRect(xa + 0.5, ytop + 0.5, xb - xa - 1, Math.max(0, bh - 1));
+    }
+    // The diffuse layers: the exponential ρ(d) = ρ₀·e^(−d/λ) with the same charge as each layer, shaded, so the shaded area is Q
+    {
+      const yq = q => y0 - Math.max(-1, Math.min(1, q / rScale)) * (h / 2);
+      [[XIN, -1, qi, C.neg], [XOUT, 1, qo, C.pos]].forEach(([face, dir, q, col]) => {
+        const xEnd = face + dir * 3 * lambda;
+        c.beginPath(); c.moveTo(psx(face), y0);
+        for (let d = 0; d <= 3 * lambda; d += 2) c.lineTo(psx(face + dir * d), yq(q * norm * Math.exp(-d / lambda)));
+        c.lineTo(psx(xEnd), y0); c.closePath();
+        c.fillStyle = col; c.globalAlpha = 0.16; c.fill(); c.globalAlpha = 1;
+        c.strokeStyle = col; c.lineWidth = 2; c.beginPath();
+        for (let d = 0; d <= 3 * lambda; d += 2) { const x = psx(face + dir * d), y = yq(q * norm * Math.exp(-d / lambda)); d ? c.lineTo(x, y) : c.moveTo(x, y); }
+        c.stroke();
+        c.setLineDash([3, 3]); c.lineWidth = 1; c.beginPath(); c.moveTo(psx(xEnd), PT + 4); c.lineTo(psx(xEnd), PT + h - 4); c.stroke(); c.setLineDash([]);
+      });
+      // each layer's Q as a diverging bar under the chart: inside grows left, outside grows right
+      [['iqInBar', 'iqInLab', qi], ['iqOutBar', 'iqOutLab', qo]].forEach(([bar, lab, q]) => {
+        const b = $(bar); b.style.width = Math.min(50, 50 * Math.abs(q) / qScale) + '%'; b.style.background = q < 0 ? C.neg : C.pos;
+        $(lab).textContent = fmtQ(q);
+      });
+      // λ scale bar under the outer layer
+      const yb = PT + h - 12;
+      c.strokeStyle = C.muted; c.lineWidth = 1; c.beginPath();
+      c.moveTo(psx(XOUT), yb - 4); c.lineTo(psx(XOUT), yb + 4); c.moveTo(psx(XOUT), yb); c.lineTo(psx(XOUT + lambda), yb);
+      c.moveTo(psx(XOUT + lambda), yb - 4); c.lineTo(psx(XOUT + lambda), yb + 4); c.stroke();
+      c.font = '11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'left'; c.fillText('λ', psx(XOUT + lambda) + 4, yb);
+    }
+    // axes
+    c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
+    c.textAlign = 'right';
+    c.fillStyle = C.pos; c.fillText('+' + rScale.toFixed(0) + ' e', PL - 6, PT + 6);
+    c.fillStyle = C.muted; c.fillText('0 e', PL - 6, y0);
+    c.fillStyle = C.neg; c.fillText('−' + rScale.toFixed(0) + ' e', PL - 6, PT + h - 6);
+    c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted;
+    c.textAlign = 'left'; c.fillText('NET CHARGE', PL, 16);
+    c.font = '500 11.5px "IBM Plex Sans", sans-serif';
+    c.textAlign = 'left'; c.fillText('intracellular', PL, PRH - 14);
+    c.textAlign = 'center'; c.fillText('membrane', psx(MX), PRH - 14);
+    c.textAlign = 'right'; c.fillText('extracellular', PW - PR, PRH - 14);
+    c.textBaseline = 'alphabetic';
+  }
+
   function loop() {
     let ran = 0;
     if (running) {
@@ -1474,7 +1605,8 @@ function chipGroup(attr, onPick) {
     }
     const t1 = performance.now();
     if (tintOn && ran) updateDensity(1 - Math.exp(-ran / densTau));
-    drawSim(); drawCharts();
+    if (ran) smoothProfile(1 - Math.exp(-ran / densTau));
+    drawSim(); drawCharts(); drawProfile();
     if (frame++ % 6 === 0) readouts();
     restMs += (performance.now() - t1 - restMs) * 0.1;
     requestAnimationFrame(loop);
@@ -1507,7 +1639,7 @@ function chipGroup(attr, onPick) {
   // The buttons work through the page's own controls, so they behave exactly like clicking them.
   const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
   const press = sel => { const b = document.querySelector(sel); if (b.getAttribute('aria-pressed') !== 'true') b.click(); };
-  const switchOn = id => { if ($(id).getAttribute('aria-checked') !== 'true') $(id).click(); };
+  const switchOn = id => { const e = $(id); if ((e.getAttribute('aria-pressed') ?? e.getAttribute('aria-checked')) !== 'true') e.click(); };
   const running = id => { if ($(id).textContent.trim() === 'Play') $(id).click(); };
   document.querySelectorAll('[data-rctry]').forEach(b => b.addEventListener('click', () => {
     const [what, id, v] = b.dataset.rctry.split(':');
@@ -1610,14 +1742,16 @@ function chipGroup(attr, onPick) {
     tags(vc, lab);
   }
   function drawI(m) {
-    const peak = Math.max(10, ...m.branch(m.V0).map(b => Math.abs(b.I)), Math.abs(ICof(m, m.V0)));
-    const top = [25, 50, 100, 200, 500, 1000, 2000].find(v => v >= peak * 1.1) || 2000;
+    const top = 500;   // fixed, wide enough for the Try-it values (g_Na 3 mS/cm²: I_C starts near 440 µA/cm²); beyond, it clips
     const y = frame(ic, -top, top, top / 2, 'I (µA/cm², outward +)'), lab = [];
     m.branch(0).forEach((b, k) => {
       curve(ic, y, t => m.branch(Vt(m, t))[k].I, b.c, 1.8);
       lab.push({ y: y(m.branch(Vt(m, TMAX))[k].I), t: b.label, c: b.c });
     });
     curve(ic, y, t => ICof(m, Vt(m, t)), C.pos, 2.6); lab.push({ y: y(ICof(m, Vt(m, TMAX))), t: 'I_C', c: C.pos });
+    // the sum of the membrane's currents (the source itself left out, as on the circuit's chart)
+    const total = t => { const V = Vt(m, t); return m.branch(V).filter(b => b.label !== 'source').reduce((a, b) => a + b.I, 0) + ICof(m, V); };
+    curve(ic, y, total, C.accent, 1.8, [6, 4]); lab.push({ y: y(total(TMAX)), t: 'sum', c: C.accent });
     tags(ic, lab);
   }
 
@@ -1677,7 +1811,26 @@ function chipGroup(attr, onPick) {
   new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
 </script>
-<!-- Fill-in boxes: type a value into any slider's readout -->
+<script>
+// The floating bar's first button follows what you are looking at. Normally it is the circuit's switch (and opens
+// the particle simulation's Na⁺ channels with it). While the particle simulation is in view and the circuit is
+// injecting current, which has nothing to do with Na⁺ channels, it becomes the particle simulation's Na⁺ channels.
+(() => {
+  const btn = document.getElementById('fbSwitch'), ion = document.getElementById('ion-card').parentElement;   // the whole particle section: simulation, charge chart, settings
+  document.getElementById('gate').style.setProperty('--on', 'var(--na)');
+  const update = () => {
+    const r = ion.getBoundingClientRect(), ionInView = r.top < innerHeight / 2 && r.bottom > innerHeight / 2;   // it crosses mid-screen
+    const injecting = document.querySelector('[data-mode="inj"]').getAttribute('aria-pressed') === 'true';
+    const want = ionInView && injecting ? 'gate' : 'cSwitch gate';
+    if (btn.dataset.copy !== want) btn.dataset.copy = want;
+  };
+  addEventListener('scroll', update, { passive: true }); addEventListener('resize', update);
+  document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setTimeout(update, 0)));
+  update();
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
 <script src="sliders.js"></script>
 </body>
 </html>
