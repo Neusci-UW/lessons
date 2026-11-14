@@ -394,6 +394,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <dt>mV</dt><dd>millivolts, for voltage: the inside relative to the outside.</dd>
         <dt>ms</dt><dd>milliseconds, for time. A spike lasts about 0.3 ms in a warm mammalian axon and 2 ms in the cold squid axon; the Speed slider sets how many ms of model time pass per second, so the fast ones can be slowed down to watch.</dd>
         <dt>µA/cm²</dt><dd>microamps per cm² of membrane, for current, positive when it flows outward.</dd>
+        <dt>mA/cm²</dt><dd>milliamps per cm², 1000 µA/cm²: the current charts use it, since the currents at a node of Ranvier run to tens of thousands of µA/cm².</dd>
         <dt>mS/cm²</dt><dd>conductance, 1/resistance, per cm² of membrane.</dd>
         <dt>µF/cm²</dt><dd>capacitance per cm². Here C = 1 µF/cm², the usual value.</dd>
         <dt>mM</dt><dd>millimolar, for concentrations. They set the Nernst potentials, as in lesson 1.</dd>
@@ -795,10 +796,10 @@ function step(dt, Istim) {   // Istim in µA, into each stimulating electrode's 
 // ---------- recording: what the electrodes see ----------
 const PULSE = 0.5;                         // ms
 // Fixed axes, the same for every cell: time charts show the last 30 ms (the C fibre's spike takes about 20 ms to
-// pass both electrodes), and current charts ±70,000 µA/cm², about twice what the default cell reaches (the motor
-// neuron's nodes, about 34,000), so its currents fill about half the chart. Beyond them, lines are clipped. The
-// distance charts follow the Length slider.
-const WINDOW = 30, I_TOP = 70000;
+// pass both electrodes), and current charts ±40 mA/cm², which the default cell's currents fill (the motor neuron's
+// nodes reach about 34 mA/cm²). Beyond them, lines are clipped. The distance charts follow the Length slider.
+// The model works in µA/cm²; the current charts show mA/cm², so the axis reads in whole numbers.
+const WINDOW = 30, I_TOP = 40, I_SCALE = 0.001;   // mA/cm², and µA → mA
 let hist = [], nextSample = 0, stimT0 = -1, stims = [], tB = null, tC = null;
 // the piece under an electrode: on a myelinated axon, the nearest node, where the voltage-gated channels are
 function idx(frac) {
@@ -1054,9 +1055,10 @@ function plot(c, o) {
     if (s.dash && !o.scrolls) c.setLineDash(s.dash);
     const per = s.dash && o.scrolls ? (s.dash[0] + s.dash[1]) * (o.x1 - o.x0) / pwid : 0, frac = per ? s.dash[0] / (s.dash[0] + s.dash[1]) : 1;
     const drawn = x => !per || ((x / per) % 1 + 1) % 1 < frac;
-    s.xs.forEach((x, i) => { const X = sx(x), Y = sy(s.ys[i]); i && drawn(s.xs[i - 1]) ? c.lineTo(X, Y) : c.moveTo(X, Y); });
+    const k = o.yscale || 1;   // o.yscale: units shown per unit of the data
+    s.xs.forEach((x, i) => { const X = sx(x), Y = sy(s.ys[i] * k); i && drawn(s.xs[i - 1]) ? c.lineTo(X, Y) : c.moveTo(X, Y); });
     c.stroke(); c.setLineDash([]);
-    if (s.label) tags.push({ y: sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color });
+    if (s.label) tags.push({ y: sy(s.ys[s.ys.length - 1] * k), t: s.label, c: s.color });
   }
   c.restore();
   c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle';
@@ -1083,7 +1085,7 @@ function drawCharts() {
     series: [{ xs: ts, ys: h.map(p => p.VA), color: C.a, width: 2, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.ink, width: 2.4, label: 'B' }, { xs: ts, ys: h.map(p => p.VC), color: C.accent, width: 2.4, label: 'C' }] });
   {
     const pick = a => along.map(i => a[i]);
-    plot(xic, { x0: 0, x1: P.len, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: xlab, ylabel: 'I (µA/cm², outward +)',
+    plot(xic, { x0: 0, x1: P.len, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, yscale: I_SCALE, xlabel: xlab, ylabel: 'I (mA/cm², outward +)',
       series: [{ xs: xsA, ys: pick(M.INa), color: C.na, label: 'I_Na' }, { xs: xsA, ys: pick(M.IK), color: C.k, label: 'I_K' }, { xs: xsA, ys: pick(M.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: xsA, ys: pick(M.IC), color: C.pos, label: 'I_C', width: 2.4 },
                { xs: xsA, ys: along.map(i => M.INa[i] + M.IK[i] + M.ICl[i] + M.IC[i]), color: C.accent, dash: [6, 4], label: 'sum' }] });
   }
@@ -1091,7 +1093,7 @@ function drawCharts() {
     plot(ic, { scrolls: true, x0: t0, x1: t1, y0: 0, y1: 1, ystep: 0.25, plus: true, spans, xlabel: tlab, ylabel: 'fraction of gates open at A',
       series: [{ xs: ts, ys: h.map(p => p.m), color: C.na, label: 'm' }, { xs: ts, ys: h.map(p => p.h), color: C.na, dash: [6, 4], label: 'h' }, { xs: ts, ys: h.map(p => p.n), color: C.k, label: 'n' }] });
   } else {
-    plot(ic, { scrolls: true, x0: t0, x1: t1, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, xlabel: tlab, ylabel: 'I (µA/cm², outward +)', spans,
+    plot(ic, { scrolls: true, x0: t0, x1: t1, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, yscale: I_SCALE, xlabel: tlab, ylabel: 'I (mA/cm², outward +)', spans,
       series: [{ xs: ts, ys: h.map(p => p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => p.IC), color: C.pos, label: 'I_C', width: 2.4 },
                { xs: ts, ys: h.map(p => p.INa + p.IK + p.ICl + p.IC), color: C.accent, dash: [6, 4], label: 'sum' }] });
   }
