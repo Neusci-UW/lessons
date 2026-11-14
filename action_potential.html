@@ -14,7 +14,7 @@
 /* Same look as the first two lessons: a travelling spike on top, the theory below. */
 :root{
   --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
-  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --a:#9aa29e;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --a:#9aa29e; --ea:#c0287a;
   --pos:#d1373f; --neg:#2861c8;
   --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
   --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
@@ -24,7 +24,7 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
-    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --a:#69726e;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --a:#69726e; --ea:#f477b7;
     --pos:#f0646b; --neg:#6b9cf2;
     --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
     color-scheme: dark;
@@ -32,7 +32,7 @@
 }
 :root[data-theme="dark"]{
   --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
-  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --a:#69726e;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --a:#69726e; --ea:#f477b7;
   --pos:#f0646b; --neg:#6b9cf2;
   --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
   color-scheme: dark;
@@ -178,7 +178,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 #axon{cursor:default;touch-action:pan-y}
 .chartrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:900px){.chartrow{grid-template-columns:1fr}}
-.dot.cl{background:var(--cl)}.dot.esoma{background:var(--a)}.dot.ea{background:var(--ink)}.dot.eb{background:var(--accent)}
+.dot.cl{background:var(--cl)}.dot.esoma{background:var(--ea)}.dot.ea{background:var(--ink)}.dot.eb{background:var(--accent)}
 .stimflash{color:var(--na);font-weight:600}
 .cellbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 .cellbar select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
@@ -290,7 +290,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="ccol">
           <p class="sect-title">Voltage at the electrodes</p>
           <canvas id="tChart" aria-label="Membrane potential at electrodes A (cell body), B and C against time"></canvas>
-          <p class="caption">The same spike, seen from fixed places: A is the cell body (grey), B and C are on the axon. Shaded: stimulus on. The delay between B and C and the distance between them give the conduction velocity.</p>
+          <p class="caption">The same spike, seen from fixed places: A is the cell body (magenta), B and C are on the axon. Shaded: stimulus on. The delay between B and C and the distance between them give the conduction velocity.</p>
         </div>
         <div class="ccol">
           <div class="charthead"><p class="sect-title">At electrode B</p>
@@ -302,7 +302,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     </div>
     <div class="help" role="tabpanel" id="pane-axhelp" aria-labelledby="tab-axhelp" hidden>
       <ul>
-        <li><b>The drawing:</b> a neuron coloured by its membrane potential, blue at rest and red at the top of a spike. Electrode A is in the cell body, at the left, and the axon runs away from it to its terminals at the right; B and C are on the axon (drag them, or use the sliders under Settings). Choose which electrodes stimulate with the A, B and C buttons by the Stimulus slider, one or several at once; the rest record. A stimulating electrode is drawn orange.</li>
+        <li><b>The drawing:</b> a neuron coloured by its membrane potential, blue at rest and red at the top of a spike. Electrode A is in the cell body, at the left, and the axon runs away from it to its terminals at the right; B and C are on the axon (drag them, or use the sliders under Settings). Choose which electrodes stimulate with the A, B and C buttons by the Stimulus slider, one or several at once; the rest record. Each electrode has its own colour, the same on the charts; a stimulating one is labelled "stimulating" in orange.</li>
         <li><b>Cell:</b> each choice sets the temperature, the ion concentrations (as on the Membrane potential page), the sizes and whether the axon is myelinated. Change any setting and the menu says Custom.</li>
         <li><b>Initiation site:</b> the orange bracket marks the start of the axon, just past the cell body. This is where the spike starts: the first membrane with enough voltage-gated channels to reach threshold.</li>
         <li><b>The model:</b> the cell body and each short piece of axon is a patch of membrane like the one in lesson 2: Na⁺, K⁺ and Cl⁻ channels, each a resistor with its Nernst battery, and a capacitor. Neighbouring patches are joined by the cytoplasm, which acts as a resistor. The cell body has a quarter of the axon's voltage-gated channels, so it fires only because the axon next to it does.</li>
@@ -623,7 +623,7 @@ const dpr = Math.min(window.devicePixelRatio || 1, 2);
 let C = {};
 function readColors() {
   const cs = getComputedStyle(document.documentElement);
-  ['bg','surface','ink','muted','line','accent','k','na','cl','a','pos','neg','cyto','bath','mem','memdark'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  ['bg','surface','ink','muted','line','accent','k','na','cl','a','ea','pos','neg','cyto','bath','mem','memdark'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
 }
 function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
@@ -968,29 +968,29 @@ function drawAxon() {
     c.strokeStyle = C.muted; c.lineWidth = 1; c.stroke();
     c.strokeStyle = 'rgba(255,255,255,0.6)'; c.beginPath(); c.moveTo(len * 0.45, -w * 0.25); c.lineTo(len - 2, -w * 0.6); c.stroke();
     c.strokeStyle = hot ? C.na : C.muted; c.lineWidth = hot ? 1.8 : 1.2; c.beginPath(); c.moveTo(len * 0.3, 0); c.lineTo(len + 18, 0); c.stroke();
-    c.fillStyle = C.muted; c.fillRect(len, -w - 1.5, 16, 2 * w + 3);
-    c.fillStyle = tint; c.fillRect(len + 12, -w - 1.5, 4, 2 * w + 3);
+    c.fillStyle = tint; c.fillRect(len, -w - 1.5, 16, 2 * w + 3);   // the holder, in the electrode's colour
     c.strokeStyle = C.muted; c.lineWidth = 2; c.beginPath(); c.moveTo(len + 16, 0); c.lineTo(len + 60, 0); c.stroke();
     if (hot) { c.strokeStyle = C.na; c.lineWidth = 1.5; [7, 12, 17].forEach((r, k) => { c.globalAlpha = 0.9 - k * 0.28; c.beginPath(); c.arc(0, 0, r, 0, 6.283); c.stroke(); }); c.globalAlpha = 1; }
     c.restore();
   }
-  // electrodes: a stimulating one is orange, with rings while the pulse is on; the others record
+  // electrodes, each in its own colour (A magenta, B ink, C teal, as on the charts); a stimulating one is labelled
+  // in orange, with rings and an orange wire while the pulse is on
   const on = stimT0 >= 0 && M.t - stimT0 < PULSE;
   const tag = (name, col, stim, x, y) => {
-    c.font = '600 13px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = stim ? C.na : col;
-    c.fillText(name, x, y);
-    if (stim) { const w = c.measureText(name).width; c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillText(on ? '⚡ stimulating' : 'stimulating', x + w + 6, y); }
+    c.font = '700 14px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = col;
+    c.fillText(name, x, y);   // the letter always in the electrode's own colour
+    if (stim) { const w = c.measureText(name).width; c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.na; c.fillText(on ? '⚡ stimulating' : 'stimulating', x + w + 6, y); }
   };
   const axonPin = (e, i, col) => {
     const tx = mmx(M.xc[i]), ty = YC - half * 0.35, stim = P.stimAt.includes(e);
-    pipette(tx, ty, 0.22, -1, 56, 3.5, stim ? C.na : col, stim && on);
+    pipette(tx, ty, 0.22, -1, 56, 3.5, col, stim && on);
     tag(e, col, stim, tx + 21, ty - 62);
   };
   axonPin('B', iB, C.ink); axonPin('C', iC, C.accent);
   // electrode A, its tip inside the cell body
   const stimA = P.stimAt.includes('A');
-  pipette(SX + sr * 0.15, YC - sr * 0.3, 0.45, -1, 70, 5, stimA ? C.na : C.a, stimA && on);
-  tag('A', C.a, stimA, SX + 62, 12);
+  pipette(SX + sr * 0.15, YC - sr * 0.3, 0.45, -1, 70, 5, C.ea, stimA && on);
+  tag('A', C.ea, stimA, SX + 62, 12);
 
   c.textAlign = 'right'; c.fillStyle = C.ink; c.font = '500 12px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
   c.fillText('t = ' + fmtTime(M.t), AW - 8, 14);
@@ -1062,9 +1062,11 @@ function plot(c, o) {
   }
   c.restore();
   c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  // spread the labels 13 px apart, then push any that ran off the bottom back up, so none sit on top of each other
   tags.sort((a, b) => a.y - b.y);
   for (let k = 1; k < tags.length; k++) if (tags[k].y - tags[k - 1].y < 13) tags[k].y = tags[k - 1].y + 13;
-  tags.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, W - R + 6, Math.max(T + 5, Math.min(T + ph - 2, l.y))); });
+  for (let k = tags.length - 1; k >= 0; k--) tags[k].y = Math.min(tags[k].y, k === tags.length - 1 ? T + ph - 2 : tags[k + 1].y - 13);
+  tags.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, W - R + 6, Math.max(T + 5, l.y)); });
 }
 const Vrefs = () => { const e = E(); return [{ v: e.Na, color: C.na, label: 'E_Na' }, { v: e.K, color: C.k, label: 'E_K' }, { v: e.Cl, color: C.cl, label: 'E_Cl' }]; };
 let iview = 'i';
@@ -1082,7 +1084,7 @@ function drawCharts() {
   const spans = stims.map(t => [t, t + PULSE]), tlab = 'time (ms)';
   const cross = (t, col) => ({ x: t != null && t >= t0 ? t : null, color: col });
   plot(tc, { scrolls: true, x0: t0, x1: t1, y0: -100, y1: 70, ystep: 50, xlabel: tlab, ylabel: 'V (mV)', refs: Vrefs(), spans, vlines: [cross(tB, C.ink), cross(tC, C.accent)],
-    series: [{ xs: ts, ys: h.map(p => p.VA), color: C.a, width: 2, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.ink, width: 2.4, label: 'B' }, { xs: ts, ys: h.map(p => p.VC), color: C.accent, width: 2.4, label: 'C' }] });
+    series: [{ xs: ts, ys: h.map(p => p.VA), color: C.ea, width: 2.4, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.ink, width: 2.4, label: 'B' }, { xs: ts, ys: h.map(p => p.VC), color: C.accent, width: 2.4, label: 'C' }] });
   {
     const pick = a => along.map(i => a[i]);
     plot(xic, { x0: 0, x1: P.len, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, yscale: I_SCALE, xlabel: xlab, ylabel: 'I (mA/cm², outward +)',
