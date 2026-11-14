@@ -1563,8 +1563,8 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   }
 
   // ---------- charge profile ----------
-  // Fixed scales, wide enough for every preset (the largest is K⁺ only with squid concentrations: bars up to 21 e,
-  // a layer up to 50 e). Settings beyond the presets can run off the edge; the scale never moves.
+  // Fixed scales, about twice what the default settings reach (bars about 11 e, a layer about 27 e), so the default
+  // fills about half the chart. Larger settings can run off the edge; the scale never moves.
   const rScale = 24, qScale = 55;
   const PT = 34, PB = 34, PL = 50, PR = 16;
   const psx = x => PL + x / W * (PW - PL - PR);
@@ -1936,9 +1936,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     const gT = G[0] + G[1] + G[2];
     const L_ = 56, R_ = 14, T_ = 16, B_ = 34, pw = GW - L_ - R_, ph = GH - T_ - B_;
     const VMIN_ = -120, VMAX_ = 80, lx = v => L_ + (v - VMIN_) / (VMAX_ - VMIN_) * pw;
-    // a fixed current range, the same for every cell in the menu and both models (the largest is the red blood
-    // cell, about 1,430); curves beyond it run off the edge
-    const imax = 1500;
+    // a fixed current range for each model, about twice the default cell's (GHK about 220, chord about 70), so the
+    // default fills about half the chart; larger currents run off the edge
+    const imax = chord ? 150 : 450;
     const ly = i => T_ + ph / 2 - (i / imax) * (ph / 2);
     const trace = fn => { gx.beginPath(); for (let V = VMIN_; V <= VMAX_; V += 2) { const y = ly(fn(V)); V === VMIN_ ? gx.moveTo(lx(V), y) : gx.lineTo(lx(V), y); } gx.stroke(); };
     gx.fillStyle = C.surface; gx.fillRect(0, 0, GW, GH);

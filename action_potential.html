@@ -747,8 +747,9 @@ function step(dt, Istim) {   // Istim in µA, into the cell body
 const PULSE = 0.5;                         // ms
 // Every chart has fixed axes, the same for every cell, wide enough for all of them: time charts show the last
 // 30 ms (the C fibre's spike takes about 20 ms to pass both electrodes), distance charts the longest axon, 1 m,
-// and current charts ±35,000 µA/cm² (the motor neuron's nodes reach about 34,000). Beyond them, lines are clipped.
-const WINDOW = 30, X_MAX = 1000, I_TOP = 35000;
+// and current charts ±70,000 µA/cm², about twice what the default cell reaches (the motor neuron's nodes, about
+// 34,000), so its currents fill about half the chart. Beyond them, lines are clipped.
+const WINDOW = 30, X_MAX = 1000, I_TOP = 70000;
 let hist = [], nextSample = 0, stimT0 = -1, stims = [], tA = null, tB = null;
 // the piece under an electrode: on a myelinated axon, the nearest node, where the voltage-gated channels are
 function idx(frac) {
@@ -989,9 +990,12 @@ function plot(c, o) {
   for (const v of o.vlines || []) { if (v.x == null) continue; c.strokeStyle = v.color; c.lineWidth = 1.4; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(sx(v.x), T); c.lineTo(sx(v.x), T + ph); c.stroke(); c.setLineDash([]); }
   for (const s of o.series) {
     if (s.xs.length < 2) continue;
-    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round'; c.setLineDash(s.dash || []); c.beginPath();
-    s.xs.forEach((x, i) => { const X = sx(x), Y = sy(s.ys[i]); i ? c.lineTo(X, Y) : c.moveTo(X, Y); });
-    c.stroke(); c.setLineDash([]);
+    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round'; c.beginPath();
+    // dashed by its own x values, so the dashes scroll with the line rather than crawling along it
+    const per = s.dash ? (s.dash[0] + s.dash[1]) * (o.x1 - o.x0) / pwid : 0, frac = s.dash ? s.dash[0] / (s.dash[0] + s.dash[1]) : 1;
+    const drawn = x => !per || ((x / per) % 1 + 1) % 1 < frac;
+    s.xs.forEach((x, i) => { const X = sx(x), Y = sy(s.ys[i]); i && drawn(s.xs[i - 1]) ? c.lineTo(X, Y) : c.moveTo(X, Y); });
+    c.stroke();
     if (s.label) tags.push({ y: sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color });
   }
   c.restore();

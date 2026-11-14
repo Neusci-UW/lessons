@@ -115,7 +115,8 @@ header p{max-width:90ch}
 .qtrack{position:relative;height:16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);overflow:hidden}
 .qtrack::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid var(--muted)}
 .qfill{position:absolute;top:0;bottom:0;width:0}
-#iProfile{max-width:900px}
+#iqInBar{right:50%}
+#iqOutBar{left:50%}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
 .stage{display:flex;flex-direction:column;gap:12px}
 canvas{display:block;width:100%;height:auto;border-radius:6px}
@@ -254,7 +255,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     </div>
     <div class="help" role="tabpanel" id="pane-circhelp" aria-labelledby="tab-circhelp" hidden>
       <ul>
-        <li><b>The drawing:</b> the bottom wire is the inside of the cell (intracellular), the top wire the outside (extracellular, ground). Each ion channel is a branch: a resistor (1/g) in series with a battery, that ion's Nernst potential E. The capacitor on the right is the lipid bilayer.</li>
+        <li><b>The drawing:</b> the bottom wire is the inside of the cell (intracellular), the top wire the outside (extracellular, ground). In current injection the two wires are the electrodes: the anode is the electrode current flows out of, into the solution around it, and the cathode the one it flows back into. With positive I<sub>inj</sub> the electrode inside the cell is the anode; make I<sub>inj</sub> negative and they swap. Each ion channel is a branch: a resistor (1/g) in series with a battery, that ion's Nernst potential E. The capacitor on the right is the lipid bilayer.</li>
         <li><b>Current injection</b> replaces the channels with a current source and one resistor, like an electrode pushing current into the cell.</li>
         <li><b>Dots:</b> moving positive charge (conventional current), coloured by the branch it went through. Each dot carries the same charge as one + or − mark on the capacitor plates, so you can watch dots arriving at a plate turn into marks. Current is positive when it flows from inside to outside, the usual sign for membrane currents.</li>
         <li><b>Membrane potential chart:</b> the black line is V; the shading marks when the switch is closed. The dotted line is V<sub>∞</sub>, where V is heading.</li>
@@ -346,11 +347,15 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="charthead"><p class="sect-title">Where the ions go</p>
           <div class="btns"><button class="chip" data-pview="i" aria-pressed="true">Currents</button><button class="chip" data-pview="q" aria-pressed="false">Ions moved</button></div></div>
         <canvas id="pIchart" aria-label="Ions crossing the membrane over time"></canvas>
+        <p class="sect-title">Charge across the membrane</p>
+        <canvas id="iProfile" aria-label="Net charge per column across the particle simulation"></canvas>
+        <div class="qbar" aria-label="Charge in each diffuse layer">
+          <span class="qlab"><span>Q<sub>in</sub></span> <b id="iqInLab">—</b></span>
+          <div class="qtrack"><span class="qfill" id="iqInBar"></span><span class="qfill" id="iqOutBar"></span></div>
+          <span class="qlab"><b id="iqOutLab">—</b> <span>Q<sub>out</sub></span></span>
+        </div>
       </div>
     </div>
-    <p class="caption"><b>Membrane potential:</b> each point averages 100 steps. Shaded: Na⁺ channels open. Dashed lines are E<sub>K</sub> and E<sub>Na</sub>; dotted is the GHK prediction for the channels as they are now.</p>
-    <p class="caption"><b>Where the ions go:</b> <span id="pIcap"></span></p>
-    <p class="caption" id="patchInfo"></p>
     </div>
 
     <div class="help" role="tabpanel" id="pane-ionhelp" aria-labelledby="tab-ionhelp" hidden>
@@ -360,6 +365,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Background tint:</b> net charge, red where there is extra positive charge and blue where there is extra negative charge. The thin layers on the two faces of the membrane are the charge on the capacitor.</li>
         <li><b>Membrane potential chart:</b> each point averages 100 steps. Dashed lines are E<sub>K</sub> and E<sub>Na</sub>; the dotted line is the GHK prediction for the channels as they are now.</li>
         <li><b>Where the ions go:</b> Currents counts ions crossing per 1000 steps, outward positive. Ions moved counts them since the switch last changed; "on membrane" is the net charge that has piled up.</li>
+        <li><b>Charge across the membrane:</b> the chart from the Membrane potential page. Bars are the net charge in the solution in each 16 px column, averaged over recent steps: red extra positive, blue extra negative. The hatched bar over the membrane is the charge held inside the channels. The curves are exponentials with the Debye length λ (scale bar at the bottom), scaled so each shaded area equals that layer's charge Q, measured out to 3λ (dashed lines). The bar under the chart shows the two layers' Q side by side; at rest they are equal and opposite, the charge on the capacitor. Open the Na⁺ channels and watch Na⁺ build up as positive charge just inside the membrane.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-ioncav" aria-labelledby="tab-ioncav" hidden>
@@ -369,28 +375,6 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <li>Ion counts are tiny compared with a real cell, so the particle traces are noisy; the voltage is averaged over many steps. Time is in simulation steps, not milliseconds.</li>
       <li>Real Na⁺ channels open with voltage and then inactivate, which gives an action potential. Here they only open and close when you tell them to.</li>
     </ul>
-    </div>
-  </section>
-  <section class="card stage" id="ion-profile">
-    <div class="tabs" role="tablist" aria-label="Charge chart">
-      <button type="button" role="tab" id="tab-iprof" aria-controls="pane-iprof" aria-selected="true">Charge across the membrane</button>
-      <button type="button" role="tab" id="tab-iprofhelp" aria-controls="pane-iprofhelp" aria-selected="false" tabindex="-1">How to read</button>
-    </div>
-    <div class="stage" role="tabpanel" id="pane-iprof" aria-labelledby="tab-iprof">
-      <canvas id="iProfile" aria-label="Net charge per column across the particle simulation"></canvas>
-      <div class="qbar" aria-label="Charge in each diffuse layer">
-        <span class="qlab"><span>Q<sub>in</sub></span> <b id="iqInLab">—</b></span>
-        <div class="qtrack"><span class="qfill" id="iqInBar"></span><span class="qfill" id="iqOutBar"></span></div>
-        <span class="qlab"><b id="iqOutLab">—</b> <span>Q<sub>out</sub></span></span>
-      </div>
-      <p class="caption">The same chart as on the Membrane potential page. Bars: net charge across the simulation. Curves and the bar under the chart: each layer's Q. Open the Na⁺ channels and watch Na⁺ build up as positive charge just inside the membrane.</p>
-    </div>
-    <div class="help" role="tabpanel" id="pane-iprofhelp" aria-labelledby="tab-iprofhelp" hidden>
-      <ul>
-        <li><b>Bars:</b> net charge in the solution in each 16 px column, averaged over recent steps. Red is extra positive charge, blue extra negative. The hatched bar over the membrane is the charge held inside the channels.</li>
-        <li><b>Curves:</b> an exponential with the Debye length λ (scale bar at the bottom), scaled so its shaded area equals the charge measured out to 3λ (dashed lines). That area is each layer's charge Q.</li>
-        <li><b>Q bar:</b> the two layers' charges side by side, inside to the left and outside to the right. At rest they are equal and opposite: the charge on the capacitor.</li>
-      </ul>
     </div>
   </section>
   <aside class="card panel wide">
@@ -680,6 +664,13 @@ function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), 
 // A line chart: series share an x array; shade marks spans where `on` is true; refs are horizontal lines.
 // The y range is fixed (o.fixed), so the scale never moves; values beyond it run along the edge.
 const CHW = 640, CHH = 340;
+// For a dashed series: is the stretch of line starting at data value x drawn? Dashes are fixed to the data
+// (dash and gap lengths in pixels, converted to x units), so they scroll with the line instead of crawling along it.
+function dashedAt(dash, x0, x1, pw) {
+  if (!dash) return () => true;
+  const per = (dash[0] + dash[1]) * (x1 - x0) / pw, on = dash[0] / (dash[0] + dash[1]);
+  return x => ((x / per) % 1 + 1) % 1 < on;
+}
 function drawChart(c, o) {
   const W = o.w || CHW, H = o.h || CHH;   // logical size; defaults to CHW × CHH
   const key = o.key || 11;                // font size of the series labels at the right
@@ -722,11 +713,17 @@ function drawChart(c, o) {
   c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
   for (const s of o.series) {
     if (o.xs.length < 2) break;
-    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round'; c.setLineDash(s.dash || []);
+    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round';
     c.beginPath();
+    // A dashed line is dashed by its own x values, not by canvas dashes: those are measured from where the path
+    // starts, which moves as the chart scrolls, so the dashes would crawl along the line.
+    const on = dashedAt(s.dash, x0, x1, pw);
     // with o.restart, a line starts afresh where `on` changes (counts that reset there)
-    for (let i = 0; i < o.xs.length; i++) { const x = sx(o.xs[i]), y = sy(s.ys[i]); i && !(o.restart && o.on[i] !== o.on[i - 1]) ? c.lineTo(x, y) : c.moveTo(x, y); }
-    c.stroke(); c.setLineDash([]);
+    for (let i = 0; i < o.xs.length; i++) {
+      const x = sx(o.xs[i]), y = sy(s.ys[i]);
+      i && on(o.xs[i - 1]) && !(o.restart && o.on[i] !== o.on[i - 1]) ? c.lineTo(x, y) : c.moveTo(x, y);
+    }
+    c.stroke();
     if (s.label) labels.push({ y: sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color });
   }
   c.restore();
@@ -750,10 +747,12 @@ function chipGroup(attr, onPick) {
 (() => {
   const cv = $('circ'), CWd = 780, CHd = 470, c = setupCanvas(cv, CWd, CHd);
   const CW = 480, CH = 300;              // charts sit beside the circuit, so draw them smaller to keep text legible
-  const I_RANGE = [-120, 120];           // fixed current axis (µA/cm²): fits the default Na⁺ step; larger g clips
-  // fixed voltage and charge axes: wide enough for the presets (g_Na up to 3 mS/cm²); beyond them lines run off the
-  // edge. Charge since the switch keeps growing while channels stay open, so it fits about one window after a change.
-  const V_RANGE = [-110, 90], Q_RANGE = [-3000, 3000];
+  // Fixed axes, one per mode: about twice what the default settings reach, so the default fills about half the
+  // chart; larger settings run off the edge. Charge since the switch keeps growing while current flows, so it is
+  // sized for one 40 ms window after a change.
+  const V_RANGE = [-110, 90];
+  const I_RANGE = { g: [-200, 200], inj: [-40, 40] };          // µA/cm²: the default Na⁺ step starts near 100; I_inj 20
+  const Q_RANGE = { g: [-3500, 3500], inj: [-1600, 1600] };    // nC/cm²: about 1,700 and 800 over one window
   const vc = setupCanvas($('cVchart'), CW, CH), ic = setupCanvas($('cIchart'), CW, CH);
   // TOP is the inside rail and BOT the outside (ground) rail. The circuit is drawn with the outside on top and the
   // inside at the bottom, so TOP sits low on the canvas and BOT high.
@@ -930,9 +929,15 @@ function chipGroup(attr, onPick) {
       c.textBaseline = 'alphabetic'; c.textAlign = 'left';
       return 14 + w;
     };
-    const xg = plate('EXTRACELLULAR', BOT - 52);
-    label('ground', xg + 10, BOT - 31, C.muted, 'left', '600 13px "IBM Plex Sans", sans-serif');
-    plate('INTRACELLULAR', TOP + 20);
+    // With current injection the rails are the two electrodes. The anode is the one current flows out of (into the
+    // solution around it), so the electrode inside is the anode when I_inj is positive and the cathode when it is
+    // negative. With
+    // conductances there are no electrodes, so the rails are named for the two sides of the membrane.
+    const anodeIn = p.I >= 0;
+    const [outName, inName] = mode === 'inj' ? (anodeIn ? ['CATHODE', 'ANODE'] : ['ANODE', 'CATHODE']) : ['EXTRACELLULAR', 'INTRACELLULAR'];
+    const xg = plate(outName, BOT - 52);
+    if (mode !== 'inj') label('ground', xg + 10, BOT - 31, C.muted, 'left', '600 13px "IBM Plex Sans", sans-serif');
+    plate(inName, TOP + 20);
     // voltmeter on the right
     c.strokeStyle = C.muted; c.lineWidth = 1.2; c.setLineDash([3, 4]);
     wire(XS[2], TOP, 740, TOP); wire(XS[2], BOT, 740, BOT); wire(740, TOP, 740, MID - 22); wire(740, MID + 22, 740, BOT); c.setLineDash([]);
@@ -976,9 +981,9 @@ function chipGroup(attr, onPick) {
       ? [{ ys: hist.q1, color: C.na, label: 'Na⁺ in' }, { ys: hist.q2, color: C.k, label: 'K⁺ out' }, { ys: hist.qC, color: C.pos, width: 2.6, label: 'on C' }]
       : [{ ys: hist.q2, color: C.ink, label: 'through R' }, { ys: hist.qC, color: C.pos, width: 2.6, label: 'on C' },
          { ys: sum(hist.q2, hist.qC), color: C.accent, dash: [6, 4], label: 'R + C' }];
-    if (cview === 'i') drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, w: CW, h: CH, key: 15, fixed: I_RANGE,
+    if (cview === 'i') drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, w: CW, h: CH, key: 15, fixed: I_RANGE[mode],
       series: iSeries, ylabel: 'µA/cm², outward +', xlabel: `last ${WIN} ms` });
-    else drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, restart: true, w: CW, h: CH, key: 15, fixed: Q_RANGE,
+    else drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, restart: true, w: CW, h: CH, key: 15, fixed: Q_RANGE[mode],
       series: qSeries, ylabel: 'nC/cm² since the switch', xlabel: `last ${WIN} ms` });
   }
   function readouts() {
@@ -1174,7 +1179,6 @@ function chipGroup(attr, onPick) {
     crossings.length = 0; dens.fill(0); rhoSm.fill(0); poreQSm = 0;
     sanitize(); binAndField(); countIn();
     vAvg = V;
-    $('patchInfo').textContent = `Simulated patch: ${H.toLocaleString()} px of membrane (zoom and drag the view to look around it), ${N.toLocaleString()} ions. Each channel lets only its own ion through; the Na⁺ channels have a gate on their inner mouth.`;
   }
   function setMembraneCharge(target) {
     let q = 0; for (let i = 0; i < N; i++) if (px[i] < MX) q += Z[sp[i]];
@@ -1343,8 +1347,9 @@ function chipGroup(attr, onPick) {
   $('zOut').addEventListener('click', () => zoomAt(CW / 2, CH / 2, 1 / 1.5));
   clampView();
   const chartW = 480, chartH = 360;      // charts sit beside the simulation, as in part 1; taller to match its height
-  const I_RANGE = [-30, 30];             // fixed current axis (ions per 1000 steps): fits 24 of each channel
-  const Q_RANGE = [-250, 250];           // fixed: ions moved over one chart window after a change, at the defaults
+  // fixed axes, about twice what the defaults reach (Na⁺ open: currents up to 18 ions per 1000 steps, about 200 ions
+  // moved over one chart window), so the default fills about half the chart
+  const I_RANGE = [-35, 35], Q_RANGE = [-400, 400];
   const vc = setupCanvas($('pVchart'), chartW, chartH), ic = setupCanvas($('pIchart'), chartW, chartH);
   let pview = 'i', tint = [], lipid = '';
   colorHooks.push(() => { tint = [C.k, C.na].map(c => mixc(c, C.surface, 0.24)); lipid = mixc(C.mem, C.surface, 0.45); lutDark = null; });
@@ -1479,11 +1484,6 @@ function chipGroup(attr, onPick) {
                { ys: tr.iNa.map((v, k) => v + tr.iK[k] + tr.iC[k]), color: C.accent, dash: [6, 4], label: 'sum' }],
       ylabel: 'ions per 1000 steps, outward +', xlabel: 'thousands of steps' });
   }
-  function captions() {
-    $('pIcap').innerHTML = pview === 'q'
-      ? 'Ions that crossed since the Na⁺ channels last opened or closed. "On membrane" is Na⁺ in minus K⁺ out: the charge that piled up at the membrane, the capacitor\'s charge. It grows at first and then levels off; after that, every Na⁺ that comes in is matched by a K⁺ going out.'
-      : 'Crossing rates, smoothed. As in the circuit, I<sub>C</sub> = −I<sub>Na</sub> − I<sub>K</sub>: right after the channels open most of the Na⁺ current charges the membrane; later it is balanced by K⁺ current. Counts are small, so these are noisy; the Ions moved view adds them up.';
-  }
 
   // ---------- UI ----------
   const speedFromSlider = v => Math.pow(10, -1.7 + v * 0.04);
@@ -1499,11 +1499,11 @@ function chipGroup(attr, onPick) {
   const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
   playBtn.addEventListener('click', () => setRunning(!running));
   $('reset').addEventListener('click', () => { setGate(false); reset(); });
-  chipGroup('pview', v => { pview = v; captions(); });
+  chipGroup('pview', v => { pview = v; });
   colorHooks.push(() => { drawSim(); drawCharts(); });
 
   // ---------- loop ----------
-  buildChannels(); reset(); captions();
+  buildChannels(); reset();
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
   const FRAME_MS = 24; let restMs = 4, frame = 0;
   // ---------- charge profile: chart B of the Membrane potential page ----------
@@ -1517,8 +1517,8 @@ function chipGroup(attr, onPick) {
     for (let b = 0; b < NB; b++) rhoSm[b] += (rho[b] - rhoSm[b]) * alpha;
     poreQSm += (pq - poreQSm) * alpha;
   }
-  // fixed scales, the same as on the Membrane potential page; beyond them bars are cut off at the frame
-  const rScale = 24, qScale = 55, PW = 640, PRH = 400, PT = 34, PB = 34, PL = 50, PR = 16;
+  // fixed scales, the same as on the Membrane potential page (the default fills about half); beyond them bars are cut off
+  const rScale = 24, qScale = 55, PW = chartW, PRH = chartH, PT = 34, PB = 34, PL = 50, PR = 16;   // the size of the charts beside it
   const pctx = setupCanvas($('iProfile'), PW, PRH);
   const psx = x => PL + x / W * (PW - PL - PR);
   const fmtQ = q => (q < 0 ? '−' : q > 0 ? '+' : '') + Math.abs(q).toFixed(0) + ' e';
@@ -1742,7 +1742,7 @@ function chipGroup(attr, onPick) {
     tags(vc, lab);
   }
   function drawI(m) {
-    const top = 500;   // fixed, wide enough for the Try-it values (g_Na 3 mS/cm²: I_C starts near 440 µA/cm²); beyond, it clips
+    const top = mode === 'g' ? 200 : 40;   // fixed, about twice the default start (I_C near 100 µA/cm², or the 20 injected), so it fills half
     const y = frame(ic, -top, top, top / 2, 'I (µA/cm², outward +)'), lab = [];
     m.branch(0).forEach((b, k) => {
       curve(ic, y, t => m.branch(Vt(m, t))[k].I, b.c, 1.8);
