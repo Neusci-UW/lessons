@@ -26,6 +26,7 @@ then go to http://localhost:8000/ for the list of lessons.
 ## Files
 
 - `floatbar.js`: a bar of the main controls (run, pause, speed) that floats in the corner while the page scrolls. Its buttons and slider are copies of the page's own, named with `data-copy`.
+- `frames.js`: caps every requestAnimationFrame loop at 30 frames a second, and stops them while all the page's simulations are paused and nobody is touching the page. Each page loads it first (in `<head>`) and registers each simulation with `Frames.sim(() => running, 'playButtonId')`. Simulations start paused and pause themselves after 60 s without a click, key, slider move or scroll.
 - `sliders.js`: fill-in boxes for every slider: click a slider's readout and type a value. Each page loads it last.
 - `lesson.js`: the lesson system. A page that sets `window.LESSON_ADAPTER` and loads it
   can show questions, and lock or hide parts of the page until they are answered.

@@ -1,0 +1,49 @@
+// Lesson pages redraw in requestAnimationFrame loops. Redrawing every canvas 60 times a
+// second costs CPU and lets the browser's drawing memory pile up (Newt's lesson tabs
+// reached ~1 GB), even while nothing moves. This wraps requestAnimationFrame so:
+//  - frames run at most 30 times a second;
+//  - they stop while every simulation on the page is paused and nobody is touching the
+//    page (any input, resize or theme change wakes them; Frames.poke() from code);
+//  - every simulation starts paused, and pauses itself after IDLE_PAUSE_MS without a
+//    change (a click, key, slider or scroll; just moving the mouse doesn't count).
+// Each page registers each simulation with Frames.sim(() => running, 'playButtonId'),
+// and loads this file first, in <head>. Pausing clicks the page's own Play/Pause button,
+// so its label and the floating bar's copy stay in step.
+(() => {
+  const native = window.requestAnimationFrame.bind(window);
+  const FRAME_MS = 1000 / 30, AWAKE_MS = 1500, IDLE_PAUSE_MS = 60000;
+  const sims = [];                    // { isPlaying, button }
+  let queue = [], lastRun = -Infinity, lastPoke = performance.now(), lastChange = performance.now(), scheduled = false;
+
+  const playingOf = s => { try { return !!s.isPlaying(); } catch (e) { return false; } };
+  const anyPlaying = () => sims.some(playingOf);
+  const pauseAll = () => sims.forEach(s => { if (playingOf(s)) document.getElementById(s.button)?.click(); });
+  const awake = now => sims.length === 0 || now - lastPoke < AWAKE_MS || anyPlaying();
+
+  function tick(now) {
+    scheduled = false;
+    if (now - lastChange > IDLE_PAUSE_MS && anyPlaying()) pauseAll();
+    if (!awake(now)) return;          // asleep: the queued loops wait for poke()
+    if (now - lastRun >= FRAME_MS - 2) {
+      lastRun = now;
+      const q = queue; queue = [];
+      q.forEach(cb => cb(now));
+    }
+    if (queue.length) schedule();
+  }
+  function schedule() { if (!scheduled) { scheduled = true; native(tick); } }
+  function poke() { lastPoke = performance.now(); if (queue.length) schedule(); }
+  function changed() { lastChange = performance.now(); poke(); }
+
+  window.requestAnimationFrame = cb => { queue.push(cb); schedule(); return 0; };
+  window.Frames = { sim: (isPlaying, button) => { sims.push({ isPlaying, button }); }, poke, pauseAll };
+
+  for (const ev of ['pointerdown', 'wheel', 'keydown', 'input', 'change', 'click', 'scroll'])
+    window.addEventListener(ev, changed, { capture: true, passive: true });
+  for (const ev of ['pointermove', 'resize', 'focus'])
+    window.addEventListener(ev, poke, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', poke);
+  new MutationObserver(poke).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  // every simulation starts paused, once the page has set itself up
+  window.addEventListener('load', () => { pauseAll(); changed(); });
+})();

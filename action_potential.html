@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="frames.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Action Potential Travels</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
 <!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
 <script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
 <style>
 /* Same look as the first two lessons: a travelling spike on top, the theory below. */
@@ -1021,6 +1023,9 @@ const xc = setupCanvas($('xChart'), CW, CH), tc = setupCanvas($('tChart'), CW, C
 // A line chart: o.series [{xs, ys, color, width, dash, label}], o.refs horizontal lines, o.vlines vertical lines,
 // o.spans shaded stretches of x (stimulus on, as lesson 2 shades the switch closed).
 function plot(c, o) {
+  const o0 = o; ChartZoom.bind(c.canvas, () => plot(c, o0));   // the zoom arrows (chartzoom.js); a scrolling chart keeps its newest edge
+  const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1, o.scrolls ? 'right' : undefined), [y0, y1] = ChartZoom.y(c.canvas, o.y0, o.y1);
+  o = { ...o, x0, x1, y0, y1, ystep: ChartZoom.step(c.canvas, 'y', o.ystep) };
   const W = o.w || CW, H = CH, pwid = W - L - R;
   const sx = x => L + (x - o.x0) / (o.x1 - o.x0) * pwid, sy = v => T + (o.y1 - Math.max(o.y0, Math.min(o.y1, v))) / (o.y1 - o.y0) * ph;
   c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
@@ -1198,6 +1203,7 @@ function loop(now) {
 }
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { running = false; $('apPlay').textContent = 'Play'; }
 applyCell(DEFAULT_CELL); setView('i');
+Frames.sim(() => running, 'apPlay');   // frames.js: starts paused, pauses itself when left alone
 requestAnimationFrame(loop);
 </script>
 <script>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="frames.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Exploring the membrane potential</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
 <!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
 <script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
 <style>
 /* Layout: lab-instrument page. Simulation with its settings under it on the left; charge profile and trace on the right; stacks on narrow screens. */
@@ -1574,17 +1576,21 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
   // ---------- voltage trace ----------
   const VMIN = -110, VMAX = 80, L = 58, R = 74, T = 14, B = 26;
-  const ty = v => T + (VMAX - Math.max(VMIN, Math.min(VMAX, v))) / (VMAX - VMIN) * (TH - T - B);
+  let vz0 = VMIN, vz1 = VMAX, n0 = 0, n1 = TRACE_LEN - 1;   // the view after the zoom arrows (chartzoom.js); n: samples, newest at the right
+  const ty = v => T + (vz1 - Math.max(vz0, Math.min(vz1, v))) / (vz1 - vz0) * (TH - T - B);
+  ChartZoom.bind(trc, () => drawTrace(refs()));
   function drawTrace(ref) {
+    [vz0, vz1] = ChartZoom.y(trc, VMIN, VMAX); [n0, n1] = ChartZoom.x(trc, 0, TRACE_LEN - 1, 'right');
+    const vstep = ChartZoom.step(trc, 'y', 50);
     tctx.fillStyle = C.surface; tctx.fillRect(0, 0, TW, TH);
     tctx.font = '11px "IBM Plex Mono", monospace'; tctx.textBaseline = 'middle';
-    for (let v = -100; v <= 50; v += 50) {
-      const y = ty(v);
-      tctx.strokeStyle = C.line; tctx.lineWidth = v === 0 ? 1.2 : 0.8; tctx.setLineDash([]);
+    for (let v = Math.ceil(vz0 / vstep) * vstep; v <= vz1 + 1e-9; v += vstep) {
+      const y = ty(v), zero = Math.abs(v) < vstep / 1e3;
+      tctx.strokeStyle = C.line; tctx.lineWidth = zero ? 1.2 : 0.8; tctx.setLineDash([]);
       tctx.beginPath(); tctx.moveTo(L, y); tctx.lineTo(TW - R, y); tctx.stroke();
-      tctx.fillStyle = C.muted; tctx.textAlign = 'right'; tctx.fillText(v + ' mV', L - 6, y);
+      tctx.fillStyle = C.muted; tctx.textAlign = 'right'; tctx.fillText((zero ? 0 : +v.toPrecision(4)) + ' mV', L - 6, y);
     }
-    tctx.textAlign = 'left'; tctx.fillText('last ' + (TRACE_LEN * SAMPLE).toLocaleString() + ' steps', L, TH - 7);
+    tctx.textAlign = 'left'; tctx.fillText('last ' + Math.round((n1 - n0 + 1) * SAMPLE).toLocaleString() + ' steps', L, TH - 7);
     const labels = [];
     ref.forEach(r => {
       if (r.v == null || !isFinite(r.v)) return;
@@ -1600,10 +1606,11 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     labels.forEach(l => { tctx.globalAlpha = Math.max(l.alpha, 0.6); tctx.fillStyle = l.c; tctx.textAlign = 'left'; fillSub(tctx, l.text, TW - R + 6, Math.min(l.y, TH - 6)); });
     tctx.globalAlpha = 1;
     if (trace.length > 1) {
-      const dx = (TW - R - L) / (TRACE_LEN - 1), x0 = L + (TRACE_LEN - trace.length) * dx;
+      const dx = (TW - R - L) / (n1 - n0), x0 = L + (TRACE_LEN - trace.length - n0) * dx;
+      tctx.save(); tctx.beginPath(); tctx.rect(L, T, TW - R - L, TH - T - B); tctx.clip();
       tctx.strokeStyle = C.ink; tctx.lineWidth = 2; tctx.lineJoin = 'round'; tctx.beginPath();
       trace.forEach((v, i) => { const x = x0 + i * dx, y = ty(v); i ? tctx.lineTo(x, y) : tctx.moveTo(x, y); });
-      tctx.stroke();
+      tctx.stroke(); tctx.restore();
       tctx.fillStyle = C.ink; tctx.beginPath(); tctx.arc(x0 + (trace.length - 1) * dx, ty(trace[trace.length - 1]), 3.5, 0, 6.283); tctx.fill();
     }
     tctx.textBaseline = 'alphabetic';
@@ -1749,6 +1756,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   const gqc = $('gQChart'), QH = 240;
   gqc.width = GW * dpr; gqc.height = QH * dpr;
   const qx = gqc.getContext('2d'); qx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  [gc, gqc].forEach(cv => ChartZoom.bind(cv, () => calcGHK(undefined, gMode !== 'chord')));   // redraw after a zoom, as the C_m slider does
   // sliders: data-log ones hold log10 of the value; the far-left end of a P or G slider means 0
   const num = id => { const e = $(id); const v = parseFloat(e.value); if (!isFinite(v)) return 0;
     if (!e.hasAttribute('data-log')) return v;
@@ -1819,16 +1827,17 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     const totI = V => (on(0) ? ionI(0, V) : 0) + (on(1) ? ionI(1, V) : 0) + (on(2) ? ionI(2, V) : 0);
     const gT = G[0] + G[1] + G[2];
     const L_ = 56, R_ = 14, T_ = 16, B_ = 34, pw = GW - L_ - R_, ph = GH - T_ - B_;
-    const VMIN_ = -120, VMAX_ = 80, lx = v => L_ + (v - VMIN_) / (VMAX_ - VMIN_) * pw;
+    const [VMIN_, VMAX_] = ChartZoom.x(gc, -120, 80), vstep = ChartZoom.step(gc, 'x', 40);   // the zoom arrows (chartzoom.js)
+    const lx = v => L_ + (v - VMIN_) / (VMAX_ - VMIN_) * pw;
     // a fixed current range for each model, about twice the default cell's (GHK about 220, chord about 70), so the
     // default fills about half the chart; larger currents run off the edge
-    const imax = chord ? 150 : 450;
-    const ly = i => T_ + ph / 2 - (i / imax) * (ph / 2);
-    const trace = fn => { gx.beginPath(); for (let V = VMIN_; V <= VMAX_; V += 2) { const y = ly(fn(V)); V === VMIN_ ? gx.moveTo(lx(V), y) : gx.lineTo(lx(V), y); } gx.stroke(); };
+    const imax = chord ? 150 : 450, [ilo, ihi] = ChartZoom.y(gc, -imax, imax);
+    const ly = i => T_ + (ihi - i) / (ihi - ilo) * ph;
+    const trace = fn => { gx.beginPath(); for (let k = 0; k <= 100; k++) { const V = VMIN_ + k / 100 * (VMAX_ - VMIN_), y = ly(fn(V)); k ? gx.lineTo(lx(V), y) : gx.moveTo(lx(V), y); } gx.stroke(); };
     gx.fillStyle = C.surface; gx.fillRect(0, 0, GW, GH);
     gx.font = '11px "IBM Plex Mono", monospace'; gx.textBaseline = 'middle';
     gx.strokeStyle = C.line; gx.lineWidth = 0.8;
-    for (let v = -120; v <= 80; v += 40) { gx.beginPath(); gx.moveTo(lx(v), T_); gx.lineTo(lx(v), T_ + ph); gx.stroke(); gx.fillStyle = C.muted; gx.textAlign = 'center'; gx.fillText((v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v), lx(v), GH - B_ + 12); }
+    for (let v = Math.ceil(VMIN_ / vstep) * vstep; v <= VMAX_ + 1e-9; v += vstep) { const r = Math.abs(v) < vstep / 1e3 ? 0 : +v.toPrecision(4); gx.beginPath(); gx.moveTo(lx(v), T_); gx.lineTo(lx(v), T_ + ph); gx.stroke(); gx.fillStyle = C.muted; gx.textAlign = 'center'; gx.fillText((r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r), lx(v), GH - B_ + 12); }
     gx.strokeStyle = C.muted; gx.lineWidth = 1; gx.beginPath(); gx.moveTo(L_, ly(0)); gx.lineTo(GW - R_, ly(0)); gx.stroke();
     gx.fillStyle = C.muted; gx.textAlign = 'center'; gx.fillText('V (mV)', L_ + pw / 2, GH - 8);
     gx.save(); gx.translate(14, T_ + ph / 2); gx.rotate(-Math.PI / 2); gx.fillText('I (outward +)', 0, 0); gx.restore();
@@ -1872,16 +1881,19 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   function drawQ(Es, V_, cols) {
     const Cm = num('gC'); $('gCo').textContent = Cm.toFixed(2) + ' µF/cm²';
     const L_ = 56, R_ = 14, T_ = 14, B_ = 34, pw = GW - L_ - R_, ph = QH - T_ - B_;
-    const VMIN_ = -120, VMAX_ = 80, QMIN = -300, QMAX = 200;
+    const [VMIN_, VMAX_] = ChartZoom.x(gqc, -120, 80), [QMIN, QMAX] = ChartZoom.y(gqc, -300, 200);   // the zoom arrows (chartzoom.js)
+    const vstep = ChartZoom.step(gqc, 'x', 40), qstep = ChartZoom.step(gqc, 'y', 100);
     const lx = v => L_ + (v - VMIN_) / (VMAX_ - VMIN_) * pw, ly = q => T_ + (QMAX - q) / (QMAX - QMIN) * ph;
     qx.fillStyle = C.surface; qx.fillRect(0, 0, GW, QH);
     qx.font = '11px "IBM Plex Mono", monospace'; qx.textBaseline = 'middle';
     qx.lineWidth = 0.8;
-    for (let v = -120; v <= 80; v += 40) {
+    for (let v0 = Math.ceil(VMIN_ / vstep) * vstep; v0 <= VMAX_ + 1e-9; v0 += vstep) {
+      const v = Math.abs(v0) < vstep / 1e3 ? 0 : +v0.toPrecision(4);
       qx.strokeStyle = v === 0 ? C.muted : C.line; qx.beginPath(); qx.moveTo(lx(v), T_); qx.lineTo(lx(v), T_ + ph); qx.stroke();
       qx.fillStyle = C.muted; qx.textAlign = 'center'; qx.fillText((v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v), lx(v), QH - B_ + 12);
     }
-    for (let q = QMIN; q <= QMAX; q += 100) {
+    for (let q0 = Math.ceil(QMIN / qstep) * qstep; q0 <= QMAX + 1e-9; q0 += qstep) {
+      const q = Math.abs(q0) < qstep / 1e3 ? 0 : +q0.toPrecision(4);
       qx.strokeStyle = q === 0 ? C.muted : C.line; qx.beginPath(); qx.moveTo(L_, ly(q)); qx.lineTo(GW - R_, ly(q)); qx.stroke();
       qx.fillStyle = C.muted; qx.textAlign = 'right'; qx.fillText((q > 0 ? '+' : q < 0 ? '−' : '') + Math.abs(q), L_ - 6, ly(q));
     }
@@ -2107,6 +2119,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     requestAnimationFrame(loop);
   }
   refreshAll();
+  Frames.sim(() => running, 'play');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 </script>

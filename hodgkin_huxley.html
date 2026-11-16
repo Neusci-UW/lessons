@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="frames.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Hodgkin–Huxley Model</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
 <!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
 <script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
 <style>
 /* Same look as membrane_potential.html: a circuit on top, the same thing done by ions below. */
@@ -128,6 +130,9 @@ canvas{display:block;width:100%;height:auto;border-radius:6px}
 .runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
 .runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
 .runlab{font-size:14px;font-weight:600}
+.cellbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.cellbar select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
+.cellbar .caption{flex:1 1 320px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
@@ -242,6 +247,11 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <button type="button" role="tab" id="tab-circlook" aria-controls="pane-circlook" aria-selected="false" tabindex="-1">What to look for</button>
     </div>
     <div class="stage" role="tabpanel" id="pane-circ" aria-labelledby="tab-circ">
+      <div class="cellbar">
+        <label for="hhCell" class="runlab">Cell</label>
+        <select id="hhCell"></select>
+        <p class="caption" id="hhCellNote"></p>
+      </div>
       <div class="btns" role="group" aria-label="Na⁺ channels">
         <button class="chip" data-mode="sw" aria-pressed="false">Na⁺ channels on a switch (lesson 2)</button>
         <button class="chip" data-mode="nav" aria-pressed="false">Voltage-gated Na⁺</button>
@@ -267,7 +277,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         </div>
         <div class="ccol">
           <div class="charthead"><p class="sect-title">Under the hood</p>
-            <div class="btns"><button class="chip" data-hview="n" aria-pressed="true">Gates</button><button class="chip" data-hview="g" aria-pressed="false">Conductances</button><button class="chip" data-hview="i" aria-pressed="false">Currents</button></div></div>
+            <div class="btns"><button class="chip" data-hview="g" aria-pressed="true">Conductances</button><button class="chip" data-hview="i" aria-pressed="false">Currents</button><button class="chip" data-hview="n" aria-pressed="false">Gates</button></div></div>
           <canvas id="hhX" aria-label="Gates, conductances or currents over time"></canvas>
         </div>
       </div>
@@ -276,18 +286,18 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="help" role="tabpanel" id="pane-circhelp" aria-labelledby="tab-circhelp" hidden>
       <ul>
         <li><b>The drawing:</b> as in lesson 2, the bottom wire is the inside of the cell and the top wire the outside (ground). Each channel type is a branch: a resistor (1/g) in series with a battery, that ion's Nernst potential E. The capacitor on the right is the lipid bilayer.</li>
-        <li><b>Na⁺ channels on a switch:</b> lesson 2's circuit exactly: a fixed g<sub>Na</sub> that you switch in and out, and K⁺ leak channels that are always open.</li>
-        <li><b>Voltage-gated:</b> the switch is gone. The Na⁺ resistor has an arrow through it: its conductance is ḡ<sub>Na</sub>m³h, set by the gates, which follow the voltage. The K⁺ gated branch (Hodgkin–Huxley mode) is ḡ<sub>K</sub>n⁴. The bar beside each shows its g as a fraction of ḡ.</li>
+        <li><b>Na⁺ channels on a switch:</b> lesson 2's circuit exactly: a fixed g<sub>Na</sub> that you switch in and out, and leak channels for K⁺, Na⁺ and Cl⁻ that are always open.</li>
+        <li><b>Voltage-gated:</b> the switch is gone. The Na⁺ resistor has an arrow through it: its conductance is ḡ<sub>Na</sub>m³h, set by the gates, which follow the voltage. The K⁺ gated branch (Hodgkin–Huxley mode) is ḡ<sub>K</sub>n⁴. The three leak branches stay as in lesson 2. The bar beside each shows its g as a fraction of ḡ.</li>
         <li><b>Electrode (left branch):</b> a current source, like a stimulating electrode in the cell. Stimulate sends one pulse of the size and length you set. Positive pulses push positive charge into the cell.</li>
         <li><b>Dots:</b> moving positive charge, as in lesson 2. Current is positive when it flows from inside to outside.</li>
         <li><b>Voltage chart:</b> shaded while the switch is closed or the pulse is on. Dashed lines: E<sub>K</sub> and E<sub>Na</sub>; dotted: rest; teal dashed: threshold (with gates) or V<sub>∞</sub> (with the switch).</li>
-        <li><b>Under the hood:</b> Gates shows m, h and n between 0 and 1. Conductances shows g<sub>Na</sub> and g<sub>K</sub>. Currents shows each branch's current and the capacitor's, I<sub>C</sub>, outward positive.</li>
+        <li><b>Under the hood:</b> Conductances shows g<sub>Na</sub> and g<sub>K</sub>. Currents shows each branch's current and the capacitor's, I<sub>C</sub>, outward positive. Gates shows m, h and n between 0 and 1.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-circlook" aria-labelledby="tab-circlook" hidden>
       <ul>
         <li><b>The switch:</b> the voltage climbs exponentially toward V<sub>∞</sub> with τ = C / Σg and stays there. Nothing ends it but you.</li>
-        <li><b>Voltage-gated Na⁺:</b> a small pulse charges the capacitor and leaks away. A bigger pulse lifts V past threshold: m opens, Na⁺ rushes in, V shoots toward E<sub>Na</sub>. Then h closes (inactivation) and V falls a little, but stays stuck near −12 mV: a few Na⁺ channels stay open (m open, h not quite shut), and the small K⁺ leak cannot outweigh them. Press Reset to start again.</li>
+        <li><b>Voltage-gated Na⁺:</b> a small pulse charges the capacitor and leaks away. A bigger pulse lifts V past threshold: m opens, Na⁺ rushes in, V shoots toward E<sub>Na</sub>. Then h closes (inactivation) and V falls a little, but stays stuck near −13 mV: a few Na⁺ channels stay open (m open, h not quite shut), and the small leaks cannot outweigh them. Press Reset to start again.</li>
         <li><b>Hodgkin–Huxley:</b> the same, but n opens as V peaks, and the K⁺ current outward pulls V all the way back down within a millisecond, while h reopens and n closes again.</li>
         <li>Press Stimulate again right after a spike: h has not recovered and n is still open, so the same pulse may fail or give a smaller spike. That is the refractory period; here it lasts only about a millisecond.</li>
         <li>Change E<sub>Na</sub>: the peak of the spike follows it. Change the pulse: past threshold, the spike's size hardly changes. All-or-none.</li>
@@ -316,6 +326,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <span class="hint">conductance when the switch is closed</span></div>
         <div class="row" data-for="nav hh"><label for="hGNaM"><i class="dot na"></i>ḡ<sub>Na</sub></label><input type="range" id="hGNaM" min="0" max="150" step="1" value="120"><output id="hGNaMo" for="hGNaM"></output>
           <span class="hint">conductance if every gate were open</span></div>
+        <div class="row"><label for="hGNaL"><i class="dot na"></i>g<sub>Na,leak</sub></label><input type="range" id="hGNaL" min="0" max="0.2" step="0.005" value="0.03"><output id="hGNaLo" for="hGNaL"></output>
+          <span class="hint">a few always open, as in lesson 2</span></div>
         <div class="row"><label for="hENa"><i class="dot na"></i>E<sub>Na</sub></label><input type="range" id="hENa" min="0" max="90" step="1" value="60"><output id="hENao" for="hENa"></output></div>
       </div>
       <div class="sgroup">
@@ -325,6 +337,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="row" data-for="hh"><label for="hGKM"><i class="dot k"></i>ḡ<sub>K</sub></label><input type="range" id="hGKM" min="0" max="60" step="1" value="36"><output id="hGKMo" for="hGKM"></output>
           <span class="hint">voltage-gated</span></div>
         <div class="row"><label for="hEK"><i class="dot k"></i>E<sub>K</sub></label><input type="range" id="hEK" min="-110" max="-50" step="1" value="-86"><output id="hEKo" for="hEK"></output></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Cl⁻ channels</span>
+        <div class="row"><label for="hGCl"><i class="dot cl"></i>g<sub>Cl</sub></label><input type="range" id="hGCl" min="0" max="1" step="0.01" value="0.1"><output id="hGClo" for="hGCl"></output>
+          <span class="hint">leak channels, always open</span></div>
+        <div class="row"><label for="hECl"><i class="dot cl"></i>E<sub>Cl</sub></label><input type="range" id="hECl" min="-100" max="-30" step="1" value="-70"><output id="hEClo" for="hECl"></output></div>
       </div>
       <div class="sgroup">
         <div class="row"><label for="hC">C</label><input type="range" id="hC" min="0.2" max="3" step="0.1" value="1"><output id="hCo" for="hC"></output></div>
@@ -337,7 +355,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
   <span class="sect-title" id="unitsTitle">Units</span>
   <dl class="unitlist">
     <dt>mV</dt><dd>millivolts, for voltage. V is the inside measured relative to the outside.</dd>
-    <dt>ms</dt><dd>milliseconds, for time. A spike here lasts about a millisecond (the channels are Hodgkin and Huxley's, sped up to 25 °C).</dd>
+    <dt>ms</dt><dd>milliseconds, for time. A spike here lasts about a millisecond (the channels are Hodgkin and Huxley's, sped up to 25 °C, for the mammalian neuron; at the squid axon's 6.3 °C a spike lasts about 8× longer).</dd>
     <dt>µA/cm²</dt><dd>microamps per cm² of membrane, for current, positive when it flows outward. 1000 µA/cm² is 1 mA/cm².</dd>
     <dt>mS/cm²</dt><dd>millisiemens per cm², for conductance. Lesson 2's channels were around 1; open voltage-gated Na⁺ channels reach tens.</dd>
     <dt>µF/cm²</dt><dd>microfarads per cm², for capacitance. Real membranes are about 1.</dd>
@@ -362,12 +380,14 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="deriv">
       <h3>Lesson 2's circuit</h3>
       <p>Each channel type is a resistor and a battery, so its current follows Ohm's law with the driving force V − E, and the capacitor takes whatever the channels don't:</p>
-      <div class="eq">\[ C\,\frac{dV}{dt} = -\,g_\mathrm{Na}\,(V - E_\mathrm{Na}) - g_\mathrm{K}\,(V - E_\mathrm{K}) \]</div>
-      <p>With fixed g's, V moves exponentially to the conductance-weighted average of the batteries, \(V_\infty\), with time constant \(\tau = C/(g_\mathrm{Na} + g_\mathrm{K})\). Open the Na⁺ channels and it stays at the new \(V_\infty\) for as long as they are open.</p>
+      <div class="eq">\[ C\,\frac{dV}{dt} = -\,g_\mathrm{Na}\,(V - E_\mathrm{Na}) - g_\mathrm{K}\,(V - E_\mathrm{K}) - g_\mathrm{Cl}\,(V - E_\mathrm{Cl}) \]</div>
+      <p>With fixed g's, V moves exponentially to the conductance-weighted average of the batteries, \(V_\infty\), with time constant \(\tau = C/(g_\mathrm{Na} + g_\mathrm{K} + g_\mathrm{Cl})\). At rest K⁺ has by far the largest g, so V sits near E<sub>K</sub>, pulled a little up by the small Na⁺ leak. Open the Na⁺ channels and it stays at the new \(V_\infty\) for as long as they are open.</p>
 
       <h3>The one change</h3>
-      <p>Hodgkin and Huxley kept that equation and changed one thing: g<sub>Na</sub> and g<sub>K</sub> are not fixed numbers but depend on the voltage, and on how long it has been there.</p>
-      <div class="eq">\[ C\,\frac{dV}{dt} = -\,\bar g_\mathrm{Na}\,m^3 h\,(V - E_\mathrm{Na}) \;-\; \bar g_\mathrm{K}\,n^4\,(V - E_\mathrm{K}) \;-\; g_\mathrm{leak}\,(V - E_\mathrm{K}) \;+\; I_\mathrm{stim} \]</div>
+      <p>Hodgkin and Huxley kept that equation and changed one thing: alongside the leaks, there are Na⁺ and K⁺ channels whose g is not a fixed number but depends on the voltage, and on how long it has been there.</p>
+      <div class="eq">\[ C\,\frac{dV}{dt} = -\,\bar g_\mathrm{Na}\,m^3 h\,(V - E_\mathrm{Na}) \;-\; \bar g_\mathrm{K}\,n^4\,(V - E_\mathrm{K}) \;-\; I_\mathrm{leak} \;+\; I_\mathrm{stim} \]</div>
+      <p>where I<sub>leak</sub> is lesson 2's three leaks together:</p>
+      <div class="eq">\[ I_\mathrm{leak} = g_\mathrm{K,leak}\,(V - E_\mathrm{K}) + g_\mathrm{Na,leak}\,(V - E_\mathrm{Na}) + g_\mathrm{Cl}\,(V - E_\mathrm{Cl}) \]</div>
       <p>\(\bar g\) (“g-bar”) is the conductance if every channel were open. The gates m, h and n are numbers between 0 and 1 that open and close as the voltage changes. That is the whole model: lesson 2's circuit with resistors that the voltage turns up and down.</p>
       <p>The result is a loop the switch never had. The voltage sets the gates, the gates set the currents, and the currents set the voltage.</p>
     </div>
@@ -394,12 +414,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <summary>Hodgkin and Huxley's form: opening and closing rates</summary>
         <p>They wrote each gate as many independent gates flipping open at a rate α(V) and shut at a rate β(V) (per ms). The fraction open changes by the gates opening minus the gates closing:</p>
         <div class="eq">\[ \frac{dx}{dt} = \alpha_x(V)\,(1 - x) - \beta_x(V)\,x \]</div>
-        <p>which is the same equation with \(x_\infty = \alpha/(\alpha + \beta)\) and \(\tau_x = 1/(\alpha + \beta)\). They fitted α and β for each gate to their voltage-clamp recordings; the voltage-clamp calculator below uses them (sped up 7.8× for 25 °C, with the K⁺ gate 10 mV more positive, as in mammalian neurons).</p>
+        <p>which is the same equation with \(x_\infty = \alpha/(\alpha + \beta)\) and \(\tau_x = 1/(\alpha + \beta)\). They fitted α and β for each gate to their voltage-clamp recordings; the voltage-clamp calculator below uses them, at the temperature of the cell picked in the simulation: 6.3 °C for the squid axon, as they measured; 20 °C for the frog fibre; and 25 °C for the mammalian neuron, with the K⁺ gate 10 mV more positive, as in mammalian neurons. The gates speed up about 3× for every 10 °C, so at 25 °C they are 7.8× faster than in the squid experiments.</p>
       </details>
     </div>
     <aside class="try">
       <span class="sect-title">Try it</span>
-      <p><button class="chip" data-hhtry="hh">Fire a spike</button> On the Gates chart: m jumps first, then h falls and n rises together.</p>
+      <p><button class="chip" data-hhtry="hhgates">Fire a spike</button> On the Gates chart: m jumps first, then h falls and n rises together.</p>
       <p><button class="chip" data-hhtry="clamp">Voltage clamp</button> In the calculator, hold V at 0 mV and watch each gate relax with its own τ.</p>
     </aside>
   </div>
@@ -414,7 +434,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <details class="fullderiv">
         <summary>Show where the threshold is</summary>
         <p>m is fast, h and n are slow, so in the first moments after a push m has followed V but h and n are still at their resting values h<sub>0</sub>, n<sub>0</sub>. The total current is then a function of V alone:</p>
-        <div class="eq">\[ I_\mathrm{fast}(V) = \bar g_\mathrm{Na}\,m_\infty(V)^3 h_0\,(V - E_\mathrm{Na}) + \bar g_\mathrm{K}\,n_0^4\,(V - E_\mathrm{K}) + g_\mathrm{leak}\,(V - E_\mathrm{K}) \]</div>
+        <div class="eq">\[ I_\mathrm{fast}(V) = \bar g_\mathrm{Na}\,m_\infty(V)^3 h_0\,(V - E_\mathrm{Na}) + \bar g_\mathrm{K}\,n_0^4\,(V - E_\mathrm{K}) + I_\mathrm{leak}(V) \]</div>
         <p>It is zero at rest and outward just above it, so a small push is pushed back. Further up, the Na⁺ term takes over and the total crosses zero again, going inward: past that crossing the current pushes V on up. That second crossing is the threshold. The calculator below draws this curve. It slightly underestimates the real threshold, because h and n do start to move during the rise.</p>
         <p>The same curve with h and n as a spike leaves them gives the threshold during recovery: smaller h<sub>0</sub> shrinks the Na⁺ term, larger n<sub>0</sub> grows the K⁺ term, and the second crossing moves up or disappears.</p>
       </details>
@@ -423,14 +443,14 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <span class="sect-title">Try it</span>
       <p><button class="chip" data-hhtry="weak">Just below</button> A pulse that stops short of threshold: an RC response, nothing more.</p>
       <p><button class="chip" data-hhtry="hh">Just above</button> A slightly larger pulse: the full spike.</p>
-      <p><button class="chip" data-hhtry="set:hGKL:2.5">More K⁺ leak</button> The K⁺ side of the tug of war is stronger: the leak drains the pulse's charge faster (τ is shorter) and threshold rises by about 6 mV, so the same pulse fails.</p>
+      <p><button class="chip" data-hhtry="set:hGKL:2.5">More K⁺ leak</button> The K⁺ side of the tug of war is stronger: rest drops closer to E<sub>K</sub>, the leak drains the pulse's charge faster (τ is shorter) and threshold rises by about 6 mV, so the same pulse fails.</p>
     </aside>
   </div>
 
   <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
     <div class="deriv">
       <h3>1. Rest</h3>
-      <p>Nearly all m gates are shut and most h gates are open, ready. The K⁺ leak holds V at E<sub>K</sub>.</p>
+      <p>Nearly all m gates are shut and most h gates are open, ready. The leaks hold V near −76 mV: mostly the K⁺ leak, pulling toward E<sub>K</sub>, with a little Na⁺ leak pulling it some 10 mV above.</p>
       <h3>2. The stimulus</h3>
       <p>The electrode's current charges the capacitor, as in lesson 2: V rises at I/C.</p>
       <h3>3. The rising phase</h3>
@@ -440,15 +460,15 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <h3>5. Recovery and the refractory period</h3>
       <p>Then n closes and h reopens. Until h has recovered, fewer Na⁺ channels are available and extra K⁺ channels are still open, so a second spike is hard or impossible: the <b>refractory period</b>.</p>
       <p>In the threshold tug of war, both changes favour K⁺. With h low, the Na⁺ current at each voltage is smaller, so the dip in the current–voltage curve, the stretch where the total current runs downhill into inward current, is shallower. With n high, the K⁺ line is steeper and lifts the whole curve. So the threshold moves up, and a bigger stimulus is needed to fire (the <b>relative</b> refractory period). With fewer Na⁺ or more K⁺ channels than here the dip can fail to reach zero at all: no threshold, no spike whatever the stimulus (the <b>absolute</b> refractory period). And while the first spike is still above the new threshold, it is still running, so no second spike can start.</p>
-      <p>In a real neuron, which rests a little above E<sub>K</sub> because of some Na⁺ leak, V also dips below rest for a moment: the <b>undershoot</b>, while the open K⁺ gated channels pull it closer to E<sub>K</sub> than the leak does. In this circuit the only leak is K⁺, so rest is already at E<sub>K</sub> and there is nothing lower to dip to.</p>
+      <p>Because the Na⁺ leak holds rest a little above E<sub>K</sub>, V also dips below rest for a moment after the spike: the <b>undershoot</b> (afterhyperpolarization). While the K⁺ gated channels are still open, K⁺ dominates even more than at rest, and V is pulled closer to E<sub>K</sub>, here about 5 mV below rest, before n closes and the leaks bring it back. Set g<sub>Na,leak</sub> to 0 and rest drops to E<sub>K</sub>: then there is nothing lower to dip to, and the undershoot disappears.</p>
       <h3>Why the K⁺ gates matter</h3>
-      <p>Without them, inactivation alone does not end the spike. A few Na⁺ channels stay open at depolarized voltages, in the window where m is open and h has not quite closed, and that small Na⁺ current outweighs the K⁺ leak: V sticks near −12 mV. The voltage-gated K⁺ channels supply the big outward current that brings V home, and the m-h-n timing is what makes the spike brief.</p>
+      <p>Without them, inactivation alone does not end the spike. A few Na⁺ channels stay open at depolarized voltages, in the window where m is open and h has not quite closed, and that small Na⁺ current outweighs the leaks: V sticks near −13 mV. The voltage-gated K⁺ channels supply the big outward current that brings V home, and the m-h-n timing is what makes the spike brief.</p>
       <p>Notice how little charge all this takes. A 100 mV spike on 1 µF/cm² moves 100 nC/cm² of charge: a tiny fraction of the ions in the cell, so the concentrations, and the Nernst potentials, barely change.</p>
     </div>
     <aside class="try">
       <span class="sect-title">Try it</span>
       <p><button class="chip" data-hhtry="nav">Without K⁺ gates</button> Inactivation shuts most Na⁺ channels, but V stays stuck high.</p>
-      <p><button class="chip" data-hhtry="refr">Two pulses 1 ms apart</button> The second comes while h is still recovering: it fails. 1.5 ms apart it gives a smaller spike.</p>
+      <p><button class="chip" data-hhtry="refr">Two pulses 0.8 ms apart</button> The second comes while h is still recovering: it fails. 1.5 ms apart it gives a smaller spike.</p>
       <p><button class="chip" data-hhtry="refriv">The curves after a spike</button> In the calculator, 0.5 ms after a spike: the Na⁺ dip is shallow and threshold is 20 mV higher. Drag the time slider to watch it come back.</p>
       <p><button class="chip" data-hhtry="set:hENa:30">E<sub>Na</sub> = +30 mV</button> Less Na⁺ outside: the peak follows E<sub>Na</sub> down.</p>
     </aside>
@@ -492,7 +512,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <div class="gion">
         <div class="gh">Time after a spike</div>
         <div class="gr"><label for="kT">t</label><input type="range" id="kT" min="0" max="5" step="0.05" value="5"><output id="kTo" for="kT"></output></div>
-        <span class="caption">measured from the spike's peak; by 5 ms the membrane has recovered and the curves are those at rest</span>
+        <span class="caption">measured from the spike's peak; at the right end of the slider the membrane has recovered and the curves are those at rest</span>
       </div>
       <div class="gion">
         <div class="gh"><i class="dot k"></i> K⁺: leak and battery</div>
@@ -501,9 +521,14 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       </div>
       <div class="gion">
         <div class="gh"><i class="dot na"></i> Na⁺: leak and battery</div>
-        <div class="gr"><label for="kGNa">g<sub>Na,leak</sub></label><input type="range" id="kGNa" min="0" max="0.2" step="0.005" value="0"><output id="kGNao" for="kGNa"></output></div>
+        <div class="gr"><label for="kGNa">g<sub>Na,leak</sub></label><input type="range" id="kGNa" min="0" max="0.2" step="0.005" value="0.03"><output id="kGNao" for="kGNa"></output></div>
         <div class="gr"><label for="kENa">E<sub>Na</sub></label><input type="range" id="kENa" min="0" max="90" step="1" value="60"><output id="kENao" for="kENa"></output></div>
-        <span class="caption">the circuit has no Na⁺ leak; add some here to see rest move up toward threshold</span>
+        <span class="caption">more Na⁺ leak moves rest up toward threshold</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot cl"></i> Cl⁻: leak and battery</div>
+        <div class="gr"><label for="kGCl">g<sub>Cl</sub></label><input type="range" id="kGCl" min="0" max="1" step="0.01" value="0.1"><output id="kGClo" for="kGCl"></output></div>
+        <div class="gr"><label for="kECl">E<sub>Cl</sub></label><input type="range" id="kECl" min="-100" max="-30" step="1" value="-70"><output id="kEClo" for="kECl"></output></div>
       </div>
       <div class="gion">
         <div class="gh">Voltage-gated channels (most open)</div>
@@ -586,7 +611,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     </div>
     <div class="calc-out">
       <div class="out"><span class="big" id="vPeakNa">—</span><span class="caption">largest Na⁺ current</span></div>
-      <div class="es"><span>at <b id="vTPeak">—</b></span><span>K⁺ current at 5 ms <b id="vIK">—</b></span><span>driving force: Na⁺ <b id="vDNa">—</b>, K⁺ <b id="vDK">—</b></span></div>
+      <div class="es"><span>at <b id="vTPeak">—</b></span><span>K⁺ current at <span class="vtmax">5</span> ms <b id="vIK">—</b></span><span>driving force: Na⁺ <b id="vDNa">—</b>, K⁺ <b id="vDK">—</b></span></div>
       <div class="gformula" id="vFormula" aria-live="polite"></div>
       <div class="tabs" role="tablist" aria-label="Voltage-clamp charts">
         <button type="button" role="tab" id="tab-vi" aria-controls="pane-vi" aria-selected="true">Currents</button>
@@ -598,13 +623,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <div class="stage" role="tabpanel" id="pane-vi" aria-labelledby="tab-vi"><canvas id="vIChart" aria-label="Na⁺, K⁺ and total current after the voltage step"></canvas></div>
       <div class="stage" role="tabpanel" id="pane-vg" aria-labelledby="tab-vg" hidden><canvas id="vGChart" aria-label="Na⁺ and K⁺ conductance after the voltage step"></canvas></div>
       <div class="stage" role="tabpanel" id="pane-vx" aria-labelledby="tab-vx" hidden><canvas id="vXChart" aria-label="Gates m, h and n after the voltage step"></canvas></div>
-      <div class="stage" role="tabpanel" id="pane-viv" aria-labelledby="tab-viv" hidden><canvas id="vIVChart" aria-label="Largest Na⁺ current and the K⁺ current at 5 ms against the step voltage"></canvas></div>
+      <div class="stage" role="tabpanel" id="pane-viv" aria-labelledby="tab-viv" hidden><canvas id="vIVChart" aria-label="Largest Na⁺ current and the K⁺ current at the end of the step against the step voltage"></canvas></div>
       <div class="help" role="tabpanel" id="pane-vhelp" aria-labelledby="tab-vhelp" hidden>
         <ul>
           <li><b>Currents:</b> what the clamp amplifier records after the step at t = 0, outward positive: I<sub>Na</sub> (inward, early), I<sub>K</sub> (outward, late) and their sum (black), the trace Hodgkin and Huxley actually saw. The capacitor's brief charging current at the step, and the small leak current, are left out, as they subtracted them.</li>
           <li><b>Conductances:</b> each current divided by its driving force, g = I / (V − E). g<sub>Na</sub> rises and falls back with V held still; g<sub>K</sub> rises and stays.</li>
           <li><b>Gates:</b> m, h and n relaxing from their values at the holding voltage to their values at the step voltage, each with its own τ.</li>
-          <li><b>Peak current vs voltage:</b> repeat the step to every voltage. Orange: the largest Na⁺ current; purple: the K⁺ current after 5 ms. The Na⁺ curve is U-shaped: small steps open few m gates, and near E<sub>Na</sub> there is no driving force. It reverses sign at E<sub>Na</sub>. The dot is the step set above.</li>
+          <li><b>Peak current vs voltage:</b> repeat the step to every voltage. Orange: the largest Na⁺ current; purple: the K⁺ current after <span class="vtmax">5</span> ms. The Na⁺ curve is U-shaped: small steps open few m gates, and near E<sub>Na</sub> there is no driving force. It reverses sign at E<sub>Na</sub>. The dot is the step set above.</li>
         </ul>
       </div>
       <p class="caption" id="vCap"></p>
@@ -670,8 +695,10 @@ function drawChart(c, o) {
   const key = o.key || 11;                // font size of the series labels at the right
   const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
   c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
-  const [lo, hi] = o.fixed;               // every chart has a fixed y range
-  const x0 = o.x0, x1 = o.x1;
+  // every chart has a fixed y range; the zoom arrows (chartzoom.js) stretch or squeeze it, and the x range
+  const [lo, hi] = ChartZoom.y(c.canvas, o.fixed[0], o.fixed[1]);
+  const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1, o.pin);   // o.pin: 'right' on a chart that scrolls
+  ChartZoom.bind(c.canvas, () => drawChart(c, o));
   const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
   // shading
   if (o.on && o.xs.length > 1) {
@@ -734,21 +761,32 @@ function chipGroup(attr, onPick) {
 }
 
 // =====================================================================================
-// The shared model: Hodgkin–Huxley channels with resting (leak) conductances, at 25 °C.
+// The shared model: Hodgkin–Huxley channels with resting (leak) conductances, at the cell's temperature (KIN).
 // A patch of membrane: C dV/dt = −Σ g_i (V − E_i), with fixed leak g for K⁺, Na⁺ and Cl⁻, the gated Na⁺
 // (ḡ m³h) and K⁺ (ḡ n⁴) conductances, and the synapse's g_syn(t) with its battery at 0 mV.
 // Units: µF/cm², mS/cm², mV, ms, µA/cm². Same gating rates as lesson 3 (V measured from −65 mV).
 // =====================================================================================
-const KTM = 25.7, PHI = Math.pow(3, (25 - 6.3) / 10);          // RT/F (mV) and the speed-up of the gates at 25 °C
+const KTM = 25.7;                                              // RT/F (mV)
+// The gates' kinetics, set by the cell menu: temperature T (the gates speed up 3× for every 10 °C above Hodgkin and
+// Huxley's 6.3 °C), and kShift, how far the K⁺ gate's curve is moved (mV). slow: how much longer everything takes
+// than in the mammalian neuron at 25 °C, to stretch the charts' time axes.
+const phiAt = T => Math.pow(3, (T - 6.3) / 10);
+const KIN = { T: 25, kShift: 10, phi: phiAt(25), slow: 1 };
+function setKinetics(T, kShift) {
+  if (KIN.T === T && KIN.kShift === kShift) return;
+  Object.assign(KIN, { T, kShift, phi: phiAt(T), slow: phiAt(25) / phiAt(T) });
+  window.dispatchEvent(new Event('hhkinetics'));
+}
+// round a time span up to 1, 2 or 5 × a power of ten, for chart axes
+const niceT = t => { const p = Math.pow(10, Math.floor(Math.log10(t))), m = t / p; return (m <= 1.0001 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; };
 const EREV = { K: KTM * Math.log(5 / 140), Na: KTM * Math.log(145 / 14), Cl: -KTM * Math.log(148.5 / 6), syn: 0 };   // mM; mature neurons keep Cl⁻ low inside
 const HHDT = 0.005;
 const GNA = 120, GK = 36;                                      // Hodgkin and Huxley's ḡ, mS/cm²                                             // ms
 const xr = (x, y) => Math.abs(x / y) < 1e-6 ? y * (1 - x / y / 2) : x / (Math.exp(x / y) - 1);
-// The K⁺ gate's curve is moved 10 mV more positive than the squid axon's, as in mammalian neurons: with the squid's,
+// In the mammalian neuron the K⁺ gate's curve is moved 10 mV more positive than the squid axon's: with the squid's,
 // K⁺ channels open a little with every small input and cancel it, so inputs below threshold barely add up.
-const K_SHIFT = 10;
 function rates(V) {
-  const u = V + 65, un = u - K_SHIFT, f = PHI;
+  const u = V + 65, un = u - KIN.kShift, f = KIN.phi;
   return { am: f * 0.1 * xr(25 - u, 10), bm: f * 4 * Math.exp(-u / 18), ah: f * 0.07 * Math.exp(-u / 20), bh: f / (Math.exp((30 - u) / 10) + 1),
     an: f * 0.01 * xr(10 - un, 10), bn: f * 0.125 * Math.exp(-un / 80) };
 }
@@ -821,25 +859,29 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const CWd = 1000, CHd = 480, c = setupCanvas($('hhcirc'), CWd, CHd);
   const CW = 560, CH = 360, vc = setupCanvas($('hhV'), CW, CH), xc = setupCanvas($('hhX'), CW, CH);
   const TOP = 410, BOT = 92, MID = 250, XV = 930;
-  const V_RANGE = [-100, 70], WIN = 10, SAMPLE_MS = 0.01;
+  const V_RANGE = [-100, 70];
+  let WIN = 10, SAMPLE_MS = 0.01;
   const BRANCHES = {
-    sw: ['na', 'kl'],
-    nav: ['stim', 'na', 'kl'],
-    hh: ['stim', 'na', 'k', 'kl'],
+    sw: ['na', 'nal', 'kl', 'cl'],
+    nav: ['stim', 'na', 'nal', 'kl', 'cl'],
+    hh: ['stim', 'na', 'nal', 'k', 'kl', 'cl'],
   };
-  const NAME = { stim: 'electrode', na: 'Na⁺', k: 'K⁺ gated', kl: 'K⁺ leak' };
-  const COL = { stim: 'ink', na: 'na', k: 'k', kl: 'k' };
-  const p = { C: 1, gKL: 0.5, gNaSw: 0.7, gNaM: 120, gKM: 36, I: 100, dur: 0.5, E: { K: -86, Na: 60, Cl: -70, syn: 0 } };
-  let mode = 'hh', sw = false, pulses = [], speed = 1.3, running = true, view = 'n', sampleAcc = 0, peak = -Infinity;
+  const NAME = { stim: 'electrode', na: 'Na⁺', k: 'K⁺ gated', kl: 'K⁺ leak', nal: 'Na⁺ leak', cl: 'Cl⁻ leak' };
+  const COL = { stim: 'ink', na: 'na', k: 'k', kl: 'k', nal: 'na', cl: 'cl' };
+  const p = { C: 1, gKL: 0.5, gNaL: 0.03, gCl: 0.1, gNaSw: 0.7, gNaM: 120, gKM: 36, I: 100, dur: 0.5, E: { K: -86, Na: 60, Cl: -70, syn: 0 } };
+  let mode = 'hh', sw = false, pulses = [], speed = 1.3, running = true, view = 'g', sampleAcc = 0, peak = -Infinity;
   let s = null, last = null, rest = null, thr = NaN;
   const hist = { t: [], V: [], gNa: [], gK: [], gL: [], iStim: [], iNa: [], iK: [], iKL: [], iC: [], m: [], h: [], n: [], on: [] };
-  // the parameters the model sees in each mode
-  const pe = (swOn = sw) => ({ C: p.C, gKL: p.gKL, gNaL: mode === 'sw' && swOn ? p.gNaSw : 0, gCl: 0, gNaM: mode === 'sw' ? 0 : p.gNaM, gKM: mode === 'hh' ? p.gKM : 0, E: p.E });
+  // the parameters the model sees in each mode: the leaks always, the switched Na⁺ channels added to the Na⁺ leak
+  const gSw = (swOn = sw) => mode === 'sw' && swOn ? p.gNaSw : 0;
+  const pe = (swOn = sw) => ({ C: p.C, gKL: p.gKL, gNaL: p.gNaL + gSw(swOn), gCl: p.gCl, gNaM: mode === 'sw' ? 0 : p.gNaM, gKM: mode === 'hh' ? p.gKM : 0, E: p.E });
   function recalc() {
     rest = restPatch(pe(false));
     thr = mode === 'sw' ? NaN : thresholdPatch(pe(false), rest);
   }
-  const vInf = () => { const q = pe(true); return (q.gKL * p.E.K + q.gNaL * p.E.Na) / (q.gKL + q.gNaL); };
+  const vInf = () => { const q = pe(true); return (q.gKL * p.E.K + q.gNaL * p.E.Na + q.gCl * p.E.Cl) / (q.gKL + q.gNaL + q.gCl); };
+  // stepPatch lumps the switched Na⁺ channels with the Na⁺ leak; split them for the drawing
+  const naLeakI = () => p.gNaL * (s.V - p.E.Na), naSwI = r => r.iNaL - naLeakI();
   const pulseOn = t => pulses.some(t0 => t >= t0 && t < t0 + p.dur);
   function reset() {
     recalc(); s = mkPatch(pe(false)); pulses = []; sw = false; peak = -Infinity; sampleAcc = 0;
@@ -855,12 +897,12 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const seg = (ax, ay, bx, by, skip) => { segs.push({ ax, ay, bx, by, L: Math.hypot(bx - ax, by - ay), o: Math.random() * SP, skip: skip || [], I: 0, q: 0 }); return segs.length - 1; };
   function buildSegs() {
     const keys = [...BRANCHES[mode], 'cap'], n = keys.length;
-    XS = keys.map((_, k) => Math.round(110 + k * (760 - 110) / (n - 1)));
+    XS = keys.map((_, k) => Math.round(110 + k * (820 - 110) / (n - 1)));
     segs = [];
     SB = keys.map((key, k) => seg(XS[k], TOP, XS[k], BOT, SKIP[key]));
     SI = XS.slice(0, -1).map((x, k) => seg(x, TOP, XS[k + 1], TOP)); SO = XS.slice(0, -1).map((x, k) => seg(x, BOT, XS[k + 1], BOT));
   }
-  const branchI = r => [...BRANCHES[mode].map(k => k === 'stim' ? r.iStim : k === 'na' ? (mode === 'sw' ? r.iNaL : r.iNa) : k === 'k' ? r.iKg : r.iK), r.iC];
+  const branchI = r => [...BRANCHES[mode].map(k => k === 'stim' ? r.iStim : k === 'na' ? (mode === 'sw' ? naSwI(r) : r.iNa) : k === 'nal' ? naLeakI() : k === 'k' ? r.iKg : k === 'cl' ? r.iCl : r.iK), r.iC];
   function moveCharge(b, h) {
     let run = 0;
     b.forEach((I, k) => { segs[SB[k]].I = I; if (k < b.length - 1) { run += I; segs[SI[k]].I = -run; segs[SO[k]].I = run; } });
@@ -883,7 +925,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
         sampleAcc -= SAMPLE_MS;
         const push = (k, v) => hist[k].push(v);
         push('t', s.t); push('V', s.V); push('gNa', mode === 'sw' ? (sw ? p.gNaSw : 0) : r.gNa); push('gK', r.gK); push('gL', p.gKL);
-        push('iStim', r.iStim); push('iNa', mode === 'sw' ? r.iNaL : r.iNa); push('iK', r.iKg); push('iKL', r.iK); push('iC', r.iC);
+        push('iStim', r.iStim); push('iNa', mode === 'sw' ? naSwI(r) : r.iNa); push('iK', r.iKg); push('iKL', r.iK + naLeakI() + r.iCl); push('iC', r.iC);
         push('m', s.m); push('h', s.h); push('n', s.n); push('on', mode === 'sw' ? sw : on);
         while (hist.t.length && hist.t[0] < s.t - WIN) for (const k in hist) hist[k].shift();
       }
@@ -993,16 +1035,18 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
         label(on ? `${fmtSigned(p.I, 0, '')} µA/cm²` : 'off', x + 32, MID + 4, on ? C.accent : C.muted);
         label(`pulse ${p.dur.toFixed(1)} ms`, x + 32, MID + 20, C.muted, 'left', '500 11.5px "IBM Plex Sans", sans-serif');
       } else {
-        const E = key === 'na' ? p.E.Na : p.E.K, vari = key === 'k' || (key === 'na' && mode !== 'sw');
+        const ion = key === 'na' || key === 'nal' ? 'Na' : key === 'cl' ? 'Cl' : 'K', E = p.E[ion], vari = key === 'k' || (key === 'na' && mode !== 'sw');
         resistor(x, MID, col, vari);
         battery(x, MID - 72, E, col);
-        label(`E_${key === 'na' ? 'Na' : 'K'} ${fmtSigned(E, 0, '')}`, x + 24, MID - 68, col);
-        const g = key === 'na' ? (mode === 'sw' ? (sw ? p.gNaSw : 0) : r.gNa) : key === 'k' ? r.gK : p.gKL;
+        label(`E_${ion} ${fmtSigned(E, 0, '')}`, x + 24, MID - 68, col);
+        const g = key === 'na' ? (mode === 'sw' ? gSw() : r.gNa) : key === 'k' ? r.gK : key === 'nal' ? p.gNaL : key === 'cl' ? p.gCl : p.gKL;
         label(`g ${fmtg(g)}`, x + 18, MID + 46, col, 'left', '500 12px "IBM Plex Mono", monospace');
         if (key === 'na' && mode === 'sw') { switchSym(x, MID + 92, sw, col); label(sw ? 'open' : 'closed', x + 30, MID + 96, col); }
         if (vari) {
           gbar(x, key === 'na' ? r.gNa / Math.max(1e-9, p.gNaM) : r.gK / Math.max(1e-9, p.gKM), col);
-          label(key === 'na' ? `m³h: m ${s.m.toFixed(2)} h ${s.h.toFixed(2)}` : `n⁴: n ${s.n.toFixed(2)}`, x + 18, MID + 62, col, 'left', '500 11.5px "IBM Plex Mono", monospace');
+          const f = '500 11.5px "IBM Plex Mono", monospace';
+          if (key === 'na') { label(`m³h: m ${s.m.toFixed(2)}`, x + 18, MID + 62, col, 'left', f); label(`h ${s.h.toFixed(2)}`, x + 52, MID + 76, col, 'left', f); }
+          else label(`n⁴: n ${s.n.toFixed(2)}`, x + 18, MID + 62, col, 'left', f);
         }
       }
       label(fmtI(I[k]), x + 8, MID + 140, col, 'left', '600 12px "IBM Plex Mono", monospace');
@@ -1017,10 +1061,10 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     const refs = [{ v: p.E.K, color: C.k, label: 'E_K' }, { v: p.E.Na, color: C.na, label: 'E_Na' }];
     if (mode === 'sw') refs.push({ v: vInf(), color: C.accent, dash: [6, 4], width: 2, label: 'V∞' });
     else { refs.push({ v: rest.V, color: C.muted, dash: [2, 3], width: 1.6, label: 'rest' }); if (isFinite(thr)) refs.push({ v: thr, color: C.accent, dash: [6, 4], width: 2, label: 'threshold' }); }
-    drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series: [{ ys: hist.V, color: C.ink, width: 2.4 }], refs, ylabel: 'mV', xlabel: `last ${WIN} ms` });
-    const o = { xs: hist.t, x0: s.t - WIN, x1: s.t, on: hist.on, w: CW, h: CH, key: 14, xlabel: `last ${WIN} ms` };
+    drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series: [{ ys: hist.V, color: C.ink, width: 2.4 }], refs, ylabel: 'mV', xlabel: `last ${WIN} ms` });
+    const o = { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, xlabel: `last ${WIN} ms` };
     if (view === 'g') drawChart(xc, { ...o, fixed: mode === 'sw' ? [0, 5] : [0, 50], ylabel: 'mS/cm²',
-      series: [{ ys: hist.gNa, color: C.na, width: 2.4, label: 'g_Na' }, ...(mode === 'hh' ? [{ ys: hist.gK, color: C.k, width: 2.4, label: 'g_K' }] : []), { ys: hist.gL, color: C.k, dash: [5, 4], label: 'leak' }] });
+      series: [{ ys: hist.gNa, color: C.na, width: 2.4, label: 'g_Na' }, ...(mode === 'hh' ? [{ ys: hist.gK, color: C.k, width: 2.4, label: 'g_K' }] : []), { ys: hist.gL, color: C.k, dash: [5, 4], label: 'K⁺ leak' }] });
     else if (view === 'i') drawChart(xc, { ...o, fixed: mode === 'sw' ? [-200, 200] : [-3000, 3000], ylabel: 'µA/cm², outward +',
       series: [...(mode === 'sw' ? [] : [{ ys: hist.iStim, color: C.muted, label: 'I_stim' }]), { ys: hist.iNa, color: C.na, label: 'I_Na' }, ...(mode === 'hh' ? [{ ys: hist.iK, color: C.k, label: 'I_K' }] : []),
                { ys: hist.iKL, color: C.k, dash: [5, 4], label: 'I_leak' }, { ys: hist.iC, color: C.pos, width: 2.4, label: 'I_C' }] });
@@ -1030,9 +1074,9 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const CAPS = {
     sw: { g: 'With the switch, g<sub>Na</sub> is whatever you set: on or off, nothing in between. Dashed: the K⁺ leak.',
           i: 'As in lesson 2: when the switch closes, the Na⁺ current first charges the capacitor (I<sub>C</sub>); once V reaches V<sub>∞</sub>, Na⁺ in is matched by K⁺ out.' },
-    nav: { n: 'Shaded: the pulse. Past threshold m jumps open within a fraction of a millisecond, then h falls and plugs most of the channels. But with no K⁺ gates, the few Na⁺ channels left open outweigh the K⁺ leak, and V sticks near −12 mV. Press Reset.',
-           g: 'g<sub>Na</sub> = ḡ<sub>Na</sub>m³h: it shoots up as m opens and falls back as h closes, but not to zero: about 2 mS/cm² stay open, more than the K⁺ leak (dashed).',
-           i: 'The pulse (grey) charges the capacitor until the Na⁺ current takes over. Afterwards a small Na⁺ current in exactly balances the K⁺ leak out, so V stays put.' },
+    nav: { n: 'Shaded: the pulse. Past threshold m jumps open within a fraction of a millisecond, then h falls and plugs most of the channels. But with no K⁺ gates, the few Na⁺ channels left open outweigh the leaks, and V sticks near −13 mV. Press Reset.',
+           g: 'g<sub>Na</sub> = ḡ<sub>Na</sub>m³h: it shoots up as m opens and falls back as h closes, but not to zero: about 0.5 mS/cm² stay open, about as much as the K⁺ leak (dashed).',
+           i: 'The pulse (grey) charges the capacitor until the Na⁺ current takes over. Afterwards a small Na⁺ current in exactly balances the leak current out (dashed), so V stays put.' },
     hh: { n: 'Shaded: the pulse. m opens first; h closes and n opens more slowly. That delay is the spike: Na⁺ in while m is open and h not yet shut, then K⁺ out once n has opened.',
           g: 'g<sub>Na</sub> rises fast and falls by itself; g<sub>K</sub> rises later and lasts longer. Both dwarf the leak (dashed).',
           i: 'The Na⁺ current inward charges the capacitor on the way up; the K⁺ current outward discharges it on the way down. I<sub>C</sub> is their difference.' },
@@ -1073,10 +1117,13 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   bindRange('hDur', v => v.toFixed(1) + ' ms', onp('dur'));
   bindRange('hGNa', v => v.toFixed(2) + ' mS/cm²', onp('gNaSw'));
   bindRange('hGNaM', v => v.toFixed(0) + ' mS/cm²', onp('gNaM'));
+  bindRange('hGNaL', v => v.toFixed(3) + ' mS/cm²', onp('gNaL'));
   bindRange('hENa', v => fmtSigned(v, 0), onp('Na', true));
   bindRange('hGKL', v => v.toFixed(2) + ' mS/cm²', onp('gKL'));
   bindRange('hGKM', v => v.toFixed(0) + ' mS/cm²', onp('gKM'));
   bindRange('hEK', v => fmtSigned(v, 0), onp('K', true));
+  bindRange('hGCl', v => v.toFixed(2) + ' mS/cm²', onp('gCl'));
+  bindRange('hECl', v => fmtSigned(v, 0), onp('Cl', true));
   bindRange('hC', v => v.toFixed(1) + ' µF/cm²', onp('C'));
   const speedFrom = v => Math.pow(10, -1.5 + v * 0.02);
   bindRange('hhSpeed', v => { const x = speedFrom(v); return (x < 1 ? x.toFixed(2) : x.toFixed(1)) + ' ms/s'; }, v => speed = speedFrom(v));
@@ -1084,6 +1131,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
   playBtn.addEventListener('click', () => setRunning(!running));
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
+  window.addEventListener('hhkinetics', () => { WIN = niceT(10 * KIN.slow); SAMPLE_MS = WIN / 1000; setMode(mode); });
   setMode('hh');
   window.HH_CIRC = { setMode, fire, setSwitch: on => { if (sw !== on) $('hhAct').click(); }, get mode() { return mode; } };
   let lastT = performance.now(), frame = 0;
@@ -1095,6 +1143,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     requestAnimationFrame(loop);
   }
   colorHooks.push(() => { draw(); drawCharts(); });
+  Frames.sim(() => running, 'hhPlay');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1103,6 +1152,8 @@ const KCW = 600, KCH = 400, KL = 58, KR = 84, KTP = 14, KB = 34, KPW = KCW - KL 
 const ksg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
 const kmv = (v, d = 1) => isFinite(v) ? (v < 0 ? '−' : '+') + Math.abs(v).toFixed(d) + ' mV' : '—';
 function kAxes(c, x0, x1, y0, y1, xlab, ylab, xstep, ystep) {
+  [x0, x1] = ChartZoom.x(c.canvas, x0, x1); [y0, y1] = ChartZoom.y(c.canvas, y0, y1);   // the zoom arrows (chartzoom.js)
+  xstep = ChartZoom.step(c.canvas, 'x', xstep); ystep = ChartZoom.step(c.canvas, 'y', ystep);
   const sx = x => KL + (x - x0) / (x1 - x0) * KPW, sy = v => KTP + (y1 - Math.max(y0, Math.min(y1, v))) / (y1 - y0) * KPH;
   c.fillStyle = C.surface; c.fillRect(0, 0, KCW, KCH);
   c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.lineWidth = 0.8;
@@ -1138,19 +1189,20 @@ function kTags(c, list) {
 // Rest is the zero crossing going outward, threshold the next one going inward.
 // =====================================================================================
 (() => {
-  const ids = ['kT', 'kGK', 'kEK', 'kGNa', 'kENa', 'kGNaM', 'kGKM', 'kC'];
+  const ids = ['kT', 'kGK', 'kEK', 'kGNa', 'kENa', 'kGCl', 'kECl', 'kGNaM', 'kGKM', 'kC'];
   const num = id => parseFloat($(id).value);
   const fmt = { kT: v => v.toFixed(2) + ' ms', kGK: fmtG, kGNa: v => fmtG(v, 3), kEK: v => ksg(v) + ' mV', kENa: v => ksg(v) + ' mV',
-    kGNaM: v => v + ' mS/cm²', kGKM: v => v + ' mS/cm²', kC: v => v.toFixed(1) + ' µF/cm²' };
+    kGCl: fmtG, kECl: v => ksg(v) + ' mV', kGNaM: v => v + ' mS/cm²', kGKM: v => v + ' mS/cm²', kC: v => v.toFixed(1) + ' µF/cm²' };
   const ivc = setupCanvas($('kIVChart'), KCW, KCH), rc = setupCanvas($('kRefrChart'), KCW, KCH), gc = setupCanvas($('kGateChart'), KCW, KCH);
-  const TREC = 5;
+  [ivc, rc, gc].forEach(x => ChartZoom.bind(x.canvas, () => update()));
+  let TREC = 5;
   let zoom = 'all', cache = null;
   // the fast current, and its zero crossings
   const parts = (p, V, h, n) => {
     const E = p.E, m = gatesInf(V).m;
-    return { na: p.gNaM * m ** 3 * h * (V - E.Na), k: p.gKM * n ** 4 * (V - E.K), kl: p.gKL * (V - E.K), nal: p.gNaL * (V - E.Na) };
+    return { na: p.gNaM * m ** 3 * h * (V - E.Na), k: p.gKM * n ** 4 * (V - E.K), kl: p.gKL * (V - E.K), nal: p.gNaL * (V - E.Na), cl: p.gCl * (V - E.Cl) };
   };
-  const fastI = (p, V, h, n) => { const q = parts(p, V, h, n); return q.na + q.k + q.kl + q.nal; };
+  const fastI = (p, V, h, n) => { const q = parts(p, V, h, n); return q.na + q.k + q.kl + q.nal + q.cl; };
   function crossings(p, h, n) {
     let prev = fastI(p, -120, h, n), stable = NaN;
     for (let V = -119.9; V <= 60; V += 0.1) {
@@ -1171,20 +1223,21 @@ function kTags(c, list) {
         if (s.V > peakV) { peakV = s.V; peakAt = rec.length; }
         rec.push({ t: s.t, V: s.V, h: s.h, n: s.n });
       }
-      if (peakV > 0) return { I, peakV, pts: rec.slice(peakAt).filter((_, k) => k % 10 === 0).map(q => ({ ...q, t: q.t - rec[peakAt].t })).filter(q => q.t <= TREC + 1e-9) };
+      const every = Math.round(10 * TREC / 5);
+      if (peakV > 0) return { I, peakV, pts: rec.slice(peakAt).filter((_, k) => k % every === 0).map(q => ({ ...q, t: q.t - rec[peakAt].t })).filter(q => q.t <= TREC + 1e-9) };
     }
     return null;
   }
   function model() {
-    const p = { C: num('kC'), gKL: num('kGK'), gNaL: num('kGNa'), gCl: 0, gNaM: num('kGNaM'), gKM: num('kGKM'), E: { K: num('kEK'), Na: num('kENa'), Cl: -70, syn: 0 } };
-    const key = JSON.stringify(p);
+    const p = { C: num('kC'), gKL: num('kGK'), gNaL: num('kGNa'), gCl: num('kGCl'), gNaM: num('kGNaM'), gKM: num('kGKM'), E: { K: num('kEK'), Na: num('kENa'), Cl: num('kECl'), syn: 0 } };
+    const key = JSON.stringify([p, KIN.T, KIN.kShift]);
     if (!cache || cache.key !== key) {
       const rest = restPatch(p), sp = spike(p, rest);
       const refr = sp ? sp.pts.map(q => ({ ...q, thr: crossings(p, q.h, q.n).thr })) : null;
-      cache = { key, p, rest, thr: thresholdPatch(p, rest), sp, refr };
+      cache = { key, p, rest, thr: thresholdPatch(p, rest), sp, refr };   // key includes the kinetics
     }
     const c = cache, t = num('kT');
-    const at = c.refr ? c.refr[Math.min(c.refr.length - 1, Math.round(t / 0.05))] : { t, V: c.rest.V, h: c.rest.h, n: c.rest.n, thr: c.thr };
+    const at = c.refr ? c.refr[Math.min(c.refr.length - 1, Math.round(t / (0.05 * TREC / 5)))] : { t, V: c.rest.V, h: c.rest.h, n: c.rest.n, thr: c.thr };
     return { ...c, t, at, cr: crossings(c.p, at.h, at.n) };
   }
   function drawIV(m) {
@@ -1198,6 +1251,7 @@ function kTags(c, list) {
     const curves = [
       { f: v => parts(p, v, at.h, at.n).kl, c: C.k, t: 'K⁺ leak', w: 1.4 },
       ...(p.gNaL > 0 ? [{ f: v => parts(p, v, at.h, at.n).nal, c: C.na, t: 'Na⁺ leak', w: 1.4 }] : []),
+      ...(p.gCl > 0 ? [{ f: v => parts(p, v, at.h, at.n).cl, c: C.cl, t: 'Cl⁻ leak', w: 1.4 }] : []),
       { f: v => parts(p, v, at.h, at.n).na, c: C.na, t: 'Na⁺ gated', w: 2, d: [6, 4] },
       { f: v => parts(p, v, at.h, at.n).k, c: C.k, t: 'K⁺ gated', w: 2, d: [6, 4] },
     ];
@@ -1212,7 +1266,7 @@ function kTags(c, list) {
     kTags(ivc, lab);
   }
   function drawRefr(m) {
-    const a = kAxes(rc, 0, TREC, -100, 60, 't (ms) after the spike\'s peak', 'V (mV)', 0.5, 20), lab = [];
+    const a = kAxes(rc, 0, TREC, -100, 60, 't (ms) after the spike\'s peak', 'V (mV)', TREC / 10, 20), lab = [];
     if (!m.refr) { kTags(rc, lab); return; }
     // shade the absolute refractory period: no threshold at any voltage
     rc.fillStyle = C.na; rc.globalAlpha = 0.12;
@@ -1273,7 +1327,7 @@ function kTags(c, list) {
       const back = m.refr.find(q => q.t > top.t && isFinite(q.thr) && q.thr - m.thr < 1), below = m.refr.find(q => isFinite(q.thr) && q.V < q.thr);
       $('kRefrCap').innerHTML = (none.length ? `No threshold at all until ${none[none.length - 1].t.toFixed(2)} ms after the peak: the absolute refractory period. ` : '') +
         `The threshold is highest, ${kmv(top.thr, 0)} (rest's is ${kmv(m.thr, 0)}), at ${top.t.toFixed(2)} ms, when h is lowest and n highest, and is back within 1 mV of rest's by ${back ? back.t.toFixed(1) : 'more than ' + TREC} ms: the relative refractory period, when only a bigger stimulus fires a spike. ` +
-        `Until ${below ? below.t.toFixed(2) : '—'} ms the voltage itself is still above the threshold line, or there is none: the first spike is still running, so no second one can start. These times are for Hodgkin and Huxley's channels at 25 °C; in mammalian neurons the refractory period lasts a few milliseconds.`;
+        `Until ${below ? below.t.toFixed(2) : '—'} ms the voltage itself is still above the threshold line, or there is none: the first spike is still running, so no second one can start. These times are for Hodgkin and Huxley's channels at ${KIN.T} °C; in mammalian neurons the refractory period lasts a few milliseconds.`;
     } else $('kRefrCap').innerHTML = 'With these channels no spike fires, so there is no refractory period to show.';
     $('kGateCap').innerHTML = `At rest m is ${r.m.toFixed(3)}, so only ${(r.m ** 3 * r.h * 100).toPrecision(2)}% of Na⁺ channels conduct. m and n rise with voltage, h falls.`;
     drawIV(m); drawRefr(m); drawGates(m);
@@ -1282,14 +1336,15 @@ function kTags(c, list) {
   document.querySelectorAll('[data-kzoom]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('[data-kzoom]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); zoom = b.dataset.kzoom; update();
   }));
-  const pair = [['kGK', 'hGKL'], ['kGNaM', 'hGNaM'], ['kGKM', 'hGKM'], ['kC', 'hC'], ['kEK', 'hEK'], ['kENa', 'hENa']];
-  $('kFromCirc').addEventListener('click', () => { pair.forEach(([k, h]) => $(k).value = $(h).value); $('kGNa').value = 0; update(); });
+  const pair = [['kGK', 'hGKL'], ['kGNa', 'hGNaL'], ['kGCl', 'hGCl'], ['kECl', 'hECl'], ['kGNaM', 'hGNaM'], ['kGKM', 'hGKM'], ['kC', 'hC'], ['kEK', 'hEK'], ['kENa', 'hENa']];
+  $('kFromCirc').addEventListener('click', () => { pair.forEach(([k, h]) => $(k).value = $(h).value); update(); });
   $('kToCirc').addEventListener('click', () => {
     if (HH_CIRC.mode !== 'hh') HH_CIRC.setMode('hh');
     pair.forEach(([k, h]) => { const e = $(h); e.value = $(k).value; e.dispatchEvent(new Event('input')); });
     $('circ-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   colorHooks.push(() => setTimeout(update, 0));
+  window.addEventListener('hhkinetics', () => { TREC = niceT(5 * KIN.slow); const el = $('kT'); el.max = TREC; el.step = TREC / 100; el.value = TREC; update(); });
   update();
 })();
 
@@ -1301,8 +1356,9 @@ function kTags(c, list) {
   const ids = ['vV0', 'vV1', 'vGNa', 'vENa', 'vGK', 'vEK'];
   const num = id => parseFloat($(id).value);
   const fmt = { vV0: v => ksg(v) + ' mV', vV1: v => ksg(v) + ' mV', vENa: v => ksg(v) + ' mV', vEK: v => ksg(v) + ' mV', vGNa: v => v + ' mS/cm²', vGK: v => v + ' mS/cm²' };
-  const TMAX = 5;
+  let TMAX = 5;
   const ic = setupCanvas($('vIChart'), KCW, KCH), gcv = setupCanvas($('vGChart'), KCW, KCH), xcv = setupCanvas($('vXChart'), KCW, KCH), ivc = setupCanvas($('vIVChart'), KCW, KCH);
+  [ic, gcv, xcv, ivc].forEach(x => ChartZoom.bind(x.canvas, () => update()));
   const tau = V => { const r = rates(V); return { m: 1 / (r.am + r.bm), h: 1 / (r.ah + r.bh), n: 1 / (r.an + r.bn) }; };
   // the clamp: gates, conductances and currents at time t after the step from V0 to V1
   function clamp(V0, V1, P) {
@@ -1312,12 +1368,12 @@ function kTags(c, list) {
       const gNa = P.gNa * m ** 3 * h, gK = P.gK * n ** 4;
       return { t, m, h, n, gNa, gK, iNa: gNa * (V1 - P.ENa), iK: gK * (V1 - P.EK) };
     };
-    const ts = []; for (let t = 0; t <= TMAX + 1e-9; t += 0.005) ts.push(t);
+    const ts = []; for (let t = 0; t <= TMAX + 1e-9; t += TMAX / 1000) ts.push(t);
     return { x0, x1, tc, pts: ts.map(at), at };
   }
   const peakNa = cl => cl.pts.reduce((b, q) => Math.abs(q.iNa) > Math.abs(b.iNa) ? q : b, cl.pts[0]);
   function plotT(c, pts, ylab, y0, y1, ystep, series) {
-    const a = kAxes(c, 0, TMAX, y0, y1, 't (ms) after the step', ylab, 1, ystep), lab = [];
+    const a = kAxes(c, 0, TMAX, y0, y1, 't (ms) after the step', ylab, TMAX / 5, ystep), lab = [];
     series.forEach(([f, col, t, w, d]) => { const ys = pts.map(f); kLine(c, a, pts.map(q => q.t), ys, col, w || 2.2, d); lab.push({ y: a.sy(ys[ys.length - 1]), t, c: col }); });
     kTags(c, lab);
   }
@@ -1335,7 +1391,7 @@ function kTags(c, list) {
       `at ${ksg(V0)} mV: m = ${cl.x0.m.toFixed(3)}, h = ${cl.x0.h.toFixed(2)}, n = ${cl.x0.n.toFixed(2)}; at ${ksg(V1)} mV they head to m<sub>∞</sub> = ${cl.x1.m.toFixed(3)}, h<sub>∞</sub> = ${cl.x1.h.toFixed(3)}, n<sub>∞</sub> = ${cl.x1.n.toFixed(2)}` + ind +
       `with τ<sub>m</sub> = ${cl.tc.m.toFixed(3)} ms, τ<sub>h</sub> = ${cl.tc.h.toFixed(2)} ms, τ<sub>n</sub> = ${cl.tc.n.toFixed(2)} ms` + ind +
       `largest I<sub>Na</sub> = ḡ<sub>Na</sub>m³h·(V − E<sub>Na</sub>) = ${P.gNa}·${pk.m.toFixed(3)}³·${pk.h.toFixed(2)}·(${ksg(V1)} − ${ksg(P.ENa)}) = <span class="res">${ua(pk.iNa)}</span> at ${pk.t.toFixed(2)} ms` + ind +
-      `at 5 ms, I<sub>K</sub> = ḡ<sub>K</sub>n⁴·(V − E<sub>K</sub>) = ${P.gK}·${end.n.toFixed(2)}⁴·(${ksg(V1)} − (${ksg(P.EK)})) = <span class="res">${ua(end.iK)}</span>`;
+      `at ${TMAX} ms, I<sub>K</sub> = ḡ<sub>K</sub>n⁴·(V − E<sub>K</sub>) = ${P.gK}·${end.n.toFixed(2)}⁴·(${ksg(V1)} − (${ksg(P.EK)})) = <span class="res">${ua(end.iK)}</span>`;
     const iTop = 3000;
     plotT(ic, cl.pts, 'I (µA/cm², outward +)', -iTop, iTop, 1000, [[q => q.iNa, C.na, 'I_Na'], [q => q.iK, C.k, 'I_K'], [q => q.iNa + q.iK, C.ink, 'total', 2.6]]);
     plotT(gcv, cl.pts, 'g (mS/cm²)', 0, 40, 10, [[q => q.gNa, C.na, 'g_Na'], [q => q.gK, C.k, 'g_K']]);
@@ -1345,17 +1401,18 @@ function kTags(c, list) {
     for (let v = -100; v <= 60; v += 1) { const q = clamp(V0, v, P); vs.push(v); na.push(peakNa(q).iNa); k10.push(q.pts[q.pts.length - 1].iK); }
     const a = kAxes(ivc, -100, 60, -iTop, iTop, 'step voltage (mV)', 'I (µA/cm², outward +)', 20, 1000), lab = [];
     kLine(ivc, a, vs, na, C.na, 2.4); lab.push({ y: a.sy(na[na.length - 1]), t: 'peak I_Na', c: C.na });
-    kLine(ivc, a, vs, k10, C.k, 2.4); lab.push({ y: a.sy(k10[k10.length - 1]), t: 'I_K at 5 ms', c: C.k });
+    kLine(ivc, a, vs, k10, C.k, 2.4); lab.push({ y: a.sy(k10[k10.length - 1]), t: `I_K at ${TMAX} ms`, c: C.k });
     [[pk.iNa, C.na], [end.iK, C.k]].forEach(([I, col]) => { ivc.fillStyle = col; ivc.beginPath(); ivc.arc(a.sx(V1), a.sy(I), 4.5, 0, 6.283); ivc.fill(); });
     kTags(ivc, lab);
     const inward = pk.iNa < -1;
     $('vCap').innerHTML = inward
-      ? `Stepping to ${ksg(V1)} mV: within ${pk.t.toFixed(2)} ms the m gates open and Na⁺ flows in (${ua(pk.iNa)}); then h closes and the Na⁺ current dies away with V still held at ${ksg(V1)} mV. Meanwhile n opens and the K⁺ current outward grows and stays (${ua(end.iK)} at 5 ms).`
+      ? `Stepping to ${ksg(V1)} mV: within ${pk.t.toFixed(2)} ms the m gates open and Na⁺ flows in (${ua(pk.iNa)}); then h closes and the Na⁺ current dies away with V still held at ${ksg(V1)} mV. Meanwhile n opens and the K⁺ current outward grows and stays (${ua(end.iK)} at ${TMAX} ms).`
       : V1 >= P.ENa ? `At ${ksg(V1)} mV, at or above E<sub>Na</sub> (${ksg(P.ENa)} mV), the Na⁺ driving force is zero or reversed: the Na⁺ channels still open, but Na⁺ current flows out, or not at all.`
       : `At ${ksg(V1)} mV hardly any m gates open, so there is almost no Na⁺ current: the step is below threshold.`;
   }
   ids.forEach(id => $(id).addEventListener('input', update));
   colorHooks.push(() => setTimeout(update, 0));
+  window.addEventListener('hhkinetics', () => { TMAX = niceT(5 * KIN.slow); document.querySelectorAll('.vtmax').forEach(e => e.textContent = TMAX); update(); });
   update();
 })();
 </script>
@@ -1397,17 +1454,48 @@ function kTags(c, list) {
   const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
   const view = v => { const b = document.querySelector(`[data-hview="${v}"]`); if (!b.hidden) b.click(); };
   const toCircuit = () => { showTab($('tab-circ')); if ($('hhPlay').textContent.trim() === 'Play') $('hhPlay').click(); $('circ-card').scrollIntoView({ behavior: 'smooth', block: 'center' }); };
-  const DEF = { hI: 100, hDur: 0.5, hGNaM: 120, hGKM: 36, hGKL: 0.5, hENa: 60, hEK: -86, hC: 1 };
-  const defaults = (except = {}) => Object.entries({ ...DEF, ...except }).forEach(([k, v]) => set(k, v));
-  const stim = (mode, over) => { HH_CIRC.setMode(mode); defaults(over); view('n'); toCircuit(); HH_CIRC.fire(); };
+  const DEF = { hI: 100, hDur: 0.5, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.03, hGCl: 0.1, hECl: -70, hENa: 60, hEK: -86, hC: 1 };
+  // ---------- the cell menu, as on the Action potential page ----------
+  // Batteries from each cell's own concentrations (mM, inside / outside) at its own temperature. T: the temperature the
+  // gates run at (°C); kShift: the K⁺ gate's shift (mV), 10 in the mammalian neuron and 0 in Hodgkin and Huxley's
+  // squid fits. ḡ, leak and C in mS/cm² and µF/cm².
+  const CELLS = [
+    { id: 'mammal', name: 'Typical mammalian neuron', T: 25, kShift: 10, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.03, hGCl: 0.1, hECl: -70, hENa: 60, hEK: -86, hC: 1,
+      note: 'K⁺ 140 inside, 5 outside; Na⁺ 14 inside, 145 outside. The values the rest of this page uses. Gates at 25 °C, with the K⁺ gate moved 10 mV more positive, as in mammalian neurons.' },
+    { id: 'squid', name: 'Squid giant axon', T: 6.3, kShift: 0, hGNaM: 120, hGKM: 36, hGKL: 0.3, hGNaL: 0.01, hGCl: 0.1, hECl: -70, hENa: 50, hEK: -77, hC: 1,
+      note: 'Where Hodgkin and Huxley measured these channels. Seawater outside is saltier than blood, but the K⁺ inside is higher still (400 vs 20 mM), so E_K is a little less negative and the cell rests higher. Gates at 6.3 °C, the temperature of the experiments, exactly as Hodgkin and Huxley fitted them: everything takes about 8× longer.' },
+    { id: 'frog', name: 'Frog nerve fibre', T: 20, kShift: 0, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.03, hGCl: 0.1, hECl: -70, hENa: 61, hEK: -98, hC: 1,
+      note: 'In frog Ringer’s solution at room temperature: very little K⁺ outside (2.5 mM), so E_K is far more negative and the cell rests further from threshold. Gates at 20 °C, with Hodgkin and Huxley’s squid kinetics: about 1.7× slower than the mammalian neuron here.' },
+  ];
+  const CELL_IDS = ['hGNaM', 'hGKM', 'hGKL', 'hGNaL', 'hGCl', 'hECl', 'hENa', 'hEK', 'hC'];
+  const cellSel = $('hhCell'), cellNote = $('hhCellNote');
+  cellSel.innerHTML = CELLS.map(c => `<option value="${c.id}">${c.name}</option>`).join('') + '<option value="custom">Custom (your settings)</option>';
+  let applying = false;
+  const quietly = f => { applying = true; try { f(); } finally { applying = false; } };
+  const showCell = c => { cellSel.value = c.id; cellNote.innerHTML = c.note.replace(/E_(K|Na)/g, 'E<sub>$1</sub>'); };
+  function applyCell(id) {
+    const c = CELLS.find(c => c.id === id); if (!c) return;
+    setKinetics(c.T, c.kShift); quietly(() => CELL_IDS.forEach(k => set(k, c[k]))); showCell(c);
+  }
+  CELL_IDS.forEach(k => $(k).addEventListener('input', () => {
+    if (applying || cellSel.value === 'custom') return;
+    cellSel.value = 'custom'; cellNote.textContent = 'Your own settings, starting from the cell you picked.';
+  }));
+  cellSel.addEventListener('change', () => { if (cellSel.value !== 'custom') applyCell(cellSel.value); });
+  showCell(CELLS[0]);
+  // the try-it buttons start from the typical neuron, as their text describes
+  const defaults = (except = {}) => { setKinetics(CELLS[0].T, CELLS[0].kShift); quietly(() => Object.entries({ ...DEF, ...except }).forEach(([k, v]) => set(k, v))); showCell(CELLS[0]);
+    if (Object.keys(except).some(k => CELL_IDS.includes(k))) { cellSel.value = 'custom'; cellNote.textContent = 'The typical neuron, with the change the button made.'; } };
+  const stim = (mode, over, v = 'g') => { HH_CIRC.setMode(mode); defaults(over); view(v); toCircuit(); HH_CIRC.fire(); };
   document.querySelectorAll('[data-hhtry]').forEach(b => b.addEventListener('click', () => {
     const [what, id, v] = b.dataset.hhtry.split(':');
     if (what === 'switch') { HH_CIRC.setMode('sw'); defaults(); view('i'); toCircuit(); HH_CIRC.setSwitch(true); }
     else if (what === 'nav') stim('nav');
     else if (what === 'hh') stim('hh');
-    else if (what === 'weak') stim('hh', { hI: 50 });
+    else if (what === 'hhgates') stim('hh', {}, 'n');
+    else if (what === 'weak') stim('hh', { hI: 30 });
     else if (what === 'ttx') stim('hh', { hGNaM: 0, hI: 150 });
-    else if (what === 'refr') { HH_CIRC.setMode('hh'); defaults(); view('n'); toCircuit(); HH_CIRC.fire([0, 1]); }
+    else if (what === 'refr') { HH_CIRC.setMode('hh'); defaults(); view('g'); toCircuit(); HH_CIRC.fire([0, 0.8]); }
     else if (what === 'refriv') { set('kT', 0.5); showTab($('tab-kiv')); $('thr-calc').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     else if (what === 'clamp') { set('vV0', -86); set('vV1', 0); showTab($('tab-vi')); $('vc-calc').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     else if (what === 'set') stim('hh', { [id]: +v });

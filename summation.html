@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="frames.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Summation and the Spike Trigger Zone</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
 <!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
 <script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
 <style>
 /* Same look as membrane_potential.html: a circuit on top, the same thing done by ions below. */
@@ -664,8 +666,10 @@ function drawChart(c, o) {
   const key = o.key || 11;                // font size of the series labels at the right
   const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
   c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
-  const [lo, hi] = o.fixed;               // every chart has a fixed y range
-  const x0 = o.x0, x1 = o.x1;
+  // every chart has a fixed y range; the zoom arrows (chartzoom.js) stretch or squeeze it, and the x range
+  const [lo, hi] = ChartZoom.y(c.canvas, o.fixed[0], o.fixed[1]);
+  const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1, o.pin);   // o.pin: 'right' on a chart that scrolls
+  ChartZoom.bind(c.canvas, () => drawChart(c, o));
   const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
   // shading
   if (o.on && o.xs.length > 1) {
@@ -913,7 +917,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     const r = restPatch(p);
     const series = [{ ys: hist.V, color: C.ink, width: 2.4, label: 'V' }];
     if (showLin) series.unshift({ ys: hist.lin, color: C.muted, width: 1.6, dash: [6, 4], label: 'sum' });
-    drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series,
+    drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series,
       refs: [{ v: EREV.K, color: C.k, label: 'E_K' }, { v: EREV.Cl, color: C.cl, label: 'E_Cl' }, { v: r.V, color: C.accent, dash: [2, 3], width: 2, label: 'rest' }],
       ylabel: 'mV', xlabel: `last ${WIN} ms` });
   }
@@ -953,6 +957,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     requestAnimationFrame(loop);
   }
   colorHooks.push(() => { draw(); drawCharts(); });
+  Frames.sim(() => running, 'capPlay');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1205,10 +1210,12 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
       refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'AIS thr.' }] : [],
       ylabel: 'mV', xlabel: 'µm from the cell body (dendrite left, axon right; AIS shaded)' });
     // the cell body's extent, as a band
-    const L = 62, R = 96, pw = CW - L - R, sx = x => L + (x - xmin()) / (xmax() - xmin()) * pw;
+    ChartZoom.bind(pc.canvas, drawCharts);
+    const [zx0, zx1] = ChartZoom.x(pc.canvas, xmin(), xmax());
+    const L = 62, R = 96, pw = CW - L - R, sx = x => Math.max(L, Math.min(L + pw, L + (x - zx0) / (zx1 - zx0) * pw));
     pc.fillStyle = C.muted; pc.globalAlpha = 0.12; pc.fillRect(sx(-P.somaD / 2), 14, Math.max(2, sx(P.somaD / 2) - sx(-P.somaD / 2)), CH - 44); pc.globalAlpha = 1;
     const t1 = M.t;
-    drawChart(tc, { xs: hist.map(h => h.t), x0: t1 - WIN, x1: t1, on: hist.map(h => h.on), w: CW, h: CH, key: 14, fixed: [-90, 50],
+    drawChart(tc, { xs: hist.map(h => h.t), x0: t1 - WIN, x1: t1, pin: 'right', on: hist.map(h => h.on), w: CW, h: CH, key: 14, fixed: [-90, 50],
       series: [{ ys: hist.map(h => h.D), color: C.syn, label: 'D' }, { ys: hist.map(h => h.S), color: C.ink, width: 2.2, label: 'S' }, { ys: hist.map(h => h.A), color: C.na, width: 2.2, label: 'A' }],
       refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'thr.' }] : [],
       ylabel: 'mV', xlabel: `last ${WIN} ms` });
@@ -1257,6 +1264,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     requestAnimationFrame(loop);
   }
   colorHooks.push(() => { drawNeuron(); drawCharts(); });
+  Frames.sim(() => running, 'aPlay');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1265,6 +1273,8 @@ const KCW = 560, KCH = 300, KL = 58, KR = 84, KTP = 14, KB = 34, KPW = KCW - KL 
 const ksg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
 const kmv = (v, d = 1) => isFinite(v) ? (v < 0 ? '−' : '+') + Math.abs(v).toFixed(d) + ' mV' : '—';
 function kAxes(c, x0, x1, y0, y1, xlab, ylab, xstep, ystep) {
+  [x0, x1] = ChartZoom.x(c.canvas, x0, x1); [y0, y1] = ChartZoom.y(c.canvas, y0, y1);   // the zoom arrows (chartzoom.js)
+  xstep = ChartZoom.step(c.canvas, 'x', xstep); ystep = ChartZoom.step(c.canvas, 'y', ystep);
   const sx = x => KL + (x - x0) / (x1 - x0) * KPW, sy = v => KTP + (y1 - Math.max(y0, Math.min(y1, v))) / (y1 - y0) * KPH;
   c.fillStyle = C.surface; c.fillRect(0, 0, KCW, KCH);
   c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.lineWidth = 0.8;
@@ -1303,6 +1313,7 @@ function kTags(c, list) {
   const fmt = { kGK: fmtG, kGNa: v => fmtG(v, 3), kGCl: fmtG, kG: v => fmtG(v, 3), kEK: v => ksg(v) + ' mV', kENa: v => ksg(v) + ' mV', kECl: v => ksg(v) + ' mV',
     kThrIn: v => ksg(v) + ' mV', kC: v => v.toFixed(1) + ' µF/cm²', kNP: v => v + (v === 1 ? ' input' : ' inputs'), kDt: v => v.toFixed(1) + ' ms' };
   const sc = setupCanvas($('kSumChart'), KCW, KCH), ic = setupCanvas($('kIntChart'), KCW, KCH);
+  [sc, ic].forEach(x => ChartZoom.bind(x.canvas, () => update()));
   const peakOf = (p, rest, n, dt, g, h = 0.02) => { const tr = passiveTrace(p, rest, trainEvents(n, dt, g), 1 + (n - 1) * dt + 10, h, false); return Math.max(...tr.vs) - tr.V0; };
   function model() {
     const p = { C: num('kC'), gKL: num('kGK'), gNaL: num('kGNa'), gCl: num('kGCl'), gNaM: 0, gKM: 0, E: { K: num('kEK'), Na: num('kENa'), Cl: num('kECl'), syn: 0 } };

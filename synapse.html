@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="frames.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Chemical Synapse</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
 <!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
 <script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
 <style>
 /* Same look as the other lessons: the synapse ion by ion on top, the same thing as a circuit below. */
@@ -716,8 +718,10 @@ function drawChart(c, o) {
   const key = o.key || 11;                // font size of the series labels at the right
   const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
   c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
-  const [lo, hi] = o.fixed;               // every chart has a fixed y range
-  const x0 = o.x0, x1 = o.x1;
+  // every chart has a fixed y range; the zoom arrows (chartzoom.js) stretch or squeeze it, and the x range
+  const [lo, hi] = ChartZoom.y(c.canvas, o.fixed[0], o.fixed[1]);
+  const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1, o.pin);   // o.pin: 'right' on a chart that scrolls
+  ChartZoom.bind(c.canvas, () => drawChart(c, o));
   const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
   // shading
   if (o.on && o.xs.length > 1) {
@@ -789,10 +793,10 @@ const speedOf = v => 0.2 * Math.pow(500, v / 100);     // slider 0–100 → 0.2
 const fmtPA = (v, d = 1) => isFinite(v) ? (v >= 0 ? (v > 0 ? '+' : '') : '−') + Math.abs(v).toFixed(d) + ' pA' : '—';
 const niceUp = v => { const s = niceStep(v); return Math.ceil(v / s - 1e-9) * s; };
 // chart geometry, matching drawChart: where data x and y land, for marks drawn on top of a chart
-function chartGeom(o) {
+function chartGeom(o, cv) {   // cv: the chart's canvas, for its zoom
   const W = o.w || CHW, H = o.h || CHH, L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;
-  const [lo, hi] = o.fixed;
-  return { L, T, pw, ph, sx: x => L + (x - o.x0) / (o.x1 - o.x0) * pw, sy: v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph };
+  const [lo, hi] = ChartZoom.y(cv, o.fixed[0], o.fixed[1]), [x0, x1] = ChartZoom.x(cv, o.x0, o.x1, o.pin);
+  return { L, T, pw, ph, sx: x => L + (x - x0) / (x1 - x0) * pw, sy: v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph };
 }
 // every n-th point, so long traces stay quick to draw
 function thin(xs, yss, max = 1400) {
@@ -1017,12 +1021,13 @@ function thin(xs, yss, max = 1400) {
     const x1 = Math.max(win, now), x0 = x1 - win;
     let i0 = 0; while (i0 < b.t.length && b.t[i0] < x0) i0++;
     const [xs, [pre, ca, I, V]] = thin(b.t.slice(i0), [b.pre.slice(i0), b.ca.slice(i0), b.I.slice(i0), b.V.slice(i0)]);
-    const base = { xs, x0, x1, xlabel: 'time since Fire (ms)', h: 220, r: 70 };
+    const base = { xs, x0, x1, pin: 'right', xlabel: 'time since Fire (ms)', h: 220, r: 70 };
     drawChart(chs.pre, { ...base, fixed: [-90, 50], ylabel: 'mV', series: [{ ys: pre, color: C.ink, label: 'V_pre' }] });
     const oCa = { ...base, fixed: [0, 40], ylabel: 'µM', series: [{ ys: ca, color: C.ca, label: 'Ca²⁺' }] };
     drawChart(chs.ca, oCa);
-    const gm = chartGeom(oCa); chs.ca.strokeStyle = C.nt; chs.ca.lineWidth = 2;
-    for (const tf of S.fus) { const t = tf - S.tFire; if (t < x0 || t > x1) continue; const x = gm.sx(t); chs.ca.beginPath(); chs.ca.moveTo(x, gm.T + 2); chs.ca.lineTo(x, gm.T + 16); chs.ca.stroke(); }
+    ChartZoom.bind(chs.ca.canvas, drawCharts);
+    const gm = chartGeom(oCa, chs.ca.canvas); chs.ca.strokeStyle = C.nt; chs.ca.lineWidth = 2;
+    for (const tf of S.fus) { const t = tf - S.tFire; const x = gm.sx(t); if (x < gm.L || x > gm.L + gm.pw) continue; chs.ca.beginPath(); chs.ca.moveTo(x, gm.T + 2); chs.ca.lineTo(x, gm.T + 16); chs.ca.stroke(); }
     const gmax = P.nR * GAM, lim = niceUp(Math.max(5, gmax * (R.ions === 'cl' ? 20 : 60)));
     drawChart(chs.I, { ...base, fixed: R.ions === 'cl' ? [-lim / 2, lim] : [-lim, lim / 4], ylabel: 'pA', series: [{ ys: I, color: R.ions === 'cl' ? C.cl : C.syn, label: 'I_syn' }] });
     drawChart(chs.V, { ...base, fixed: [-80, -55], ylabel: 'mV', series: [{ ys: V, color: C.ink, label: 'V' }],
@@ -1071,6 +1076,7 @@ function thin(xs, yss, max = 1400) {
     drawPicture(frame); drawCharts(); readouts();
     requestAnimationFrame(loop);
   }
+  Frames.sim(() => playing, 'sPlay');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1210,8 +1216,9 @@ function thin(xs, yss, max = 1400) {
     function multi(cx, series, fixed, ylabel, refs) {
       const base = { x0: 0, x1: W, xlabel: 'time (ms)', ylabel, fixed, h: 190, r: 70 };
       drawChart(cx, { ...base, xs: series.length ? series[0].xs : [], series: series.slice(0, 1), refs });
+      ChartZoom.bind(cx.canvas, drawCharts);
       if (series.length > 1) {   // the others on top, without redrawing the background
-        const g = chartGeom(base);
+        const g = chartGeom(base, cx.canvas);
         cx.save(); cx.beginPath(); cx.rect(g.L, g.T, g.pw, g.ph); cx.clip();
         for (const s of series.slice(1)) {
           cx.strokeStyle = s.color; cx.lineWidth = s.width; cx.beginPath();
@@ -1277,6 +1284,7 @@ function thin(xs, yss, max = 1400) {
     drawCircuit(); drawCharts(); readouts();
     requestAnimationFrame(loop);
   }
+  Frames.sim(() => playing, 'cPlay');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1314,8 +1322,8 @@ function thin(xs, yss, max = 1400) {
     const lo = Math.min(...ys0, ...ys, -1), hi = Math.max(...ys0, ...ys, 1), st = niceStep((hi - lo) / 5);
     const o = { xs, x0: -100, x1: 60, w: KW, h: KH, r: 70, fixed: [Math.floor(lo / st) * st, Math.ceil(hi / st) * st], xlabel: 'V (mV)', ylabel: 'pA',
       series: (mg ? [{ ys: ys0, color: C.muted, dash: [5, 4], width: 1.4, label: 'no Mg²⁺' }] : []).concat([{ ys, color: kind === 'cat' ? C.syn : C.cl, label: 'I_syn' }]) };
-    drawChart(cx, o);
-    const gm = chartGeom(o);
+    drawChart(cx, o); ChartZoom.bind(cx.canvas, update);
+    const gm = chartGeom(o, cx.canvas);
     cx.setLineDash([2, 3]); cx.lineWidth = 1.2; cx.font = '11px "IBM Plex Sans", sans-serif'; cx.textAlign = 'center';
     [[rest, 'rest'], [thr, 'threshold']].forEach(([v, t]) => { cx.strokeStyle = C.muted; cx.beginPath(); cx.moveTo(gm.sx(v), gm.T); cx.lineTo(gm.sx(v), gm.T + gm.ph); cx.stroke(); cx.fillStyle = C.muted; cx.fillText(t, gm.sx(v), gm.T + 10); });
     cx.setLineDash([]);

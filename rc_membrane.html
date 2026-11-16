@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="frames.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RC Circuit and Membrane</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
 <!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
 <script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
 <style>
 /* Same look as membrane_potential.html: a circuit on top, the same thing done by ions below. */
@@ -737,8 +739,10 @@ function drawChart(c, o) {
   const key = o.key || 11;                // font size of the series labels at the right
   const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
   c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
-  const [lo, hi] = o.fixed;               // every chart has a fixed y range
-  const x0 = o.x0, x1 = o.x1;
+  // every chart has a fixed y range; the zoom arrows (chartzoom.js) stretch or squeeze it, and the x range
+  const [lo, hi] = ChartZoom.y(c.canvas, o.fixed[0], o.fixed[1]);
+  const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1, o.pin);   // o.pin: 'right' on a chart that scrolls
+  ChartZoom.bind(c.canvas, () => drawChart(c, o));
   const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
   // shading
   if (o.on && o.xs.length > 1) {
@@ -1086,7 +1090,7 @@ function chipGroup(attr, onPick) {
       : mode === 'full'
       ? [{ v: p.fEK, color: C.k, label: 'E_K' }, { v: p.fECl, color: C.cl, label: 'E_Cl' }, { v: p.fENa, color: C.na, label: 'E_Na' }, { v: Vinf, color: C.accent, dash: [2, 3], width: 2, label: 'V∞' }]
       : [{ v: Vinf, color: C.accent, dash: [2, 3], width: 2, label: 'V∞' }];
-    drawChart(vc, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, w: CW, h: CH, key: 15, fixed: V_RANGE,
+    drawChart(vc, { xs: hist.t, x0: t - WIN, x1: t, pin: 'right', on: hist.on, w: CW, h: CH, key: 15, fixed: V_RANGE,
       series: [{ ys: hist.V, color: C.ink, width: 2.4 }], refs, ylabel: 'mV', xlabel: `last ${WIN} ms` });
     // Conductance change: the two channel currents and I_C. Current injection: I_R, I_C and their sum,
     // which is the injected current (the source line itself is left out).
@@ -1114,9 +1118,9 @@ function chipGroup(attr, onPick) {
          { ys: q4, color: C.cl, label: 'Cl⁻ in' }, { ys: hist.qC, color: C.pos, width: 2.6, label: 'on C' }]
       : [{ ys: q1, color: C.ink, label: 'through R' }, { ys: hist.qC, color: C.pos, width: 2.6, label: 'on C' },
          { ys: sum(q1, hist.qC), color: C.accent, dash: [6, 4], label: 'R + C' }];
-    if (cview === 'i') drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, w: CW, h: CH, key: 15, fixed: I_RANGE[mode],
+    if (cview === 'i') drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, pin: 'right', on: hist.on, w: CW, h: CH, key: 15, fixed: I_RANGE[mode],
       series: iSeries, ylabel: 'µA/cm², outward +', xlabel: `last ${WIN} ms` });
-    else drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, on: hist.on, restart: true, w: CW, h: CH, key: 15, fixed: Q_RANGE[mode],
+    else drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, pin: 'right', on: hist.on, restart: true, w: CW, h: CH, key: 15, fixed: Q_RANGE[mode],
       series: qSeries, ylabel: 'nC/cm² since the switch', xlabel: `last ${WIN} ms` });
   }
   function readouts() {
@@ -1200,6 +1204,7 @@ function chipGroup(attr, onPick) {
     requestAnimationFrame(loop);
   }
   colorHooks.push(() => { draw(); drawCharts(); });
+  Frames.sim(() => running, 'cPlay');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1618,18 +1623,18 @@ function chipGroup(attr, onPick) {
   function drawCharts() {
     const x1 = Math.max(TRACE_LEN * SAMPLE / 1000, steps / 1000), x0 = x1 - TRACE_LEN * SAMPLE / 1000;
     const full = pmode === 'full', sum = (...a) => a[0].map((_, k) => a.reduce((t, ys) => t + ys[k], 0));
-    drawChart(vc, { w: chartW, h: chartH, key: 15, xs: tr.x, x0, x1, on: tr.on, fixed: [-110, 80],
+    drawChart(vc, { w: chartW, h: chartH, key: 15, xs: tr.x, x0, x1, pin: 'right', on: tr.on, fixed: [-110, 80],
       series: [{ ys: tr.V, color: C.ink, width: 2.2 }],
       refs: [{ v: nernst(0), color: C.k, label: 'E_K' }, ...(full ? [{ v: nernst(3), color: C.cl, label: 'E_Cl' }] : []), { v: nernst(1), color: C.na, label: 'E_Na' },
              { v: ghkNow(naOpen), color: C.accent, dash: [2, 3], width: 2, label: 'GHK' }],
       ylabel: 'mV', xlabel: 'thousands of steps' });
     const onC = { ys: tr.qC, color: C.pos, width: 2.6, label: 'on membrane' };
-    if (pview === 'q') drawChart(ic, { w: chartW, h: chartH, key: 15, r: 128, xs: tr.x, x0, x1, on: tr.on, restart: true, fixed: Q_RANGE,
+    if (pview === 'q') drawChart(ic, { w: chartW, h: chartH, key: 15, r: 128, xs: tr.x, x0, x1, pin: 'right', on: tr.on, restart: true, fixed: Q_RANGE,
       series: full
         ? [{ ys: tr.qNa, color: C.na, label: 'Na⁺ in' }, { ys: tr.qK, color: C.k, label: 'K⁺ out' }, { ys: tr.qCl, color: C.cl, label: 'Cl⁻ in' }, onC]
         : [{ ys: tr.qNa, color: C.na, label: 'Na⁺ in' }, { ys: tr.qK, color: C.k, label: 'K⁺ out' }, onC],
       ylabel: 'ions since the last change', xlabel: 'thousands of steps' });
-    else drawChart(ic, { w: chartW, h: chartH, key: 15, xs: tr.x, x0, x1, on: tr.on, fixed: I_RANGE,
+    else drawChart(ic, { w: chartW, h: chartH, key: 15, xs: tr.x, x0, x1, pin: 'right', on: tr.on, fixed: I_RANGE,
       series: full
         ? [{ ys: tr.iNa, color: C.na, label: 'I_Na' }, { ys: tr.iK, color: C.k, label: 'I_K' }, { ys: tr.iCl, color: C.cl, label: 'I_Cl' },
            { ys: tr.iC, color: C.pos, width: 2.6, label: 'I_C' }, { ys: sum(tr.iNa, tr.iK, tr.iCl, tr.iC), color: C.accent, dash: [6, 4], label: 'sum' }]
@@ -1769,6 +1774,7 @@ function chipGroup(attr, onPick) {
     requestAnimationFrame(loop);
   }
   readouts();
+  Frames.sim(() => running, 'play');   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 </script>
@@ -1854,18 +1860,23 @@ function chipGroup(attr, onPick) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const setup = id => { const cv = $(id); cv.width = W * dpr; cv.height = H * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; };
   const vc = setup('rVChart'), ic = setup('rIChart');
-  const tx = t => L + t / TMAX * pw;
+  [vc, ic].forEach(c => ChartZoom.bind(c.canvas, () => update()));
+  let tz0 = 0, tz1 = TMAX;   // the time shown, after the zoom arrows (chartzoom.js); set by frame()
+  const tx = t => L + (t - tz0) / (tz1 - tz0) * pw;
   function frame(c, lo, hi, step, unit) {
+    [lo, hi] = ChartZoom.y(c.canvas, lo, hi); step = ChartZoom.step(c.canvas, 'y', step);
+    [tz0, tz1] = ChartZoom.x(c.canvas, 0, TMAX); const tstep = ChartZoom.step(c.canvas, 'x', 2);
     const y = v => T + (hi - v) / (hi - lo) * ph;
     c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
     c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.lineWidth = 0.8;
-    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
-      c.strokeStyle = v === 0 ? C.muted : C.line; c.beginPath(); c.moveTo(L, y(v)); c.lineTo(W - R, y(v)); c.stroke();
-      c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(sgn(v), L - 6, y(v));
+    for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) {
+      const zero = Math.abs(v) < step / 1e3;
+      c.strokeStyle = zero ? C.muted : C.line; c.beginPath(); c.moveTo(L, y(v)); c.lineTo(W - R, y(v)); c.stroke();
+      c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(sgn(zero ? 0 : +v.toPrecision(4)), L - 6, y(v));
     }
-    for (let t = 0; t <= TMAX; t += 2) {
+    for (let t = Math.ceil(tz0 / tstep) * tstep; t <= tz1 + 1e-9; t += tstep) {
       c.strokeStyle = C.line; c.beginPath(); c.moveTo(tx(t), T); c.lineTo(tx(t), T + ph); c.stroke();
-      c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, tx(t), H - B + 12);
+      c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(+t.toPrecision(4), tx(t), H - B + 12);
     }
     c.fillText('t (ms) after the switch closes', L + pw / 2, H - 8);
     c.save(); c.translate(12, T + ph / 2); c.rotate(-Math.PI / 2); c.fillText(unit, 0, 0); c.restore();
@@ -1874,7 +1885,7 @@ function chipGroup(attr, onPick) {
   function curve(c, y, f, col, width, dash) {
     c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
     c.strokeStyle = col; c.lineWidth = width; c.setLineDash(dash || []); c.lineJoin = 'round'; c.beginPath();
-    for (let i = 0; i <= 200; i++) { const t = i / 200 * TMAX, Y = y(f(t)); i ? c.lineTo(tx(t), Y) : c.moveTo(tx(t), Y); }
+    for (let i = 0; i <= 200; i++) { const t = tz0 + i / 200 * (tz1 - tz0), Y = y(f(t)); i ? c.lineTo(tx(t), Y) : c.moveTo(tx(t), Y); }
     c.stroke(); c.restore();
   }
   // labels at the right edge, nudged apart so they never overlap
@@ -1889,7 +1900,7 @@ function chipGroup(attr, onPick) {
     m.refs.forEach(r => { curve(vc, y, () => r.v, r.c, 1.2, [5, 4]); lab.push({ y: y(r.v), t: r.label, c: r.c }); });
     curve(vc, y, () => m.Vinf, C.accent, 1.6, [2, 3]); lab.push({ y: y(m.Vinf), t: 'V_∞', c: C.accent });
     curve(vc, y, t => Vt(m, t), C.ink, 2.4);
-    if (m.tau <= TMAX) {   // one τ in: 63% of the way
+    if (m.tau >= tz0 && m.tau <= tz1) {   // one τ in: 63% of the way
       const Vtau = Vt(m, m.tau);
       vc.setLineDash([2, 3]); vc.strokeStyle = C.muted; vc.lineWidth = 1; vc.beginPath(); vc.moveTo(tx(m.tau), y(Vtau)); vc.lineTo(tx(m.tau), T + ph); vc.stroke(); vc.setLineDash([]);
       vc.fillStyle = C.ink; vc.beginPath(); vc.arc(tx(m.tau), y(Vtau), 4, 0, 6.283); vc.fill();
@@ -1903,12 +1914,12 @@ function chipGroup(attr, onPick) {
     const y = frame(ic, -top, top, top / 2, 'I (µA/cm², outward +)'), lab = [];
     m.branch(0).forEach((b, k) => {
       curve(ic, y, t => m.branch(Vt(m, t))[k].I, b.c, 1.8);
-      lab.push({ y: y(m.branch(Vt(m, TMAX))[k].I), t: b.label, c: b.c });
+      lab.push({ y: y(m.branch(Vt(m, tz1))[k].I), t: b.label, c: b.c });
     });
-    curve(ic, y, t => ICof(m, Vt(m, t)), C.pos, 2.6); lab.push({ y: y(ICof(m, Vt(m, TMAX))), t: 'I_C', c: C.pos });
+    curve(ic, y, t => ICof(m, Vt(m, t)), C.pos, 2.6); lab.push({ y: y(ICof(m, Vt(m, tz1))), t: 'I_C', c: C.pos });
     // the sum of the membrane's currents (the source itself left out, as on the circuit's chart)
     const total = t => { const V = Vt(m, t); return m.branch(V).filter(b => b.label !== 'source').reduce((a, b) => a + b.I, 0) + ICof(m, V); };
-    curve(ic, y, total, C.accent, 1.8, [6, 4]); lab.push({ y: y(total(TMAX)), t: 'sum', c: C.accent });
+    curve(ic, y, total, C.accent, 1.8, [6, 4]); lab.push({ y: y(total(tz1)), t: 'sum', c: C.accent });
     tags(ic, lab);
   }
 
