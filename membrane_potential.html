@@ -103,7 +103,6 @@ canvas{display:block;width:100%;height:auto;border-radius:6px}
 .litem small{display:block;font-size:12.5px;color:var(--muted)}
 .lion{width:20px;height:20px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--surface);font:700 14px var(--font-mono);line-height:1}
 .lion.k{background:var(--k)}.lion.na{background:var(--na)}.lion.cl{background:var(--cl)}.lion.a{background:var(--a);width:24px;height:24px}
-.lpump{width:26px;height:18px;border-radius:5px;background:var(--accent);flex:none}
 .lbar{height:14px;border-radius:4px;border:1px solid var(--line);background:linear-gradient(90deg,var(--neg),transparent 50%,var(--pos))}
 .lticks{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:4px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
@@ -249,14 +248,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 .help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
 .help li{margin-bottom:8px}
 .help li::marker{color:var(--muted)}
-.tally{display:flex;flex-direction:column;gap:8px}
 [role=tabpanel][hidden]{display:none}
-.tallynums{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
-.tallynums span{display:inline-flex;align-items:center;gap:6px}
-.tallynums b{color:var(--ink);font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums}
-.tkey{width:16px;height:0;border-top:2.5px solid var(--accent);display:inline-block}
-.tkey.leak{border-top:2.5px dashed var(--ink)}
-.tkey.gap{height:10px;border:0;background:color-mix(in srgb,var(--accent) 22%,transparent)}
 
 .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
 .notes h2{font-size:16px;font-weight:600;margin:0 0 8px}
@@ -326,7 +318,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     <div class="help" role="tabpanel" id="pane-simhelp" aria-labelledby="tab-simhelp" hidden>
       <ul>
         <li><b>Dots:</b> each one is a single ion; the Key tab below shows which colour is which. Intracellular (inside the cell) is on the left, extracellular on the right.</li>
-        <li><b>Membrane:</b> the vertical band in the middle. Ions cross only through channels, each coloured by the ion it lets through; the teal blocks are Na⁺/K⁺ pumps.</li>
+        <li><b>Membrane:</b> the vertical band in the middle. Ions cross only through channels, each coloured by the ion it lets through.</li>
         <li><b>Rings:</b> an ion that has just crossed the membrane.</li>
         <li><b>Background tint:</b> the charge map, red where there is extra positive charge and blue where there is extra negative charge. At rest a thin blue layer lines the inside of the membrane and a red layer the outside: that is the charge Q that makes the voltage.</li>
         <li><b>View:</b> zoom to the membrane to see those layers; zooming changes only the view, not what is simulated.</li>
@@ -346,7 +338,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     <div class="help" role="tabpanel" id="notes" aria-labelledby="tab-notes" hidden>
       <ul>
           <li>Fields only vary across the membrane (left to right). Ions do not collide, and there is no field along the membrane.</li>
-          <li>Both sides are infinite reservoirs: the far bulk on each side is held at fixed concentrations, the standard simplification for a real cell, where charging the membrane moves only about 1 ion in 100,000. So the pump here cannot build or restore gradients; what it shows is its current, and the leak current that balances it.</li><li>Real diffuse layers are about 1 nm thick. Here they are tens of pixels, so you can see them.</li>
+          <li>Both sides are infinite reservoirs: the far bulk on each side is held at fixed concentrations, the standard simplification for a real cell, where charging the membrane moves only about 1 ion in 100,000.</li><li>Real diffuse layers are about 1 nm thick. Here they are tens of pixels, so you can see them.</li>
           <li>All channels are leak channels, always open. There are no voltage-gated channels or action potentials here; each ion's permeability is its number of channels.</li>
           <li>It is 2D. Ions crowd slightly at busy channel mouths and the charge layers carry a few mV, so GHK is a close but not exact match when several ions are permeant.</li>
         </ul>
@@ -379,24 +371,11 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     <section class="card stage" id="sim-trace">
       <div class="tabs" role="tablist" aria-label="Trace">
         <button type="button" role="tab" id="tab-vm" aria-controls="pane-vm" aria-selected="true">Voltage</button>
-        <button type="button" role="tab" id="tab-tally" aria-controls="tallyBox" aria-selected="false" tabindex="-1">Pump current</button>
         <button type="button" role="tab" id="tab-tracehelp" aria-controls="pane-tracehelp" aria-selected="false" tabindex="-1">How to read</button>
       </div>
       <div class="stage" role="tabpanel" id="pane-vm" aria-labelledby="tab-vm">
         <canvas id="trace" aria-label="Voltage trace with Nernst and GHK reference lines"></canvas>
         <p class="caption">Inside relative to outside, each point averaging 100 steps. Dashed: Nernst potentials. Dotted: GHK.</p>
-      </div>
-      <div class="tally" role="tabpanel" id="tallyBox" aria-labelledby="tab-tally" hidden>
-        <p class="sect-title">Charge carried across the membrane since the pump was turned on</p>
-        <p class="caption" id="tallyOff">The pump is off. <button class="chip" data-try="pump">Turn on the pump</button> to count the charge it carries out and the charge the leak channels carry back in.</p>
-        <canvas id="tally" aria-label="Charge carried out by the pump and back in by the leak channels since the pump was turned on"></canvas>
-        <div class="tallynums">
-          <span><i class="tkey pump"></i>Pump, out <b id="tPump">0</b></span>
-          <span><i class="tkey leak"></i>Leak channels, net in <b id="tLeak">0</b></span>
-          <span><i class="tkey gap"></i>Extra on membrane <b id="tGap">0</b></span>
-        </div>
-        <p class="caption" id="tRate"></p>
-        <p class="caption">Charges counted since the pump was turned on. Each pump cycle carries one net charge out; the leak channels carry charge back in. Once V<sub>m</sub> settles the two lines climb in parallel: at rest the leak current is equal and opposite to the pump current, so the net current is zero even though ions keep crossing.</p>
       </div>
       <div class="help" role="tabpanel" id="pane-tracehelp" aria-labelledby="tab-tracehelp" hidden>
         <h4>Membrane potential</h4>
@@ -405,12 +384,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           <li><b>Dashed lines:</b> each ion's Nernst potential, the voltage at which that ion alone would be at equilibrium.</li>
           <li><b>Dotted line:</b> the GHK prediction from the current channel numbers and concentrations.</li>
           <li>The trace settles between the dashed lines, nearest the ion with the most channels. The small wobble is noise from the limited number of ions.</li>
-        </ul>
-        <h4>Pump and leak current</h4>
-        <ul>
-          <li><b>Solid line:</b> total charge the pump has carried out since it was turned on (one charge per cycle).</li>
-          <li><b>Dashed line:</b> net charge the leak channels have carried back in.</li>
-          <li><b>Shaded gap:</b> charge added to the membrane. Once the voltage settles the gap stops growing and the lines run parallel: the leak current is equal and opposite to the pump current.</li>
         </ul>
       </div>
     </section>
@@ -434,7 +407,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       <div class="lgrp">
         <span class="sect-title">Membrane</span>
         <div class="litem"><svg width="26" height="22" viewBox="0 0 26 22" aria-hidden="true" style="color:var(--k);flex:none"><rect x="1" y="1" width="24" height="20" rx="6" fill="currentColor" fill-opacity="0.24" stroke="currentColor" stroke-width="1.4"/><rect x="1" y="7" width="24" height="8" fill="var(--surface)"/></svg><span>Leak channel <small>always open; coloured by the ion it passes</small></span></div>
-        <div class="litem"><span class="lpump"></span><span>Na⁺/K⁺ pump <small>3 Na⁺ out, 2 K⁺ in</small></span></div>
         <div class="litem"><svg width="26" height="22" viewBox="0 0 26 22" aria-hidden="true" style="color:var(--na);flex:none"><circle cx="13" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Ring <small>an ion that just crossed</small></span></div>
       </div>
       <div class="lgrp">
@@ -484,14 +456,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         <p class="caption" id="leakFull" hidden></p>
         <p class="caption">Leak channels are always open, so each ion's permeability follows its conductance.</p>
       </fieldset>
-      <fieldset>
-        <legend class="sect-title">Na⁺/K⁺ pump</legend>
-        <div class="prow">
-          <label class="check" for="pump"><input type="checkbox" id="pump">Pump on (3 Na⁺ out, 2 K⁺ in)</label>
-          <div class="row"><label for="pumpRate">Pump rate</label><input type="range" id="pumpRate" min="0" max="10" step="0.5" value="0.5"><output id="pumpRateo" for="pumpRate"></output>
-            <span class="hint">max cycles per 1000 steps; each cycle carries one charge out</span></div>
-        </div>
-      </fieldset>
     </div>
     <div class="panel" role="tabpanel" id="pane-model" aria-labelledby="tab-model" hidden>
       <fieldset class="mgrid">
@@ -500,7 +464,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           <span class="hint">how much membrane is simulated; more ions give steadier graphs but run slower</span></div>
         <div class="row"><label for="qmv">Membrane C</label><input type="range" id="qmv" min="3" max="40" step="1" value="11"><output id="qmvo" for="qmv"></output>
           <span class="hint">capacitance per 100 px of membrane</span></div>
-        <label class="check" for="tint"><input type="checkbox" id="tint" checked>Show charge density map</label>
+        <label class="check" for="tint"><input type="checkbox" id="tint">Show charge density map</label>
         <div class="row"><label for="blur">Charge blur σ</label><input type="range" id="blur" min="6" max="40" step="2" value="10"><output id="bluro" for="blur"></output>
           <span class="hint">on-screen width of each ion's Gaussian; scales with zoom</span></div>
         <div class="row"><label for="dtau">Map averaging</label><input type="range" id="dtau" min="0" max="100" value="88"><output id="dtauo" for="dtau"></output>
@@ -536,9 +500,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       <div>
         <p class="unithead">Simulation units</p>
         <dl class="unitlist">
-          <dt>e</dt><dd>elementary charge, the charge of one K⁺ or Na⁺ ion (Cl⁻ carries −1 e); 1 e = 1.6 × 10⁻¹⁹ C. The charge chart, the Q bar and the pump tally count charge in ions this way.</dd>
+          <dt>e</dt><dd>elementary charge, the charge of one K⁺ or Na⁺ ion (Cl⁻ carries −1 e); 1 e = 1.6 × 10⁻¹⁹ C. The charge chart and the Q bar count charge in ions this way.</dd>
           <dt>px</dt><dd>pixels, the simulation's unit of distance. It is not to scale: the Debye length is 40 px here but about 0.8 nm in a real cell, so the charge layers are drawn thick enough to see.</dd>
-          <dt>steps</dt><dd>the simulation's unit of time: in each step every ion takes one random move. Steps are not tied to real seconds; the trace, the pump rate and the speed all count them.</dd>
+          <dt>steps</dt><dd>the simulation's unit of time: in each step every ion takes one random move. Steps are not tied to real seconds; the trace and the speed both count them.</dd>
           <dt>e/mV</dt><dd>the simulation's membrane capacitance: extra charges, per 100 px of membrane, needed to change the voltage by 1 mV. The same idea as µF/cm², charge per volt per area, in simulation units.</dd>
         </dl>
       </div>
@@ -624,7 +588,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           </details>
 
           <h3>Charge moves, voltage follows</h3>
-          <p>\(V_m\) changes only when charge crosses the membrane, through channels or pumps. Any net current charges or discharges the capacitor:</p>
+          <p>\(V_m\) changes only when charge crosses the membrane, through its channels. Any net current charges or discharges the capacitor:</p>
           <div class="eq">\[ I_\text{net} = C_m\,\frac{dV_m}{dt} \]</div>
           <p>This is the link to the steady-state tab. At rest the voltage is steady, so the net current is zero; that is the condition both the chord conductance and GHK formulas solve. Away from rest, net current flows until the capacitor reaches the new voltage, with time constant \(\tau = C_m/g\) (see the RC membrane page). Capacitance sets how much charge has to move, and so how long it takes, but not where \(V_m\) ends up.</p>
 
@@ -678,7 +642,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           <ul>
             <li>A channel is not a fixed resistor, so Ohm's law with a constant \(g_s\) is only an approximation. Even an always-open channel passes current more easily in the direction that has more ions to carry it, so its current–voltage curve bends, and \(g_s\) changes with voltage and with concentrations. Raise [K⁺]ₒ and \(g_\mathrm{K}\) should rise too; the formula cannot say by how much.</li>
             <li>The Nernst potentials are inputs. The formula takes \(E_s\) as given, so it says nothing about how a concentration gradient makes a voltage.</li>
-            <li>Zero net current is not zero flux. At rest K⁺ keeps leaking out and Na⁺ keeps leaking in, each a steady current that the others cancel. Over time the gradients run down unless the Na⁺/K⁺ pump restores them, and the pump's own current (3 charges out for every 2 in) is not in the formula.</li>
+            <li>Zero net current is not zero flux. At rest K⁺ keeps leaking out and Na⁺ keeps leaking in, each a steady current that the others cancel.</li>
             <li>It says where \(V_m\) ends up, not how fast it gets there. That is set by the membrane capacitance; see the RC membrane page.</li>
           </ul>
         </div>
@@ -730,7 +694,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           <ul>
             <li>Real channels are not uniform slabs. Ions bind in the selectivity filter, move single file and can saturate the channel, so permeability ratios measured at one set of concentrations may not hold at another.</li>
             <li>The voltage equation needs every permeant ion to have the same size of charge. With Ca²⁺ in the mix, you go back to the current equation and find the zero crossing numerically.</li>
-            <li>Like the chord formula, it describes zero net current, not zero flux, and it leaves out the pump's current.</li>
+            <li>Like the chord formula, it describes zero net current, not zero flux.</li>
           </ul>
         </div>
         <aside class="try">
@@ -748,7 +712,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
             <li>Each concentration gradient is a battery. An ion's Nernst potential is the voltage at which its drift in the field exactly balances its diffusion down the gradient.</li>
             <li>Each permeant ion pulls \(V_m\) toward its own battery, with a strength set by how easily it crosses.</li>
             <li>The membrane is a capacitor, so very little charge sets the voltage: about 1 ion in 100,000 near the membrane. The thin layers in the charge profile are that charge, and the bulk concentrations barely change.</li>
-            <li>\(V_m\) settles where the inward and outward currents cancel. That is a steady state, not an equilibrium: the ions keep leaking, and the pump pays to keep the gradients.</li>
+            <li>\(V_m\) settles where the inward and outward currents cancel. That is a steady state, not an equilibrium: the ions keep leaking.</li>
           </ul>
           <p>Both formulas say exactly this. They differ only in how each ion's current depends on voltage.</p>
 
@@ -772,7 +736,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         <aside class="try">
           <span class="sect-title">Try it</span>
           <p><button class="chip" data-try="model:chord">Chord model in the calculator</button> The voltage does not change when you switch: the conductances shown are the chord conductances at V<sub>m</sub>. Now drag [K⁺]ₒ, then switch back to GHK and compare.</p>
-          <p><button class="chip" data-try="pump">Turn on the pump</button> The Pump current tab beside the voltage trace counts the charge the pump carries out and the charge the leak channels carry back in. At rest they climb together: the leak current is equal and opposite to the pump current.</p>
         </aside>
       </div>
       </div>
@@ -788,8 +751,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         <li><b>Cole KS, Curtis HJ (1938).</b> Transverse electric impedance of the squid giant axon. <i>Journal of General Physiology</i> 21:757–765. <a href="https://doi.org/10.1085/jgp.21.6.757" target="_blank" rel="noopener">doi:10.1085/jgp.21.6.757</a><br><span class="why">The squid axon membrane as a capacitor of about 1 µF/cm² in parallel with a resistance.</span></li>
         <li><b>Goldman DE (1943).</b> Potential, impedance, and rectification in membranes. <i>Journal of General Physiology</i> 27:37–60. <a href="https://doi.org/10.1085/jgp.27.1.37" target="_blank" rel="noopener">doi:10.1085/jgp.27.1.37</a><br><span class="why">The constant-field current equation for ions crossing a membrane.</span></li>
         <li><b>Hodgkin AL, Katz B (1949).</b> The effect of sodium ions on the electrical activity of the giant axon of the squid. <i>Journal of Physiology</i> 108:37–77. <a href="https://doi.org/10.1113/jphysiol.1949.sp004310" target="_blank" rel="noopener">doi:10.1113/jphysiol.1949.sp004310</a><br><span class="why">The Goldman–Hodgkin–Katz voltage equation, and the sodium hypothesis: the spike is a brief rise in Na⁺ permeability.</span></li>
-        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lesson 3 are theirs, including the 3× speed-up per 10 °C.</span></li>
-        <li><b>Skou JC (1957).</b> The influence of some cations on an adenosine triphosphatase from peripheral nerves. <i>Biochimica et Biophysica Acta</i> 23:394–401. <a href="https://doi.org/10.1016/0006-3002(57)90343-8" target="_blank" rel="noopener">doi:10.1016/0006-3002(57)90343-8</a><br><span class="why">The discovery of the Na⁺/K⁺ ATPase, the pump that keeps up the concentration differences.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 3 to 5 are theirs, including the 3× speed-up per 10 °C.</span></li>
           </ol>
         </div>
       </div>
@@ -936,14 +898,14 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
   // ---------- channels ----------
   // All channels are leak channels (always open). Each ion's permeability is its number of channels:
-  // the sliders set channels per 1000 px of membrane, spread evenly down the membrane between pumps.
+  // the sliders set channels per 1000 px of membrane, spread evenly down the membrane.
   const LEAK_PER = 1000;
-  // Hard walls: ions are spheres that never overlap the membrane, a channel body or a pump.
+  // Hard walls: ions are spheres that never overlap the membrane or a channel body.
   // A channel body spans XIN-BW..XOUT+BW and BH tall; its open lumen is the pore (PH tall).
-  const BW = 8, BH = SLOT * 0.74, PUMP_H = SLOT * 0.8;
+  const BW = 8, BH = SLOT * 0.74;
   const BASE_RAD = [2.8, 2.8, 2.8, 3.6];                  // drawn and physical ion radius, px (× density factor)
   let RAD = BASE_RAD.slice();
-  let bodyAt = new Uint8Array(0);                         // 1 where a slot holds a channel or pump body
+  let bodyAt = new Uint8Array(0);                         // 1 where a slot holds a channel body
   const radScale = () => density < 0.4 ? 1.25 : density < 0.75 ? 1.1 : 0.85;
   function setRadii() { const k = radScale(); RAD = BASE_RAD.map(v => v * k); }
   const wrapY = y => (y < 0 ? y + H : y >= H ? y - H : y);
@@ -958,12 +920,11 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       else { const R = rightLimit(s, y); if (px[i] < R) px[i] = ox[i] = R + 0.3; }
     }
   }
-  let pores = [], pumps = [], slotPore = [], nLeak = [0,0,0], leakFull = false;
-  const isPumpSlot = i => i % 24 === 12;
+  let pores = [], slotPore = [], nLeak = [0,0,0], leakFull = false;
   function buildChannels() {
-    pores = []; pumps = []; slotPore = [];
+    pores = []; slotPore = [];
     const n = Math.round(H / SLOT);
-    const free = []; for (let i = 0; i < n; i++) if (!isPumpSlot(i)) free.push(i);
+    const free = []; for (let i = 0; i < n; i++) free.push(i);
     const want = [0, 1, 2].map(s => perm[s] * H / LEAK_PER);
     let cnt = want.map(Math.round);
     leakFull = false;
@@ -976,14 +937,13 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     items.forEach((it, k) => { assign[free[Math.floor((k + 0.5) * free.length / items.length)]] = it.s; });
     for (let i = 0; i < n; i++) {
       const yc = (i + 0.5) * SLOT;
-      if (isPumpSlot(i)) { pumps.push({ y: yc, flash: 0 }); slotPore.push(-1); continue; }
       if (assign[i] < 0) { slotPore.push(-1); continue; }
       slotPore.push(pores.length);
       pores.push({ y0: yc - PH/2, y1: yc + PH/2, yc, s: assign[i], slot: i });
     }
     nLeak = [0,0,0]; pores.forEach(p => nLeak[p.s]++);
     bodyAt = new Uint8Array(n);
-    for (let i = 0; i < n; i++) bodyAt[i] = (isPumpSlot(i) || slotPore[i] >= 0) ? 1 : 0;
+    for (let i = 0; i < n; i++) bodyAt[i] = slotPore[i] >= 0 ? 1 : 0;
   }
   // after a layout change: ions inside a channel that is gone (or is now another ion's) step out to the nearer face
   function remapPores(oldSlot) {
@@ -1012,12 +972,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   let perm = gLeak.map(g => g / G_PER_CH);   // leak channels per 1000 px of membrane
   buildChannels();
   let concIn = DEFAULTS.mammal.cin.slice(), concOut = DEFAULTS.mammal.cout.slice();
-  let pumpOn = false, pumpRate = 0.5, pumpAcc = 0;
-  // Charge tally while the pump runs: charges the pump has carried out, and net charge the leak channels have
-  // carried in. Their difference is the extra charge on the membrane, which stops growing once V settles.
-  const tally = { pump: 0, leak: 0, steps: 0, hist: [], every: 1 };
-  function resetTally() { tally.pump = tally.leak = tally.steps = 0; tally.hist = [[0, 0, 0]]; tally.every = 1; }
-  let qmv = 11, lambda = 40 /* Debye length, px: fixed */, vSum = 0, speed = 60, tintOn = true, chargeColor = false, densTau = 1500;
+  let qmv = 11, lambda = 40 /* Debye length, px: fixed */, vSum = 0, speed = 60, tintOn = false, chargeColor = false, densTau = 1500;
   const cIn = [0,0,0,0], cOut = [0,0,0,0];
   const crossings = [];
   const trace = []; const TRACE_LEN = 500, SAMPLE = 100; let sampleAcc = 0;
@@ -1069,8 +1024,8 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     outN.forEach((n, s) => { for (let k = 0; k < n; k++) addParticle(s, XOUT + BW + 7 + Math.random() * (W - XOUT - BW - 12), Math.random() * H); });
     cTot = inN.reduce((a, b) => a + b, 0) / XIN;
     setKappa();
-    V = vAvg = vSum = 0; steps = 0; stepAcc = 0; sampleAcc = 0; pumpAcc = 0;
-    crossings.length = 0; trace.length = 0; resetTally(); rhoSm.fill(0); Esm.fill(0); dens.fill(0);
+    V = vAvg = vSum = 0; steps = 0; stepAcc = 0; sampleAcc = 0;
+    crossings.length = 0; trace.length = 0; rhoSm.fill(0); Esm.fill(0); dens.fill(0);
     sanitize();
     binAndField(); countSides();
     if (typeof updatePatchInfo === 'function') updatePatchInfo();
@@ -1134,10 +1089,10 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         if (nx <= XIN - BW - RAD[s] || nx >= XOUT + BW + RAD[s]) {
           pore[i] = -1;
           const ns = nx <= XIN ? -1 : 1;
-          if (ns !== side[i]) { side[i] = ns; tally.leak -= ns * Z[s]; if (crossings.length < 200) crossings.push({ x: nx, y: ny, s, age: 0 }); }
+          if (ns !== side[i]) { side[i] = ns; if (crossings.length < 200) crossings.push({ x: nx, y: ny, s, age: 0 }); }
         }
       } else {
-        // in solution: a move that would overlap the membrane, a channel body or a pump is rejected,
+        // in solution: a move that would overlap the membrane or a channel body is rejected,
         // unless it takes the ion into the open lumen of a channel for its own species
         const left = x < MX;
         const over = left ? nx > leftLimit(s, ny) : nx < rightLimit(s, ny);
@@ -1159,15 +1114,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     qin = q; poreQ = pq; rngState = rs;
     steps++;
     if (steps % 25 === 0) clampBath();
-    if (pumpOn && pumpRate > 0) {
-      const nain = cIn[1], km = Math.max(1, perPx2(14) * XIN * H);
-      pumpAcc += (pumpRate / 1000) * (nain / (nain + km));
-      while (pumpAcc >= 1) { pumpAcc -= 1; pumpCycle(); }
-    }
-    if (pumpOn && ++tally.steps % (SAMPLE * tally.every) === 0) {
-      tally.hist.push([tally.steps, tally.pump, tally.leak]);
-      if (tally.hist.length > 400) { tally.hist = tally.hist.filter((_, k) => k % 2 === 0); tally.every *= 2; }   // keep it all, coarser
-    }
     computeField();
     smoothProfiles(0.0005);
     sampleAcc++; vSum += V;
@@ -1198,7 +1144,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     rm.sort((a, b) => b - a).forEach(removeAt);
     return changed;
   }
-  // Keep the whole system exactly electroneutral. Crossings, pumps and reservoir moves all conserve charge;
+  // Keep the whole system exactly electroneutral. Crossings and reservoir moves both conserve charge;
   // resizing the patch can leave a few stray charges, which are removed from the far reservoirs here.
   function neutralize() {
     let q = 0; for (let i = 0; i < N; i++) q += Z[sp[i]];
@@ -1214,32 +1160,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     changed = clampRegion(CLAMP_X, W, [0, 1, 2, 3].map(clampTarget), [2, 3]) || changed;
     changed = clampRegion(0, CLAMP_IN, [0, 1, 2, 3].map(s => inCount(s) * CLAMP_IN / XIN), [2, 3]) || changed;
     if (changed) binAndField();
-  }
-
-  function pickNear(s, wantInside, y0) {
-    for (let t = 0; t < 400; t++) {
-      const i = Math.floor(Math.random() * N);
-      if (sp[i] !== s || pore[i] >= 0) continue;
-      const x = px[i];
-      const ok = wantInside ? (x < XIN && x > XIN - 140) : (x > XOUT && x < XOUT + 140);
-      if (ok && Math.abs(py[i] - y0) < 120) return i;
-    }
-    for (let t = 0; t < 400; t++) {
-      const i = Math.floor(Math.random() * N);
-      if (sp[i] === s && pore[i] < 0 && (wantInside ? px[i] < XIN : px[i] > XOUT)) return i;
-    }
-    return -1;
-  }
-  function pumpCycle() {
-    const pm = pumps[Math.floor(Math.random() * pumps.length)];
-    const na = [], k = [];
-    for (let n = 0; n < 3; n++) { const i = pickNear(1, true, pm.y); if (i < 0 || na.includes(i)) return; na.push(i); }
-    for (let n = 0; n < 2; n++) { const i = pickNear(0, false, pm.y); if (i < 0 || k.includes(i)) return; k.push(i); }
-    na.forEach(i => { px[i] = ox[i] = XOUT + BW + RAD[1] + 1 + Math.random() * 6; py[i] = oy[i] = pm.y + (Math.random() - 0.5) * PH; side[i] = 1; });
-    k.forEach(i => { px[i] = ox[i] = XIN - BW - RAD[0] - 1 - Math.random() * 6; py[i] = oy[i] = pm.y + (Math.random() - 0.5) * PH; side[i] = -1; });
-    qin -= 1; tally.pump++; cIn[1] -= 3; cOut[1] += 3; cIn[0] += 2; cOut[0] -= 2;
-    pm.flash = 1;
-    binAndField();
   }
 
   // ---------- readouts ----------
@@ -1268,9 +1188,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   sim.width = CW * dpr; sim.height = CH * dpr; prof.width = PW * dpr; prof.height = PRH * dpr; trc.width = TW * dpr; trc.height = TH * dpr;
   const ctx = sim.getContext('2d'), pctx = prof.getContext('2d'), tctx = trc.getContext('2d');
   pctx.setTransform(dpr, 0, 0, dpr, 0, 0); tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const tly = document.getElementById('tally'), YW = 640, YH = 400;
-  tly.width = YW * dpr; tly.height = YH * dpr;
-  const yctx = tly.getContext('2d'); yctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   let C = {};
   function readColors() {
@@ -1509,13 +1426,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
         }
       });
-      pumps.forEach(pm => {
-        if (pm.y + PH < ly0 || pm.y - PH > ly1) return;
-        ctx.globalAlpha = pumpOn ? 0.55 + 0.45 * pm.flash : 0.25;
-        ctx.fillStyle = C.accent;
-        ctx.beginPath(); ctx.roundRect(XIN - BW, pm.y - PUMP_H / 2, XOUT - XIN + 2 * BW, PUMP_H, SLOT * 0.26); ctx.fill();
-        ctx.globalAlpha = 1;
-      });
       // ions: hard spheres, interpolated in slow motion
       if (showSigns) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; }
       for (let s = 3; s >= 0; s--) {
@@ -1547,7 +1457,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       }
       ctx.globalAlpha = 1;
     }
-    pumps.forEach(pm => pm.flash *= 0.9);
     for (let k = crossings.length - 1; k >= 0; k--) { if (++crossings[k].age > 40) crossings.splice(k, 1); }
     // screen-space labels
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1577,7 +1486,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           const q = toScreen(XOUT + 22, p.yc + off); if (q.y < 36 || q.y > CH - 8 || q.x > CW - 90) return;
           tag(PORE_LABEL[p.s], q.x + 10, q.y + 4, 'left', C.sp[p.s]);
         });
-        pumps.forEach(pm => { const q = toScreen(XOUT + 22, pm.y + off); if (q.y < 36 || q.y > CH - 8 || q.x > CW - 90) return; tag('Na⁺/K⁺ pump', q.x + 14, q.y + 4, 'left', C.accent); });
       }
     }
     ctx.textAlign = 'left';
@@ -1701,47 +1609,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     tctx.textBaseline = 'alphabetic';
   }
 
-  // cumulative charge: pump out (solid) and leak channels in (dashed); the shaded gap is the extra charge on the membrane
-  function drawTally() {
-    if ($('tallyBox').hidden) return;   // drawn only while its tab is showing
-    const h = tally.hist.concat([[tally.steps, tally.pump, tally.leak]]);
-    const L = 56, R = 14, T = 12, B = 26, pw = YW - L - R, ph = YH - T - B;
-    // A fixed scale: the last 50,000 steps (as on the voltage trace) and 40 e of height, enough for the default pump
-    // rate over that time. The totals only grow, so the window slides up to keep the newest values in view, without
-    // changing its size. (The leak total dips below 0 if the membrane was still charging when the pump started.)
-    const S_WIN = 50000, Q_SPAN = 40, s0 = Math.max(0, tally.steps - S_WIN);
-    const seen = h.filter(r => r[0] >= s0), top = Math.max(0, ...seen.map(r => Math.max(r[1], r[2])));
-    const qMin = Math.max(-10, top - Q_SPAN + 5), qMax = qMin + Q_SPAN;
-    const X = s => L + (s - s0) / S_WIN * pw, Y = q => T + (qMax - q) / (qMax - qMin) * ph;
-    yctx.fillStyle = C.surface; yctx.fillRect(0, 0, YW, YH);
-    yctx.font = '11px "IBM Plex Mono", monospace'; yctx.textBaseline = 'middle';
-    const qStep = 10;
-    for (let q = Math.ceil(qMin / qStep) * qStep; q <= qMax; q += qStep) {
-      yctx.strokeStyle = C.line; yctx.lineWidth = q === 0 ? 1.2 : 0.8;
-      yctx.beginPath(); yctx.moveTo(L, Y(q)); yctx.lineTo(YW - R, Y(q)); yctx.stroke();
-      yctx.fillStyle = C.muted; yctx.textAlign = 'right'; yctx.fillText(q + ' e', L - 6, Y(q));
-    }
-    yctx.textAlign = 'left'; yctx.fillText(tally.steps.toLocaleString() + ' steps since the pump was turned on', L, YH - 8);
-    yctx.save(); yctx.beginPath(); yctx.rect(L, T, pw, ph); yctx.clip();
-    yctx.fillStyle = C.accent; yctx.globalAlpha = 0.22; yctx.beginPath();
-    h.forEach(([s, p], k) => k ? yctx.lineTo(X(s), Y(p)) : yctx.moveTo(X(s), Y(p)));
-    for (let k = h.length - 1; k >= 0; k--) yctx.lineTo(X(h[k][0]), Y(h[k][2]));
-    yctx.fill(); yctx.globalAlpha = 1;
-    const line = (col, c, w, dash) => {
-      yctx.strokeStyle = c; yctx.lineWidth = w; yctx.setLineDash(dash); yctx.lineJoin = 'round'; yctx.beginPath();
-      h.forEach((r, k) => k ? yctx.lineTo(X(r[0]), Y(r[col])) : yctx.moveTo(X(r[0]), Y(r[col]))); yctx.stroke(); yctx.setLineDash([]);
-    };
-    line(1, C.accent, 2.5, []); line(2, C.ink, 2, [6, 4]);
-    yctx.restore();
-    yctx.textBaseline = 'alphabetic';
-    $('tPump').textContent = tally.pump + ' e'; $('tLeak').textContent = tally.leak + ' e'; $('tGap').textContent = (tally.pump - tally.leak) + ' e';
-    // rates over the recent stretch (about the last quarter of the record)
-    const r0 = h[Math.max(0, h.length - 1 - Math.max(4, h.length >> 2))], r1 = h[h.length - 1], ds = r1[0] - r0[0];
-    $('tRate').textContent = ds >= SAMPLE * 20
-      ? `Recent rates, charges per 1000 steps: pump ${(1000 * (r1[1] - r0[1]) / ds).toFixed(1)} out, leak channels ${(1000 * (r1[2] - r0[2]) / ds).toFixed(1)} in.`
-      : 'Recent rates appear after a few thousand steps.';
-  }
-
   // ---------- UI ----------
   const $ = id => document.getElementById(id);
   const DUMMY = { textContent: '', style: {}, classList: { add() {}, remove() {} } };
@@ -1838,11 +1705,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   $('defMammal').addEventListener('click', () => loadDefaults(DEFAULTS.mammal));
   $('defSquid').addEventListener('click', () => loadDefaults(DEFAULTS.squid));
   syncConcUI();
-  bindRange('pumpRate', v => String(v), v => pumpRate = v);
   bindRange('qmv', v => (1 / v).toFixed(3) + ' e/mV', v => { qmv = v; setKappa(); computeField(); });
-  const showPumpOff = () => { $('tallyOff').hidden = pumpOn; tly.style.opacity = pumpOn ? 1 : 0.35; };
-  $('pump').addEventListener('change', e => { pumpOn = e.target.checked; resetTally(); showPumpOff(); });
-  showPumpOff();
   $('tint').addEventListener('change', e => tintOn = e.target.checked);
   bindRange('blur', v => v + ' px', v => { blurSigma = v; allocDensity(true); });
   bindRange('dtau', v => { const t = Math.round(Math.pow(10, v / 100 * 3.7)); return t <= 1 ? 'none' : t.toLocaleString() + ' st'; }, v => { densTau = Math.max(1, Math.pow(10, v / 100 * 3.7)); });
@@ -2134,14 +1997,13 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   applyCell('mammal');
 
   // ---------- theory tabs ----------
-  // tabs: the theory tabs and the trace / pump-current tabs
+  // tabs: the theory tabs and the chart tabs
   function showTab(tab) {
     tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
       const on = t === tab;
       t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
       $(t.getAttribute('aria-controls')).hidden = !on;
     });
-    if (tab.id === 'tab-tally') drawTally();
   }
   document.querySelectorAll('[role=tablist]').forEach(list => {
     const tabs = [...list.querySelectorAll('[role=tab]')];
@@ -2166,10 +2028,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       setRunning(true); into('sim-profile');
     }
     else if (what === 'zoom') { showTab($('tab-sim')); $('zMem').click(); setRunning(true); into('sim-stage'); }
-    else if (what === 'pump') {
-      if (!$('pump').checked) $('pump').click();
-      showTab($('tab-tally')); setRunning(true); into('sim-trace');
-    }
   }));
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(calcGHK, 0));
   new MutationObserver(() => setTimeout(calcGHK, 0)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -2200,7 +2058,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       gT: calcControl('gT', 'Calculator: temperature', '°C'),
       gC: calcControl('gC', 'Calculator: membrane capacitance', 'µF/cm²'),
       simRunning: { label: 'Simulation: running (1 or 0)', get: () => running ? 1 : 0, set: v => setRunning(!!+v) },
-      simPump: checkbox('pump', 'Simulation: Na⁺/K⁺ pump'),
     },
     afterSet: () => { calcGHK(lessonSrc); lessonSrc = 'P'; markCustom(); },
     regions: {
@@ -2246,7 +2103,6 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     drawProfile();
     if (frame++ % 6 === 0) { updateReadouts(); updateTable(); }
     drawTrace(refs());
-    if (frame % 6 === 0) drawTally();
     restMs += (performance.now() - t1 - restMs) * 0.1;
     requestAnimationFrame(loop);
   }

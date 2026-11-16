@@ -10,7 +10,10 @@ and shows the pages on its Lessons tabs.
 | `index.html` | Landing page: links to the lessons in order |
 | `membrane_potential.html` | Exploring the membrane potential: ions crossing a membrane one by one, Q = C·V, Nernst, chord conductance and GHK, with a GHK calculator |
 | `rc_membrane.html` | Charging a membrane: the membrane as an RC circuit, then the same thing ion by ion, with an RC calculator |
+| `hodgkin_huxley.html` | The Hodgkin–Huxley model: lesson 2's circuit in three steps (Na⁺ on a switch, voltage-gated Na⁺, voltage-gated Na⁺ and K⁺), with a threshold calculator and a voltage-clamp calculator |
 | `action_potential.html` | The action potential travelling along an axon: a cell body and axon built from Hodgkin–Huxley patches joined by the cytoplasm, with a menu of real cells (motor neuron, pain fibre, frog nerve, squid giant axon), myelin, electrodes and a cable calculator |
+| `synapse.html` | The chemical synapse: a presynaptic terminal, cleft and spine vesicle by vesicle (Ca²⁺ entry, chance release, facilitation and depression, receptors), then the synapse as a conductance with its own battery in current and voltage clamp, with a synaptic current calculator |
+| `summation.html` | Summation and the spike trigger zone: the membrane as a capacitor adding inputs up, a neuron from dendrite to axon initial segment, and a summation calculator |
 
 ## Running a page
 

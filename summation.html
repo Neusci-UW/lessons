@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summation and the Spike Trigger Zone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as membrane_potential.html: a circuit on top, the same thing done by ions below. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --ea:#c0287a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:80ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+/* page sections, intro, tabs, help and units: the same look as membrane_potential.html */
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+header p{max-width:90ch}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help h4{margin:0 0 4px;font-size:13.5px;font-weight:600}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* RC calculator, styled like the GHK calculator in membrane_potential.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.gr[hidden]{display:none}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;gap:16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500}
+.gion[hidden]{display:none}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:1100px){.top{grid-template-columns:1fr}}
+.cgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.qbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.qlab{white-space:nowrap}
+.qlab b{color:var(--ink);font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums;display:inline-block;min-width:5ch}
+.qlab:first-child b{text-align:right}
+.qtrack{position:relative;height:16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);overflow:hidden}
+.qtrack::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid var(--muted)}
+.qfill{position:absolute;top:0;bottom:0;width:0}
+#iqInBar{right:50%}
+#iqOutBar{left:50%}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+#sim{cursor:grab;touch-action:none}
+#sim.dragging{cursor:grabbing}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.toolbar .spacer{flex:1}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.cl{background:var(--cl)}.dot.syn{background:var(--syn)}.dot.ea{background:var(--ea)}.dot.k{background:var(--k)}.dot.na{background:var(--na)}.dot.a{background:var(--a);width:12px;height:12px}
+.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg);border-radius:2px}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.top.stacked{grid-template-columns:1fr}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.sgroup{display:flex;flex-direction:column;gap:10px}.sgroup[hidden]{display:none}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:92px minmax(0,1fr) 104px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+.row[hidden]{display:none}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+/* theory card, styled like the GHK derivation in membrane_potential.html */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+/* on/off switch for the ion simulation's Na⁺ channels: label, track, state in words */
+button.toggle{display:inline-flex;align-items:center;gap:10px;border:0;background:none;padding:4px 2px;font-weight:600}
+button.toggle .track{width:42px;height:24px;border-radius:12px;background:var(--muted);position:relative;transition:background .15s;flex:none}
+button.toggle .thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:left .15s}
+button.toggle[aria-checked="true"] .track{background:var(--on,var(--na))}
+button.toggle[aria-checked="true"] .thumb{left:21px}
+button.toggle .tstate{font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--muted);min-width:52px;text-align:left}
+@media (prefers-reduced-motion:reduce){button.toggle .track,button.toggle .thumb{transition:none}}
+/* a button that stays down while it is on (the circuit's current, or its Na⁺ channels), filled in its colour */
+button.latch[aria-pressed=true]{background:var(--on,var(--accent));border-color:var(--on,var(--accent));color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.charthead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+
+/* this page */
+.cgrid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.cgrid.even{grid-template-columns:1fr}}
+.row.wide2{grid-template-columns:128px minmax(0,1fr) 104px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+#neu,#capcv,#hhcirc{touch-action:none}
+.pill{display:inline-block;font-family:var(--font-mono);font-size:12px;padding:1px 7px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+</style>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbFire" data-copy="capFire" data-copy-also="aFire" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="capPlay" data-copy-also="aPlay"></button>
+</div>
+<div class="wrap">
+<header>
+  <h1>Adding up inputs: summation and where the spike starts</h1>
+  <p>One synapse almost never makes a neuron fire. A neuron adds up hundreds of small inputs, and only if the total, at one special place at the start of the axon, reaches threshold do its voltage-gated Na⁺ channels (lesson 3) take over and fire a spike. See why inputs add on the membrane's capacitor, then follow them through a whole neuron from the dendrite to the axon initial segment.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>predict how the resting conductances and the capacitance set how large one input is and how long it lasts (lesson 2's τ = C / Σg)</li>
+        <li>explain temporal summation (inputs close in time ride on each other because the membrane has not yet discharged) and spatial summation (inputs on different synapses charge the same membrane)</li>
+        <li>explain why an input far out on a dendrite arrives smaller, and how inhibition near the cell body shunts the sum</li>
+        <li>explain why the spike starts in the axon initial segment, not the cell body: it has the most Na⁺ channels, so it reaches threshold first</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-sutry="sum">1 · Two inputs add</button> On the capacitor, two inputs close together sum; two far apart do not.</li>
+    <li><button class="chip" data-sutry="set:capGK:0.4">2 · A leakier membrane</button> More K⁺ leak: each input is smaller and gone sooner, so less adds up.</li>
+    <li><button class="chip" data-sutry="ais">3 · Where it starts</button> Fire 25 synapses on the dendrite (20 are not enough) and watch the voltage spread to the cell body and axon: the spike starts in the axon initial segment.</li>
+    <li><button class="chip" data-sutry="far">4 · Far out on the dendrite</button> The same synapses at 330 µm: too little reaches the cell body.</li>
+    <li><button class="chip" data-sutry="noais">5 · Take the channels away</button> With no Na⁺ channels in the axon initial segment, the same sum goes nowhere.</li>
+  </ol>
+</section>
+
+<!-- =================== Part 2: the capacitor =================== -->
+<h3 class="part">1 · The membrane as a capacitor: why inputs add</h3>
+<div class="top stacked">
+  <section class="card stage" id="cap-card">
+    <div class="tabs" role="tablist" aria-label="Capacitor">
+      <button type="button" role="tab" id="tab-cap" aria-controls="pane-cap" aria-selected="true">Capacitor</button>
+      <button type="button" role="tab" id="tab-caphelp" aria-controls="pane-caphelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-caplook" aria-controls="pane-caplook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-cap" aria-labelledby="tab-cap">
+    <div class="cgrid even">
+      <div class="ccol">
+        <canvas id="capcv" aria-label="A piece of membrane drawn as a capacitor, with charge on its two faces, synaptic current arriving and leak currents leaving"></canvas>
+        <div class="runbar">
+          <button id="capFire" class="primary">Fire input</button>
+          <button id="capPlay" class="primary">Pause</button>
+          <label for="capSpeed" class="runlab">Speed</label>
+          <input type="range" id="capSpeed" min="0" max="100" value="75">
+          <output id="capSpeedo" for="capSpeed"></output>
+        </div>
+        <div class="legend">
+          <span><i class="dot syn"></i>synaptic input</span>
+          <span><i class="dot k"></i>K⁺ leak</span>
+          <span><i class="dot na"></i>Na⁺ leak</span>
+          <span><i class="dot cl"></i>Cl⁻ leak</span>
+          <span><i class="dot pos"></i>+ charge on the membrane</span><span><i class="dot neg"></i>− charge on the membrane</span>
+        </div>
+      </div>
+      <div class="ccol">
+        <div class="charthead"><p class="sect-title">Membrane potential</p>
+          <label class="check" for="capLin"><input type="checkbox" id="capLin" checked>Show the sum of single inputs</label></div>
+        <canvas id="capV" aria-label="Voltage over time as inputs arrive"></canvas>
+        <p class="caption" id="capCap"></p>
+      </div>
+    </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-caphelp" aria-labelledby="tab-caphelp" hidden>
+      <ul>
+        <li><b>The drawing:</b> the lipid bilayer in the middle, the inside of the cell on the left and the outside on the right. The marks along its two faces are the charge Q on the capacitor, one mark per 2 nC/cm². At rest the inside face carries negative charge and the outside positive: that is the resting voltage. Q = C·V, so more capacitance means more marks for the same voltage.</li>
+        <li><b>Dots:</b> positive charge flowing, coloured by the channel it goes through. A synaptic input brings positive charge in; the leak channels let it flow back out. The charge that is in but not yet out sits on the capacitor and moves the voltage.</li>
+        <li><b>Voltage chart:</b> the black line is V. Dashed grey is what you would get by adding up each input as if it came alone (a single input's curve, copied to each arrival time). Where black matches the dashed line, summation is simply addition.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-caplook" aria-labelledby="tab-caplook" hidden>
+      <ul>
+        <li>Fire one input, then a train with a short interval: each input starts from where the last left off, because the membrane has not yet discharged. Lengthen the interval and the inputs stop adding.</li>
+        <li>Raise the resting conductances: the voltage decays faster (τ = C / Σg gets shorter) and each input is smaller (more current leaks out as it arrives), so summation is weaker. Raise C instead: inputs are smaller but last longer.</li>
+        <li>Make g<sub>K</sub> larger: rest moves toward E<sub>K</sub>, farther from threshold. Make g<sub>Na</sub> larger: rest moves toward E<sub>Na</sub>, closer to it.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Membrane potential</span>
+      <span class="vnum" id="capVnum">—</span>
+      <div class="vrow"><span>resting voltage (chord conductance)</span><b id="capVrest">—</b></div>
+      <div class="vrow"><span>time constant τ = C / Σg</span><b id="capTau">—</b></div>
+      <div class="vrow"><span>one input alone: peak</span><b id="capPeak">—</b></div>
+      <div class="vrow"><span>charge on the capacitor</span><b id="capQ">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">Components</legend>
+      <div class="sgroup">
+        <span class="gtitle">Resting conductances</span>
+        <div class="row"><label for="capGK"><i class="dot k"></i>g<sub>K</sub></label><input type="range" id="capGK" min="0" max="0.5" step="0.01" value="0.12"><output id="capGKo" for="capGK"></output></div>
+        <div class="row"><label for="capGNa"><i class="dot na"></i>g<sub>Na</sub></label><input type="range" id="capGNa" min="0" max="0.1" step="0.001" value="0.005"><output id="capGNao" for="capGNa"></output></div>
+        <div class="row"><label for="capGCl"><i class="dot cl"></i>g<sub>Cl</sub></label><input type="range" id="capGCl" min="0" max="0.5" step="0.01" value="0.02"><output id="capGClo" for="capGCl"></output></div>
+        <div class="row"><label for="capC">C</label><input type="range" id="capC" min="0.2" max="3" step="0.1" value="1"><output id="capCo" for="capC"></output></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Input</span>
+        <div class="row"><label for="capG"><i class="dot syn"></i>Strength</label><input type="range" id="capG" min="0.005" max="0.3" step="0.005" value="0.05"><output id="capGo" for="capG"></output>
+          <span class="hint">peak synaptic conductance of one input</span></div>
+        <div class="row"><label for="capN">Inputs</label><input type="range" id="capN" min="1" max="8" step="1" value="3"><output id="capNo" for="capN"></output></div>
+        <div class="row"><label for="capDt">Interval</label><input type="range" id="capDt" min="0.5" max="30" step="0.5" value="4"><output id="capDto" for="capDt"></output></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 4: soma to axon =================== -->
+<h3 class="part">2 · The cell: from the dendrite to the axon initial segment</h3>
+<div class="top stacked">
+  <section class="card stage" id="ais-card">
+    <div class="tabs" role="tablist" aria-label="Cell">
+      <button type="button" role="tab" id="tab-ais" aria-controls="pane-ais" aria-selected="true">Neuron</button>
+      <button type="button" role="tab" id="tab-aishelp" aria-controls="pane-aishelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-aislook" aria-controls="pane-aislook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-ais" aria-labelledby="tab-ais">
+      <canvas id="neu" aria-label="A neuron: dendrite with synapses, cell body, axon hillock, axon initial segment and axon, coloured by voltage"></canvas>
+      <div class="runbar">
+        <button id="aFire" class="primary">Fire synapses</button>
+        <button id="aPlay" class="primary">Pause</button>
+        <button id="aReset">Reset</button>
+        <label for="aSpeed" class="runlab">Speed</label>
+        <input type="range" id="aSpeed" min="0" max="100" value="70">
+        <output id="aSpeedo" for="aSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot neg"></i>resting voltage</span><span><i class="dot pos"></i>depolarized</span>
+        <span><i class="dot syn"></i>excitatory synapse</span><span><i class="dot k"></i>inhibitory synapse</span>
+        <span>recording sites: <i class="dot syn"></i>D <i class="dot" style="background:var(--ink)"></i>S <i class="dot na"></i>A, the same colours on the chart</span>
+      </div>
+      <div class="cgrid even">
+        <div class="ccol">
+          <p class="sect-title">Voltage along the cell, from the dendrite tip to the axon</p>
+          <canvas id="aProf" aria-label="Voltage against distance along the cell"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">Voltage over time at the dendrite, the cell body and the axon initial segment</p>
+          <canvas id="aTime" aria-label="Voltage against time at three recording sites"></canvas>
+        </div>
+      </div>
+      <p class="caption" id="aCap"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-aishelp" aria-labelledby="tab-aishelp" hidden>
+      <ul>
+        <li><b>The picture:</b> the cell is coloured by its voltage, blue at rest to red at the peak. From the left: a dendrite with its synapses (small teal knobs), the cell body, the axon hillock narrowing into the axon, and the axon initial segment (AIS, bracketed). The brightness of the orange shading on the AIS shows its density of Na⁺ channels.</li>
+        <li><b>Voltage along the cell:</b> the black line is the voltage now; the dashed line is the highest each place reached since you fired. Shaded bands mark the dendrite, the cell body and the AIS. The dotted teal line is the threshold measured at the AIS during the last spike: the voltage at which its rise sped past 20 mV/ms, as experimenters often define it.</li>
+        <li><b>Over time:</b> recordings at D (the dendrite, where the synapses are), S (the cell body) and A (the middle of the AIS).</li>
+        <li><b>The model</b> is lesson 3's Hodgkin–Huxley circuit, one copy per short piece of membrane, with the cytoplasm connecting neighbours (as on lesson 4).</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-aislook" aria-labelledby="tab-aislook" hidden>
+      <ul>
+        <li>Fire a few synapses far out on the dendrite: the voltage there is large, but by the cell body it has decayed a lot. Move them closer and more arrives. This is the cable: the dendrite leaks current across its wall on the way.</li>
+        <li>Raise the number of synapses: the sum at the AIS reaches threshold (the dotted line) and the AIS fires first. The A trace rises before the S trace, and the spike runs on down the axon and back into the cell body.</li>
+        <li>Remove the AIS's Na⁺ channels, or move it far from the cell body, and the same synapses can no longer fire the cell. Turn on the inhibitory synapse at the cell body: its Cl⁻ conductance is a leak that shunts the sum.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">At the axon initial segment</span>
+      <span class="vnum" id="aVnum">—</span>
+      <div class="vrow"><span>cell body voltage</span><b id="aVsoma">—</b></div>
+      <div class="vrow"><span>threshold at the AIS (measured)</span><b id="aThr">—</b></div>
+      <div class="vrow"><span>peak at the dendrite synapses / cell body / AIS</span><b id="aPeaks">—</b></div>
+      <div class="vrow"><span>spike started at</span><b id="aStartAt">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The cell</legend>
+      <div class="sgroup">
+        <span class="gtitle">Excitatory synapses</span>
+        <div class="row wide2"><label for="aN"><i class="dot syn"></i>Synapses</label><input type="range" id="aN" min="1" max="60" step="1" value="25"><output id="aNo" for="aN"></output>
+          <span class="hint">firing together: spatial summation</span></div>
+        <div class="row wide2"><label for="aG">Each one</label><input type="range" id="aG" min="0.05" max="1" step="0.05" value="0.3"><output id="aGo" for="aG"></output></div>
+        <div class="row wide2"><label for="aPos">Distance from cell body</label><input type="range" id="aPos" min="40" max="360" step="10" value="150"><output id="aPoso" for="aPos"></output></div>
+        <div class="row wide2"><label for="aNP">Times</label><input type="range" id="aNP" min="1" max="6" step="1" value="1"><output id="aNPo" for="aNP"></output>
+          <span class="hint">repeated at the interval below: temporal summation</span></div>
+        <div class="row wide2"><label for="aDt">Interval</label><input type="range" id="aDt" min="0.5" max="20" step="0.5" value="2"><output id="aDto" for="aDt"></output></div>
+        <label class="check" for="aInh"><input type="checkbox" id="aInh"><i class="dot k"></i>Inhibitory synapse on the cell body (always on, Cl⁻)</label>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Axon initial segment</span>
+        <div class="row wide2"><label for="aNa"><i class="dot na"></i>Na⁺ channels</label><input type="range" id="aNa" min="0" max="40" step="1" value="20"><output id="aNao" for="aNa"></output>
+          <span class="hint">density, as a multiple of the squid axon's</span></div>
+        <div class="row wide2"><label for="aStart">Starts at</label><input type="range" id="aStart" min="0" max="80" step="2" value="10"><output id="aStarto" for="aStart"></output>
+          <span class="hint">distance from the cell body</span></div>
+        <div class="row wide2"><label for="aLen">Length</label><input type="range" id="aLen" min="10" max="60" step="2" value="30"><output id="aLeno" for="aLen"></output></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Cell body and resting conductance</span>
+        <div class="row wide2"><label for="aSoma">Cell body width</label><input type="range" id="aSoma" min="8" max="40" step="1" value="20"><output id="aSomao" for="aSoma"></output></div>
+        <div class="row wide2"><label for="aLeak">Resting g</label><input type="range" id="aLeak" min="0.3" max="3" step="0.05" value="1"><output id="aLeako" for="aLeak"></output>
+          <span class="hint">all the resting (leak) conductances, scaled together</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Real units</p>
+      <dl class="unitlist">
+        <dt>mV</dt><dd>millivolts, for voltage. V is the inside measured relative to the outside.</dd>
+        <dt>ms</dt><dd>milliseconds, for time. Real spikes last a millisecond or two.</dd>
+        <dt>mS/cm²</dt><dd>millisiemens per cm² of membrane, for conductance (1/resistance). Resting channels are a fraction of a mS/cm²; open gated Na⁺ channels reach tens or hundreds.</dd>
+        <dt>µF/cm²</dt><dd>microfarads per cm², for capacitance. Real membranes are about 1.</dd>
+        <dt>mA/cm²</dt><dd>milliamps per cm² of membrane, for current, positive when it flows outward.</dd>
+        <dt>nS</dt><dd>nanosiemens, for the conductance of one synapse (the cell is built from real sizes in µm).</dd>
+        <dt>µm</dt><dd>micrometres, for distances along the cell.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="sumtheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Resting conductances</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">Summation</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Why the spike starts at the AIS</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+<div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <h3>Each kind of channel is a resistor with a battery</h3>
+      <p>From lessons 1 and 2: Ohm's law says current is conductance times voltage, and an ion channel's voltage is the <em>driving force</em>, how far the membrane voltage V is from that ion's Nernst potential E:</p>
+      <div class="eq">\[ I_\mathrm{K} = g_\mathrm{K}\,(V - E_\mathrm{K}), \quad I_\mathrm{Na} = g_\mathrm{Na}\,(V - E_\mathrm{Na}), \quad I_\mathrm{Cl} = g_\mathrm{Cl}\,(V - E_\mathrm{Cl}) \]</div>
+      <p>At rest the three channel types are open a little, and each pulls the voltage toward its own battery. The voltage settles where the currents cancel, and that is a conductance-weighted average of the batteries:</p>
+      <div class="eq">\[ V_\mathrm{rest} = \frac{g_\mathrm{K}E_\mathrm{K} + g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{Cl}E_\mathrm{Cl}}{g_\mathrm{K} + g_\mathrm{Na} + g_\mathrm{Cl}} \]</div>
+      <p>So whichever channel is open most wins the tug of war. Mostly K⁺ leak channels: rest near E<sub>K</sub> (about −86 mV). Add some Na⁺ leak: rest moves up, toward +60 mV. Cl⁻ sits at about −82 mV in a mature neuron (which pumps Cl⁻ out), close to rest, so it mostly anchors the voltage in place.</p>
+
+      <h3>Why this matters for firing</h3>
+      <p>Two things about the resting conductances decide whether inputs can fire the cell. First, <b>where rest is</b>: the farther V<sub>rest</sub> is below the threshold, the more depolarization a neuron needs. Second, <b>how big the total conductance is</b>: a leaky membrane (big Σg) lets input current escape, so each input changes the voltage less and for a shorter time. Both are set by the same sliders.</p>
+      <div class="eq">\[ R_\mathrm{in} = \frac{1}{g_\mathrm{K} + g_\mathrm{Na} + g_\mathrm{Cl}} \]</div>
+      <p>R<sub>in</sub>, the resistance the input current has to push through, is one over the total conductance. By Ohm's law a steady input current I raises the voltage by I·R<sub>in</sub>, so the leakier the membrane, the smaller every input.</p>
+
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>At rest the voltage does not change, so the three currents add to zero:</p>
+        <div class="eq">\[ g_\mathrm{K}(V - E_\mathrm{K}) + g_\mathrm{Na}(V - E_\mathrm{Na}) + g_\mathrm{Cl}(V - E_\mathrm{Cl}) = 0 \]</div>
+        <p>Collect the terms with V and solve:</p>
+        <div class="eq">\[ V\,(g_\mathrm{K} + g_\mathrm{Na} + g_\mathrm{Cl}) = g_\mathrm{K}E_\mathrm{K} + g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{Cl}E_\mathrm{Cl} \]</div>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sutry="set:capGK:0.4">More K⁺ leak</button> Rest moves toward E<sub>K</sub>, and the inputs get smaller and shorter.</p>
+      <p><button class="chip" data-sutry="set:capGNa:0.05">More Na⁺ leak</button> Rest moves up toward E<sub>Na</sub>, closer to threshold, but the membrane is leakier.</p>
+      <p><button class="chip" data-sutry="resetleak">Back to the defaults</button></p>
+    </aside>
+  </div>
+
+<div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <h3>One input</h3>
+      <p>A synapse opens channels that let in positive charge, a current I<sub>syn</sub>. As in lesson 2, that current has two places to go: onto the capacitor, which changes the voltage, or out through the resting channels, which does not. Together:</p>
+      <div class="eq">\[ C\,\frac{dV}{dt} = -\,g\,(V - V_\mathrm{rest}) + I_\mathrm{syn}(t), \qquad g = g_\mathrm{K} + g_\mathrm{Na} + g_\mathrm{Cl} \]</div>
+      <p>If the current is steady, V rises toward \(V_\mathrm{rest} + I_\mathrm{syn}\,R_\mathrm{in}\) (Ohm's law again) with time constant \(\tau = C/g\). A brief input charges the capacitor by a fixed amount of charge Q, so the voltage jumps by about \(Q/C\) and then decays back with the same τ:</p>
+      <div class="eq">\[ \Delta V(t) \approx \frac{Q}{C}\,e^{-t/\tau} \]</div>
+
+      <h3>Temporal summation</h3>
+      <p>Because the voltage decays gradually, a second input that arrives before the first has gone starts from a higher voltage. For a passive membrane the effects add. If inputs come every T, the voltage of one decays by a factor \(e^{-T/\tau}\) between them, so a long train piles up to about</p>
+      <div class="eq">\[ \Delta V_\mathrm{steady} \approx \frac{\Delta V_1}{1 - e^{-T/\tau}} \]</div>
+      <p>A large τ (large C, small g) means more summation. A short interval T means more too.</p>
+
+      <h3>Spatial summation</h3>
+      <p>Inputs at different synapses add for a different reason: all their currents flow into the same membrane and charge the same capacitor. Ten synapses at once put ten times the charge on it. In a real cell that membrane is spread out, and a dendrite is a leaky cable, so an input far from the cell body arrives smaller. How far a voltage change spreads along a cable is its length constant λ, set by how leaky the wall is compared with how easily current flows down the inside.</p>
+
+      <h3>Shunting</h3>
+      <p>An input that opens extra channels adds conductance. An inhibitory Cl⁻ synapse near the cell body, with a battery close to rest, does almost nothing by itself, but it adds conductance for the excitatory current to leak through. That is why inhibition near the cell body can veto the sum.</p>
+
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>With no input, the equation says \(C\,dV/dt = -g(V - V_\mathrm{rest})\), so V relaxes back with \(V - V_\mathrm{rest} \propto e^{-t/\tau}\), \(\tau = C/g\). For a brief input of total charge Q, the capacitor takes the charge at once, so \(\Delta V(0) = Q/C\), and then it decays. Inputs add because the equation is linear in \(V - V_\mathrm{rest}\) (when the driving force of the synapse is nearly constant): if \(\Delta V_1(t)\) solves it for one input, the sum of shifted copies solves it for a train. A train every T gives the geometric series \(\Delta V_1(1 + e^{-T/\tau} + e^{-2T/\tau} + \dots) = \Delta V_1/(1 - e^{-T/\tau})\).</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sutry="set:capDt:4">Interval 4 ms</button> The inputs ride on top of each other.</p>
+      <p><button class="chip" data-sutry="set:capDt:25">Interval 25 ms</button> Each input has gone before the next arrives, so nothing adds.</p>
+      <p><button class="chip" data-sutry="set:capC:2.5">C = 2.5</button> Bigger inputs last longer, and sum more.</p>
+    </aside>
+  </div>
+
+<div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <h3>The cell adds up, the initial segment decides</h3>
+      <p>A neuron receives its inputs on its dendrites and cell body, which have few of lesson 3's voltage-gated Na⁺ channels. Those inputs are only local voltage changes that spread along the cell like the cable above: no spike. The sum flows to the axon's first stretch, the <b>axon hillock</b> and <b>axon initial segment</b> (AIS), the first 20 to 60 µm of axon. That is where the cell's output is decided.</p>
+      <h3>Why there</h3>
+      <ul>
+        <li><b>Many more Na⁺ channels.</b> The AIS has a very high density, and some are of a type that opens at lower voltage. More Na⁺ channels means the inward current beats the outward currents at a lower voltage (lesson 3's tug of war), so its threshold is the lowest on the cell: the same summed depolarization, a few mV at the cell body, is enough to push the AIS past it.</li>
+        <li><b>Small, so it charges fast.</b> A patch of thin axon has little capacitance to charge, so a little current moves its voltage a lot. The big cell body is a large capacitor and moves slowly.</li>
+        <li><b>It sees the sum.</b> The cell body is the junction where all dendrites meet, so its voltage (and the AIS's, one short step away) is the sum of everything the dendrites delivered.</li>
+      </ul>
+      <p>When the AIS fires, the spike runs down the axon as in lesson 4 and also back into the cell body, which is why a recording at the cell body shows the spike a moment after one at the AIS.</p>
+      <h3>What changes the sum</h3>
+      <ul>
+        <li><b>Distance:</b> a distal input has to travel along a leaky dendrite, so the closer to the cell body, the more of it arrives (the length constant).</li>
+        <li><b>Resting conductance:</b> a leakier membrane shortens λ and τ and shrinks every input.</li>
+        <li><b>Inhibition</b> at the cell body adds a shunt where all the current has to pass.</li>
+        <li><b>AIS position, length and channel density</b> set where and how easily the spike starts.</li>
+      </ul>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sutry="ais">25 synapses</button> The AIS fires first; the cell body follows.</p>
+      <p><button class="chip" data-sutry="far">Move them far out</button> The same synapses at 330 µm: the sum arriving at the cell body is smaller, and the cell does not fire.</p>
+      <p><button class="chip" data-sutry="shunt">Add inhibition</button> A Cl⁻ conductance on the cell body shunts the same sum.</p>
+    </aside>
+  </div>
+
+<div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The gates m, h and n and the threshold of a spike (lesson 3). The channels in the cell here are theirs.</span></li>
+        <li><b>Rall W (1959).</b> Branching dendritic trees and motoneuron membrane resistivity. <i>Experimental Neurology</i> 1:491–527. <a href="https://doi.org/10.1016/0014-4886(59)90046-9" target="_blank" rel="noopener">doi:10.1016/0014-4886(59)90046-9</a><br><span class="why">Dendrites as leaky cables: how an input's voltage decays on its way to the cell body, and how inputs sum.</span></li>
+        <li><b>Coombs JS, Curtis DR, Eccles JC (1957).</b> The generation of impulses in motoneurones. <i>Journal of Physiology</i> 139:232–249. <a href="https://doi.org/10.1113/jphysiol.1957.sp005888" target="_blank" rel="noopener">doi:10.1113/jphysiol.1957.sp005888</a><br><span class="why">Recording from motor neurons: the spike begins at the initial segment, before the cell body.</span></li>
+        <li><b>Stuart G, Schiller J, Sakmann B (1997).</b> Action potential initiation and propagation in rat neocortical pyramidal neurons. <i>Journal of Physiology</i> 505:617–632. <a href="https://doi.org/10.1111/j.1469-7793.1997.617ba.x" target="_blank" rel="noopener">doi:10.1111/j.1469-7793.1997.617ba.x</a><br><span class="why">Recordings at the axon, cell body and dendrites of the same neuron: the spike starts in the axon, and runs back into the cell body.</span></li>
+        <li><b>Kole MHP, Stuart GJ (2012).</b> Signal processing in the axon initial segment. <i>Neuron</i> 73:235–247. <a href="https://doi.org/10.1016/j.neuron.2012.01.007" target="_blank" rel="noopener">doi:10.1016/j.neuron.2012.01.007</a><br><span class="why">A review of why the initial segment's channel density and position make it the trigger zone.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="sum-calc">
+  <div class="calc-head">
+    <span class="sect-title">Summation calculator</span>
+  </div>
+  <p class="caption">Set the resting conductances, the capacitance and a train of inputs, and see how big one input is, how much a train adds up to, and how many it takes to reach threshold. The membrane here is passive: its conductances stay at their resting values, which is what the voltage-gated channels see on the way up to threshold.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh"><i class="dot k"></i> K⁺ leak</div>
+        <div class="gr"><label for="kGK">g<sub>K</sub></label><input type="range" id="kGK" min="0" max="0.5" step="0.01" value="0.12"><output id="kGKo" for="kGK"></output></div>
+        <div class="gr"><label for="kEK">E<sub>K</sub></label><input type="range" id="kEK" min="-110" max="-60" step="1" value="-86"><output id="kEKo" for="kEK"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot na"></i> Na⁺ leak</div>
+        <div class="gr"><label for="kGNa">g<sub>Na</sub></label><input type="range" id="kGNa" min="0" max="0.1" step="0.001" value="0.005"><output id="kGNao" for="kGNa"></output></div>
+        <div class="gr"><label for="kENa">E<sub>Na</sub></label><input type="range" id="kENa" min="30" max="90" step="1" value="60"><output id="kENao" for="kENa"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot cl"></i> Cl⁻ leak</div>
+        <div class="gr"><label for="kGCl">g<sub>Cl</sub></label><input type="range" id="kGCl" min="0" max="0.5" step="0.01" value="0.02"><output id="kGClo" for="kGCl"></output></div>
+        <div class="gr"><label for="kECl">E<sub>Cl</sub></label><input type="range" id="kECl" min="-100" max="-40" step="1" value="-82"><output id="kEClo" for="kECl"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">Membrane</div>
+        <div class="gr"><label for="kC">C</label><input type="range" id="kC" min="0.2" max="3" step="0.1" value="1"><output id="kCo" for="kC"></output></div>
+        <div class="gr"><label for="kThrIn">Threshold</label><input type="range" id="kThrIn" min="-75" max="-40" step="1" value="-64"><output id="kThrIno" for="kThrIn"></output></div>
+        <span class="caption">the voltage the inputs must reach; lesson 3's circuit, with these leaks, needs about −64 mV</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot syn"></i> Input</div>
+        <div class="gr"><label for="kG">Strength</label><input type="range" id="kG" min="0.005" max="0.3" step="0.005" value="0.035"><output id="kGo" for="kG"></output></div>
+        <div class="gr"><label for="kNP">Inputs</label><input type="range" id="kNP" min="1" max="8" step="1" value="4"><output id="kNPo" for="kNP"></output></div>
+        <div class="gr"><label for="kDt">Interval</label><input type="range" id="kDt" min="0.5" max="30" step="0.5" value="1.5"><output id="kDto" for="kDt"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kPeak1">—</span><span class="caption">one input: peak depolarization</span></div>
+      <div class="es"><span>V<sub>rest</sub> <b id="kV">—</b></span><span>τ <b id="kTau">—</b></span><span>R<sub>in</sub> <b id="kRin">—</b></span></div>
+      <div class="es"><span>the train: peak <b id="kPeakN">—</b></span><span>gap to threshold <b id="kGap">—</b></span><span>inputs to threshold <b id="kNeed">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator charts">
+        <button type="button" role="tab" id="tab-ksum" aria-controls="pane-ksum" aria-selected="true">Summation</button>
+        <button type="button" role="tab" id="tab-kint" aria-controls="pane-kint" aria-selected="false" tabindex="-1">Peak vs interval</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-ksum" aria-labelledby="tab-ksum">
+        <canvas id="kSumChart" aria-label="Voltage as a train of inputs arrives, against the threshold"></canvas>
+        <p class="caption" id="kSumCap"></p>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kint" aria-labelledby="tab-kint" hidden>
+        <canvas id="kIntChart" aria-label="Peak depolarization of the train against the interval between inputs"></canvas>
+        <p class="caption" id="kIntCap"></p>
+      </div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <h4>Summation</h4>
+        <ul>
+          <li><b>Black curve:</b> the voltage as the train arrives (the teal triangles). <b>Dashed grey:</b> one input alone. <b>Dashed teal:</b> threshold. <b>Dotted:</b> rest.</li>
+          <li>If the train crosses threshold, a real neuron's voltage-gated channels would take over there and fire a spike (lesson 3).</li>
+        </ul>
+        <h4>Peak vs interval</h4>
+        <ul>
+          <li><b>Black curve:</b> the train's peak depolarization for every interval between inputs, with the number of inputs set above. The dot is the interval set above.</li>
+          <li>Short intervals add up to nearly the number of inputs times one input; past a few τ, the peak falls to one input's, because each has gone before the next arrives.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ---------- shared: colours, number formats, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','syn','ea','a','pos','neg','cyto','bath','mem','memdark'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const fmtSigned = (v, d = 1, u = ' mV') => isFinite(v) ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d) + u : '—';
+function setupCanvas(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; }
+function bindRange(id, fmt, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmt(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// Canvas text with subscripts: "I_Na" draws I with a subscript Na (the letters and digits after
+// the underscore), in the current font, size and alignment.
+function fillSub(c, text, x, y) {
+  if (!text.includes('_')) { c.fillText(text, x, y); return; }
+  const parts = [], re = /_([A-Za-z0-9∞]+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { parts.push([text.slice(last, m.index), false], [m[1], true]); last = re.lastIndex; }
+  parts.push([text.slice(last), false]);
+  const font = c.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]);
+  const subFont = font.replace(/[\d.]+px/, (size * 0.72).toFixed(1) + 'px');
+  const w = parts.map(([t, sub]) => { c.font = sub ? subFont : font; return c.measureText(t).width; });
+  const total = w.reduce((a, b) => a + b, 0), align = c.textAlign;
+  let px = align === 'center' ? x - total / 2 : align === 'right' || align === 'end' ? x - total : x;
+  c.textAlign = 'left';
+  parts.forEach(([t, sub], i) => { c.font = sub ? subFont : font; c.fillText(t, px, y + (sub ? size * 0.28 : 0)); px += w[i]; });
+  c.font = font; c.textAlign = align;
+}
+function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+
+// A line chart: series share an x array; shade marks spans where `on` is true; refs are horizontal lines.
+// The y range is fixed (o.fixed), so the scale never moves; values beyond it run along the edge.
+const CHW = 640, CHH = 340;
+// For a dashed series: is the stretch of line starting at data value x drawn? Dashes are fixed to the data
+// (dash and gap lengths in pixels, converted to x units), so they scroll with the line instead of crawling along it.
+function dashedAt(dash, x0, x1, pw) {
+  if (!dash) return () => true;
+  const per = (dash[0] + dash[1]) * (x1 - x0) / pw, on = dash[0] / (dash[0] + dash[1]);
+  return x => ((x / per) % 1 + 1) % 1 < on;
+}
+function drawChart(c, o) {
+  const W = o.w || CHW, H = o.h || CHH;   // logical size; defaults to CHW × CHH
+  const key = o.key || 11;                // font size of the series labels at the right
+  const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  const [lo, hi] = o.fixed;               // every chart has a fixed y range
+  const x0 = o.x0, x1 = o.x1;
+  const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
+  // shading
+  if (o.on && o.xs.length > 1) {
+    c.fillStyle = C.na; c.globalAlpha = 0.10;
+    let a = -1;
+    for (let i = 0; i <= o.xs.length; i++) {
+      const on = i < o.xs.length && o.on[i];
+      if (on && a < 0) a = i;
+      if (!on && a >= 0) { const xa = sx(o.xs[a]), xb = sx(o.xs[i - 1]); c.fillRect(Math.max(L, xa), T, Math.min(L + pw, xb) - Math.max(L, xa), ph); a = -1; }
+    }
+    c.globalAlpha = 1;
+  }
+  // grid
+  const stp = niceStep((hi - lo) / 5);
+  c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.textAlign = 'right';
+  for (let v = Math.ceil(lo / stp) * stp; v <= hi + 1e-9; v += stp) {
+    const y = sy(v); c.strokeStyle = C.line; c.lineWidth = Math.abs(v) < stp / 1e3 ? 1.4 : 0.8;
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke();
+    c.fillStyle = C.muted; c.fillText((Math.abs(v) < stp / 1e3 ? 0 : +v.toPrecision(4)) + '', L - 6, y);
+  }
+  c.save(); c.translate(14, T + ph / 2); c.rotate(-Math.PI / 2); c.textAlign = 'center'; c.fillText(o.ylabel, 0, 0); c.restore();
+  c.textAlign = 'left'; c.fillText(o.xlabel, L, H - 9);
+  // reference lines
+  const labels = [];
+  for (const r of o.refs || []) {
+    if (!isFinite(r.v)) continue;
+    const y = sy(r.v);
+    c.strokeStyle = r.color; c.lineWidth = r.width || 1.2; c.setLineDash(r.dash || [6, 4]);
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.setLineDash([]);
+    labels.push({ y, t: r.label, c: r.color });
+  }
+  // series
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  for (const s of o.series) {
+    if (o.xs.length < 2) break;
+    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round';
+    c.beginPath();
+    // A dashed line is dashed by its own x values, not by canvas dashes: those are measured from where the path
+    // starts, which moves as the chart scrolls, so the dashes would crawl along the line.
+    const on = dashedAt(s.dash, x0, x1, pw);
+    // with o.restart, a line starts afresh where `on` changes (counts that reset there)
+    for (let i = 0; i < o.xs.length; i++) {
+      const x = sx(o.xs[i]), y = sy(s.ys[i]);
+      i && on(o.xs[i - 1]) && !(o.restart && o.on[i] !== o.on[i - 1]) ? c.lineTo(x, y) : c.moveTo(x, y);
+    }
+    c.stroke();
+    if (s.label) labels.push({ y: sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color });
+  }
+  c.restore();
+  labels.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < key + 2) labels[i].y = labels[i - 1].y + key + 2;
+  c.font = `600 ${key}px "IBM Plex Sans", sans-serif`; c.textAlign = 'left';
+  labels.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, L + pw + 6, Math.max(T + 4, Math.min(H - 6, l.y))); });
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
+  c.textBaseline = 'alphabetic';
+}
+function chipGroup(attr, onPick) {
+  const bs = document.querySelectorAll(`[data-${attr}]`);
+  bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(b.dataset[attr]); }));
+}
+
+// =====================================================================================
+// The shared model: Hodgkin–Huxley channels with resting (leak) conductances, at 25 °C.
+// A patch of membrane: C dV/dt = −Σ g_i (V − E_i), with fixed leak g for K⁺, Na⁺ and Cl⁻, the gated Na⁺
+// (ḡ m³h) and K⁺ (ḡ n⁴) conductances, and the synapse's g_syn(t) with its battery at 0 mV.
+// Units: µF/cm², mS/cm², mV, ms, µA/cm². Same gating rates as lesson 3 (V measured from −65 mV).
+// =====================================================================================
+const KTM = 25.7, PHI = Math.pow(3, (25 - 6.3) / 10);          // RT/F (mV) and the speed-up of the gates at 25 °C
+const EREV = { K: KTM * Math.log(5 / 140), Na: KTM * Math.log(145 / 14), Cl: -KTM * Math.log(148.5 / 6), syn: 0 };   // mM; mature neurons keep Cl⁻ low inside
+const HHDT = 0.005;
+const GNA = 120, GK = 36;                                      // Hodgkin and Huxley's ḡ, mS/cm²                                             // ms
+const xr = (x, y) => Math.abs(x / y) < 1e-6 ? y * (1 - x / y / 2) : x / (Math.exp(x / y) - 1);
+// The K⁺ gate's curve is moved 10 mV more positive than the squid axon's, as in mammalian neurons: with the squid's,
+// K⁺ channels open a little with every small input and cancel it, so inputs below threshold barely add up.
+const K_SHIFT = 10;
+function rates(V) {
+  const u = V + 65, un = u - K_SHIFT, f = PHI;
+  return { am: f * 0.1 * xr(25 - u, 10), bm: f * 4 * Math.exp(-u / 18), ah: f * 0.07 * Math.exp(-u / 20), bh: f / (Math.exp((30 - u) / 10) + 1),
+    an: f * 0.01 * xr(10 - un, 10), bn: f * 0.125 * Math.exp(-un / 80) };
+}
+function gatesInf(V) { const r = rates(V); return { m: r.am / (r.am + r.bm), h: r.ah / (r.ah + r.bh), n: r.an / (r.an + r.bn) }; }
+// one synaptic input: a double exponential (0.3 ms rise, 2 ms decay) scaled to peak at gpk
+const SYN_TR = 0.3, SYN_TD = 2, SYN_TP = Math.log(SYN_TD / SYN_TR) * SYN_TR * SYN_TD / (SYN_TD - SYN_TR);
+const SYN_NORM = 1 / (Math.exp(-SYN_TP / SYN_TD) - Math.exp(-SYN_TP / SYN_TR));
+const synShape = t => t <= 0 ? 0 : SYN_NORM * (Math.exp(-t / SYN_TD) - Math.exp(-t / SYN_TR));
+const synG = (evs, t) => { let g = 0; for (const e of evs) g += e.g * synShape(t - e.t); return g; };
+// the patch's parameters: { C, gKL, gNaL, gCl, gNaM, gKM }
+// (p.E, if given, replaces the Nernst potentials: the calculator sets its own)
+function patchCurrentAt(p, V, gates) {   // outward µA/cm², the gates given
+  const E = p.E || EREV;
+  return p.gNaM * gates.m ** 3 * gates.h * (V - E.Na) + p.gKM * gates.n ** 4 * (V - E.K) + p.gKL * (V - E.K) + p.gNaL * (V - E.Na) + p.gCl * (V - E.Cl);
+}
+// where the membrane rests: the lowest voltage at which all the currents cancel, with every gate at its steady state
+function restPatch(p) {
+  const I = V => patchCurrentAt(p, V, gatesInf(V));
+  let lo = -150, hi = lo;
+  while (hi < 100 && I(hi + 0.25) < 0) hi += 0.25;
+  lo = hi; hi += 0.25;
+  for (let k = 0; k < 40; k++) { const mid = (lo + hi) / 2; (I(mid) < 0 ? (lo = mid) : (hi = mid)); }
+  const V = (lo + hi) / 2, q = gatesInf(V);
+  const gNa0 = p.gNaM * q.m ** 3 * q.h, gK0 = p.gKM * q.n ** 4, G = p.gKL + p.gNaL + p.gCl + gNa0 + gK0;
+  return { V, m: q.m, h: q.h, n: q.n, gNa0, gK0, G, tau: p.C / G, Rin: 1 / G };
+}
+// threshold: the unstable crossing of the fast current, with m following V instantly and h and n held at rest
+function thresholdPatch(p, rest) {
+  const I = V => patchCurrentAt(p, V, { m: gatesInf(V).m, h: rest.h, n: rest.n });
+  let prev = I(rest.V + 0.5);
+  for (let V = rest.V + 0.5; V < 40; V += 0.1) { const cur = I(V); if (prev >= 0 && cur < 0) return V; prev = cur; }
+  return Infinity;
+}
+function mkPatch(p) { const r = restPatch(p); return { V: r.V, m: r.m, h: r.h, n: r.n, t: 0 }; }
+// one step: the gates move exactly, the voltage implicitly. Returns what each channel is doing.
+// (iInj: current injected into the cell, µA/cm², inward positive, as from an electrode)
+function stepPatch(s, p, dt, gsyn, gated = true, iInj = 0) {
+  const E = p.E || EREV, r = rates(s.V), g = (al, be, x) => { const tau = 1 / (al + be), xi = al * tau; return xi + (x - xi) * Math.exp(-dt / tau); };
+  s.m = g(r.am, r.bm, s.m); s.h = g(r.ah, r.bh, s.h); s.n = g(r.an, r.bn, s.n);
+  const gNa = gated ? p.gNaM * s.m ** 3 * s.h : 0, gK = gated ? p.gKM * s.n ** 4 : 0;
+  const G = p.gKL + p.gNaL + p.gCl + gNa + gK + gsyn;
+  const num = p.C / dt * s.V + (p.gKL + gK) * E.K + (p.gNaL + gNa) * E.Na + p.gCl * E.Cl + gsyn * E.syn + iInj;
+  const Vn = num / (p.C / dt + G), iC = p.C * (Vn - s.V) / dt;
+  s.V = Vn; s.t += dt;
+  return { gNa, gK, gsyn, iK: p.gKL * (Vn - E.K), iNaL: p.gNaL * (Vn - E.Na), iCl: p.gCl * (Vn - E.Cl),
+    iNa: gNa * (Vn - E.Na), iKg: gK * (Vn - E.K), iSyn: gsyn * (Vn - E.syn), iStim: -iInj, iC };
+}
+// the voltage of a membrane whose conductances are frozen at their resting values (the gated channels shut,
+// or at their resting openness), receiving synaptic events: what a passive membrane makes of the inputs
+function passiveTrace(p, rest, evs, tEnd, dt = 0.02, withGated = true) {
+  const E = p.E || EREV, G0 = p.gKL + p.gNaL + p.gCl + (withGated ? rest.gNa0 + rest.gK0 : 0);
+  const E0 = (p.gKL * E.K + p.gNaL * E.Na + p.gCl * E.Cl + (withGated ? rest.gNa0 * E.Na + rest.gK0 * E.K : 0)) / G0;
+  let V = E0; const ts = [], vs = [];
+  for (let t = 0; t <= tEnd; t += dt) {
+    const gs = synG(evs, t + dt);
+    V = (p.C / dt * V + G0 * E0 + gs * EREV.syn) / (p.C / dt + G0 + gs);
+    ts.push(t + dt); vs.push(V);
+  }
+  return { ts, vs, V0: E0, G0 };
+}
+const trainEvents = (n, dt, g, t0 = 1) => Array.from({ length: n }, (_, k) => ({ t: t0 + k * dt, g }));
+const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
+
+// =====================================================================================
+// Part 2: the membrane as a capacitor. A passive patch (leak channels only) receiving synaptic inputs:
+// C dV/dt = −Σ g_i (V − E_i) − g_syn(t)(V − E_syn). Its charge Q = C·V is drawn on the two faces of the bilayer.
+// =====================================================================================
+(() => {
+  const CWd = 780, CHd = 470, c = setupCanvas($('capcv'), CWd, CHd);
+  const CW = 560, CH = 400, vc = setupCanvas($('capV'), CW, CH);
+  const V_RANGE = [-100, -20], WIN = 40, SAMPLE_MS = 0.05;
+  const p = { C: 1, gKL: 0.12, gNaL: 0.005, gCl: 0.02, gNaM: 0, gKM: 0 };
+  let gIn = 0.05, nIn = 3, dtIn = 4, speed = 3, running = true, showLin = true;
+  let s = mkPatch(p), evs = [], sampleAcc = 0, single = null;
+  const hist = { t: [], V: [], lin: [], on: [] };
+  // ---------- one input alone, for the "sum of single inputs" line ----------
+  function computeSingle() {
+    const r = restPatch(p), tr = passiveTrace(p, r, [{ t: 0, g: gIn }], 80, 0.02, false);
+    single = { dv: tr.vs.map(v => v - tr.V0), V0: tr.V0, dt: 0.02 };
+    single.peak = Math.max(...single.dv.map(Math.abs)) * Math.sign(single.dv.reduce((a, b) => Math.abs(b) > Math.abs(a) ? b : a, 0));
+  }
+  function linAt(t) {
+    let v = single.V0;
+    for (const e of evs) { const k = Math.round((t - e.t) / single.dt); if (k >= 0 && k < single.dv.length) v += single.dv[k] * e.g / gIn; }
+    return v;
+  }
+  // ---------- dots: charge flowing through each channel, one dot per mark on the plates ----------
+  const Q0 = 2;                                            // nC/cm² per dot and per mark
+  const MX = 390, MW = 15, CHY = { syn: 78, k: 180, na: 282, cl: 384 };
+  const flow = { syn: 0, k: 0, na: 0, cl: 0 }, dots = [];
+  function addFlow(name, I, h) {   // I outward µA/cm², over h ms: µA/cm² × ms = nC/cm²
+    flow[name] += I * h;
+    while (Math.abs(flow[name]) >= Q0 && dots.length < 160) {
+      const out = flow[name] > 0; flow[name] -= (out ? 1 : -1) * Q0;
+      dots.push({ name, out, x: out ? MX - 70 : MX + 70, y: CHY[name] + (Math.random() - 0.5) * 6 });
+    }
+    if (dots.length >= 160) flow[name] = 0;
+  }
+  function advance(ms) {
+    let left = ms;
+    while (left > 1e-9) {
+      const h = Math.min(left, 0.02), gs = synG(evs, s.t + h), r = stepPatch(s, p, h, gs, false);
+      addFlow('syn', r.iSyn, h); addFlow('k', r.iK, h); addFlow('na', r.iNaL, h); addFlow('cl', r.iCl, h);
+      left -= h; sampleAcc += h;
+      if (sampleAcc >= SAMPLE_MS) {
+        sampleAcc -= SAMPLE_MS;
+        hist.t.push(s.t); hist.V.push(s.V); hist.lin.push(linAt(s.t)); hist.on.push(gs > 0.02 * gIn);
+        while (hist.t.length && hist.t[0] < s.t - WIN) for (const k in hist) hist[k].shift();
+      }
+    }
+    evs = evs.filter(e => s.t - e.t < 80);
+  }
+  function moveDots() {
+    for (const d of dots) d.x += d.out ? 2.2 : -2.2;
+    for (let k = dots.length - 1; k >= 0; k--) { const d = dots[k]; if (d.out ? d.x > MX + 90 : d.x < MX - 90) dots.splice(k, 1); }
+  }
+  // ---------- drawing ----------
+  function plate(t, x, y, align) {
+    c.font = '700 16px "IBM Plex Sans", sans-serif';
+    const w = c.measureText(t).width + 20, h = 30, bx = align === 'left' ? x : x - w;
+    c.fillStyle = C.ink; c.beginPath(); c.roundRect(bx, y, w, h, 6); c.fill();
+    c.fillStyle = C.surface; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, bx + w / 2, y + h / 2 + 1);
+    c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  }
+  function draw() {
+    c.fillStyle = C.cyto; c.fillRect(0, 0, MX, CHd);
+    c.fillStyle = C.bath; c.fillRect(MX, 0, CWd - MX, CHd);
+    // charge on the faces: Q = C·V, one mark per Q0, in columns away from the membrane
+    const Q = p.C * s.V, n = Math.round(Math.abs(Q) / Q0), ROWS = 34, SP = 12.5;
+    c.font = '700 13px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    for (let k = 0; k < Math.min(n, ROWS * 6); k++) {
+      const col = Math.floor(k / ROWS), inCol = Math.min(ROWS, n - col * ROWS), row = k % ROWS, y = CHd / 2 + (row - (inCol - 1) / 2) * SP;
+      c.fillStyle = Q < 0 ? C.neg : C.pos; c.fillText(Q < 0 ? '−' : '+', MX - MW - 9 - col * 11, y);
+      c.fillStyle = Q < 0 ? C.pos : C.neg; c.fillText(Q < 0 ? '+' : '−', MX + MW + 9 + col * 11, y);
+    }
+    c.textBaseline = 'alphabetic';
+    // the bilayer
+    c.fillStyle = mixc(C.mem, C.surface, 0.5); c.fillRect(MX - MW, 0, 2 * MW, CHd);
+    c.fillStyle = C.mem; c.beginPath();
+    for (let y = 4; y < CHd; y += 8) { c.moveTo(MX - MW + 7, y); c.arc(MX - MW + 3.5, y, 3.5, 0, 6.283); c.moveTo(MX + MW, y); c.arc(MX + MW - 3.5, y, 3.5, 0, 6.283); }
+    c.fill();
+    // channels, each in its ion's colour; the synapse's opens with its conductance
+    const gs = synG(evs, s.t), names = { syn: 'synaptic channels', k: 'K⁺ leak', na: 'Na⁺ leak', cl: 'Cl⁻ leak' };
+    const gv = { syn: gs, k: p.gKL, na: p.gNaL, cl: p.gCl };
+    for (const k of ['syn', 'k', 'na', 'cl']) {
+      const y = CHY[k], col = C[k], open = k !== 'syn' || gs > 0.02 * gIn;
+      c.fillStyle = mixc(col, C.surface, 0.25); c.strokeStyle = col; c.lineWidth = 1.6;
+      c.beginPath(); c.roundRect(MX - MW - 6, y - 15, 2 * MW + 12, 30, 9); c.fill(); c.stroke();
+      c.fillStyle = open ? C.surface : col; c.fillRect(MX - MW - 6, y - 5, 2 * MW + 12, 10);
+      c.font = '600 13px "IBM Plex Sans", sans-serif'; c.fillStyle = col; c.textAlign = 'left';
+      c.fillText(names[k], MX + 100, y - 2);
+      c.font = '500 12px "IBM Plex Mono", monospace';
+      c.fillText((k === 'syn' ? 'g now ' : 'g ') + gv[k].toFixed(2) + ' mS/cm²', MX + 100, y + 14);
+    }
+    // dots
+    for (const d of dots) {
+      c.fillStyle = C[d.name]; c.strokeStyle = C.surface; c.lineWidth = 1;
+      c.beginPath(); c.arc(d.x, d.y, 4.5, 0, 6.283); c.fill(); c.stroke();
+    }
+    plate('INTRACELLULAR', 12, 12, 'left'); plate('EXTRACELLULAR', CWd - 12, 12, 'right');
+    c.font = '600 13px "IBM Plex Mono", monospace'; c.fillStyle = C.ink; c.textAlign = 'left';
+    fillSub(c, 'V = ' + fmtSigned(s.V), 14, CHd - 34);
+    fillSub(c, 'Q = C·V = ' + fmtSigned(Q, 0, ' nC/cm²'), 14, CHd - 14);
+    c.font = '500 11.5px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'right';
+    c.fillText('one mark = ' + Q0 + ' nC/cm²', CWd - 12, CHd - 14);
+  }
+  function drawCharts() {
+    const r = restPatch(p);
+    const series = [{ ys: hist.V, color: C.ink, width: 2.4, label: 'V' }];
+    if (showLin) series.unshift({ ys: hist.lin, color: C.muted, width: 1.6, dash: [6, 4], label: 'sum' });
+    drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series,
+      refs: [{ v: EREV.K, color: C.k, label: 'E_K' }, { v: EREV.Cl, color: C.cl, label: 'E_Cl' }, { v: r.V, color: C.accent, dash: [2, 3], width: 2, label: 'rest' }],
+      ylabel: 'mV', xlabel: `last ${WIN} ms` });
+  }
+  function readouts() {
+    const r = restPatch(p);
+    $('capVnum').textContent = fmtSigned(s.V);
+    $('capVrest').textContent = fmtSigned(r.V);
+    $('capTau').textContent = r.tau.toFixed(1) + ' ms';
+    $('capPeak').textContent = fmtSigned(single.peak, 2);
+    $('capQ').textContent = fmtSigned(p.C * s.V, 0, ' nC/cm²');
+    const fade = Math.exp(-dtIn / r.tau);
+    $('capCap').innerHTML = `Shaded: synaptic channels open. One input raises V by ${single.peak.toFixed(2)} mV. With τ = ${r.tau.toFixed(1)} ms, after ${dtIn} ms ${Math.round(fade * 100)}% of it is still there when the next arrives, so ${nIn} inputs pile up to about ${(single.peak * (1 - Math.pow(fade, nIn)) / (1 - fade)).toFixed(1)} mV.`;
+  }
+  const changed = () => { computeSingle(); readouts(); };
+  bindRange('capGK', v => fmtG(v), v => { p.gKL = v; single && changed(); });
+  bindRange('capGNa', v => fmtG(v, 3), v => { p.gNaL = v; single && changed(); });
+  bindRange('capGCl', v => fmtG(v), v => { p.gCl = v; single && changed(); });
+  bindRange('capC', v => v.toFixed(1) + ' µF/cm²', v => { p.C = v; single && changed(); });
+  bindRange('capG', v => fmtG(v, 3), v => { gIn = v; single && changed(); });
+  bindRange('capN', v => v + (v === 1 ? ' input' : ' inputs'), v => { nIn = v; single && readouts(); });
+  bindRange('capDt', v => v.toFixed(1) + ' ms', v => { dtIn = v; single && readouts(); });
+  const speedFrom = v => Math.pow(10, -1 + v * 0.02);
+  bindRange('capSpeed', v => { const x = speedFrom(v); return (x < 1 ? x.toFixed(2) : x.toFixed(1)) + ' ms/s'; }, v => speed = speedFrom(v));
+  $('capLin').addEventListener('change', e => showLin = e.target.checked);
+  $('capFire').addEventListener('click', () => { for (let k = 0; k < nIn; k++) evs.push({ t: s.t + 0.2 + k * dtIn, g: gIn }); });
+  const playBtn = $('capPlay');
+  const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
+  playBtn.addEventListener('click', () => setRunning(!running));
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
+  s = mkPatch(p); changed();
+  let last = performance.now(), frame = 0;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (running) { advance(dt * speed); moveDots(); }
+    draw(); drawCharts();
+    if (frame++ % 6 === 0) readouts();
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { draw(); drawCharts(); });
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// Part 4: the cell. Part 3's circuit, one copy per short piece of membrane, joined by the cytoplasm (as on
+// lesson 3): a dendrite (1.5 µm wide, 400 µm long), the cell body, the axon
+// hillock, the axon initial segment (AIS) and the axon. Units: cm, µF, mS, µA, mV, ms; densities per cm².
+// The step is semi-implicit (a tridiagonal solve), as in lesson 3.
+// =====================================================================================
+(() => {
+  const RI = 150, CMEM = 1;                                    // Ω·cm, µF/cm²
+  const LEAK = { gKL: 0.12, gNaL: 0.005, gCl: 0.02 };             // the circuit's resting conductances (mS/cm²)
+  const DEND_L = 400, DEND_D = 1.5, DEND_DX = 5, AX_D = 1.2, AX_L = 200, AX_DX = 2, HILL_D = 3;
+  const SOMA = { na: 0.25, k: 0.25 }, HILL = { na: 0.5, k: 0.5 }, AXON = { na: 1.5, k: 1 };   // gated densities, × the squid axon's
+  const P = { n: 25, gS: 0.3, pos: 150, np: 1, dt: 2, inh: false, aisNa: 20, start: 10, len: 30, somaD: 20, leak: 1 };
+  const INH_G = 15e-6;                                         // mS (15 nS) of steady Cl⁻ conductance on the cell body
+  const um = 1e-4;                                             // cm per µm
+  let M = null, evs = [], synIdx = [], iD = 0, iS = 0, iA = 0, running = true, speed = 2, sampleAcc = 0;
+  let peak = null, startAt = null, firedAt = -1, hist = [], thrAIS = NaN, thrSoma = NaN;
+  const WIN = 30, SAMPLE_MS = 0.02;
+
+  function build() {
+    const R = P.somaD / 2, parts = [];
+    for (let k = 0; k < DEND_L / DEND_DX; k++) parts.push({ type: 'dend', l: DEND_DX, d: DEND_D, x: -R - DEND_L + (k + 0.5) * DEND_DX, dens: { na: 0, k: 0 } });
+    parts.push({ type: 'soma', l: 0, d: P.somaD, x: 0, dens: SOMA });
+    for (let a = 0; a < AX_L; a += AX_DX) {
+      const xm = a + AX_DX / 2, inAIS = xm >= P.start && xm < P.start + P.len, hill = xm < P.start;
+      const d = hill ? HILL_D + (AX_D - HILL_D) * (xm / Math.max(P.start, 1e-6)) : AX_D;
+      parts.push({ type: inAIS ? 'ais' : hill ? 'hill' : 'ax', l: AX_DX, d, x: R + xm, dens: inAIS ? { na: P.aisNa, k: P.aisNa / 2 } : hill ? HILL : AXON });
+    }
+    const n = parts.length, f = () => new Float64Array(n);
+    const m = { n, parts, x: f(), A: f(), cm: f(), gNa: f(), gK: f(), gKL: f(), gNaL: f(), gCl: f(), G: f(), V: f(), mm: f(), h: f(), nn: f(), gsyn: f(),
+      lo: f(), b: f(), rr: f(), cp: f(), dp: f(), Vn: f(), t: 0 };
+    const Ra = parts.map(pt => pt.type === 'soma' ? 0 : RI * (pt.l * um / 2) / (Math.PI * (pt.d * um / 2) ** 2));   // Ω, half a piece
+    parts.forEach((pt, i) => {
+      m.x[i] = pt.x;
+      m.A[i] = pt.type === 'soma' ? Math.PI * (pt.d * um) ** 2 : Math.PI * pt.d * um * pt.l * um;
+      m.cm[i] = CMEM * m.A[i];
+      m.gNa[i] = GNA * pt.dens.na * m.A[i]; m.gK[i] = GK * pt.dens.k * m.A[i];
+      m.gKL[i] = LEAK.gKL * P.leak * m.A[i]; m.gNaL[i] = LEAK.gNaL * P.leak * m.A[i]; m.gCl[i] = LEAK.gCl * P.leak * m.A[i];
+    });
+    for (let i = 0; i < n - 1; i++) m.G[i] = 1000 / (Ra[i] + Ra[i + 1]);   // mS through the cytoplasm
+    M = m;
+    iS = parts.findIndex(pt => pt.type === 'soma');
+    const ais = parts.map((pt, i) => pt.type === 'ais' ? i : -1).filter(i => i >= 0);
+    iA = ais.length ? ais[Math.floor(ais.length / 2)] : iS + 1 + Math.round((P.start + P.len / 2) / AX_DX);
+    placeSynapses();
+    thrAIS = thrSoma = NaN;
+  }
+  // the synapses spread evenly over 100 µm of dendrite around their distance from the cell body
+  function placeSynapses() {
+    const R = P.somaD / 2, lo = Math.max(10, P.pos - 50), hi = Math.min(DEND_L - 5, P.pos + 50);
+    synIdx = Array.from({ length: P.n }, (_, k) => {
+      const dist = P.n === 1 ? P.pos : lo + (hi - lo) * k / (P.n - 1), x = -R - dist;
+      return Math.max(0, Math.min(iS - 1, Math.round((x - M.x[0]) / DEND_DX)));
+    });
+    const R2 = -R - P.pos; iD = Math.max(0, Math.min(iS - 1, Math.round((R2 - M.x[0]) / DEND_DX)));
+  }
+  function restAll() {
+    for (let i = 0; i < M.n; i++) {
+      const pp = { C: 1, gKL: M.gKL[i] / M.A[i], gNaL: M.gNaL[i] / M.A[i], gCl: M.gCl[i] / M.A[i], gNaM: M.gNa[i] / M.A[i], gKM: M.gK[i] / M.A[i] };
+      const r = restPatch(pp); M.V[i] = r.V; M.mm[i] = r.m; M.h[i] = r.h; M.nn[i] = r.n;
+    }
+    for (let k = 0; k < 60; k++) step(0.25);
+    M.t = 0;
+  }
+  function step(dt) {
+    const m = M, n = m.n, V = m.V;
+    for (let i = 0; i < n; i++) {
+      const r = rates(V[i]), g = (al, be, x) => { const tau = 1 / (al + be), xi = al * tau; return xi + (x - xi) * Math.exp(-dt / tau); };
+      if (m.gNa[i] > 0 || m.gK[i] > 0) { m.mm[i] = g(r.am, r.bm, m.mm[i]); m.h[i] = g(r.ah, r.bh, m.h[i]); m.nn[i] = g(r.an, r.bn, m.nn[i]); }
+      const gNa = m.gNa[i] * m.mm[i] ** 3 * m.h[i] + m.gNaL[i], gK = m.gK[i] * m.nn[i] ** 4 + m.gKL[i];
+      const gInh = P.inh && i === iS ? INH_G : 0, gs = m.gsyn[i];
+      const gl = i > 0 ? m.G[i - 1] : 0, gr = i < n - 1 ? m.G[i] : 0;
+      m.lo[i] = gl;
+      m.b[i] = m.cm[i] / dt + gNa + gK + m.gCl[i] + gInh + gs + gl + gr;
+      m.rr[i] = m.cm[i] / dt * V[i] + gNa * EREV.Na + gK * EREV.K + (m.gCl[i] + gInh) * EREV.Cl + gs * EREV.syn;
+    }
+    const { lo, b, rr, cp, dp, Vn, G } = m;
+    cp[0] = -G[0] / b[0]; dp[0] = rr[0] / b[0];
+    for (let i = 1; i < n; i++) { const w = b[i] + lo[i] * cp[i - 1]; cp[i] = i < n - 1 ? -G[i] / w : 0; dp[i] = (rr[i] + lo[i] * dp[i - 1]) / w; }
+    Vn[n - 1] = dp[n - 1];
+    for (let i = n - 2; i >= 0; i--) Vn[i] = dp[i] - cp[i] * Vn[i + 1];
+    for (let i = 0; i < n; i++) V[i] = Vn[i];
+    m.t += dt;
+  }
+  function reset() { build(); restAll(); evs = []; hist = []; peak = null; startAt = null; firedAt = -1; sampleAcc = 0; }
+  // threshold as experimenters measure it: the voltage at which the rise speeds past 20 mV/ms
+  function fire() {
+    for (let k = 0; k < P.np; k++) evs.push({ t: M.t + 0.2 + k * P.dt, g: P.gS * 1e-6 });   // nS → mS
+    peak = Float64Array.from(M.V); startAt = null; firedAt = M.t; thrAIS = thrSoma = NaN;
+  }
+  function advance(ms) {
+    let left = ms;
+    while (left > 1e-9) {
+      const h = Math.min(left, HHDT);
+      const g1 = synG(evs, M.t + h);
+      M.gsyn.fill(0); if (g1 > 0) for (const i of synIdx) M.gsyn[i] += g1;
+      const before = startAt === null && peak ? Float64Array.from(M.V) : null, va = M.V[iA], vs = M.V[iS];
+      step(h); left -= h;
+      if (peak && isNaN(thrAIS) && (M.V[iA] - va) / h > 20) thrAIS = va;
+      if (peak && isNaN(thrSoma) && (M.V[iS] - vs) / h > 20) thrSoma = vs;
+      if (peak) for (let i = 0; i < M.n; i++) if (M.V[i] > peak[i]) peak[i] = M.V[i];
+      if (before) for (let i = 0; i < M.n; i++) if (before[i] < -10 && M.V[i] >= -10) { startAt = i; break; }
+      sampleAcc += h;
+      if (sampleAcc >= SAMPLE_MS) {
+        sampleAcc -= SAMPLE_MS;
+        hist.push({ t: M.t, D: M.V[iD], S: M.V[iS], A: M.V[iA], on: g1 > 0.02 * P.gS * 1e-6 });
+        while (hist.length && hist[0].t < M.t - WIN) hist.shift();
+      }
+    }
+    evs = evs.filter(e => M.t - e.t < 40);
+  }
+
+  // ---------- the neuron picture, in lesson 3's style ----------
+  const NW = 1000, NH = 270, YC = 128, X0 = 40, X1 = 930, nc = setupCanvas($('neu'), NW, NH);
+  const xmin = () => -(P.somaD / 2 + DEND_L), xmax = () => P.somaD / 2 + AX_L;
+  const px = x => X0 + (x - xmin()) / (xmax() - xmin()) * (X1 - X0);
+  function vrgb(V) { const t = Math.max(0, Math.min(1, (V + 75) / 125)), p = rgb(C.pos), q = rgb(C.neg); return p.map((v, i) => v * t + q[i] * (1 - t)); }
+  const shade = (a, k = 0) => `rgb(${a.map(v => Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k))).join(',')})`;
+  const vcolor = (V, k) => shade(vrgb(V), k);
+  // side branches off the dendrite: [where along it (µm from the cell body), angle, length]; fixed, decorative
+  const TWIGS = [[60, -0.9, 34], [120, 0.8, 30], [190, -0.7, 40], [250, 0.9, 34], [320, -0.8, 30], [370, 0.7, 26]];
+  // extra dendrites on the cell body, coloured by its voltage
+  const SDENDS = [[-1.9, 34], [1.95, 30], [-2.5, 26], [2.6, 24]];
+  function pipette(tx, ty, ux, uy, len, w, tint) {
+    const c = nc; c.save(); c.translate(tx, ty); c.rotate(Math.atan2(uy, ux));
+    c.beginPath(); c.moveTo(0, -0.6); c.lineTo(len * 0.4, -w * 0.4); c.lineTo(len, -w); c.lineTo(len, w); c.lineTo(len * 0.4, w * 0.4); c.lineTo(0, 0.6); c.closePath();
+    c.globalAlpha = 0.85; c.fillStyle = mixc(C.surface, C.accent, 0.82); c.fill(); c.globalAlpha = 1;
+    c.strokeStyle = C.muted; c.lineWidth = 1; c.stroke();
+    c.strokeStyle = C.muted; c.lineWidth = 1.2; c.beginPath(); c.moveTo(len * 0.3, 0); c.lineTo(len + 14, 0); c.stroke();
+    c.fillStyle = tint; c.fillRect(len, -w - 1.5, 14, 2 * w + 3);
+    c.restore();
+  }
+  function drawNeuron() {
+    const c = nc, n = M.n, R = P.somaD / 2, sr = Math.max(14, px(R) - px(0)), edge = C.memdark;
+    const dh = 6.5, ah = 3;                                  // half widths of the dendrite and the axon (px)
+    const somaCol = vcolor(M.V[iS]);
+    c.fillStyle = C.bath; c.fillRect(0, 0, NW, NH);
+    const x0i = i => px(M.x[i] - M.parts[i].l / 2), x1i = i => px(M.x[i] + M.parts[i].l / 2);
+    // glow wherever the membrane is depolarized past −40 mV
+    c.save(); c.shadowColor = C.pos; c.shadowBlur = 16; c.fillStyle = C.pos; c.globalAlpha = 0.5;
+    for (let i = 0; i < n; i++) {
+      if (i === iS || M.V[i] < -40) continue;
+      let j = i; while (j + 1 < n && j + 1 !== iS && M.V[j + 1] >= -40) j++;
+      const hw = i < iS ? dh : ah; c.fillRect(x0i(i), YC - hw, Math.max(2, x1i(j) - x0i(i)), 2 * hw); i = j;
+    }
+    if (M.V[iS] >= -40) { c.beginPath(); c.arc(px(0), YC, sr, 0, 6.283); c.fill(); }
+    c.restore();
+    const curve = (xa, ya, cx, cy, xb, yb) => Array.from({ length: 11 }, (_, k) => { const t = k / 10, u = 1 - t; return [u * u * xa + 2 * u * t * cx + t * t * xb, u * u * ya + 2 * u * t * cy + t * t * yb]; });
+    const taper = (pts, w0, w1, col, extra) => { c.lineCap = 'round'; c.strokeStyle = col;
+      for (let k = 1; k < pts.length; k++) { c.lineWidth = w0 + (w1 - w0) * k / (pts.length - 1) + extra; c.beginPath(); c.moveTo(...pts[k - 1]); c.lineTo(...pts[k]); c.stroke(); } };
+    // side twigs of the dendrite, each coloured by the voltage where it leaves
+    const twigs = TWIGS.map(([d, a, len]) => {
+      const i = Math.max(0, Math.min(iS - 1, Math.round((-R - d - M.x[0]) / DEND_DX))), x = px(-R - d), dy = Math.sign(a);
+      return [curve(x, YC + dy * dh * 0.6, x - 6, YC + dy * (dh + len * 0.5), x - len * Math.cos(Math.abs(a)) * 0.9, YC + dy * (dh + len)), vcolor(M.V[i])];
+    });
+    const sd = SDENDS.map(([a, len]) => { const dx = Math.cos(a), dy = Math.sin(a), sx = px(0);
+      return curve(sx + dx * sr * 0.8, YC + dy * sr * 0.8, sx + dx * (sr + len * 0.5) + 4, YC + dy * (sr + len * 0.5), sx + dx * (sr + len), YC + dy * (sr + len)); });
+    twigs.forEach(([p]) => taper(p, 4, 1.4, edge, 2)); sd.forEach(p => taper(p, 6, 1.6, edge, 2));
+    twigs.forEach(([p, col]) => taper(p, 4, 1.4, col, 0)); sd.forEach(p => taper(p, 6, 1.6, somaCol, 0));
+    c.lineCap = 'butt';
+    // the dendrite: each piece coloured by its voltage, shaded as a tube, its tip rounded
+    for (let i = 0; i < iS; i++) { c.fillStyle = vcolor(M.V[i]); c.fillRect(x0i(i) - 0.3, YC - dh, x1i(i) - x0i(i) + 0.6, 2 * dh); }
+    c.fillStyle = vcolor(M.V[0]); c.beginPath(); c.arc(x0i(0), YC, dh, Math.PI / 2, 3 * Math.PI / 2); c.fill();
+    const tube = (y, hw) => { const g = c.createLinearGradient(0, y - hw, 0, y + hw);
+      g.addColorStop(0, 'rgba(255,255,255,0.10)'); g.addColorStop(0.25, 'rgba(255,255,255,0.32)'); g.addColorStop(0.55, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,0.25)'); return g; };
+    c.fillStyle = tube(YC, dh); c.fillRect(x0i(0), YC - dh, px(-R) - x0i(0), 2 * dh);
+    c.strokeStyle = edge; c.lineWidth = 1.5; c.beginPath();
+    c.moveTo(x0i(0), YC - dh); c.lineTo(px(-R) + 2, YC - dh); c.moveTo(x0i(0), YC + dh); c.lineTo(px(-R) + 2, YC + dh);
+    c.moveTo(x0i(0), YC - dh); c.arc(x0i(0), YC, dh, -Math.PI / 2, -3 * Math.PI / 2, true); c.stroke();
+    // axon pieces, then the hillock drawn over the first stretch
+    for (let i = iS + 1; i < n; i++) { c.fillStyle = vcolor(M.V[i]); c.fillRect(x0i(i) - 0.3, YC - ah, x1i(i) - x0i(i) + 0.6, 2 * ah); }
+    const xe = px(xmax());
+    c.fillStyle = tube(YC, ah); c.fillRect(px(R), YC - ah, xe - px(R), 2 * ah);
+    c.strokeStyle = edge; c.lineWidth = 1.5; c.beginPath(); c.moveTo(px(R), YC - ah); c.lineTo(xe, YC - ah); c.moveTo(px(R), YC + ah); c.lineTo(xe, YC + ah); c.stroke();
+    const hEnd = Math.max(px(R + Math.max(P.start, 4)), px(0) + sr + 6), iH = Math.min(n - 1, iS + 1 + Math.round(Math.max(P.start, 4) / AX_DX));
+    const hy = sr * 0.55, hx = px(0) + Math.sqrt(Math.max(0, sr * sr - hy * hy)) - 1;
+    const hg = c.createLinearGradient(hx, 0, hEnd, 0); hg.addColorStop(0, somaCol); hg.addColorStop(1, vcolor(M.V[iH]));
+    c.beginPath(); c.moveTo(hx, YC - hy); c.bezierCurveTo(hx + 10, YC - hy, hEnd - 10, YC - ah, hEnd + 1, YC - ah);
+    c.lineTo(hEnd + 1, YC + ah); c.bezierCurveTo(hEnd - 10, YC + ah, hx + 10, YC + hy, hx, YC + hy); c.closePath();
+    c.fillStyle = hg; c.fill(); c.fillStyle = tube(YC, hy); c.fill();
+    c.strokeStyle = edge; c.lineWidth = 1.5; c.beginPath();
+    c.moveTo(hx, YC - hy); c.bezierCurveTo(hx + 10, YC - hy, hEnd - 10, YC - ah, hEnd + 1, YC - ah);
+    c.moveTo(hx, YC + hy); c.bezierCurveTo(hx + 10, YC + hy, hEnd - 10, YC + ah, hEnd + 1, YC + ah); c.stroke();
+    // the cell body, as on lesson 3: irregular, lit from the top left, with its nucleus
+    const SX = px(0);
+    const blob = () => { c.beginPath(); for (let k = 0; k <= 48; k++) { const th = k / 48 * 6.283, r = sr * (1 + 0.05 * Math.sin(3 * th + 0.6) + 0.03 * Math.sin(5 * th + 1.3)); k ? c.lineTo(SX + r * Math.cos(th), YC + r * Math.sin(th)) : c.moveTo(SX + r * Math.cos(th), YC + r * Math.sin(th)); } c.closePath(); };
+    const sg = c.createRadialGradient(SX - sr * 0.35, YC - sr * 0.4, sr * 0.1, SX, YC, sr * 1.05);
+    sg.addColorStop(0, vcolor(M.V[iS], 0.35)); sg.addColorStop(0.6, somaCol); sg.addColorStop(1, vcolor(M.V[iS], -0.25));
+    blob(); c.fillStyle = sg; c.fill(); c.strokeStyle = edge; c.lineWidth = 2; c.stroke();
+    c.fillStyle = vcolor(M.V[iS], -0.3); c.globalAlpha = 0.55;
+    c.beginPath(); c.ellipse(SX - sr * 0.12, YC + sr * 0.06, sr * 0.4, sr * 0.34, -0.3, 0, 6.283); c.fill(); c.globalAlpha = 1;
+    // the AIS: Na⁺ channel density as orange speckle on the axon, and a bracket under it
+    const a0 = px(R + P.start), a1 = px(R + P.start + P.len);
+    if (P.aisNa > 0) {
+      c.fillStyle = C.na; c.globalAlpha = Math.min(0.85, 0.15 + P.aisNa / 40 * 0.7);
+      for (let x = a0 + 2; x < a1 - 1; x += 4) { c.beginPath(); c.arc(x, YC - ah + 0.5, 1.2, 0, 6.283); c.arc(x + 2, YC + ah - 0.5, 1.2, 0, 6.283); c.fill(); }
+      c.globalAlpha = 1;
+    }
+    const yb = YC + 16;
+    c.strokeStyle = C.na; c.fillStyle = C.na; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(a0, yb - 5); c.lineTo(a0, yb); c.lineTo(a1, yb); c.lineTo(a1, yb - 5); c.stroke();
+    c.font = '600 12px "IBM Plex Sans", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('axon initial segment', (a0 + a1) / 2 + 30, yb + 13);
+    c.fillStyle = C.muted;
+    c.fillText('cell body', SX, YC + sr + 30); c.fillText('dendrite', px(-R - 200), YC + 46); c.fillText('axon', px(R + 160), YC + 16);
+    // axon terminals
+    const tcol = vcolor(M.V[n - 1]), tips = [[18, -16], [24, 0], [18, 16]];
+    const tb = tips.map(([dx, dy]) => curve(xe - 1, YC, xe + dx * 0.45, YC + dy * 0.15, xe + dx - 4, YC + dy));
+    tb.forEach(p => taper(p, ah * 1.6, 2, edge, 2)); tb.forEach(p => taper(p, ah * 1.6, 2, tcol, 0));
+    tips.forEach(([dx, dy]) => { c.beginPath(); c.arc(xe + dx, YC + dy, 4.5, 0, 6.283); c.fillStyle = tcol; c.fill(); c.strokeStyle = edge; c.lineWidth = 1.5; c.stroke(); });
+    c.lineCap = 'butt';
+    // synapses: boutons touching the dendrite, alternately above and below, lit while their channels are open
+    const gNow = synG(evs, M.t), lit = Math.min(1, gNow / (P.gS * 1e-6));
+    synIdx.forEach((i, k) => {
+      const x = (x0i(i) + x1i(i)) / 2 + (k % 3 - 1) * 1.5, up = k % 2 === 0, y = YC + (up ? -1 : 1) * (dh + 6);
+      c.strokeStyle = C.syn; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (k % 4 - 1.5) * 2, y + (up ? -8 : 8)); c.stroke();
+      c.fillStyle = mixc(C.syn, C.surface, 0.35 + 0.65 * lit); c.beginPath(); c.arc(x, y, 3.6, 0, 6.283); c.fill(); c.stroke();
+    });
+    if (P.inh) {   // the inhibitory synapse, on top of the cell body
+      const x = SX + sr * 0.5, y = YC - sr * 0.95;
+      c.fillStyle = C.k; c.strokeStyle = C.k; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 8, y - 14); c.stroke();
+      c.beginPath(); c.arc(x, y - 1, 5, 0, 6.283); c.fill();
+    }
+    // recording sites D, S, A
+    const tag = (t, col, x, y) => { c.font = '700 14px "IBM Plex Sans", sans-serif'; c.fillStyle = col; c.textAlign = 'left'; c.fillText(t, x, y); };
+    const xD = (x0i(iD) + x1i(iD)) / 2, xA = (x0i(iA) + x1i(iA)) / 2;
+    pipette(xD, YC + dh * 0.3, -0.25, 1, 56, 3.5, C.syn); tag('D', C.syn, xD - 30, YC + 66);
+    pipette(SX + sr * 0.2, YC + sr * 0.3, 0.3, 1, 60, 4, C.ink); tag('S', C.ink, SX + sr * 0.2 + 22, YC + sr * 0.3 + 60);
+    pipette(xA, YC - ah * 0.4, 0.25, -1, 56, 3.5, C.na); tag('A', C.na, xA + 20, YC - 58);
+    // distance scale, from the cell body's centre
+    c.font = '11px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.fillStyle = C.muted; c.strokeStyle = C.line; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(px(xmin()), NH - 24); c.lineTo(xe, NH - 24); c.stroke();
+    for (let x = Math.ceil(xmin() / 100) * 100; x <= xmax(); x += 100) {
+      c.beginPath(); c.moveTo(px(x), NH - 24); c.lineTo(px(x), NH - 19); c.stroke();
+      c.fillText(x + (x === 0 ? ' µm' : ''), px(x), NH - 10);
+    }
+    c.textAlign = 'right'; c.fillStyle = C.ink; c.font = '500 12px "IBM Plex Mono", monospace';
+    c.fillText('t = ' + M.t.toFixed(1) + ' ms', NW - 8, 16);
+    c.textBaseline = 'alphabetic';
+  }
+  // ---------- charts ----------
+  const CW = 560, CH = 340, pc = setupCanvas($('aProf'), CW, CH), tc = setupCanvas($('aTime'), CW, CH);
+  function drawCharts() {
+    const xs = Array.from(M.x), isAIS = M.parts.map(pt => pt.type === 'ais');
+    const series = [{ ys: Array.from(M.V), color: C.ink, width: 2.4, label: 'now' }];
+    if (peak) series.unshift({ ys: Array.from(peak), color: C.accent, width: 1.6, dash: [6, 4], label: 'peak' });
+    drawChart(pc, { xs, x0: xmin(), x1: xmax(), on: isAIS, w: CW, h: CH, key: 13, fixed: [-90, 50], series,
+      refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'AIS thr.' }] : [],
+      ylabel: 'mV', xlabel: 'µm from the cell body (dendrite left, axon right; AIS shaded)' });
+    // the cell body's extent, as a band
+    const L = 62, R = 96, pw = CW - L - R, sx = x => L + (x - xmin()) / (xmax() - xmin()) * pw;
+    pc.fillStyle = C.muted; pc.globalAlpha = 0.12; pc.fillRect(sx(-P.somaD / 2), 14, Math.max(2, sx(P.somaD / 2) - sx(-P.somaD / 2)), CH - 44); pc.globalAlpha = 1;
+    const t1 = M.t;
+    drawChart(tc, { xs: hist.map(h => h.t), x0: t1 - WIN, x1: t1, on: hist.map(h => h.on), w: CW, h: CH, key: 14, fixed: [-90, 50],
+      series: [{ ys: hist.map(h => h.D), color: C.syn, label: 'D' }, { ys: hist.map(h => h.S), color: C.ink, width: 2.2, label: 'S' }, { ys: hist.map(h => h.A), color: C.na, width: 2.2, label: 'A' }],
+      refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'thr.' }] : [],
+      ylabel: 'mV', xlabel: `last ${WIN} ms` });
+  }
+  const where = i => { const t = M.parts[i].type, end = P.somaD / 2 + P.start + P.len;
+    return t === 'ais' ? 'the AIS' : t === 'soma' ? 'the cell body' : t === 'dend' ? 'the dendrite' : t === 'hill' ? 'the hillock' : M.x[i] < end + 8 ? 'the far end of the AIS' : 'the axon'; };
+  function readouts() {
+    $('aVnum').textContent = fmtSigned(M.V[iA]);
+    $('aVsoma').textContent = fmtSigned(M.V[iS]);
+    $('aThr').textContent = isFinite(thrAIS) ? fmtSigned(thrAIS) + (isFinite(thrSoma) ? ' (cell body ' + fmtSigned(thrSoma, 0) + ')' : '') : peak ? 'not reached' : 'fire to measure';
+    $('aPeaks').textContent = peak ? `${peak[iD].toFixed(0)} / ${peak[iS].toFixed(0)} / ${peak[iA].toFixed(0)} mV` : '—';
+    $('aStartAt').textContent = startAt === null ? (peak ? 'no spike' : '—') : `${where(startAt)}, ${Math.round(M.x[startAt] - (M.x[startAt] > 0 ? P.somaD / 2 : -P.somaD / 2))} µm`;
+    $('aCap').innerHTML = !peak ? 'Press Fire synapses. Shaded on the time chart: synaptic channels open.'
+      : startAt === null ? `No spike: the depolarization reached ${peak[iA].toFixed(0)} mV at the AIS, short of its threshold (${isFinite(thrAIS) ? fmtSigned(thrAIS, 0) : 'none'}). Add synapses, move them closer, or fire them repeatedly.`
+      : `The spike started in ${where(startAt)}, then ran down the axon and back into the cell body. Threshold, measured where the rise speeds past 20 mV/ms, was ${fmtSigned(thrAIS, 0)} at the AIS${isFinite(thrSoma) ? ' but ' + fmtSigned(thrSoma, 0) + ' at the cell body, which only fired because the AIS spike charged it' : ''}.`;
+  }
+  // ---------- controls ----------
+  const rebuild = () => { if (M) reset(); };
+  bindRange('aN', v => v + (v === 1 ? ' synapse' : ' synapses'), v => { P.n = v; M && placeSynapses(); });
+  bindRange('aG', v => v.toFixed(2) + ' nS', v => P.gS = v);
+  bindRange('aPos', v => v + ' µm', v => { P.pos = v; M && placeSynapses(); });
+  bindRange('aNP', v => v + (v === 1 ? ' time' : ' times'), v => P.np = v);
+  bindRange('aDt', v => v.toFixed(1) + ' ms', v => P.dt = v);
+  $('aInh').addEventListener('change', e => { P.inh = e.target.checked; });
+  bindRange('aNa', v => v + '× squid', v => { P.aisNa = v; rebuild(); });
+  bindRange('aStart', v => v + ' µm', v => { P.start = v; rebuild(); });
+  bindRange('aLen', v => v + ' µm', v => { P.len = v; rebuild(); });
+  bindRange('aSoma', v => v + ' µm', v => { P.somaD = v; rebuild(); });
+  bindRange('aLeak', v => v.toFixed(2) + '×', v => { P.leak = v; rebuild(); });
+  const speedFrom = v => Math.pow(10, -1.5 + v * 0.02);
+  bindRange('aSpeed', v => { const x = speedFrom(v); return (x < 1 ? x.toFixed(2) : x.toFixed(1)) + ' ms/s'; }, v => speed = speedFrom(v));
+  $('aFire').addEventListener('click', fire);
+  $('aReset').addEventListener('click', reset);
+  const playBtn = $('aPlay');
+  const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
+  playBtn.addEventListener('click', () => setRunning(!running));
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
+  reset(); readouts();
+  window.SUM_AIS = { P, get M() { return M; }, fire, reset, advance, get startAt() { return startAt; }, get peak() { return peak; }, get thr() { return thrAIS; }, idx: () => ({ iD, iS, iA }) };
+  let lastT = performance.now(), frame = 0;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+    if (running) advance(dt * speed);
+    drawNeuron(); drawCharts();
+    if (frame++ % 6 === 0) readouts();
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { drawNeuron(); drawCharts(); });
+  requestAnimationFrame(loop);
+})();
+
+// ---------- calculator charts: fixed axes, curves, labels at the right edge ----------
+const KCW = 560, KCH = 300, KL = 58, KR = 84, KTP = 14, KB = 34, KPW = KCW - KL - KR, KPH = KCH - KTP - KB;
+const ksg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
+const kmv = (v, d = 1) => isFinite(v) ? (v < 0 ? '−' : '+') + Math.abs(v).toFixed(d) + ' mV' : '—';
+function kAxes(c, x0, x1, y0, y1, xlab, ylab, xstep, ystep) {
+  const sx = x => KL + (x - x0) / (x1 - x0) * KPW, sy = v => KTP + (y1 - Math.max(y0, Math.min(y1, v))) / (y1 - y0) * KPH;
+  c.fillStyle = C.surface; c.fillRect(0, 0, KCW, KCH);
+  c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.lineWidth = 0.8;
+  for (let v = Math.ceil(y0 / ystep) * ystep; v <= y1 + 1e-9; v += ystep) {
+    c.strokeStyle = Math.abs(v) < 1e-9 ? C.muted : C.line; c.beginPath(); c.moveTo(KL, sy(v)); c.lineTo(KL + KPW, sy(v)); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(ksg(+v.toPrecision(4)), KL - 6, sy(v));
+  }
+  for (let x = Math.ceil(x0 / xstep) * xstep; x <= x1 + 1e-9; x += xstep) {
+    c.strokeStyle = C.line; c.beginPath(); c.moveTo(sx(x), KTP); c.lineTo(sx(x), KTP + KPH); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(+x.toPrecision(4), sx(x), KCH - KB + 12);
+  }
+  c.fillText(xlab, KL + KPW / 2, KCH - 8);
+  c.save(); c.translate(12, KTP + KPH / 2); c.rotate(-Math.PI / 2); c.fillText(ylab, 0, 0); c.restore();
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(KL + 0.5, KTP + 0.5, KPW - 1, KPH - 1);
+  return { sx, sy };
+}
+function kLine(c, a, xs, ys, col, width, dash) {
+  c.save(); c.beginPath(); c.rect(KL, KTP, KPW, KPH); c.clip();
+  c.strokeStyle = col; c.lineWidth = width; c.setLineDash(dash || []); c.lineJoin = 'round'; c.beginPath();
+  xs.forEach((x, k) => k ? c.lineTo(a.sx(x), a.sy(ys[k])) : c.moveTo(a.sx(x), a.sy(ys[k])));
+  c.stroke(); c.restore();
+}
+function kTags(c, list) {
+  c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
+  list.sort((a, b) => a.y - b.y);
+  for (let k = 1; k < list.length; k++) if (list[k].y - list[k - 1].y < 13) list[k].y = list[k - 1].y + 13;
+  list.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, KCW - KR + 6, Math.max(KTP + 4, Math.min(KTP + KPH - 2, l.y))); });
+}
+
+// =====================================================================================
+// Summation calculator: a passive membrane (leak channels only) receiving a train of synaptic inputs.
+// =====================================================================================
+(() => {
+  const ids = ['kGK', 'kEK', 'kGNa', 'kENa', 'kGCl', 'kECl', 'kC', 'kThrIn', 'kG', 'kNP', 'kDt'];
+  const num = id => parseFloat($(id).value);
+  const fmt = { kGK: fmtG, kGNa: v => fmtG(v, 3), kGCl: fmtG, kG: v => fmtG(v, 3), kEK: v => ksg(v) + ' mV', kENa: v => ksg(v) + ' mV', kECl: v => ksg(v) + ' mV',
+    kThrIn: v => ksg(v) + ' mV', kC: v => v.toFixed(1) + ' µF/cm²', kNP: v => v + (v === 1 ? ' input' : ' inputs'), kDt: v => v.toFixed(1) + ' ms' };
+  const sc = setupCanvas($('kSumChart'), KCW, KCH), ic = setupCanvas($('kIntChart'), KCW, KCH);
+  const peakOf = (p, rest, n, dt, g, h = 0.02) => { const tr = passiveTrace(p, rest, trainEvents(n, dt, g), 1 + (n - 1) * dt + 10, h, false); return Math.max(...tr.vs) - tr.V0; };
+  function model() {
+    const p = { C: num('kC'), gKL: num('kGK'), gNaL: num('kGNa'), gCl: num('kGCl'), gNaM: 0, gKM: 0, E: { K: num('kEK'), Na: num('kENa'), Cl: num('kECl'), syn: 0 } };
+    const rest = restPatch(p), thr = num('kThrIn'), g = num('kG'), n = num('kNP'), dt = num('kDt');
+    const tEnd = Math.min(260, 1 + (n - 1) * dt + 25);
+    const one = passiveTrace(p, rest, [{ t: 1, g }], tEnd, 0.02, false), train = passiveTrace(p, rest, trainEvents(n, dt, g), tEnd, 0.02, false);
+    const peak1 = Math.max(...one.vs) - one.V0, peakN = Math.max(...train.vs) - train.V0;
+    let need = null;
+    if (thr > rest.V) for (let k = 1; k <= 60; k++) if (rest.V + peakOf(p, rest, k, dt, g) >= thr) { need = k; break; }
+    return { p, rest, thr, g, n, dt, tEnd, one, train, peak1, peakN, need };
+  }
+  function drawSum(m) {
+    const x1 = m.tEnd, a = kAxes(sc, 0, x1, -95, -35, 't (ms)', 'V (mV)', niceStep(x1 / 6), 10), lab = [];
+    const hline = (v, col, dash, t) => { kLine(sc, a, [0, x1], [v, v], col, 1.5, dash); lab.push({ y: a.sy(v), t, c: col }); };
+    hline(m.rest.V, C.muted, [2, 3], 'rest'); hline(m.thr, C.accent, [6, 4], 'threshold');
+    kLine(sc, a, m.one.ts, m.one.vs, C.muted, 1.6, [5, 4]); lab.push({ y: a.sy(m.one.vs[m.one.vs.length - 1]) + 12, t: 'one', c: C.muted });
+    kLine(sc, a, m.train.ts, m.train.vs, C.ink, 2.4);
+    sc.fillStyle = C.syn; for (let k = 0; k < m.n; k++) { const x = a.sx(1 + k * m.dt); sc.beginPath(); sc.moveTo(x, KTP + KPH); sc.lineTo(x - 4, KTP + KPH - 7); sc.lineTo(x + 4, KTP + KPH - 7); sc.fill(); }
+    kTags(sc, lab);
+  }
+  function drawInt(m) {
+    const top = Math.max(5, niceStep(m.peak1 * m.n * 1.2 / 4) * 4), a = kAxes(ic, 0, 30, 0, top, 'interval between inputs (ms)', 'train peak (mV above rest)', 5, niceStep(top / 5)), lab = [];
+    const xs = [], ys = [];
+    for (let d = 0.5; d <= 30.001; d += 0.5) { xs.push(d); ys.push(peakOf(m.p, m.rest, m.n, d, m.g, 0.05)); }
+    kLine(ic, a, [0, 30], [m.thr - m.rest.V, m.thr - m.rest.V], C.accent, 1.5, [6, 4]); lab.push({ y: a.sy(m.thr - m.rest.V), t: 'threshold', c: C.accent });
+    kLine(ic, a, [0, 30], [m.peak1, m.peak1], C.muted, 1.4, [5, 4]); lab.push({ y: a.sy(m.peak1), t: 'one', c: C.muted });
+    kLine(ic, a, xs, ys, C.ink, 2.4); lab.push({ y: a.sy(ys[ys.length - 1]) - 12, t: m.n + ' inputs', c: C.ink });
+    ic.fillStyle = C.ink; ic.beginPath(); ic.arc(a.sx(m.dt), a.sy(m.peakN), 4.5, 0, 6.283); ic.fill();
+    kTags(ic, lab);
+    return ys;
+  }
+  function update() {
+    ids.forEach(id => $(id + 'o').textContent = fmt[id](num(id)));
+    const m = model(), r = m.rest, p = m.p, f2 = v => v.toFixed(2), gap = m.thr - r.V;
+    $('kPeak1').textContent = kmv(m.peak1, 2);
+    $('kV').textContent = kmv(r.V); $('kTau').textContent = r.tau.toFixed(1) + ' ms'; $('kRin').textContent = (1 / r.G).toFixed(1) + ' kΩ·cm²';
+    $('kPeakN').textContent = kmv(m.peakN); $('kGap').textContent = gap > 0 ? gap.toFixed(1) + ' mV' : 'none: rest is above it';
+    $('kNeed').textContent = gap <= 0 ? '—' : m.need ? m.need + (m.need === 1 ? ' input' : ' inputs') : 'more than 60';
+    const fade = Math.exp(-m.dt / r.tau), ind = '<br>';
+    $('kFormula').innerHTML =
+      `V<sub>rest</sub> = Σ g·E / Σ g = (${f2(p.gKL)}·(${ksg(p.E.K)}) + ${p.gNaL.toFixed(3)}·${ksg(p.E.Na)} + ${f2(p.gCl)}·(${ksg(p.E.Cl)})) / ${f2(r.G)} = <span class="res">${kmv(r.V)}</span>` + ind +
+      `τ = C / Σg = ${p.C.toFixed(1)} / ${f2(r.G)} = <span class="res">${r.tau.toFixed(1)} ms</span>, R<sub>in</sub> = 1 / Σg = ${(1 / r.G).toFixed(1)} kΩ·cm²` + ind +
+      `between inputs ${m.dt} ms apart, e<sup>−T/τ</sup> = e<sup>−${m.dt}/${r.tau.toFixed(1)}</sup> = ${fade.toFixed(2)} of the voltage is left, so a long train piles up to about ${m.peak1.toFixed(2)} / (1 − ${fade.toFixed(2)}) = <span class="res">${(m.peak1 / (1 - fade)).toFixed(1)} mV</span>`;
+    $('kSumCap').innerHTML = `${m.n} inputs reach ${m.peakN.toFixed(1)} mV, ${(m.peakN / m.peak1).toFixed(1)} times one input. ` +
+      (gap <= 0 ? 'Rest is already above threshold: this cell would fire on its own.' : r.V + m.peakN >= m.thr ? 'That crosses threshold: the voltage-gated channels would take over and fire a spike.' : `That is ${(gap - m.peakN).toFixed(1)} mV short of threshold.`);
+    const ys = drawInt(m);
+    const iFail = ys.findIndex(v => v < gap), lim = iFail < 0 ? 30 : iFail * 0.5;   // the longest interval that still reaches threshold
+    $('kIntCap').innerHTML = gap <= 0 ? '' : ys[0] < gap ? `Even ${m.n} inputs half a millisecond apart fall short of threshold.`
+      : `${m.n} inputs reach threshold only if they come within ${iFail < 0 ? 'more than 30' : lim.toFixed(1)} ms of each other, ${(lim / r.tau).toFixed(1)} τ.`;
+    drawSum(m);
+  }
+  ids.forEach(id => $(id).addEventListener('input', update));
+  colorHooks.push(() => setTimeout(update, 0));
+  update();
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they behave exactly like clicking them.
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const press = sel => { const b = document.querySelector(sel); if (b.getAttribute('aria-pressed') !== 'true') b.click(); };
+  const running = id => { if ($(id).textContent.trim() === 'Play') $(id).click(); };
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const check = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
+  const cardOf = { ion: ['tab-ion', 'play', 'ion-card'], cap: ['tab-cap', 'capPlay', 'cap-card'], circ: ['tab-circ', 'hhPlay', 'circ-card'], ais: ['tab-ais', 'aPlay', 'ais-card'] };
+  const go = k => { const [tab, play, card] = cardOf[k]; showTab($(tab)); running(play); into(card); };
+  const neuron = (opts) => { set('aNa', opts.na ?? 20); set('aPos', opts.pos ?? 150); set('aN', opts.n ?? 25); set('aNP', 1); check('aInh', !!opts.inh); go('ais'); $('aFire').click(); };
+  document.querySelectorAll('[data-sutry]').forEach(b => b.addEventListener('click', () => {
+    const [what, id, v] = b.dataset.sutry.split(':');
+    if (what === 'ions') { set('nSyn', 6); go('ion'); $('synBtn').click(); }
+    else if (what === 'weakions') { set('nSyn', 3); go('ion'); $('synBtn').click(); }
+    else if (what === 'resetleak') {
+      const k = $('capGK') ? 'cap' : 'circ', ids = k === 'cap' ? ['capGK', 'capGNa', 'capGCl'] : ['hGKL', 'hGNaL', 'hGCl'];
+      [0.12, 0.005, 0.02].forEach((v, i) => set(ids[i], v)); go(k);
+    }
+    else if (what === 'sum') { set('capN', 2); set('capDt', 4); go('cap'); $('capFire').click(); }
+    else if (what === 'spike') { set('hN', 5); set('hDt', 1.5); set('hG', 0.035); press('[data-hview="n"]'); go('circ'); $('hhFire').click(); }
+    else if (what === 'ais') neuron({});
+    else if (what === 'noais') neuron({ na: 0 });
+    else if (what === 'far') neuron({ pos: 330 });
+    else if (what === 'shunt') neuron({ inh: true });
+    else if (what === 'set') {
+      set(id, v);
+      const k = id.startsWith('cap') ? 'cap' : id.startsWith('h') ? 'circ' : id.startsWith('a') ? 'ais' : 'ion';
+      go(k);
+    }
+  }));
+})();
+</script>
+<script>
+// The floating bar's buttons follow the simulation crossing the middle of the screen.
+(() => {
+  const fire = document.getElementById('fbFire'), play = document.getElementById('fbPlay');
+  const cards = [['ion-card', 'synBtn', 'play'], ['cap-card', 'capFire', 'capPlay'], ['circ-card', 'hhFire', 'hhPlay'], ['ais-card', 'aFire', 'aPlay']].filter(cd => document.getElementById(cd[0]));
+  const update = () => {
+    let pick = cards[0];
+    for (const cd of cards) { const r = document.getElementById(cd[0]).parentElement.getBoundingClientRect(); if (r.top < innerHeight / 2) pick = cd; }
+    if (fire.dataset.copy !== pick[1]) fire.dataset.copy = pick[1];
+    if (play.dataset.copy !== pick[2]) play.dataset.copy = pick[2];
+  };
+  addEventListener('scroll', update, { passive: true }); addEventListener('resize', update);
+  update();
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

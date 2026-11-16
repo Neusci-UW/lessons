@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Chemical Synapse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as the other lessons: the synapse ion by ion on top, the same thing as a circuit below. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --ea:#c0287a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:80ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+/* page sections, intro, tabs, help and units: the same look as membrane_potential.html */
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+header p{max-width:90ch}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help h4{margin:0 0 4px;font-size:13.5px;font-weight:600}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* RC calculator, styled like the GHK calculator in membrane_potential.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.gr[hidden]{display:none}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;gap:16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500}
+.gion[hidden]{display:none}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:1100px){.top{grid-template-columns:1fr}}
+.cgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.qbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.qlab{white-space:nowrap}
+.qlab b{color:var(--ink);font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums;display:inline-block;min-width:5ch}
+.qlab:first-child b{text-align:right}
+.qtrack{position:relative;height:16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);overflow:hidden}
+.qtrack::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid var(--muted)}
+.qfill{position:absolute;top:0;bottom:0;width:0}
+#iqInBar{right:50%}
+#iqOutBar{left:50%}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+#sim{cursor:grab;touch-action:none}
+#sim.dragging{cursor:grabbing}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.toolbar .spacer{flex:1}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.cl{background:var(--cl)}.dot.syn{background:var(--syn)}.dot.ea{background:var(--ea)}.dot.k{background:var(--k)}.dot.na{background:var(--na)}.dot.a{background:var(--a);width:12px;height:12px}
+.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg);border-radius:2px}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.top.stacked{grid-template-columns:1fr}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.sgroup{display:flex;flex-direction:column;gap:10px}.sgroup[hidden]{display:none}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:92px minmax(0,1fr) 104px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+.row[hidden]{display:none}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+/* theory card, styled like the GHK derivation in membrane_potential.html */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+/* on/off switch for the ion simulation's Na⁺ channels: label, track, state in words */
+button.toggle{display:inline-flex;align-items:center;gap:10px;border:0;background:none;padding:4px 2px;font-weight:600}
+button.toggle .track{width:42px;height:24px;border-radius:12px;background:var(--muted);position:relative;transition:background .15s;flex:none}
+button.toggle .thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:left .15s}
+button.toggle[aria-checked="true"] .track{background:var(--on,var(--na))}
+button.toggle[aria-checked="true"] .thumb{left:21px}
+button.toggle .tstate{font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--muted);min-width:52px;text-align:left}
+@media (prefers-reduced-motion:reduce){button.toggle .track,button.toggle .thumb{transition:none}}
+/* a button that stays down while it is on (the circuit's current, or its Na⁺ channels), filled in its colour */
+button.latch[aria-pressed=true]{background:var(--on,var(--accent));border-color:var(--on,var(--accent));color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.charthead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+
+/* this page */
+:root{--ca:#9c7a12;--nt:#c0287a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ca:#e0bb5c;--nt:#f477b7}}
+:root[data-theme="dark"]{--ca:#e0bb5c;--nt:#f477b7}
+.dot.ca{background:var(--ca)}.dot.nt{background:var(--nt)}
+.cgrid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.cgrid.even{grid-template-columns:1fr}}
+.row.wide2{grid-template-columns:128px minmax(0,1fr) 104px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.chartcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.segrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+button:disabled{opacity:.45;cursor:default}
+</style>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbFire" data-copy="sFire" data-copy-also="cFire" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="sPlay" data-copy-also="cPlay"></button>
+</div>
+<div class="wrap">
+<header>
+  <h1>From one cell to the next: the chemical synapse</h1>
+  <p>A spike (lesson 4) runs to the end of the axon, but it cannot jump to the next cell: there is a gap, the synaptic cleft. Instead the spike opens Ca²⁺ channels, the Ca²⁺ that rushes in makes small bubbles of transmitter (vesicles) fuse with the membrane, and the transmitter crosses the gap and opens channels on the next cell. Those channels are one more conductance with its own battery, so, exactly as in lessons 1 and 2, they pull the next cell's voltage toward that battery.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>put the steps in order, spike → Ca²⁺ entry → vesicle fusion → transmitter in the cleft → receptor channels open → current → voltage change, and say what blocks each one</li>
+        <li>explain why release depends so steeply on Ca²⁺ outside the cell, and why each spike releases a different number of vesicles</li>
+        <li>calculate a synaptic current with Ohm's law, I<sub>syn</sub> = g<sub>syn</sub>(V − E<sub>rev</sub>), and find the reversal potential of a channel that passes both Na⁺ and K⁺</li>
+        <li>decide whether a synapse excites or inhibits from where its reversal potential sits compared with rest and threshold, not from the name of its transmitter</li>
+        <li>explain the NMDA receptor's Mg²⁺ block, and how a synapse's signal is ended</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-sytry="one">1 · One spike</button> Watch the spike open the Ca²⁺ channels, a few vesicles fuse, transmitter cross the cleft and AMPA channels open: a small EPSP in the next cell. Fire it again: a different number of vesicles each time.</li>
+    <li><button class="chip" data-sytry="noca">2 · No Ca²⁺ outside</button> The spike still arrives, but nothing is released.</li>
+    <li><button class="chip" data-sytry="train">3 · Five spikes in a row</button> Ca²⁺ left over from one spike helps the next release more, until the ready vesicles run out.</li>
+    <li><button class="chip" data-sytry="gaba">4 · Make it inhibitory</button> A GABA<sub>A</sub> synapse opens Cl⁻ channels. Their battery is below rest, so the next cell moves down, away from threshold.</li>
+    <li><button class="chip" data-sytry="sweep">5 · Find E<sub>rev</sub></button> Hold the next cell at a range of voltages: the AMPA current shrinks to nothing at 0 mV and flips sign beyond it.</li>
+    <li><button class="chip" data-sytry="nmda">6 · NMDA and Mg²⁺</button> The same sweep with NMDA receptors: at rest Mg²⁺ plugs them, and they only pass current once the cell is depolarized.</li>
+  </ol>
+</section>
+
+<!-- =================== Part 1: the synapse, ion by ion =================== -->
+<h3 class="part">1 · The synapse up close: spike, Ca²⁺, transmitter, channel</h3>
+<div class="top stacked">
+  <section class="card stage" id="syn-card">
+    <div class="tabs" role="tablist" aria-label="Synapse">
+      <button type="button" role="tab" id="tab-syn" aria-controls="pane-syn" aria-selected="true">Synapse</button>
+      <button type="button" role="tab" id="tab-synhelp" aria-controls="pane-synhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-synlook" aria-controls="pane-synlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-syn" aria-labelledby="tab-syn">
+      <canvas id="syn" aria-label="A presynaptic terminal above, the synaptic cleft, and a postsynaptic spine below, with Ca²⁺ channels, vesicles, transmitter and receptor channels"></canvas>
+      <div class="runbar">
+        <button id="sFire" class="primary">Fire spike</button>
+        <button id="sPlay" class="primary">Pause</button>
+        <button id="sReset">Reset</button>
+        <label for="sSpeed" class="runlab">Speed</label>
+        <input type="range" id="sSpeed" min="0" max="100" value="44">
+        <output id="sSpeedo" for="sSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot ca"></i>Ca²⁺</span>
+        <span><i class="dot nt"></i>transmitter</span>
+        <span><i class="dot na"></i>Na⁺</span>
+        <span><i class="dot k"></i>K⁺</span>
+        <span><i class="dot cl"></i>Cl⁻</span>
+        <span><i class="dot a"></i>Mg²⁺</span>
+        <span><i class="dot neg"></i>at rest</span><span><i class="dot pos"></i>depolarized</span>
+      </div>
+      <div class="cgrid even">
+        <div class="chartcol"><p class="sect-title">Presynaptic terminal: voltage</p><canvas id="sPreC" aria-label="Voltage of the presynaptic terminal over time"></canvas></div>
+        <div class="chartcol"><p class="sect-title">Ca²⁺ at the release sites, and each vesicle released</p><canvas id="sCaC" aria-label="Calcium concentration at the release sites over time, with a mark for each vesicle released"></canvas></div>
+        <div class="chartcol"><p class="sect-title">Next cell: synaptic current</p><canvas id="sIC" aria-label="Synaptic current in the next cell over time"></canvas></div>
+        <div class="chartcol"><p class="sect-title">Next cell: voltage</p><canvas id="sVC" aria-label="Voltage of the next cell over time"></canvas></div>
+      </div>
+      <p class="caption" id="sCap"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-synhelp" aria-labelledby="tab-synhelp" hidden>
+      <ul>
+        <li><b>The picture:</b> the end of the axon (the presynaptic terminal) at the top, the synaptic cleft in the middle, and a spine of the next cell's dendrite at the bottom. Each part is tinted by its voltage: blue at rest, red when depolarized.</li>
+        <li><b>On the terminal's lower membrane:</b> the yellow marks are voltage-gated Ca²⁺ channels; they split open while the spike passes. The circles above them are vesicles docked and ready to fuse, each full of transmitter. The vesicles farther up are the reserve, which refills empty docking sites.</li>
+        <li><b>On the spine:</b> the receptors, which are channels. Closed they are solid; open they split, with transmitter (a pink dot) bound on top. Ions flowing through an open channel are shown as dots in their own colour. A grey dot sitting in an NMDA channel is a Mg²⁺ ion plugging it.</li>
+        <li><b>Charts:</b> time runs from the last time you pressed Fire. The Ca²⁺ chart puts a pink tick at every vesicle that fuses. Current is negative when positive charge flows into the cell (inward), as electrophysiologists draw it.</li>
+        <li><b>Timing:</b> a real synapse does all of this in about a millisecond, so the simulation runs in slow motion; the speed is in milliseconds of synapse time per second of yours.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-synlook" aria-labelledby="tab-synlook" hidden>
+      <ul>
+        <li>Fire one spike several times. The Ca²⁺ rise is the same each time, but the number of vesicles that fuse is not: each docked vesicle has the same chance of fusing, and chance decides. The EPSP comes in steps, one vesicle's worth (a quantum) each.</li>
+        <li>Halve Ca²⁺ outside, from 2 to 1 mM: release falls far more than half, because a vesicle needs several Ca²⁺ ions bound at once to fuse. Double it to 4 mM and nearly every docked vesicle goes.</li>
+        <li>Fire five spikes 10 ms apart. Early spikes release more and more (facilitation, from the Ca²⁺ left over); with high Ca²⁺ outside the docked vesicles run out and later spikes release less (depression).</li>
+        <li>Slow the uptake of transmitter: it stays longer in the cleft, keeps binding receptors, and the current lasts longer. Block the receptors: everything before them still happens, but no current flows.</li>
+        <li>Switch to NMDA receptors: they open slowly and stay open long, but at rest most are plugged by Mg²⁺, so the current is small (part 2 shows why).</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Next cell's voltage</span>
+      <span class="vnum" id="sVnum">—</span>
+      <div class="vrow"><span>vesicles released by the last spike</span><b id="sRel">—</b></div>
+      <div class="vrow"><span>docked vesicles ready to fuse</span><b id="sReady">—</b></div>
+      <div class="vrow"><span>receptor channels open now</span><b id="sOpen">—</b></div>
+      <div class="vrow"><span>largest change since Fire</span><b id="sPeak">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The synapse</legend>
+      <div class="sgroup">
+        <span class="gtitle">Presynaptic terminal</span>
+        <div class="row wide2"><label for="sCa"><i class="dot ca"></i>Ca²⁺ outside</label><input type="range" id="sCa" min="0" max="4" step="0.1" value="2"><output id="sCao" for="sCa"></output>
+          <span class="hint">blood and brain fluid have about 1–2 mM</span></div>
+        <div class="row wide2"><label for="sN">Spikes</label><input type="range" id="sN" min="1" max="6" step="1" value="1"><output id="sNo" for="sN"></output></div>
+        <div class="row wide2"><label for="sDt">Interval</label><input type="range" id="sDt" min="3" max="100" step="1" value="10"><output id="sDto" for="sDt"></output></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Receptors on the next cell</span>
+        <div class="seg" role="group" aria-label="Receptor">
+          <button type="button" data-srec="ampa" aria-pressed="true">AMPA</button><button type="button" data-srec="nmda" aria-pressed="false">NMDA</button><button type="button" data-srec="gaba" aria-pressed="false">GABA<sub>A</sub></button><button type="button" data-srec="gly" aria-pressed="false">Glycine</button>
+        </div>
+        <span class="caption" id="sRecCap"></span>
+        <div class="row wide2"><label for="sR">Receptors</label><input type="range" id="sR" min="5" max="60" step="1" value="40"><output id="sRo" for="sR"></output></div>
+        <label class="check" for="sBlk"><input type="checkbox" id="sBlk">Block them with <span id="sBlkName">CNQX</span></label>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Clearing the cleft</span>
+        <div class="row wide2"><label for="sUp"><i class="dot nt"></i>Uptake speed</label><input type="range" id="sUp" min="-1" max="0.7" step="0.05" value="0"><output id="sUpo" for="sUp"></output>
+          <span class="hint">how fast transmitter is pumped away or broken down</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 2: the synapse as a circuit =================== -->
+<h3 class="part">2 · The synapse as a circuit: a conductance with its own battery</h3>
+<div class="top stacked">
+  <section class="card stage" id="circ-card">
+    <div class="tabs" role="tablist" aria-label="Circuit">
+      <button type="button" role="tab" id="tab-circ" aria-controls="pane-circ" aria-selected="true">Circuit</button>
+      <button type="button" role="tab" id="tab-circhelp" aria-controls="pane-circhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-circlook" aria-controls="pane-circlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-circ" aria-labelledby="tab-circ">
+      <div class="cgrid even">
+        <div class="ccol">
+          <canvas id="circ" aria-label="The next cell as a circuit: its capacitance, its resting conductance with the resting battery, and the synaptic conductance with its reversal battery"></canvas>
+          <div class="runbar">
+            <button id="cFire" class="primary">Fire spike</button>
+            <button id="cPlay" class="primary">Pause</button>
+            <button id="cSweep">Sweep the holding voltage</button>
+            <button id="cClear">Clear</button>
+            <label for="cSpeed" class="runlab">Speed</label>
+            <input type="range" id="cSpeed" min="0" max="100" value="62">
+            <output id="cSpeedo" for="cSpeed"></output>
+          </div>
+          <div class="segrow">
+            <span class="sect-title">Recording</span>
+            <div class="seg" role="group" aria-label="Recording mode">
+              <button type="button" data-cmode="cc" aria-pressed="true">Current clamp: watch V</button><button type="button" data-cmode="vc" aria-pressed="false">Voltage clamp: hold V</button>
+            </div>
+          </div>
+          <p class="caption" id="cCap"></p>
+        </div>
+        <div class="ccol">
+          <div class="chartcol"><p class="sect-title">Synaptic conductance g<sub>syn</sub></p><canvas id="cGC" aria-label="Synaptic conductance over time"></canvas></div>
+          <div class="chartcol"><p class="sect-title">Synaptic current I<sub>syn</sub> = g<sub>syn</sub>(V − E<sub>rev</sub>)</p><canvas id="cIC" aria-label="Synaptic current over time"></canvas></div>
+          <div class="chartcol"><p class="sect-title">Next cell's voltage</p><canvas id="cVC" aria-label="Voltage of the next cell over time"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-circhelp" aria-labelledby="tab-circhelp" hidden>
+      <ul>
+        <li><b>The circuit:</b> the next cell's membrane, as in lesson 2. The capacitor C stores charge; the resting conductance g<sub>rest</sub> with its battery E<sub>rest</sub> holds the cell at rest; the synapse adds a second conductance, g<sub>syn</sub>, with its own battery, the reversal potential E<sub>rev</sub>. The synaptic resistor darkens as more receptor channels open.</li>
+        <li><b>Arrows:</b> the current through each branch, pointing up when positive charge flows into the cell. Their length shows the size.</li>
+        <li><b>Current clamp</b> just watches V, as a microelectrode in the cell would. <b>Voltage clamp</b> adds an amplifier that holds V fixed at the holding voltage by supplying whatever current the synapse lets through, so the synaptic current can be measured directly.</li>
+        <li><b>Charts:</b> in voltage clamp each Fire adds a trace, labelled with its holding voltage, until you press Clear. The dashed line on the voltage chart is E<sub>rev</sub>; the dotted line is rest.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-circlook" aria-labelledby="tab-circlook" hidden>
+      <ul>
+        <li>The conductance g<sub>syn</sub> is the same whatever the voltage; the current is not. It is g<sub>syn</sub> times the driving force V − E<sub>rev</sub>, so it is large far from E<sub>rev</sub>, zero at E<sub>rev</sub>, and reverses beyond it. Sweep the holding voltage to see it.</li>
+        <li>In current clamp the voltage moves toward E<sub>rev</sub>, never past it. AMPA (E<sub>rev</sub> = 0 mV) pushes V up; GABA<sub>A</sub> and glycine (E<sub>rev</sub> ≈ −80 mV) pull it down.</li>
+        <li>Move E<sub>rev</sub> to −65 mV, a little above rest: the synapse now depolarizes the cell, but its pull stops well below threshold. That is shunting inhibition: it also makes the membrane leakier, so excitatory inputs move V less.</li>
+        <li>With NMDA, set the holding voltage to −70 mV, then −30 mV: the same conductance passes far more current at −30, because depolarization pushes the Mg²⁺ plug out. Take Mg²⁺ away and the block is gone at every voltage.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title" id="cVlab">Next cell's voltage</span>
+      <span class="vnum" id="cVnum">—</span>
+      <div class="vrow"><span>driving force V − E<sub>rev</sub></span><b id="cDrive">—</b></div>
+      <div class="vrow"><span>synaptic conductance / current now</span><b id="cNow">—</b></div>
+      <div class="vrow"><span id="cPeakLab">largest change in V</span><b id="cPeak">—</b></div>
+      <div class="vrow"><span>NMDA channels free of Mg²⁺</span><b id="cMgFree">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The circuit</legend>
+      <div class="sgroup">
+        <span class="gtitle">Synapse</span>
+        <div class="seg" role="group" aria-label="Receptor">
+          <button type="button" data-crec="ampa" aria-pressed="true">AMPA</button><button type="button" data-crec="nmda" aria-pressed="false">NMDA</button><button type="button" data-crec="gaba" aria-pressed="false">GABA<sub>A</sub></button><button type="button" data-crec="gly" aria-pressed="false">Glycine</button>
+        </div>
+        <div class="row wide2"><label for="cG"><i class="dot nt"></i>Peak g<sub>syn</sub></label><input type="range" id="cG" min="0.1" max="10" step="0.1" value="1"><output id="cGo" for="cG"></output>
+          <span class="hint">for one spike, all the synapse's open channels together</span></div>
+        <div class="row wide2"><label for="cE">E<sub>rev</sub></label><input type="range" id="cE" min="-100" max="20" step="1" value="0"><output id="cEo" for="cE"></output></div>
+        <div class="row wide2"><label for="cTd">Decay τ</label><input type="range" id="cTd" min="0.5" max="150" step="0.5" value="2"><output id="cTdo" for="cTd"></output>
+          <span class="hint">how long the channels stay open</span></div>
+        <div class="row wide2"><label for="cMg"><i class="dot a"></i>Mg²⁺ outside</label><input type="range" id="cMg" min="0" max="2" step="0.1" value="1"><output id="cMgo" for="cMg"></output>
+          <span class="hint">plugs NMDA channels only</span></div>
+        <div class="row wide2"><label for="cN">Spikes</label><input type="range" id="cN" min="1" max="6" step="1" value="1"><output id="cNo" for="cN"></output></div>
+        <div class="row wide2"><label for="cDt">Interval</label><input type="range" id="cDt" min="2" max="100" step="1" value="10"><output id="cDto" for="cDt"></output></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Next cell</span>
+        <div class="row wide2"><label for="cVh">Holding V</label><input type="range" id="cVh" min="-100" max="40" step="1" value="-70"><output id="cVho" for="cVh"></output>
+          <span class="hint">voltage clamp holds V here; current clamp brings rest here with a steady current</span></div>
+        <div class="row wide2"><label for="cGr">Resting g</label><input type="range" id="cGr" min="1" max="20" step="0.5" value="2.5"><output id="cGro" for="cGr"></output>
+          <span class="hint">E<sub>rest</sub> = −70 mV, C = 50 pF</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Real units</p>
+      <dl class="unitlist">
+        <dt>mV</dt><dd>millivolts, for voltage. V is the inside measured relative to the outside.</dd>
+        <dt>ms</dt><dd>milliseconds, for time. Transmitter is released and cleared in about a millisecond; AMPA currents last a few ms, NMDA currents about 100 ms.</dd>
+        <dt>mM, µM</dt><dd>millimolar and micromolar, for concentration. Ca²⁺ is about 2 mM outside a cell but only 0.1 µM inside at rest, 20 000 times less; near an open Ca²⁺ channel it briefly reaches tens of µM.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">For one synapse on one cell</p>
+      <dl class="unitlist">
+        <dt>nS</dt><dd>nanosiemens, for conductance (1/resistance). One receptor channel is about 10–50 pS (picosiemens); a synapse's open channels together reach about 1 nS.</dd>
+        <dt>pA</dt><dd>picoamps, for current. 1 nS × 70 mV = 70 pA. Negative when positive charge flows into the cell.</dd>
+        <dt>pF</dt><dd>picofarads, for the whole cell's capacitance (lesson 2's µF/cm² times its area). pA / pF = mV/ms: 50 pA into 50 pF changes V by 1 mV every ms.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="syntheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Spike to release</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">Transmitters and receptors</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">The synaptic current</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Excitatory or inhibitory?</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Ending the signal</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <h3>Ca²⁺ is the trigger</h3>
+      <p>The membrane of the axon's terminal has voltage-gated Ca²⁺ channels, packed into the <em>active zone</em> right next to the docked vesicles. They open when the spike depolarizes the terminal. Ca²⁺ has a huge driving force into the cell: about 2 mM outside against 0.1 µM inside, so its Nernst potential is around +120 mV, and at any voltage the cell reaches Ca²⁺ flows in.</p>
+      <div class="eq">\[ E_\mathrm{Ca} = \frac{RT}{2F}\ln\frac{[\mathrm{Ca^{2+}}]_\mathrm{out}}{[\mathrm{Ca^{2+}}]_\mathrm{in}} \approx 12.9\ \mathrm{mV} \times \ln\frac{2\ \mathrm{mM}}{0.0001\ \mathrm{mM}} \approx +128\ \mathrm{mV} \]</div>
+      <p>The Ca²⁺ that comes in stays near the channel for well under a millisecond before it spreads out and is pumped away, so only vesicles docked right beside the channels are triggered. Ca²⁺ binds a sensor protein on each vesicle (synaptotagmin), which pulls the vesicle and the cell membranes together until they fuse and the transmitter spills into the cleft.</p>
+      <h3>Why release is so steep</h3>
+      <p>A vesicle fuses only when several Ca²⁺ ions, about four, are bound to its sensor at once. So the rate of release goes roughly as the fourth power of the Ca²⁺ concentration:</p>
+      <div class="eq">\[ \text{release rate} \propto [\mathrm{Ca^{2+}}]^4 \]</div>
+      <p>Halve the Ca²⁺ and release falls by about 2<sup>4</sup> = 16 times. This is why Ca²⁺ outside the cell matters so much for transmission, and why a drug that blocks only some of the terminal's Ca²⁺ channels can stop a synapse almost completely.</p>
+      <h3>Quanta: release comes in packets</h3>
+      <p>Each vesicle holds a few thousand transmitter molecules, and a vesicle either fuses or does not. So the response of the next cell comes in steps of one vesicle's worth, a <em>quantum</em> of size q. Each of the n docked vesicles fuses with some probability p, so a spike releases on average n·p vesicles, and the average response is</p>
+      <div class="eq">\[ \text{average response} = n \cdot p \cdot q \]</div>
+      <p>The number released changes from spike to spike by chance, which is why the same spike gives EPSPs of different sizes, and sometimes none at all.</p>
+      <details class="fullderiv">
+        <summary>Show where the steps and failures come from</summary>
+        <p>If each of the n docked vesicles fuses independently with probability p, the number that fuse, k, follows the binomial distribution:</p>
+        <div class="eq">\[ P(k) = \binom{n}{k}\,p^k\,(1-p)^{n-k}, \qquad P(0) = (1-p)^n \]</div>
+        <p>With n = 10 and p = 0.3, P(0) = 0.7<sup>10</sup> ≈ 3%: about one spike in thirty releases nothing (a failure). Lower Ca²⁺ outside lowers p, and failures become common. Del Castillo and Katz used exactly this, at the frog neuromuscular junction in low Ca²⁺, to show that release is quantal.</p>
+      </details>
+      <h3>Facilitation and depression</h3>
+      <p>Some Ca²⁺ is still left in the terminal tens of milliseconds after a spike. A second spike soon after adds its Ca²⁺ on top, and because of the fourth power, a little extra Ca²⁺ raises release a lot: <em>facilitation</em>. But each fused vesicle leaves an empty docking site that takes a few hundred milliseconds to refill, so a fast train eventually runs out of ready vesicles: <em>depression</em>. Which wins depends on p: synapses with low p facilitate, synapses with high p depress.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sytry="set:sCa:1">Ca²⁺ outside 1 mM</button> Half the Ca²⁺: many spikes release nothing.</p>
+      <p><button class="chip" data-sytry="set:sCa:4">Ca²⁺ outside 4 mM</button> Nearly every docked vesicle fuses.</p>
+      <p><button class="chip" data-sytry="train">Five spikes, 10 ms apart</button> Facilitation from the leftover Ca²⁺.</p>
+      <p><button class="chip" data-sytry="deplete">Five spikes at 4 mM</button> High p: the ready vesicles run out, and later spikes release less.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <h3>Receptors that are channels</h3>
+      <p>The receptors in this lesson are <em>ionotropic</em>: the receptor is itself an ion channel, and binding transmitter opens it within a fraction of a millisecond. Other receptors are <em>metabotropic</em> (G-protein-coupled): binding starts a chain of reactions inside the cell that may open or close channels later, over tens of milliseconds to seconds. Most transmitters have both kinds.</p>
+      <table class="map">
+        <tr><th>Receptor</th><th>Transmitter</th><th>Lets through</th><th>E<sub>rev</sub></th><th>Open for</th><th>Blocked by</th></tr>
+        <tr><td>AMPA</td><td>glutamate</td><td>Na⁺ and K⁺</td><td>≈ 0 mV</td><td>a few ms</td><td>CNQX</td></tr>
+        <tr><td>NMDA</td><td>glutamate (with glycine as a co-agonist)</td><td>Na⁺, K⁺ and Ca²⁺; plugged by Mg²⁺ at rest</td><td>≈ 0 mV</td><td>about 100 ms</td><td>APV</td></tr>
+        <tr><td>Nicotinic ACh</td><td>acetylcholine</td><td>Na⁺ and K⁺</td><td>≈ 0 mV</td><td>a few ms</td><td>curare</td></tr>
+        <tr><td>GABA<sub>A</sub></td><td>GABA</td><td>Cl⁻ (and some HCO₃⁻)</td><td>≈ −70 to −80 mV</td><td>10–20 ms</td><td>bicuculline</td></tr>
+        <tr><td>Glycine</td><td>glycine</td><td>Cl⁻</td><td>≈ −70 to −80 mV</td><td>5–10 ms</td><td>strychnine</td></tr>
+      </table>
+      <p>Glutamate is the brain's main excitatory transmitter, GABA its main inhibitory one, glycine an inhibitory one in the spinal cord and brainstem, and acetylcholine the transmitter from motor neurons to muscle. Strychnine poisoning causes convulsions because it removes the spinal cord's glycine inhibition; benzodiazepines calm because they make GABA<sub>A</sub> channels open more.</p>
+      <p>A receptor's speed comes from how long transmitter stays bound and the channel stays open. AMPA lets go of glutamate in a millisecond or two; NMDA holds on for about a hundred. The circuit's decay τ is that time.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sytry="srec:nmda">NMDA receptors</button> Slow to open, slow to close, and mostly plugged at rest.</p>
+      <p><button class="chip" data-sytry="srec:gaba">GABA<sub>A</sub> receptors</button> Cl⁻ channels: a small current at rest, outward.</p>
+      <p><button class="chip" data-sytry="block">Block the receptors</button> Release goes on as before; nothing happens in the next cell.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <h3>Ohm's law again</h3>
+      <p>An open receptor channel is a conductance like any other (lesson 1), and the current through it is the conductance times the driving force, the distance from the voltage to the channel's battery:</p>
+      <div class="eq">\[ I_\mathrm{syn} = g_\mathrm{syn}(t)\,\bigl(V - E_\mathrm{rev}\bigr) \]</div>
+      <p>The transmitter sets g<sub>syn</sub>(t): it rises as channels open and falls as they close. The battery E<sub>rev</sub>, the <em>reversal potential</em>, is set by which ions the channel lets through. At V = E<sub>rev</sub> the channel can be wide open and pass no net current; past it, the current reverses. That is how E<sub>rev</sub> is measured: voltage-clamp the cell at several voltages and find where the current changes sign.</p>
+      <h3>A channel for two ions</h3>
+      <p>AMPA and nicotinic channels let through both Na⁺ (E<sub>Na</sub> ≈ +60 mV) and K⁺ (E<sub>K</sub> ≈ −90 mV). Inside the channel the two ions are two conductances side by side, each pulling toward its own battery, and the channel settles where their currents cancel: the conductance-weighted average, the same chord-conductance formula as for the resting voltage in lesson 1.</p>
+      <div class="eq">\[ E_\mathrm{rev} = \frac{g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{K}E_\mathrm{K}}{g_\mathrm{Na} + g_\mathrm{K}} \]</div>
+      <p>With g<sub>Na</sub> about 1.5 times g<sub>K</sub>, E<sub>rev</sub> = (1.5 × 60 − 90) / 2.5 = 0 mV. Use the calculator below to try other mixes.</p>
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>At the reversal potential the Na⁺ and K⁺ currents through the channel add to zero:</p>
+        <div class="eq">\[ g_\mathrm{Na}(E_\mathrm{rev} - E_\mathrm{Na}) + g_\mathrm{K}(E_\mathrm{rev} - E_\mathrm{K}) = 0 \]</div>
+        <p>Collect the terms with E<sub>rev</sub>:</p>
+        <div class="eq">\[ E_\mathrm{rev}\,(g_\mathrm{Na} + g_\mathrm{K}) = g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{K}E_\mathrm{K} \]</div>
+        <p>and divide. Below E<sub>rev</sub> more Na⁺ flows in than K⁺ flows out, a net inward current; above it the opposite.</p>
+      </details>
+      <h3>From current to voltage</h3>
+      <p>In the next cell, the synaptic current joins lesson 2's circuit: it either charges the capacitor, moving V, or leaks back out through the resting conductance.</p>
+      <div class="eq">\[ C\,\frac{dV}{dt} = -\,g_\mathrm{rest}(V - E_\mathrm{rest}) \;-\; g_\mathrm{syn}(t)\,(V - E_\mathrm{rev}) \]</div>
+      <p>So V moves from rest toward E<sub>rev</sub>, but only part of the way: g<sub>syn</sub> is small and brief, and the resting conductance pulls back. A single synapse typically moves V by well under a millivolt to a few millivolts. Summation (lesson 6) is how many of them add up.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sytry="sweep">Sweep the holding voltage</button> The current shrinks to zero at E<sub>rev</sub> = 0 mV and reverses above it.</p>
+      <p><button class="chip" data-sytry="hold0">Hold at 0 mV</button> The channels open just the same, but no current flows.</p>
+      <p><button class="chip" data-sytry="set:cG:6">Peak g<sub>syn</sub> 6 nS</button> A bigger synapse: V goes much closer to E<sub>rev</sub>.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <h3>It is the battery that decides</h3>
+      <p>A synapse pulls V toward its E<sub>rev</sub>. Whether that excites or inhibits depends on where E<sub>rev</sub> sits compared with the threshold for a spike (about −55 mV), not on the transmitter's name:</p>
+      <ul>
+        <li><b>E<sub>rev</sub> above threshold</b> (AMPA, NMDA, nicotinic: 0 mV): the synapse pushes V up toward threshold. An <em>excitatory</em> postsynaptic potential, EPSP.</li>
+        <li><b>E<sub>rev</sub> below rest</b> (GABA<sub>A</sub>, glycine in a mature neuron: about −80 mV): V is pulled down, away from threshold. An <em>inhibitory</em> postsynaptic potential, IPSP.</li>
+        <li><b>E<sub>rev</sub> between rest and threshold</b>: V moves up a little, yet the synapse still inhibits. It cannot push V past its own E<sub>rev</sub>, which is below threshold, and while its channels are open the membrane is leakier, so excitatory currents leak away instead of charging the capacitor. This is <em>shunting inhibition</em>.</li>
+      </ul>
+      <p>The same transmitter can do different things in different cells. Young neurons keep more Cl⁻ inside, so their E<sub>Cl</sub> is above rest and GABA depolarizes them; as they mature they start pumping Cl⁻ out and GABA becomes inhibitory.</p>
+      <h3>NMDA: a receptor that needs two things at once</h3>
+      <p>At rest the NMDA channel's pore is plugged by a Mg²⁺ ion from outside, pulled in by the negative inside of the cell. Depolarization pushes it out. So the channel passes current only when glutamate is bound <em>and</em> the cell is already depolarized, for instance by its AMPA receptors or other synapses. The fraction of channels free of Mg²⁺ is close to</p>
+      <div class="eq">\[ B(V) = \frac{1}{1 + \dfrac{[\mathrm{Mg^{2+}}]}{3.57\ \mathrm{mM}}\, e^{-0.062\,V/\mathrm{mV}}} \]</div>
+      <p>about 6% at −70 mV with 1 mM Mg²⁺, and 45% at −20 mV. NMDA channels also let in Ca²⁺, which inside the spine switches on the enzymes that strengthen a synapse (long-term potentiation), so this coincidence detector is a key part of learning and memory.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sytry="gaba">GABA<sub>A</sub>, current clamp</button> An IPSP: V moves down toward −80 mV.</p>
+      <p><button class="chip" data-sytry="shunt">E<sub>rev</sub> = −65 mV</button> A depolarizing synapse that still stops below threshold.</p>
+      <p><button class="chip" data-sytry="nmda">Sweep NMDA</button> Tiny currents near rest, big ones once depolarized.</p>
+      <p><button class="chip" data-sytry="nomg">NMDA without Mg²⁺</button> Unplugged: a straight-line current like AMPA's.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <h3>Clearing the cleft</h3>
+      <p>For a synapse to signal the next spike, the transmitter from this one has to go. Three things remove it:</p>
+      <ul>
+        <li><b>Diffusion</b> out of the narrow cleft, about 20 nm wide.</li>
+        <li><b>Uptake</b>: transporters in the terminal and in nearby glial cells pump glutamate, GABA, dopamine, serotonin and noradrenaline back in. Many drugs act here: SSRI antidepressants block serotonin uptake, and cocaine blocks dopamine uptake, so the transmitter lingers.</li>
+        <li><b>Breakdown</b>: at the neuromuscular junction acetylcholinesterase splits acetylcholine within a millisecond. Anticholinesterases (neostigmine, used in myasthenia gravis; nerve agents, as poisons) slow this, so acetylcholine keeps acting.</li>
+      </ul>
+      <p>How long the current lasts is set by whichever is slower: clearing the transmitter or the receptor letting go of it. AMPA receptors let go fast, so clearing matters; NMDA receptors hold on for about 100 ms whatever the cleft does.</p>
+      <h3>Keeping the terminal going</h3>
+      <p>A fused vesicle's membrane is taken back into the terminal (endocytosis), refilled with transmitter and docked again, which takes from seconds to tens of seconds; a reserve pool of full vesicles covers the gap. Ca²⁺ is pumped back out of the terminal, so the next spike starts from a low Ca²⁺ again.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sytry="set:sUp:-0.7">Slow uptake (0.2×)</button> Transmitter lingers; the AMPA current lasts longer.</p>
+      <p><button class="chip" data-sytry="set:sUp:0.6">Fast uptake (4×)</button> The current is shorter and smaller.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Fatt P, Katz B (1951).</b> An analysis of the end-plate potential recorded with an intracellular electrode. <i>Journal of Physiology</i> 115:320–370. <a href="https://doi.org/10.1113/jphysiol.1951.sp004675" target="_blank" rel="noopener">doi:10.1113/jphysiol.1951.sp004675</a><br><span class="why">The synaptic potential at the neuromuscular junction, recorded from inside the muscle fibre.</span></li>
+        <li><b>del Castillo J, Katz B (1954).</b> Quantal components of the end-plate potential. <i>Journal of Physiology</i> 124:560–573. <a href="https://doi.org/10.1113/jphysiol.1954.sp005129" target="_blank" rel="noopener">doi:10.1113/jphysiol.1954.sp005129</a><br><span class="why">Release comes in packets of fixed size, with chance deciding how many: the quantal hypothesis and n·p·q.</span></li>
+        <li><b>Takeuchi A, Takeuchi N (1960).</b> On the permeability of end-plate membrane during the action of transmitter. <i>Journal of Physiology</i> 154:52–67. <a href="https://doi.org/10.1113/jphysiol.1960.sp006564" target="_blank" rel="noopener">doi:10.1113/jphysiol.1960.sp006564</a><br><span class="why">Voltage clamp of the synaptic current: one channel type passing both Na⁺ and K⁺, reversing near 0 mV.</span></li>
+        <li><b>Katz B, Miledi R (1967).</b> The timing of calcium action during neuromuscular transmission. <i>Journal of Physiology</i> 189:535–544. <a href="https://doi.org/10.1113/jphysiol.1967.sp008183" target="_blank" rel="noopener">doi:10.1113/jphysiol.1967.sp008183</a><br><span class="why">Ca²⁺ must be present outside at the moment the spike arrives for transmitter to be released.</span></li>
+        <li><b>Dodge FA, Rahamimoff R (1967).</b> Co-operative action of calcium ions in transmitter release at the neuromuscular junction. <i>Journal of Physiology</i> 193:419–432. <a href="https://doi.org/10.1113/jphysiol.1967.sp008367" target="_blank" rel="noopener">doi:10.1113/jphysiol.1967.sp008367</a><br><span class="why">Release rises as about the fourth power of Ca²⁺: the steep dependence the simulation uses.</span></li>
+        <li><b>Nowak L, Bregestovski P, Ascher P, Herbet A, Prochiantz A (1984).</b> Magnesium gates glutamate-activated channels in mouse central neurones. <i>Nature</i> 307:462–465. <a href="https://doi.org/10.1038/307462a0" target="_blank" rel="noopener">doi:10.1038/307462a0</a>; and <b>Mayer ML, Westbrook GL, Guthrie PB (1984).</b> Voltage-dependent block by Mg²⁺ of NMDA responses in spinal cord neurones. <i>Nature</i> 309:261–263. <a href="https://doi.org/10.1038/309261a0" target="_blank" rel="noopener">doi:10.1038/309261a0</a><br><span class="why">The two papers that found the NMDA channel's Mg²⁺ block.</span></li>
+        <li><b>Jahr CE, Stevens CF (1990).</b> Voltage dependence of NMDA-activated macroscopic conductances predicted by single-channel kinetics. <i>Journal of Neuroscience</i> 10:3178–3182. <a href="https://doi.org/10.1523/JNEUROSCI.10-09-03178.1990" target="_blank" rel="noopener">doi:10.1523/JNEUROSCI.10-09-03178.1990</a><br><span class="why">The formula for the fraction of NMDA channels free of Mg²⁺, B(V), used here.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="syn-calc">
+  <div class="calc-head">
+    <span class="sect-title">Synaptic current calculator</span>
+    <div class="seg" role="group" aria-label="Channel">
+      <button type="button" data-kkind="cat" aria-pressed="true">Na⁺/K⁺ channel (AMPA, NMDA, nicotinic)</button><button type="button" data-kkind="cl" aria-pressed="false">Cl⁻ channel (GABA<sub>A</sub>, glycine)</button>
+    </div>
+  </div>
+  <p class="caption">Set the channel's ions, the synapse's conductance and the cell's voltage, and see the reversal potential, the current, and whether the synapse excites or inhibits.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion" id="kCatBox">
+        <div class="gh"><i class="dot na"></i><i class="dot k"></i> The channel's ions</div>
+        <div class="gr"><label for="kR">g<sub>Na</sub>/g<sub>K</sub></label><input type="range" id="kR" min="-1" max="1" step="0.01" value="0.18"><output id="kRo" for="kR"></output></div>
+        <div class="gr"><label for="kENa">E<sub>Na</sub></label><input type="range" id="kENa" min="30" max="90" step="1" value="60"><output id="kENao" for="kENa"></output></div>
+        <div class="gr"><label for="kEK">E<sub>K</sub></label><input type="range" id="kEK" min="-110" max="-60" step="1" value="-90"><output id="kEKo" for="kEK"></output></div>
+        <label class="check" for="kMg"><input type="checkbox" id="kMg">NMDA: plugged by 1 mM Mg²⁺</label>
+      </div>
+      <div class="gion" id="kClBox" hidden>
+        <div class="gh"><i class="dot cl"></i> The channel's ion</div>
+        <div class="gr"><label for="kECl">E<sub>Cl</sub></label><input type="range" id="kECl" min="-100" max="-40" step="1" value="-80"><output id="kEClo" for="kECl"></output></div>
+        <span class="caption">about −80 mV in a mature neuron, which pumps Cl⁻ out; above −60 mV in a young one</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot nt"></i> The synapse</div>
+        <div class="gr"><label for="kG">g<sub>syn</sub></label><input type="range" id="kG" min="0" max="10" step="0.1" value="1"><output id="kGo" for="kG"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">The next cell</div>
+        <div class="gr"><label for="kV">V</label><input type="range" id="kV" min="-100" max="40" step="1" value="-70"><output id="kVo" for="kV"></output></div>
+        <div class="gr"><label for="kRest">Rest</label><input type="range" id="kRest" min="-90" max="-55" step="1" value="-70"><output id="kResto" for="kRest"></output></div>
+        <div class="gr"><label for="kThr">Threshold</label><input type="range" id="kThr" min="-65" max="-35" step="1" value="-55"><output id="kThro" for="kThr"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kI">—</span><span class="caption" id="kIcap">synaptic current at V</span></div>
+      <div class="es"><span>E<sub>rev</sub> <b id="kErev">—</b></span><span>driving force <b id="kDrive">—</b></span><span>channels free of Mg²⁺ <b id="kB">—</b></span></div>
+      <div class="es"><span>effect: <b id="kEffect">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator charts">
+        <button type="button" role="tab" id="tab-kiv" aria-controls="pane-kiv" aria-selected="true">Current vs voltage</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kiv" aria-labelledby="tab-kiv">
+        <canvas id="kIV" aria-label="Synaptic current against the cell's voltage, crossing zero at the reversal potential"></canvas>
+        <p class="caption" id="kCap"></p>
+      </div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li><b>The line:</b> the synaptic current at every voltage, with this conductance. It crosses zero at E<sub>rev</sub>: below it the current is inward (negative, depolarizing), above it outward.</li>
+          <li><b>The dot</b> is the voltage set above. The dotted lines mark rest and threshold.</li>
+          <li>With the Mg²⁺ block on, the line bends toward zero at negative voltages: the conductance itself shrinks as Mg²⁺ plugs the channels. The dashed line is the same synapse without Mg²⁺.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<script>
+// ---------- shared: colours, number formats, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','syn','ea','a','pos','neg','cyto','bath','mem','memdark','ca','nt'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const fmtSigned = (v, d = 1, u = ' mV') => isFinite(v) ? (+v.toFixed(d) > 0 ? '+' : +v.toFixed(d) < 0 ? '−' : '') + Math.abs(v).toFixed(d) + u : '—';
+function setupCanvas(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; }
+function bindRange(id, fmt, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmt(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// Canvas text with subscripts: "I_Na" draws I with a subscript Na (the letters and digits after
+// the underscore), in the current font, size and alignment.
+function fillSub(c, text, x, y) {
+  if (!text.includes('_')) { c.fillText(text, x, y); return; }
+  const parts = [], re = /_([A-Za-z0-9∞]+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { parts.push([text.slice(last, m.index), false], [m[1], true]); last = re.lastIndex; }
+  parts.push([text.slice(last), false]);
+  const font = c.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]);
+  const subFont = font.replace(/[\d.]+px/, (size * 0.72).toFixed(1) + 'px');
+  const w = parts.map(([t, sub]) => { c.font = sub ? subFont : font; return c.measureText(t).width; });
+  const total = w.reduce((a, b) => a + b, 0), align = c.textAlign;
+  let px = align === 'center' ? x - total / 2 : align === 'right' || align === 'end' ? x - total : x;
+  c.textAlign = 'left';
+  parts.forEach(([t, sub], i) => { c.font = sub ? subFont : font; c.fillText(t, px, y + (sub ? size * 0.28 : 0)); px += w[i]; });
+  c.font = font; c.textAlign = align;
+}
+function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+
+// A line chart: series share an x array; shade marks spans where `on` is true; refs are horizontal lines.
+// The y range is fixed (o.fixed), so the scale never moves; values beyond it run along the edge.
+const CHW = 640, CHH = 340;
+// For a dashed series: is the stretch of line starting at data value x drawn? Dashes are fixed to the data
+// (dash and gap lengths in pixels, converted to x units), so they scroll with the line instead of crawling along it.
+function dashedAt(dash, x0, x1, pw) {
+  if (!dash) return () => true;
+  const per = (dash[0] + dash[1]) * (x1 - x0) / pw, on = dash[0] / (dash[0] + dash[1]);
+  return x => ((x / per) % 1 + 1) % 1 < on;
+}
+function drawChart(c, o) {
+  const W = o.w || CHW, H = o.h || CHH;   // logical size; defaults to CHW × CHH
+  const key = o.key || 11;                // font size of the series labels at the right
+  const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  const [lo, hi] = o.fixed;               // every chart has a fixed y range
+  const x0 = o.x0, x1 = o.x1;
+  const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
+  // shading
+  if (o.on && o.xs.length > 1) {
+    c.fillStyle = C.na; c.globalAlpha = 0.10;
+    let a = -1;
+    for (let i = 0; i <= o.xs.length; i++) {
+      const on = i < o.xs.length && o.on[i];
+      if (on && a < 0) a = i;
+      if (!on && a >= 0) { const xa = sx(o.xs[a]), xb = sx(o.xs[i - 1]); c.fillRect(Math.max(L, xa), T, Math.min(L + pw, xb) - Math.max(L, xa), ph); a = -1; }
+    }
+    c.globalAlpha = 1;
+  }
+  // grid
+  const stp = niceStep((hi - lo) / 5);
+  c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.textAlign = 'right';
+  for (let v = Math.ceil(lo / stp) * stp; v <= hi + 1e-9; v += stp) {
+    const y = sy(v); c.strokeStyle = C.line; c.lineWidth = Math.abs(v) < stp / 1e3 ? 1.4 : 0.8;
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke();
+    c.fillStyle = C.muted; c.fillText((Math.abs(v) < stp / 1e3 ? 0 : +v.toPrecision(4)) + '', L - 6, y);
+  }
+  c.save(); c.translate(14, T + ph / 2); c.rotate(-Math.PI / 2); c.textAlign = 'center'; c.fillText(o.ylabel, 0, 0); c.restore();
+  c.textAlign = 'left'; c.fillText(o.xlabel, L, H - 9);
+  // reference lines
+  const labels = [];
+  for (const r of o.refs || []) {
+    if (!isFinite(r.v)) continue;
+    const y = sy(r.v);
+    c.strokeStyle = r.color; c.lineWidth = r.width || 1.2; c.setLineDash(r.dash || [6, 4]);
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.setLineDash([]);
+    labels.push({ y, t: r.label, c: r.color });
+  }
+  // series
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  for (const s of o.series) {
+    if (o.xs.length < 2) break;
+    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round';
+    c.beginPath();
+    // A dashed line is dashed by its own x values, not by canvas dashes: those are measured from where the path
+    // starts, which moves as the chart scrolls, so the dashes would crawl along the line.
+    const on = dashedAt(s.dash, x0, x1, pw);
+    // with o.restart, a line starts afresh where `on` changes (counts that reset there)
+    for (let i = 0; i < o.xs.length; i++) {
+      const x = sx(o.xs[i]), y = sy(s.ys[i]);
+      i && on(o.xs[i - 1]) && !(o.restart && o.on[i] !== o.on[i - 1]) ? c.lineTo(x, y) : c.moveTo(x, y);
+    }
+    c.stroke();
+    if (s.label) labels.push({ y: sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color });
+  }
+  c.restore();
+  labels.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < key + 2) labels[i].y = labels[i - 1].y + key + 2;
+  c.font = `600 ${key}px "IBM Plex Sans", sans-serif`; c.textAlign = 'left';
+  labels.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, L + pw + 6, Math.max(T + 4, Math.min(H - 6, l.y))); });
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
+  c.textBaseline = 'alphabetic';
+}
+function chipGroup(attr, onPick) {
+  const bs = document.querySelectorAll(`[data-${attr}]`);
+  bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(b.dataset[attr]); }));
+}
+
+// =====================================================================================
+// Shared numbers for both simulations. Units: mV, ms, nS, pA, pF (pA / pF = mV/ms).
+// =====================================================================================
+const E_REST = -70, C_CELL = 50;                       // the next cell: rest and capacitance
+const mgFree = (V, mg) => 1 / (1 + mg / 3.57 * Math.exp(-0.062 * V));   // Jahr & Stevens (1990)
+const fmtSpeed = v => (v < 1 ? v.toFixed(2) : v < 10 ? v.toFixed(1) : v.toFixed(0)) + ' ms per s';
+const speedOf = v => 0.2 * Math.pow(500, v / 100);     // slider 0–100 → 0.2–100 ms of synapse time per second
+const fmtPA = (v, d = 1) => isFinite(v) ? (v >= 0 ? (v > 0 ? '+' : '') : '−') + Math.abs(v).toFixed(d) + ' pA' : '—';
+const niceUp = v => { const s = niceStep(v); return Math.ceil(v / s - 1e-9) * s; };
+// chart geometry, matching drawChart: where data x and y land, for marks drawn on top of a chart
+function chartGeom(o) {
+  const W = o.w || CHW, H = o.h || CHH, L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;
+  const [lo, hi] = o.fixed;
+  return { L, T, pw, ph, sx: x => L + (x - o.x0) / (o.x1 - o.x0) * pw, sy: v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph };
+}
+// every n-th point, so long traces stay quick to draw
+function thin(xs, yss, max = 1400) {
+  const k = Math.max(1, Math.ceil(xs.length / max));
+  if (k === 1) return [xs, yss];
+  const keep = (a) => a.filter((_, i) => i % k === 0 || i === a.length - 1);
+  return [keep(xs), yss.map(keep)];
+}
+
+// =====================================================================================
+// Part 1: the synapse, vesicle by vesicle and channel by channel.
+// Presynaptic: a stereotyped spike opens Ca²⁺ channels; Ca²⁺ at the release sites has a fast part (the
+// cloud around open channels, gone in 0.5 ms) and a slow residual part (40 ms). Each docked vesicle fuses
+// at a rate ∝ Ca⁴/(Ca⁴ + Kd⁴) (Dodge & Rahamimoff), by chance; an empty site refills by chance (τ 150 ms).
+// Cleft: each vesicle adds one unit of transmitter, cleared with τ 1.2 ms / uptake speed.
+// Receptors: each one by chance, free → open at rate α·T (NMDA: free → bound → open), open → free at β.
+// Next cell: one compartment, C dV/dt = −g_rest(V − E_rest) − n_open·γ·B(V)·(V − E_rev).
+// =====================================================================================
+(() => {
+  const SITES = 10, REFILL = 150, KD = 25, KMAX = 6, K_IN = 95, K_RES = 4, GAM = 0.025, G_REST = 2.5, DT = 0.01;
+  const REC = {
+    ampa: { name: 'AMPA', tx: 'glutamate', ions: 'cat', E: 0, a: 0.5, b: 1 / 2, blocker: 'CNQX', win: 50,
+            cap: 'Glutamate opens Na⁺/K⁺ channels for a few ms. E_rev ≈ 0 mV: excitatory.' },
+    nmda: { name: 'NMDA', tx: 'glutamate', ions: 'cat', E: 0, a: 0.25, ko: 0.2, b: 1 / 60, blocker: 'APV', win: 250, mg: true,
+            cap: 'Glutamate opens Na⁺/K⁺/Ca²⁺ channels for about 100 ms, but at rest Mg²⁺ plugs most of them. E_rev ≈ 0 mV.' },
+    gaba: { name: 'GABA_A', tx: 'GABA', ions: 'cl', E: -80, a: 0.5, b: 1 / 8, blocker: 'bicuculline', win: 100,
+            cap: 'GABA opens Cl⁻ channels for about 10 ms. E_rev ≈ −80 mV, below rest: inhibitory.' },
+    gly:  { name: 'glycine', tx: 'glycine', ions: 'cl', E: -80, a: 0.5, b: 1 / 5, blocker: 'strychnine', win: 80,
+            cap: 'Glycine opens Cl⁻ channels for a few ms. E_rev ≈ −80 mV: inhibitory.' },
+  };
+  const P = { cao: 2, n: 1, dt: 10, rec: 'ampa', nR: 40, block: false, up: 1, speed: speedOf(44) };
+  let S, playing = true;
+  const preV = s => {   // one presynaptic spike, s ms after it starts (rest −70 mV, peak +30 mV, small undershoot)
+    if (s < 0) return -70;
+    let v = -70 + 100 * Math.exp(-(((s - 0.6) / 0.28) ** 2));
+    if (s > 0.9) v -= 12 * (1 - Math.exp(-(s - 0.9) / 0.3)) * Math.exp(-(s - 0.9) / 4);
+    return v;
+  };
+  // the picture's layout (logical pixels)
+  const W = 960, H = 400, AZ = 160, CT = 160, CB = 214;            // active zone membrane, cleft top and bottom
+  const siteX = i => 290 + i * (380 / (SITES - 1));
+  const caChX = i => (siteX(i) + siteX(i + 1)) / 2;
+  const recX = i => 300 + (i + 0.5) * (360 / P.nR);
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const reserve = Array.from({ length: 18 }, (_, i) => ({ x: 270 + (i * 137) % 420 + rnd(-8, 8), y: 30 + ((i * 53) % 90) }));
+  const bathCa = Array.from({ length: 40 }, (_, i) => { const left = i % 2 === 0; return { x: left ? rnd(14, 170) : rnd(790, 946), y: rnd(20, 380), ph: rnd(0, 6.28) }; });
+
+  function reset() {
+    S = { t: 0, tFire: 0, Vpre: -70, o: 0, caF: 0, caR: 0, T: 0, V: E_REST, spikes: [],
+          sites: Array.from({ length: SITES }, () => ({ docked: true, fuseT: -1e9, dockT: -1e9 })),
+          rec: new Int8Array(P.nR), lastRel: null, relCount: 0, peak: 0, g: 0, I: 0,
+          buf: { t: [], pre: [], ca: [], I: [], V: [] }, fus: [], nextSample: 0,
+          caP: [], ntP: [], ionP: [] };
+  }
+  reset();
+
+  function fire() {
+    S.tFire = S.t; S.peak = 0; S.relCount = 0;
+    S.buf = { t: [], pre: [], ca: [], I: [], V: [] }; S.fus = []; S.nextSample = S.t;
+    for (let k = 0; k < P.n; k++) S.spikes.push(S.t + 0.5 + k * P.dt);
+    S.lastRel = null;
+    if (!playing) $('sPlay').click();
+  }
+
+  function step(dt) {
+    const R = REC[P.rec];
+    S.t += dt;
+    // presynaptic voltage: the sum of the spikes in flight
+    let V = -70, newSpike = false;
+    for (const s of S.spikes) { const d = S.t - s; if (d >= 0 && d < 40) V += preV(d) + 70; if (d >= 0 && d < dt) newSpike = true; }
+    if (newSpike) S.lastRel = 0;
+    S.spikes = S.spikes.filter(s => S.t - s < 40);
+    S.Vpre = V;
+    // Ca²⁺ channels and Ca²⁺ at the release sites
+    const oi = 1 / (1 + Math.exp(-(V + 15) / 6));
+    S.o += (oi - S.o) * dt / 0.25;
+    const flux = S.o * (P.cao / 2) * Math.max(0, 125 - V) / 195;
+    S.caF += (K_IN * flux - S.caF / 0.5) * dt;
+    S.caR += (K_RES * flux - S.caR / 40) * dt;
+    const ca = S.caF + S.caR, ca4 = ca ** 4, rate = KMAX * ca4 / (ca4 + KD ** 4);
+    if (flux > 0.02 && Math.random() < flux * dt * 40) {   // Ca²⁺ dots entering through an open channel
+      const i = Math.floor(Math.random() * (SITES - 1));
+      S.caP.push({ x: caChX(i) + rnd(-3, 3), y: AZ + 4, vx: rnd(-0.6, 0.6), vy: rnd(-1.6, -0.6), born: S.t });
+    }
+    // vesicles
+    S.sites.forEach((s, i) => {
+      if (s.docked) {
+        if (Math.random() < rate * dt) {
+          s.docked = false; s.fuseT = S.t; S.T += 1; S.fus.push(S.t); S.relCount++;
+          if (S.lastRel !== null) S.lastRel++;
+          for (let k = 0; k < 16; k++) S.ntP.push({ x: siteX(i) + rnd(-6, 6), y: CT + 2, vx: rnd(-1.2, 1.2), vy: rnd(0.3, 1.6) });
+        }
+      } else if (Math.random() < dt / REFILL) { s.docked = true; s.dockT = S.t; }
+    });
+    // transmitter in the cleft
+    const tauC = 1.2 / P.up;
+    S.T -= S.T * dt / tauC;
+    // receptors (blocked: the antagonist sits in the binding site, so transmitter cannot bind)
+    const aT = P.block ? 0 : R.a * S.T;
+    let nOpen = 0;
+    for (let i = 0; i < S.rec.length; i++) {
+      const st = S.rec[i], u = Math.random();
+      if (st === 0) { if (u < aT * dt) S.rec[i] = R.ko ? 1 : 2; }
+      else if (st === 1) { if (u < R.ko * dt) S.rec[i] = 2; else if (u > 1 - R.b * dt) S.rec[i] = 0; }
+      else if (u < R.b * dt) S.rec[i] = 0;
+      if (S.rec[i] === 2) nOpen++;
+    }
+    const B = R.mg ? mgFree(S.V, 1) : 1;
+    S.g = nOpen * GAM * B; S.nOpen = nOpen;
+    S.I = S.g * (S.V - R.E);
+    S.V += dt * (-G_REST * (S.V - E_REST) - S.I) / C_CELL;
+    S.peak = Math.abs(S.V - E_REST) > Math.abs(S.peak) ? S.V - E_REST : S.peak;
+    if (S.t >= S.nextSample) {
+      const b = S.buf; b.t.push(S.t - S.tFire); b.pre.push(S.Vpre); b.ca.push(ca); b.I.push(S.I); b.V.push(S.V);
+      S.nextSample = S.t + 0.05;
+      if (b.t.length > 16000) for (const k in b) b[k].splice(0, 4000);
+    }
+  }
+
+  // ---------- drawing ----------
+  const cv = $('syn'), c = setupCanvas(cv, W, H);
+  const tint = (V, rest, up, down) => V >= rest ? mixc(C.pos, C.cyto, Math.min(1, (V - rest) / up) * 0.75) : mixc(C.neg, C.cyto, Math.min(1, (rest - V) / down) * 0.75);
+  function rrect(x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  function dot(x, y, col, r = 4) { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fill(); }
+
+  function drawPicture(frame) {
+    const R = REC[P.rec];
+    c.fillStyle = C.bath; c.fillRect(0, 0, W, H);
+    // Ca²⁺ in the bath, as many as the concentration
+    const nb = Math.round(P.cao * 10);
+    for (let i = 0; i < nb; i++) { const b = bathCa[i]; dot(b.x + 3 * Math.sin(frame / 40 + b.ph), b.y + 3 * Math.cos(frame / 50 + b.ph), C.ca, 3.5); }
+    // the presynaptic terminal
+    rrect(180, -80, 600, 240, 80);
+    c.fillStyle = tint(S.Vpre, -70, 100, 10); c.fill();
+    c.lineWidth = 6; c.strokeStyle = C.memdark; c.stroke();
+    // the spine of the next cell
+    rrect(240, CB, 480, 260, 60);
+    c.fillStyle = tint(S.V, E_REST, 12, 8); c.fill(); c.stroke();
+    c.font = '13px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'left';
+    c.fillText('presynaptic terminal (the end of the axon)', 200, 18);
+    c.fillText('synaptic cleft', 18, (CT + CB) / 2 + 4);
+    c.fillText('outside the cells', 800, 18);
+    c.fillText('postsynaptic spine (the next cell)', 262, H - 14);
+    // reserve vesicles
+    c.lineWidth = 2;
+    for (const v of reserve) { c.strokeStyle = C.nt; c.globalAlpha = 0.55; c.beginPath(); c.arc(v.x, v.y, 11, 0, 6.2832); c.stroke(); c.globalAlpha = 1; }
+    // docked vesicles: fusing ones open into the membrane over 1 ms, new ones fade in over 3 ms
+    S.sites.forEach((s, i) => {
+      const x = siteX(i), since = S.t - s.fuseT;
+      if (s.docked) {
+        const a = Math.min(1, (S.t - s.dockT) / 3);
+        c.globalAlpha = a; c.strokeStyle = C.nt; c.beginPath(); c.arc(x, AZ - 15, 12, 0, 6.2832); c.stroke();
+        c.fillStyle = C.nt; for (let k = 0; k < 4; k++) dot(x - 6 + 4 * k, AZ - 15 + (k % 2 ? 4 : -4), C.nt, 2.2);
+        c.globalAlpha = 1;
+      } else if (since < 1) {
+        const f = since / 1;   // the vesicle flattens into the membrane
+        c.strokeStyle = C.nt; c.beginPath(); c.ellipse(x, AZ - 12 + 8 * f, 12 + 6 * f, 12 * (1 - f) + 1, 0, Math.PI, 2 * Math.PI); c.stroke();
+      }
+    });
+    // Ca²⁺ channels on the active zone: they split open as the spike passes
+    for (let i = 0; i < SITES - 1; i++) {
+      const x = caChX(i), open = S.o > (i + 0.5) / (SITES - 1) * 0.9, gap = open ? 3 : 0;
+      c.fillStyle = C.ca; c.fillRect(x - 6 - gap, AZ - 8, 6, 16); c.fillRect(x + gap, AZ - 8, 6, 16);
+    }
+    // receptors on the spine
+    const rw = Math.max(3, Math.min(9, 360 / P.nR * 0.6)), rcol = R.ions === 'cl' ? C.cl : C.syn;
+    const B = R.mg ? mgFree(S.V, 1) : 1;
+    for (let i = 0; i < S.rec.length; i++) {
+      const x = recX(i), st = S.rec[i];
+      c.fillStyle = P.block ? C.a : rcol;
+      if (st === 2) {
+        c.fillRect(x - rw / 2 - 2, CB - 9, rw / 2, 18); c.fillRect(x + 2, CB - 9, rw / 2, 18);
+        dot(x, CB - 13, C.nt, 3);
+        const plugged = R.mg && ((Math.sin(i * 12.9898 + Math.floor(S.t / 2) * 78.233) * 43758.5) % 1 + 1) % 1 > B;
+        if (plugged) dot(x, CB, C.a, 3);
+      } else {
+        c.fillRect(x - rw / 2, CB - 9, rw, 18);
+        if (st === 1) dot(x, CB - 13, C.nt, 3);
+        if (P.block) { c.fillStyle = C.ink; c.fillRect(x - 3, CB - 15, 6, 4); }
+      }
+      // ions through open, unplugged channels: Na⁺ in and K⁺ out balance at E_rev; Cl⁻ moves with V − E_Cl
+      if (st === 2 && playing) {
+        const k = 0.0025 * P.speed * (R.mg ? B : 1);
+        if (R.ions === 'cat') {
+          if (Math.random() < k * Math.max(0, 60 - S.V)) S.ionP.push({ x, y: CB - 22, vy: 1.4, col: C.na, life: 70 });
+          if (Math.random() < k * Math.max(0, S.V + 90)) S.ionP.push({ x, y: CB + 18, vy: -1.4, col: C.k, life: 40 });
+          if (R.mg && Math.random() < k * 0.15 * Math.max(0, 120 - S.V)) S.ionP.push({ x, y: CB - 22, vy: 1.4, col: C.ca, life: 70 });
+        } else {
+          const d = S.V - R.E;
+          if (Math.random() < k * 1.5 * Math.abs(d)) S.ionP.push(d > 0 ? { x, y: CB - 22, vy: 1.4, col: C.cl, life: 70 } : { x, y: CB + 18, vy: -1.4, col: C.cl, life: 40 });
+        }
+      }
+    }
+    // the moving dots
+    for (const p of S.caP) dot(p.x, p.y, C.ca, 3.5);
+    for (const p of S.ntP) dot(p.x, p.y, C.nt, 2.8);
+    for (const p of S.ionP) { c.globalAlpha = Math.min(1, p.life / 20); dot(p.x, p.y, p.col, 3.5); }
+    c.globalAlpha = 1;
+  }
+
+  // particles move in real time (so they stay visible at any speed); they are removed in synapse time
+  function moveParticles(simDt) {
+    S.caP.forEach(p => { p.x += p.vx + rnd(-0.8, 0.8); p.y += p.vy + rnd(-0.8, 0.8); });
+    S.caP = S.caP.filter(p => p.y > AZ - 70 && Math.random() > simDt / 0.5 * 0.5).slice(-150);
+    const tauC = 1.2 / P.up;
+    S.ntP.forEach(p => { p.x += p.vx + rnd(-1.5, 1.5); p.y += p.vy + rnd(-1.5, 1.5); if (p.y > CB - 18) { p.y = CB - 18; p.vy = -Math.abs(p.vy) * 0.5; } if (p.y < CT + 4) { p.y = CT + 4; p.vy = Math.abs(p.vy); } });
+    S.ntP = S.ntP.filter(p => Math.random() > simDt / tauC).slice(-400);
+    S.ionP.forEach(p => { p.y += p.vy; p.x += rnd(-0.6, 0.6); p.life--; });
+    S.ionP = S.ionP.filter(p => p.life > 0).slice(-300);
+  }
+
+  const chs = {
+    pre: setupCanvas($('sPreC'), CHW, 220), ca: setupCanvas($('sCaC'), CHW, 220),
+    I: setupCanvas($('sIC'), CHW, 220), V: setupCanvas($('sVC'), CHW, 220),
+  };
+  function drawCharts() {
+    const R = REC[P.rec], b = S.buf, now = S.t - S.tFire;
+    const win = niceUp(Math.max(R.win, (P.n - 1) * P.dt + R.win * 0.6));
+    const x1 = Math.max(win, now), x0 = x1 - win;
+    let i0 = 0; while (i0 < b.t.length && b.t[i0] < x0) i0++;
+    const [xs, [pre, ca, I, V]] = thin(b.t.slice(i0), [b.pre.slice(i0), b.ca.slice(i0), b.I.slice(i0), b.V.slice(i0)]);
+    const base = { xs, x0, x1, xlabel: 'time since Fire (ms)', h: 220, r: 70 };
+    drawChart(chs.pre, { ...base, fixed: [-90, 50], ylabel: 'mV', series: [{ ys: pre, color: C.ink, label: 'V_pre' }] });
+    const oCa = { ...base, fixed: [0, 40], ylabel: 'µM', series: [{ ys: ca, color: C.ca, label: 'Ca²⁺' }] };
+    drawChart(chs.ca, oCa);
+    const gm = chartGeom(oCa); chs.ca.strokeStyle = C.nt; chs.ca.lineWidth = 2;
+    for (const tf of S.fus) { const t = tf - S.tFire; if (t < x0 || t > x1) continue; const x = gm.sx(t); chs.ca.beginPath(); chs.ca.moveTo(x, gm.T + 2); chs.ca.lineTo(x, gm.T + 16); chs.ca.stroke(); }
+    const gmax = P.nR * GAM, lim = niceUp(Math.max(5, gmax * (R.ions === 'cl' ? 20 : 60)));
+    drawChart(chs.I, { ...base, fixed: R.ions === 'cl' ? [-lim / 2, lim] : [-lim, lim / 4], ylabel: 'pA', series: [{ ys: I, color: R.ions === 'cl' ? C.cl : C.syn, label: 'I_syn' }] });
+    drawChart(chs.V, { ...base, fixed: [-80, -55], ylabel: 'mV', series: [{ ys: V, color: C.ink, label: 'V' }],
+      refs: [{ v: E_REST, color: C.muted, dash: [2, 3], label: 'rest' }, { v: R.E, color: R.ions === 'cl' ? C.cl : C.syn, label: 'E_rev' }] });
+  }
+  function readouts() {
+    $('sVnum').textContent = fmtSigned(S.V, 2);
+    $('sRel').textContent = S.lastRel === null ? '—' : S.lastRel + (S.lastRel === 1 ? ' vesicle' : ' vesicles');
+    $('sReady').textContent = S.sites.filter(s => s.docked).length + ' of ' + SITES;
+    $('sOpen').textContent = (S.nOpen || 0) + ' of ' + P.nR + (REC[P.rec].mg && S.nOpen ? `, ${Math.round(mgFree(S.V, 1) * 100)}% free of Mg²⁺` : '');
+    $('sPeak').textContent = S.peak ? fmtSigned(S.peak, 2) : '—';
+    const R = REC[P.rec], n = S.relCount;
+    $('sCap').innerHTML = S.t - S.tFire < 1 ? '' :
+      P.cao === 0 ? 'With no Ca²⁺ outside, the spike opens the Ca²⁺ channels but nothing comes in, so no vesicle fuses.' :
+      n === 0 ? 'No vesicle fused this time: a failure. Fire again.' :
+      P.block ? `${n} ${n === 1 ? 'vesicle' : 'vesicles'} released ${R.tx}, but ${R.blocker} sits on the receptors, so no channel opens.` :
+      `${n} ${n === 1 ? 'vesicle' : 'vesicles'} released ${R.tx}; the next cell's voltage moved by ${S.peak.toFixed(2)} mV at most, toward E<sub>rev</sub> = ${fmtSigned(R.E, 0)}.`;
+  }
+
+  // ---------- controls ----------
+  bindRange('sCa', v => v.toFixed(1) + ' mM', v => P.cao = v);
+  bindRange('sN', v => v + (v === 1 ? ' spike' : ' spikes'), v => P.n = v);
+  bindRange('sDt', v => v + ' ms', v => P.dt = v);
+  bindRange('sR', v => v + '', v => { P.nR = v; const old = S.rec; S.rec = new Int8Array(v); S.rec.set(old.slice(0, v)); });
+  bindRange('sUp', v => Math.pow(10, v).toFixed(1) + '×', v => P.up = Math.pow(10, v));
+  bindRange('sSpeed', v => fmtSpeed(speedOf(v)), v => P.speed = speedOf(v));
+  $('sBlk').addEventListener('change', e => P.block = e.target.checked);
+  const setRec = k => {
+    P.rec = k; S.rec.fill(0);
+    $('sBlkName').textContent = REC[k].blocker;
+    $('sRecCap').innerHTML = REC[k].cap.replace(/E_rev/g, 'E<sub>rev</sub>');
+  };
+  chipGroup('srec', setRec); setRec('ampa');
+  $('sFire').addEventListener('click', fire);
+  $('sPlay').addEventListener('click', () => { playing = !playing; $('sPlay').textContent = playing ? 'Pause' : 'Play'; });
+  $('sReset').addEventListener('click', reset);
+
+  let frame = 0, last = performance.now();
+  function loop(now) {
+    const real = Math.min(0.05, (now - last) / 1000); last = now; frame++;
+    if (playing) {
+      const sim = P.speed * real, n = Math.ceil(sim / DT);
+      for (let i = 0; i < n; i++) step(sim / n);
+      moveParticles(sim);
+    }
+    drawPicture(frame); drawCharts(); readouts();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// Part 2: the synapse as a circuit. g_syn(t) is a sum of two-exponential pulses, one per spike;
+// I_syn = g_syn·B(V)·(V − E_rev), B = 1 except for NMDA's Mg²⁺ block.
+// Current clamp: C dV/dt = −g_rest(V − E_rest) + I_hold − I_syn, with I_hold bringing rest to the holding V.
+// Voltage clamp: V stays at the holding V, and the amplifier supplies I_syn.
+// The whole trace is worked out when you press Fire, then revealed at the chosen speed.
+// =====================================================================================
+(() => {
+  const PRESET = {
+    ampa: { E: 0, tr: 0.3, td: 2, g: 1, mg: false, col: 'syn' },
+    nmda: { E: 0, tr: 5, td: 80, g: 1, mg: true, col: 'syn' },
+    gaba: { E: -80, tr: 0.5, td: 8, g: 2, mg: false, col: 'cl' },
+    gly:  { E: -80, tr: 0.5, td: 5, g: 2, mg: false, col: 'cl' },
+  };
+  const P = { rec: 'ampa', g: 1, E: 0, td: 2, mg: 1, n: 1, dt: 10, Vh: -70, gr: 2.5, mode: 'cc', speed: speedOf(62) };
+  let tr = null, overlays = [], tc = 0, playing = true;
+  const isMg = () => PRESET[P.rec].mg;
+  const recCol = () => C[PRESET[P.rec].col];
+
+  function compute(Vh) {
+    const pr = PRESET[P.rec], tR = Math.min(pr.tr, P.td * 0.5), tD = P.td;
+    const tp = tR * tD / (tD - tR) * Math.log(tD / tR), norm = 1 / (Math.exp(-tp / tD) - Math.exp(-tp / tR));
+    const shape = t => t <= 0 ? 0 : norm * (Math.exp(-t / tD) - Math.exp(-t / tR));
+    const spikes = Array.from({ length: P.n }, (_, k) => 2 + k * P.dt);
+    const W = Math.min(600, niceUp(Math.max(40, (P.n - 1) * P.dt + 5 * tD + 5)));
+    const dt = 0.02, N = Math.round(W / dt) + 1, Ihold = P.gr * (Vh - E_REST);
+    const t = new Float64Array(N), g = new Float64Array(N), I = new Float64Array(N), V = new Float64Array(N), Bv = new Float64Array(N);
+    let v = Vh;
+    for (let i = 0; i < N; i++) {
+      const ti = i * dt; let gi = 0; for (const s of spikes) gi += P.g * shape(ti - s);
+      const B = isMg() ? mgFree(v, P.mg) : 1, Ii = gi * B * (v - P.E);
+      t[i] = ti; g[i] = gi * B; I[i] = Ii; V[i] = v; Bv[i] = B;
+      if (P.mode === 'cc') v += dt * (-P.gr * (v - E_REST) + Ihold - Ii) / C_CELL;
+    }
+    return { t, g, I, V, B: Bv, W, Vh, Ihold, mode: P.mode, dt };
+  }
+  function fire() {
+    // in voltage clamp the last trace stays on the charts, one per holding voltage
+    if (P.mode === 'vc' && tr && tr.mode === 'vc') { overlays = overlays.filter(o => o.Vh !== tr.Vh); overlays.push(tr); }
+    tr = compute(P.Vh); tc = 0;
+    if (!playing) $('cPlay').click();
+  }
+  function sweep() {
+    if (P.mode !== 'vc') document.querySelector('[data-cmode="vc"]').click();
+    overlays = [];
+    for (let vh = -100; vh <= 40; vh += 20) overlays.push(compute(vh));
+    tr = compute(P.Vh); tc = 0;
+    if (!playing) $('cPlay').click();
+  }
+  const clear = () => { overlays = []; tr = null; tc = 0; };
+
+  // ---------- the circuit ----------
+  const CW = 640, CH = 400, cv = $('circ'), c = setupCanvas(cv, CW, CH);
+  function resistor(x, y0, y1, col, w) {
+    c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(x, y0);
+    const n = 6, h = (y1 - y0) / n; for (let i = 0; i < n; i++) c.lineTo(x + (i % 2 ? -12 : 12), y0 + h * (i + 0.5));
+    c.lineTo(x, y1); c.stroke();
+  }
+  function battery(x, y, col) {
+    c.strokeStyle = col; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(x - 18, y); c.lineTo(x + 18, y); c.stroke();
+    c.lineWidth = 6; c.beginPath(); c.moveTo(x - 9, y + 9); c.lineTo(x + 9, y + 9); c.stroke();
+  }
+  function arrow(x, yMid, I, scale, col) {   // I < 0 (inward): arrow points up, toward the inside
+    const len = Math.min(70, Math.abs(I) / scale * 70); if (len < 4) return;
+    const dir = I < 0 ? -1 : 1, y0 = yMid - dir * len / 2, y1 = yMid + dir * len / 2;
+    c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(x, y0); c.lineTo(x, y1); c.stroke();
+    c.beginPath(); c.moveTo(x, y1 + dir * 8); c.lineTo(x - 7, y1 - dir * 2); c.lineTo(x + 7, y1 - dir * 2); c.fill();
+  }
+  function now() {
+    if (!tr) return { V: P.mode === 'vc' ? P.Vh : P.Vh, g: 0, I: 0, B: isMg() ? mgFree(P.Vh, P.mg) : 1, Ihold: P.gr * (P.Vh - E_REST) };
+    const i = Math.min(tr.t.length - 1, Math.floor(tc / tr.dt));
+    return { V: tr.V[i], g: tr.g[i], I: tr.I[i], B: tr.B[i], Ihold: tr.Ihold };
+  }
+  function drawCircuit() {
+    const s = now(), top = 70, bot = 340, xs = [90, 250, 410, 560];
+    c.fillStyle = C.surface; c.fillRect(0, 0, CW, CH);
+    c.fillStyle = C.cyto; c.fillRect(0, 0, CW, top); c.fillStyle = C.bath; c.fillRect(0, bot, CW, CH - bot);
+    c.font = '13px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'left';
+    c.fillText('inside the next cell', 10, 22); c.fillText('outside', 10, CH - 14);
+    c.font = '600 22px "IBM Plex Mono", monospace'; c.fillStyle = C.ink; c.textAlign = 'right';
+    fillSub(c, 'V = ' + fmtSigned(s.V, 1), CW - 12, 30);
+    c.strokeStyle = C.ink; c.lineWidth = 2.5;
+    const last = P.mode === 'vc' || Math.abs(s.Ihold) > 0.5 ? xs[3] : xs[2];
+    c.beginPath(); c.moveTo(xs[0], top); c.lineTo(last, top); c.moveTo(xs[0], bot); c.lineTo(last, bot); c.stroke();
+    c.font = '13px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
+    // capacitor
+    c.beginPath(); c.moveTo(xs[0], top); c.lineTo(xs[0], 195); c.moveTo(xs[0] - 26, 195); c.lineTo(xs[0] + 26, 195);
+    c.moveTo(xs[0] - 26, 211); c.lineTo(xs[0] + 26, 211); c.moveTo(xs[0], 211); c.lineTo(xs[0], bot); c.stroke();
+    c.fillStyle = C.ink; c.fillText('C = ' + C_CELL + ' pF', xs[0] + 32, 207);
+    // resting branch
+    const Irest = P.gr * (s.V - E_REST);
+    c.strokeStyle = C.ink; c.beginPath(); c.moveTo(xs[1], top); c.lineTo(xs[1], 110); c.moveTo(xs[1], 190); c.lineTo(xs[1], 240); c.moveTo(xs[1], 249); c.lineTo(xs[1], bot); c.stroke();
+    resistor(xs[1], 110, 190, C.ink, 2.5); battery(xs[1], 240, C.ink);
+    c.fillStyle = C.ink; fillSub(c, 'g_rest = ' + P.gr + ' nS', xs[1] + 20, 154); fillSub(c, 'E_rest = −70 mV', xs[1] + 20, 252);
+    arrow(xs[1] - 30, 150, Irest, 60, C.muted);
+    // synaptic branch: the resistor darkens with g
+    const col = recCol(), gmax = Math.max(0.5, P.g * Math.max(1, P.n * 0.6));
+    c.strokeStyle = C.ink; c.lineWidth = 2.5; c.beginPath(); c.moveTo(xs[2], top); c.lineTo(xs[2], 110); c.moveTo(xs[2], 190); c.lineTo(xs[2], 240); c.moveTo(xs[2], 249); c.lineTo(xs[2], bot); c.stroke();
+    resistor(xs[2], 110, 190, mixc(col, C.line, Math.min(1, s.g / gmax * 1.4)), 2.5 + 4 * Math.min(1, s.g / gmax));
+    battery(xs[2], 240, col);
+    c.fillStyle = col; fillSub(c, 'g_syn = ' + s.g.toFixed(2) + ' nS', xs[2] + 20, 146); fillSub(c, 'E_rev = ' + fmtSigned(P.E, 0), xs[2] + 20, 252);
+    fillSub(c, 'I_syn = ' + fmtPA(s.I), xs[2] + 20, 166);
+    arrow(xs[2] - 30, 150, s.I, 60, col);
+    // the amplifier (voltage clamp) or the steady holding current (current clamp)
+    if (P.mode === 'vc') {
+      const Iamp = s.I + Irest;   // the amplifier supplies what leaves through the channels
+      c.strokeStyle = C.accent; c.lineWidth = 2.5; c.beginPath(); c.moveTo(xs[3], top); c.lineTo(xs[3], 160); c.moveTo(xs[3], 240); c.lineTo(xs[3], bot); c.stroke();
+      c.strokeRect(xs[3] - 40, 160, 80, 80);
+      c.fillStyle = C.accent; c.textAlign = 'center'; c.fillText('voltage', xs[3], 192); c.fillText('clamp', xs[3], 210);
+      c.textAlign = 'left'; c.font = '12px "IBM Plex Sans", sans-serif';
+      c.fillText('holds V at ' + fmtSigned(P.Vh, 0), xs[3] - 48, 262); c.fillText('supplies ' + fmtPA(-Iamp), xs[3] - 48, 278);
+    } else if (Math.abs(s.Ihold) > 0.5) {
+      c.strokeStyle = C.accent; c.lineWidth = 2.5; c.beginPath(); c.moveTo(xs[3], top); c.lineTo(xs[3], 175); c.moveTo(xs[3], 225); c.lineTo(xs[3], bot); c.stroke();
+      c.beginPath(); c.arc(xs[3], 200, 25, 0, 6.2832); c.stroke();
+      arrow(xs[3], 200, -s.Ihold, Math.abs(s.Ihold), C.accent);
+      c.fillStyle = C.accent; c.font = '12px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
+      c.fillText('steady current', xs[3] - 40, 248); c.fillText(fmtPA(s.Ihold) + ' in', xs[3] - 40, 264);
+    }
+    c.textAlign = 'left';
+  }
+
+  // ---------- charts ----------
+  const chs = { g: setupCanvas($('cGC'), CHW, 190), I: setupCanvas($('cIC'), CHW, 190), V: setupCanvas($('cVC'), CHW, 190) };
+  const vhColor = vh => mixc(C.pos, C.neg, (vh + 100) / 140);
+  function drawCharts() {
+    const all = (tr ? [tr] : []).concat(overlays.filter(o => !tr || o.Vh !== tr.Vh));   // the current trace first, so it is drawn with the background
+    const W = all.length ? Math.max(...all.map(o => o.W)) : 50;
+    const reveal = (o, arr) => { const n = o === tr ? Math.min(arr.length, Math.floor(tc / o.dt) + 1) : arr.length; return Array.from(arr.slice(0, n)); };
+    const span = (key, lo0, hi0) => { let lo = lo0, hi = hi0; for (const o of all) for (const v of o[key]) { if (v < lo) lo = v; if (v > hi) hi = v; } return [lo, hi]; };
+    const mk = (key, colOf, labOf) => all.map(o => { const [xs, [ys]] = thin(reveal(o, o.t), [reveal(o, o[key])]); return { xs, ys, color: colOf(o), label: labOf(o), width: o === tr ? 2.2 : 1.4 }; });
+    // drawChart shares one x array per chart, so each trace is drawn as its own call on the same canvas
+    function multi(cx, series, fixed, ylabel, refs) {
+      const base = { x0: 0, x1: W, xlabel: 'time (ms)', ylabel, fixed, h: 190, r: 70 };
+      drawChart(cx, { ...base, xs: series.length ? series[0].xs : [], series: series.slice(0, 1), refs });
+      if (series.length > 1) {   // the others on top, without redrawing the background
+        const g = chartGeom(base);
+        cx.save(); cx.beginPath(); cx.rect(g.L, g.T, g.pw, g.ph); cx.clip();
+        for (const s of series.slice(1)) {
+          cx.strokeStyle = s.color; cx.lineWidth = s.width; cx.beginPath();
+          s.xs.forEach((x, i) => i ? cx.lineTo(g.sx(x), g.sy(s.ys[i])) : cx.moveTo(g.sx(x), g.sy(s.ys[i]))); cx.stroke();
+        }
+        cx.restore();
+        cx.font = '600 11px "IBM Plex Sans", sans-serif'; cx.textAlign = 'left';
+        const labs = series.slice(1).filter(s => s.label && s.ys.length).map(s => ({ y: g.sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color })).sort((a, b) => a.y - b.y);
+        for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 12) labs[i].y = labs[i - 1].y + 12;
+        labs.forEach(l => { cx.fillStyle = l.c; cx.fillText(l.t, g.L + g.pw + 6, Math.min(185, l.y)); });
+      }
+    }
+    const col = o => o === tr ? (P.mode === 'vc' && overlays.length ? vhColor(o.Vh) : recCol()) : vhColor(o.Vh);
+    const lab = (name) => o => P.mode === 'vc' && (overlays.length || o !== tr) ? fmtSigned(o.Vh, 0).replace(' mV', '') : name;
+    const [gl, gh] = span('g', 0, 0.5);
+    multi(chs.g, mk('g', col, lab('g_syn')), [0, niceUp(gh * 1.1)], 'nS');
+    let [il, ih] = span('I', -5, 5); const ir = niceStep((ih - il) / 4);
+    multi(chs.I, mk('I', col, lab('I_syn')), [Math.floor(il * 1.1 / ir) * ir, Math.ceil(ih * 1.1 / ir) * ir], 'pA');
+    let [vl, vh] = span('V', Math.min(E_REST, P.E) - 3, Math.max(E_REST, P.E) + 3); vl = Math.max(-110, vl); vh = Math.min(50, vh);
+    const vr = niceStep((vh - vl) / 4);
+    multi(chs.V, mk('V', col, lab('V')), [Math.floor(vl / vr) * vr, Math.ceil(vh / vr) * vr], 'mV',
+      [{ v: P.E, color: recCol(), label: 'E_rev' }, { v: E_REST, color: C.muted, dash: [2, 3], label: 'rest' }]);
+  }
+  function readouts() {
+    const s = now(), R = P.rec;
+    $('cVlab').textContent = P.mode === 'vc' ? 'Synaptic current (V held)' : "Next cell's voltage";
+    $('cVnum').textContent = P.mode === 'vc' ? fmtPA(s.I) : fmtSigned(s.V, 2);
+    $('cDrive').textContent = fmtSigned(s.V - P.E, 1);
+    $('cNow').textContent = s.g.toFixed(2) + ' nS / ' + fmtPA(s.I);
+    $('cPeakLab').textContent = P.mode === 'vc' ? 'largest current' : 'largest change in V';
+    let pk = 0;
+    if (tr) { const n = Math.min(tr.t.length, Math.floor(tc / tr.dt) + 1); for (let i = 0; i < n; i++) { const v = P.mode === 'vc' ? tr.I[i] : tr.V[i] - tr.Vh; if (Math.abs(v) > Math.abs(pk)) pk = v; } }
+    $('cPeak').textContent = !tr ? '—' : P.mode === 'vc' ? fmtPA(pk) : fmtSigned(pk, 2);
+    $('cMgFree').textContent = isMg() ? Math.round(s.B * 100) + '% at ' + fmtSigned(s.V, 0) : 'not NMDA';
+    const name = R === 'gaba' ? 'GABA<sub>A</sub>' : R === 'gly' ? 'glycine' : R.toUpperCase();
+    $('cCap').innerHTML = P.mode === 'vc'
+      ? `Voltage clamp at ${fmtSigned(P.Vh, 0)}: the driving force V − E<sub>rev</sub> is ${fmtSigned(P.Vh - P.E, 0)}, so the ${name} current is ${Math.abs(P.Vh - P.E) < 1 ? 'zero: the channels open, but no net charge flows' : P.Vh < P.E ? 'inward (negative)' : 'outward (positive)'}.`
+      : `Current clamp: V starts at ${fmtSigned(P.Vh, 0)} and moves toward E<sub>rev</sub> = ${fmtSigned(P.E, 0)}, ${P.E > P.Vh ? 'up' : 'down'}, but only part of the way.`;
+  }
+
+  // ---------- controls ----------
+  bindRange('cG', v => v.toFixed(1) + ' nS', v => P.g = v);
+  bindRange('cE', v => fmtSigned(v, 0), v => P.E = v);
+  bindRange('cTd', v => v + ' ms', v => P.td = v);
+  bindRange('cMg', v => v.toFixed(1) + ' mM', v => P.mg = v);
+  bindRange('cN', v => v + (v === 1 ? ' spike' : ' spikes'), v => P.n = v);
+  bindRange('cDt', v => v + ' ms', v => P.dt = v);
+  bindRange('cVh', v => fmtSigned(v, 0), v => P.Vh = v);
+  bindRange('cGr', v => v.toFixed(1) + ' nS', v => P.gr = v);
+  bindRange('cSpeed', v => fmtSpeed(speedOf(v)), v => P.speed = speedOf(v));
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  chipGroup('crec', k => { P.rec = k; const pr = PRESET[k]; set('cE', pr.E); set('cTd', pr.td); set('cG', pr.g); clear(); });
+  chipGroup('cmode', m => { P.mode = m; clear(); });
+  $('cFire').addEventListener('click', fire);
+  $('cSweep').addEventListener('click', sweep);
+  $('cClear').addEventListener('click', clear);
+  $('cPlay').addEventListener('click', () => { playing = !playing; $('cPlay').textContent = playing ? 'Pause' : 'Play'; });
+
+  let last = performance.now();
+  function loop(t) {
+    const real = Math.min(0.05, (t - last) / 1000); last = t;
+    if (playing && tr) tc = Math.min(tr.W, tc + P.speed * real);
+    drawCircuit(); drawCharts(); readouts();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// The calculator: E_rev from the channel's ions, I_syn = g·B(V)·(V − E_rev), and its effect.
+// =====================================================================================
+(() => {
+  let kind = 'cat';
+  const KW = 560, KH = 300, cx = setupCanvas($('kIV'), KW, KH);
+  const ids = ['kR', 'kENa', 'kEK', 'kECl', 'kG', 'kV', 'kRest', 'kThr'];
+  const fm = { kR: v => '1 : ' + (1 / Math.pow(10, v)).toFixed(2) + ' (' + Math.pow(10, v).toFixed(2) + '×)', kG: v => v.toFixed(1) + ' nS' };
+  ids.forEach(id => { const el = $(id), out = $(id + 'o'); const f = () => out.textContent = (fm[id] || (v => fmtSigned(v, 0)))(parseFloat(el.value)); el.addEventListener('input', f); f(); });
+  const val = id => parseFloat($(id).value);
+  const sg = (v, d = 0) => (v < 0 ? '−' : '') + Math.abs(v).toFixed(d);   // a number with a real minus sign
+  function update() {
+    const r = Math.pow(10, val('kR')), ENa = val('kENa'), EK = val('kEK'), g = val('kG'), V = val('kV'), rest = val('kRest'), thr = val('kThr');
+    const mg = kind === 'cat' && $('kMg').checked;
+    const E = kind === 'cat' ? (r * ENa + EK) / (r + 1) : val('kECl');
+    const B = mg ? mgFree(V, 1) : 1, I = g * B * (V - E);
+    $('kI').textContent = fmtPA(I, 1);
+    $('kIcap').textContent = 'synaptic current at ' + fmtSigned(V, 0) + (Math.abs(I) < 0.05 ? '' : I < 0 ? ': inward, depolarizing' : ': outward, hyperpolarizing');
+    $('kErev').textContent = fmtSigned(E, 1);
+    $('kDrive').textContent = fmtSigned(V - E, 1);
+    $('kB').textContent = mg ? Math.round(B * 100) + '%' : 'no block';
+    $('kEffect').textContent = E > thr ? 'excitatory: it pulls V up past threshold' : E > rest ? 'depolarizing, but it stops below threshold: shunting inhibition' : 'inhibitory: it pulls V down, away from threshold';
+    const ind = '<br>';
+    $('kFormula').innerHTML = (kind === 'cat'
+      ? `E<sub>rev</sub> = (g<sub>Na</sub>E<sub>Na</sub> + g<sub>K</sub>E<sub>K</sub>) / (g<sub>Na</sub> + g<sub>K</sub>) = (${r.toFixed(2)}·${ENa} + 1·(${sg(EK)})) / ${(r + 1).toFixed(2)} = <span class="res">${fmtSigned(E, 1)}</span>`
+      : `E<sub>rev</sub> = E<sub>Cl</sub> = <span class="res">${fmtSigned(E, 0)}</span>`) + ind +
+      (mg ? `B(V) = 1 / (1 + (1/3.57)·e<sup>−0.062·(${sg(V)})</sup>) = ${B.toFixed(3)}` + ind : '') +
+      `I<sub>syn</sub> = g<sub>syn</sub>${mg ? '·B(V)' : ''}·(V − E<sub>rev</sub>) = ${g.toFixed(1)} nS${mg ? ' × ' + B.toFixed(3) : ''} × (${sg(V)} − (${sg(E, 1)})) mV = <span class="res">${fmtPA(I, 1)}</span>`;
+    // the I–V line
+    const xs = [], ys = [], ys0 = [];
+    for (let v = -100; v <= 60; v += 1) { xs.push(v); ys.push(g * (mg ? mgFree(v, 1) : 1) * (v - E)); ys0.push(g * (v - E)); }
+    const lo = Math.min(...ys0, ...ys, -1), hi = Math.max(...ys0, ...ys, 1), st = niceStep((hi - lo) / 5);
+    const o = { xs, x0: -100, x1: 60, w: KW, h: KH, r: 70, fixed: [Math.floor(lo / st) * st, Math.ceil(hi / st) * st], xlabel: 'V (mV)', ylabel: 'pA',
+      series: (mg ? [{ ys: ys0, color: C.muted, dash: [5, 4], width: 1.4, label: 'no Mg²⁺' }] : []).concat([{ ys, color: kind === 'cat' ? C.syn : C.cl, label: 'I_syn' }]) };
+    drawChart(cx, o);
+    const gm = chartGeom(o);
+    cx.setLineDash([2, 3]); cx.lineWidth = 1.2; cx.font = '11px "IBM Plex Sans", sans-serif'; cx.textAlign = 'center';
+    [[rest, 'rest'], [thr, 'threshold']].forEach(([v, t]) => { cx.strokeStyle = C.muted; cx.beginPath(); cx.moveTo(gm.sx(v), gm.T); cx.lineTo(gm.sx(v), gm.T + gm.ph); cx.stroke(); cx.fillStyle = C.muted; cx.fillText(t, gm.sx(v), gm.T + 10); });
+    cx.setLineDash([]);
+    if (E >= -100 && E <= 60) { cx.fillStyle = C.ink; cx.beginPath(); cx.arc(gm.sx(E), gm.sy(0), 4, 0, 6.2832); cx.fill(); fillSub(cx, 'E_rev', gm.sx(E), gm.sy(0) - 10); }
+    cx.fillStyle = C.nt; cx.beginPath(); cx.arc(gm.sx(V), gm.sy(I), 6, 0, 6.2832); cx.fill();
+    $('kCap').textContent = `At ${fmtSigned(V, 0)} the driving force is ${fmtSigned(V - E, 1)}` + (mg ? `, and only ${Math.round(B * 100)}% of the NMDA channels are free of Mg²⁺.` : '.');
+  }
+  ids.forEach(id => $(id).addEventListener('input', update));
+  $('kMg').addEventListener('change', update);
+  chipGroup('kkind', k => { kind = k; $('kCatBox').hidden = k !== 'cat'; $('kClBox').hidden = k === 'cat'; update(); });
+  colorHooks.push(() => setTimeout(update, 0));
+  update();
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they behave exactly like clicking them.
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const press = sel => { const b = document.querySelector(sel); if (b.getAttribute('aria-pressed') !== 'true') b.click(); };
+  const running = id => { if ($(id).textContent.trim() === 'Play') $(id).click(); };
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const check = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
+  const cardOf = { syn: ['tab-syn', 'sPlay', 'syn-card'], circ: ['tab-circ', 'cPlay', 'circ-card'], calc: [null, null, 'syn-calc'] };
+  const go = k => { const [tab, play, card] = cardOf[k]; if (tab) showTab($(tab)); if (play) running(play); into(card); };
+  const syn = (o = {}) => { press(`[data-srec="${o.rec || 'ampa'}"]`); set('sCa', o.ca ?? 2); set('sN', o.n ?? 1); set('sDt', o.dt ?? 10); check('sBlk', !!o.block); go('syn'); $('sFire').click(); };
+  const circ = (o = {}) => { press(`[data-crec="${o.rec || 'ampa'}"]`); press(`[data-cmode="${o.mode || 'cc'}"]`); set('cVh', o.vh ?? -70); set('cMg', o.mg ?? 1); set('cN', 1);
+    if (o.E !== undefined) set('cE', o.E); go('circ'); o.sweep ? $('cSweep').click() : $('cFire').click(); };
+  document.querySelectorAll('[data-sytry]').forEach(b => b.addEventListener('click', () => {
+    const [what, id, v] = b.dataset.sytry.split(':');
+    if (what === 'one') syn();
+    else if (what === 'noca') syn({ ca: 0 });
+    else if (what === 'train') syn({ n: 5, dt: 10 });
+    else if (what === 'deplete') syn({ n: 5, dt: 10, ca: 4 });
+    else if (what === 'block') syn({ block: true });
+    else if (what === 'srec') syn({ rec: id });
+    else if (what === 'gaba') circ({ rec: 'gaba' });
+    else if (what === 'shunt') circ({ rec: 'gaba', E: -65 });
+    else if (what === 'sweep') circ({ mode: 'vc', sweep: true });
+    else if (what === 'hold0') circ({ mode: 'vc', vh: 0 });
+    else if (what === 'nmda') circ({ rec: 'nmda', mode: 'vc', sweep: true });
+    else if (what === 'nomg') circ({ rec: 'nmda', mode: 'vc', mg: 0, sweep: true });
+    else if (what === 'set') {
+      set(id, v);
+      if (id.startsWith('s')) { go('syn'); $('sFire').click(); }
+      else if (id.startsWith('c')) { go('circ'); $('cFire').click(); }
+      else go('calc');
+    }
+  }));
+})();
+</script>
+<script>
+// The floating bar's buttons follow the simulation crossing the middle of the screen.
+(() => {
+  const fire = document.getElementById('fbFire'), play = document.getElementById('fbPlay');
+  const cards = [['syn-card', 'sFire', 'sPlay'], ['circ-card', 'cFire', 'cPlay']];
+  const update = () => {
+    let pick = cards[0];
+    for (const cd of cards) { const r = document.getElementById(cd[0]).parentElement.getBoundingClientRect(); if (r.top < innerHeight / 2) pick = cd; }
+    if (fire.dataset.copy !== pick[1]) fire.dataset.copy = pick[1];
+    if (play.dataset.copy !== pick[2]) play.dataset.copy = pick[2];
+  };
+  addEventListener('scroll', update, { passive: true }); addEventListener('resize', update);
+  update();
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>
