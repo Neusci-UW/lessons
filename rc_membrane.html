@@ -932,10 +932,11 @@ function chipGroup(attr, onPick) {
     return { G, Vinf: -I0 / G, tau: p.C / G };
   }
   const restV = () => steady().Vinf;   // called with the switch open
-  // Newt: this circuit as it's set now, on the Breadboard simulator (per cm², in F, S, V and A)
+  // Newt: this circuit as it's set now, on the Breadboard simulator (per cm², in F, S, V and A), scaled to
+  // breadboard parts and volts
   NewtBreadboard.add($('cPlay'), () => {
     const S = g => g * 1e-3, mv = e => e * 1e-3, C = p.C * 1e-6, ch = [];
-    if (mode === 'inj') return { title: 'the RC circuit', compartments: [{ name: 'Membrane', C,
+    if (mode === 'inj') return { title: 'the RC circuit', scale: 'breadboard', compartments: [{ name: 'Membrane', C,
       channels: [{ name: 'R', g: S(p.gL) }], stim: { I: p.I * 1e-6 } }] };
     if (mode === 'bat') ch.push({ name: 'Battery 1', g: 1e-3 / p.R1, E: mv(p.E1), switch: true, closed: sw },
                                 { name: 'Battery 2', g: 1e-3 / p.R2, E: mv(p.E2) });
@@ -945,7 +946,7 @@ function chipGroup(attr, onPick) {
       ch.push({ name: 'Na⁺ leak', g: S(p.fgNa), E: mv(p.fENa) }, { name: 'K⁺ leak', g: S(p.fgK), E: mv(p.fEK) },
               { name: 'Cl⁻ leak', g: S(p.fgCl), E: mv(p.fECl) });
     } else ch.push({ name: 'Na⁺', g: S(p.gNa), E: mv(p.ENa), switch: true, closed: sw }, { name: 'K⁺', g: S(p.gK), E: mv(p.EK) });
-    return { title: 'the RC circuit', compartments: [{ name: 'Membrane', C, channels: ch }] };
+    return { title: 'the RC circuit', scale: 'breadboard', compartments: [{ name: 'Membrane', C, channels: ch }] };
   });
   function switchText() {
     const g = mode === 'g';

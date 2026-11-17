@@ -1,11 +1,12 @@
 // "Build on breadboard": inside Newt, rebuilds a simulation's circuit on the Breadboard
-// simulator with real part values (Newt's lessoncircuit.py scales it). In a plain browser
+// simulator (Newt's lessoncircuit.py builds it). In a plain browser
 // the button never appears.
 //
 //   NewtBreadboard.add(afterElement, () => circuit)
 //
-// circuit, in F, S, V, A and s (or the same per cm²):
-//   { title: 'the RC circuit',
+// circuit, in F, S, V, A and s (or the same per cm²), built with these values as they are
+// (scale: 'breadboard' rescales it to parts you could buy and volts instead):
+//   { title: 'the RC circuit', scale: 'breadboard',
 //     compartments: [{ name: 'Membrane', C: 1e-6,
 //                      channels: [{ name: 'Na⁺', g: 7e-4, E: 0.060,      // conductance and its battery
 //                                   vary: true, gmin: 5e-5,               // a potentiometer, down to gmin
