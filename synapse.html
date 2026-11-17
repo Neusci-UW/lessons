@@ -372,6 +372,7 @@ button:disabled{opacity:.45;cursor:default}
             <button id="cFire" class="primary">Fire spike</button>
             <button id="cPlay" class="primary">Pause</button>
             <button id="cSweep">Sweep</button>
+            <button id="cSweepCC" title="Current clamp: a steady current sets each starting voltage, from the lowest to the highest V in the sweep; then one spike, and V is free to move">Current-clamp sweep</button>
             <button id="cClear">Clear</button>
             <label for="cSpeed" class="runlab">Speed</label>
             <input type="range" id="cSpeed" min="0" max="100" value="62">
@@ -1332,6 +1333,7 @@ function thin(xs, yss, max = 1400) {
     return { t, g, I, V, W, Vh, Ihold, mode: P.mode, dt };
   }
   function fire() {
+    if (P.mode !== 'vc') { P.mode = 'vc'; overlays = []; tr = null; }   // Fire is voltage clamp
     queue = []; sweeping = false;
     // in voltage clamp the last trace stays on the charts, one per holding voltage
     if (P.mode === 'vc' && tr && tr.mode === 'vc') { overlays = overlays.filter(o => o.Vh !== tr.Vh); overlays.push(tr); }
@@ -1340,8 +1342,10 @@ function thin(xs, yss, max = 1400) {
   }
   // the sweep holds the cell at one voltage after another, lowest to highest V_C in the number of steps set, firing once at each:
   // the holding slider steps along and each trace stays on the charts as the next one runs
-  function sweep() {
-    overlays = []; tr = null;
+  // mode 'cc': current clamp. A steady current through the electrode sets each starting voltage, then V is free:
+  // the EPSPs move toward E_rev from every start, and change sign where they cross it.
+  function sweep(mode = 'vc') {
+    P.mode = mode; overlays = []; tr = null;
     const lo = Math.min(SWP.a, SWP.b), hi = Math.max(SWP.a, SWP.b);
     queue = Array.from({ length: SWP.n }, (_, k) => Math.round(lo + (hi - lo) * k / (SWP.n - 1)));
     sweeping = true;
@@ -1386,7 +1390,7 @@ function thin(xs, yss, max = 1400) {
         { x: 220, col: C.ink, E: E_REST, Elabel: 'E_rest −70 mV', glabel: 'g_rest ' + P.gr + ' nS', I: Irest, Ilabel: 'I_rest' },
         { x: 370, col: recCol(), E: P.E, Elabel: 'E_rev ' + fmtSigned(P.E, 0), variable: true, I: s.I, Ilabel: 'I_syn',
           glabel: (closes() ? 'Δg ' : 'g_syn ') + (s.g < -0.005 ? '−' : '') + Math.abs(s.g).toFixed(2) + ' nS' } ],
-      amp: { x: 530, mode: 'vc', Vc: P.Vh, I: -(Irest + s.I) } });
+      amp: P.mode === 'vc' ? { x: 530, mode: 'vc', Vc: P.Vh, I: -(Irest + s.I) } : { x: 530, mode: 'cc', I: -s.Ihold } });
     drawMem(s, Irest);
   }
   // ---------- the same membrane as a cartoon (membrane.js): each channel under its branch ----------
@@ -1398,7 +1402,7 @@ function thin(xs, yss, max = 1400) {
   const REC = { ampa: ['AMPA receptor', 'syn'], gaba: ['GABA_A receptor', 'cl'], gly: ['glycine receptor', 'cl'], musc: ['K⁺ (muscarinic)', 'k'] };
   function drawMem(s, Irest) {
     const t = performance.now(), real = Math.min(0.05, (t - memT) / 1000); memT = t;
-    const [rname, rion] = REC[P.rec], Iamp = -(Irest + s.I);
+    const [rname, rion] = REC[P.rec], Iamp = P.mode === 'vc' ? -(Irest + s.I) : -s.Ihold;
     const open = closes() ? Math.max(0, 1 + s.g / Math.max(1e-9, P.g)) : Math.min(1, s.g / Math.max(1e-9, P.g));
     if (playing && tr) memO = MemSlice.step(memO, [-Irest, (rion === 'cl' ? 1 : -1) * s.I, -Iamp].map(I => I / 60 * 240 * real));
     MemSlice.draw(mc, MW, MH, C, { where: 'dendrite', cap: { x: 80, q: s.V / 4 }, ions: MIONS, channels: [
@@ -1439,8 +1443,8 @@ function thin(xs, yss, max = 1400) {
         labs.forEach(l => { cx.fillStyle = l.c; fillSub(cx, l.t, g.L + g.pw + 6, Math.min(185, l.y)); });
       }
     }
-    const col = o => o === tr ? (P.mode === 'vc' && overlays.length ? vhColor(o.Vh) : recCol()) : vhColor(o.Vh);
-    const lab = (name) => o => P.mode === 'vc' && (overlays.length || o !== tr) ? 'V_C ' + fmtSigned(o.Vh, 0).replace(' mV', '') : name;   // the command voltage
+    const col = o => o === tr ? (overlays.length ? vhColor(o.Vh) : recCol()) : vhColor(o.Vh);
+    const lab = (name) => o => overlays.length || o !== tr ? (P.mode === 'vc' ? 'V_C ' : 'V₀ ') + fmtSigned(o.Vh, 0).replace(' mV', '') : name;   // the command (or starting) voltage
     // fixed y ranges, so traces can be compared from one Fire to the next; the zoom arrows rescale them
     multi(chs.g, mk('g', col, lab(closes() ? 'Δg' : 'g_syn')), closes() ? [-2, 1] : [0, 4], 'nS');
     $('cGTitle').innerHTML = closes() ? 'Post: change in K⁺ conductance Δg (channels closing, so it is negative)' : 'Post: synaptic conductance g<sub>syn</sub>';
@@ -1537,7 +1541,8 @@ function thin(xs, yss, max = 1400) {
   chipGroup('crec', k => { P.rec = k; const pr = PRESET[k]; set('cE', pr.E); set('cTd', pr.td); set('cG', pr.g); clear(); });
   chipGroup('civ', a => { ivAxes = a; });
   $('cFire').addEventListener('click', fire);
-  $('cSweep').addEventListener('click', sweep);
+  $('cSweep').addEventListener('click', () => sweep('vc'));
+  $('cSweepCC').addEventListener('click', () => sweep('cc'));
   $('cClear').addEventListener('click', clear);
   $('cPlay').addEventListener('click', () => { playing = !playing; $('cPlay').textContent = playing ? 'Pause' : 'Play'; });
 

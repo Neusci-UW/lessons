@@ -278,7 +278,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <ul>
         <li><b>The drawing:</b> the lipid bilayer in the middle, the inside of the cell on the left and the outside on the right. The marks along its two faces are the charge Q on the capacitor, one mark per 2 nC/cm². At rest the inside face carries negative charge and the outside positive: that is the resting voltage. Q = C·V, so more capacitance means more marks for the same voltage.</li>
         <li><b>Dots:</b> positive charge flowing, coloured by the channel it goes through. A synaptic input brings positive charge in; the leak channels let it flow back out. The charge that is in but not yet out sits on the capacitor and moves the voltage.</li>
-        <li><b>Voltage chart:</b> the black line is V. Dashed grey is what you would get by adding up each input as if it came alone (a single input's curve, copied to each arrival time). Where black matches the dashed line, summation is simply addition.</li>
+        <li><b>Voltage chart:</b> the black line is V. Dashed grey is what you would get by adding up each input as if it came alone (a single input's curve, copied to each arrival time). Where black matches the dashed line, summation is simply addition. Dotted grey: rest. Dashed teal: threshold, about −64 mV, the voltage lesson 8's circuit needs to fire with the default leaks. This patch has no channels that open with voltage, so it never fires; the line shows how close the inputs get.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-caplook" aria-labelledby="tab-caplook" hidden>
@@ -364,7 +364,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <ul>
         <li><b>The picture:</b> the cell is coloured by its voltage, blue at rest to red at the peak. From the left: the dendritic branches, covered in spines (small knobs on short necks, where excitatory synapses land); the synapses are the teal boutons on the larger spines, lit while their channels are open. Then the cell body, the axon hillock narrowing into the axon, and the axon initial segment (AIS, bracketed). The brightness of the orange shading on the AIS shows its density of Na⁺ channels.</li>
         <li><b>Inputs:</b> <b>Temporal</b>, one branch, whose synapses fire the number of times set, at the interval set. <b>Spatial</b>, four branches, the ticked ones firing once, all at the same moment. <b>Realistic</b>, six branches, every synapse firing on its own at random times, at the rate set, for as long as the simulation runs: inputs separate in both space and time, as a neuron in the brain receives them.</li>
-        <li><b>Voltage along the cell:</b> the black line is the voltage now; the dashed line is the highest each place reached since you fired. Shaded: the AIS; the grey band is the cell body. The dotted teal line is the threshold measured at the AIS during the last spike: the voltage at which it started to shoot up (faster than 20 mV per ms), as experimenters often define it.</li>
+        <li><b>Voltage along the cell:</b> the black line is the voltage now; the dashed line is the highest each place reached since you fired. Shaded: the AIS; the grey band is the cell body. The dotted teal line is the threshold at the AIS: the voltage at which it starts to shoot up (faster than 20 mV per ms), as experimenters often define it. Before the cell has fired, it is the value expected for this cell, found by slowly pushing current into the cell body until the AIS fires; after a spike, it is the value measured during that spike.</li>
         <li><b>Over time:</b> recordings at S (the cell body) and A (the middle of the AIS), and on the branches: D (where the synapses are) with one branch; each ticked branch, in its colour, in Spatial; in Realistic, a tick along the bottom for every input, in its branch's colour. <b>Voltage along the cell</b> draws one line per branch, in its colour, each joined to the cell body and axon.</li>
         <li><b>The model</b> is the Hodgkin–Huxley circuit of lesson 4's axon (lesson 8 takes it apart), one copy per short piece of membrane, with the cytoplasm connecting neighbours (as in lesson 4).</li>
       </ul>
@@ -385,7 +385,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <span class="sect-title">At the axon initial segment</span>
       <span class="vnum" id="aVnum">—</span>
       <div class="vrow"><span>cell body voltage</span><b id="aVsoma">—</b></div>
-      <div class="vrow"><span>threshold at the AIS (measured)</span><b id="aThr">—</b></div>
+      <div class="vrow"><span>threshold at the AIS</span><b id="aThr">—</b></div>
       <div class="vrow"><span>peak at the dendrite synapses / cell body / AIS</span><b id="aPeaks">—</b></div>
       <div class="vrow"><span>spike started at</span><b id="aStartAt">—</b></div>
       <div class="vrow" data-afor="r" hidden><span>firing rate, last second</span><b id="aFreq">—</b></div>
@@ -842,6 +842,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const CWd = 780, CHd = 470, c = setupCanvas($('capcv'), CWd, CHd);
   const CW = 560, CH = 400, vc = setupCanvas($('capV'), CW, CH);
   const V_RANGE = [-100, -20], WIN = 40, SAMPLE_MS = 0.05;
+  const THR = -64;   // mV, as in the calculator: lesson 8's circuit, with these leaks, needs about −64 mV to fire
   const p = { C: 1, gKL: 0.12, gNaL: 0.005, gCl: 0.02, gNaM: 0, gKM: 0 };
   let gIn = 0.05, nIn = 3, dtIn = 4, speed = 3, running = true, showLin = true;
   let s = mkPatch(p), evs = [], sampleAcc = 0, single = null;
@@ -948,7 +949,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     const series = [{ ys: hist.V, color: C.ink, width: 2.4, label: 'V' }];
     if (showLin) series.unshift({ ys: hist.lin, color: C.muted, width: 1.6, dash: [6, 4], label: 'sum' });
     drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series,
-      refs: [{ v: EREV.K, color: C.k, label: 'E_K' }, { v: EREV.Cl, color: C.cl, label: 'E_Cl' }, { v: r.V, color: C.accent, dash: [2, 3], width: 2, label: 'rest' }],
+      refs: [{ v: EREV.K, color: C.k, label: 'E_K' }, { v: EREV.Cl, color: C.cl, label: 'E_Cl' }, { v: r.V, color: C.muted, dash: [2, 3], width: 2, label: 'rest' }, { v: THR, color: C.accent, dash: [6, 4], width: 1.6, label: 'threshold' }],
       ylabel: 'mV', xlabel: `last ${WIN} ms` });
   }
   function readouts() {
@@ -1022,7 +1023,10 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const um = 1e-4;                                             // cm per µm
   let M = null, evs = [], syns = [], dIdx = [], iS = 0, iA = 0, running = true, speed = 2, sampleAcc = 0;
   let peak = null, startAt = null, firedAt = -1, hist = [], ticks = [], spikes = [], thrAIS = NaN, thrSoma = NaN, aisWasUp = false;
+  // thrExp: this cell's threshold at the AIS before any spike, from probe(); probeI: its current into the cell body (µA)
+  let thrExp = NaN, probed = false, probeI = 0, restSnap = null, probeTimer = 0;
   const MD = () => MODES[P.mode];
+  const thrNow = () => isFinite(thrAIS) ? thrAIS : thrExp;   // the threshold line: measured in the last spike, else expected
 
   function build() {
     const md = MD(), R = P.somaD / 2, parts = [];
@@ -1091,6 +1095,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
       bP[i] = m.cm[i] / dt + gNa + gK + m.gCl[i] + gInh + gs + m.Gsum[i];
       rP[i] = m.cm[i] / dt * V[i] + gNa * EREV.Na + gK * EREV.K + (m.gCl[i] + gInh) * EREV.Cl + gs * EREV.syn;
     }
+    rP[iS] += probeI;   // the threshold probe's current into the cell body (zero otherwise)
     // in from the tips: each piece's voltage as d + e × its parent's, its parent's equation updated with it
     for (const i of m.order) {
       const p = par[i]; if (p < 0) continue;
@@ -1101,7 +1106,31 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     for (let k = m.order.length - 2; k >= 0; k--) { const i = m.order[k]; V[i] = d[i] + e[i] * V[par[i]]; }
     m.t += dt;
   }
-  function reset() { build(); restAll(); evs = []; hist = []; ticks = []; spikes = []; peak = null; startAt = null; firedAt = -1; sampleAcc = 0; aisWasUp = false; }
+  function reset() {
+    build(); restAll(); evs = []; hist = []; ticks = []; spikes = []; peak = null; startAt = null; firedAt = -1; sampleAcc = 0; aisWasUp = false;
+    restSnap = snap(); thrExp = NaN; probed = false;
+    clearTimeout(probeTimer); probeTimer = setTimeout(probe, 120);   // once the sliders settle, so dragging stays smooth
+  }
+  const snap = () => ({ V: M.V.slice(), mm: M.mm.slice(), h: M.h.slice(), nn: M.nn.slice(), gsyn: M.gsyn.slice(), t: M.t });
+  const load = s => { M.V.set(s.V); M.mm.set(s.mm); M.h.set(s.h); M.nn.set(s.nn); M.gsyn.set(s.gsyn); M.t = s.t; };
+  // The cell's threshold before it has fired: from rest, push a slowly rising current into the cell body (the voltage
+  // climbs a few mV/ms, far below the 20 mV/ms that marks a spike) until the AIS shoots up; its voltage just before
+  // is the threshold. Run on a copy of the rest state, without the inhibitory synapse; the live cell is put back after.
+  // RAMP, mV/ms: the current grows by the cell's resting conductance × RAMP each ms. With PROBE_H's coarse step it
+  // takes about 12 ms of computing, and lands within 1–2 mV of the threshold measured in a spike from synapses.
+  const RAMP = 3, PROBE_H = 0.02;
+  function probe() {
+    if (!M || !restSnap) return;
+    const live = snap(), inh = P.inh, h = PROBE_H;
+    let G = 0; for (let i = 0; i < M.n; i++) G += M.gKL[i] + M.gNaL[i] + M.gCl[i];
+    load(restSnap); M.gsyn.fill(0); P.inh = false; thrExp = NaN;
+    for (let t = 0; t < 60; t += h) {
+      probeI = G * RAMP * t;
+      const va = M.V[iA]; step(h);
+      if ((M.V[iA] - va) / h > 20) { thrExp = va; break; }
+    }
+    probeI = 0; P.inh = inh; load(live); probed = true;
+  }
   // the synapses that fire: temporal, branch 1's, a train; spatial, the ticked branches', once
   function fire() {
     if (P.mode === 'r') return;
@@ -1308,7 +1337,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
       series.unshift({ ys: env, color: C.accent, width: 1.6, dash: [6, 4], label: 'peak' });
     }
     drawChart(pc, { xs, x0: xmin(), x1: xmax(), on: isAIS, w: CW, h: CH, key: 13, fixed: [-90, 50], series,
-      refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'AIS thr.' }] : [],
+      refs: isFinite(thrNow()) ? [{ v: thrNow(), color: C.accent, dash: [2, 3], width: 1.6, label: 'AIS thr.' }] : [],
       ylabel: 'mV', xlabel: M.nb === 1 ? 'µm from the cell body (dendrite left, axon right; AIS shaded)' : 'µm from the cell body (each branch left, in its colour; axon right)' });
     ChartZoom.bind(pc.canvas, drawCharts);
     const [zx0, zx1] = ChartZoom.x(pc.canvas, xmin(), xmax());
@@ -1319,7 +1348,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     if (P.mode === 's') for (let b = 0; b < M.nb; b++) if (P.on[b]) ser.push({ ys: hist.map(h => h.D[b]), color: BRC()[b], width: 1.4, label: String(b + 1) });
     ser.push({ ys: hist.map(h => h.S), color: C.ink, width: 2.2, label: 'S' }, { ys: hist.map(h => h.A), color: C.na, width: 2.2, label: 'A' });
     drawChart(tc, { xs: hist.map(h => h.t), x0: t1 - md.win, x1: t1, pin: 'right', on: P.mode === 'r' ? null : hist.map(h => h.on), w: CW, h: CH, key: 14, fixed: [-90, 50],
-      series: ser, refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'thr.' }] : [],
+      series: ser, refs: isFinite(thrNow()) ? [{ v: thrNow(), color: C.accent, dash: [2, 3], width: 1.6, label: 'thr.' }] : [],
       ylabel: 'mV', xlabel: `last ${md.win} ms` + (P.mode === 'r' ? '; ticks: inputs, in their branch\'s colour' : '') });
     if (P.mode === 'r') {   // each input as a tick along the bottom, in its branch's colour
       const [x0, x1] = ChartZoom.x(tc.canvas, t1 - md.win, t1, 'right'), T = 14, ph = CH - T - 30, tsx = t => L + (t - x0) / (x1 - x0) * pw;
@@ -1328,11 +1357,21 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   }
   const where = i => { const t = M.parts[i].type, end = P.somaD / 2 + P.start + P.len;
     return t === 'ais' ? 'the AIS' : t === 'soma' ? 'the cell body' : t === 'dend' ? (M.nb > 1 ? 'branch ' + (M.parts[i].b + 1) : 'the dendrite') : t === 'hill' ? 'the hillock' : M.x[i] < end + 8 ? 'the far end of the AIS' : 'the axon'; };
+  // the caption while no spike has started: how the AIS's peak compares with its threshold
+  function noSpike() {
+    const thr = thrNow(), pk = peak[iA], reached = `the depolarization reached ${fmtSigned(pk, 0)} at the AIS`;
+    const more = P.mode === 't' ? 'Fire more times, closer together, or add synapses.' : 'Tick more branches, add synapses, or move them closer.';
+    if (!isFinite(thr)) return probed ? `No spike: ${reached}, but nothing there can take over and fire${P.aisNa === 0 ? ': it has no Na⁺ channels' : ''}.` : `No spike yet: ${reached}.`;
+    if (pk < thr) return `No spike: ${reached}, ${(thr - pk).toFixed(0)} mV short of its threshold (${fmtSigned(thr, 0)}). ${more}`;
+    if (M.V[iA] >= thr) return `The AIS has passed its threshold (${fmtSigned(thr, 0)}): its Na⁺ channels are opening.`;
+    return `No spike: ${reached}, past its threshold (${fmtSigned(thr, 0)}), but too briefly for its Na⁺ channels to take over. ${more}`;
+  }
   function readouts() {
     const r = P.mode === 'r';
     $('aVnum').textContent = fmtSigned(M.V[iA]);
     $('aVsoma').textContent = fmtSigned(M.V[iS]);
-    $('aThr').textContent = isFinite(thrAIS) ? fmtSigned(thrAIS) + (isFinite(thrSoma) ? ' (cell body ' + fmtSigned(thrSoma, 0) + ')' : '') : peak || r ? 'not reached' : 'fire to measure';
+    $('aThr').textContent = isFinite(thrAIS) ? fmtSigned(thrAIS) + (isFinite(thrSoma) ? ' (cell body ' + fmtSigned(thrSoma, 0) + ')' : '')
+      : isFinite(thrExp) ? fmtSigned(thrExp) + ' (expected)' : probed ? 'none: it cannot fire' : '—';
     const dpk = peak ? Math.max(...dIdx.map((i, b) => P.mode !== 's' || P.on[b] ? peak[i] : -Infinity)) : NaN;
     $('aPeaks').textContent = peak ? `${dpk.toFixed(0)} / ${peak[iS].toFixed(0)} / ${peak[iA].toFixed(0)} mV` : '—';
     $('aStartAt').textContent = r ? '—' : startAt === null ? (peak ? 'no spike' : '—') : `${where(startAt)}, ${Math.round(Math.abs(M.x[startAt]) - P.somaD / 2)} µm`;
@@ -1342,7 +1381,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     $('aCap').innerHTML = r
       ? `${M.nb} branches × ${P.n} synapses, each firing at random ${P.rate} times a second: about ${nIn.toLocaleString()} inputs a second in all. One alone does almost nothing; the cell fires when enough of them bunch up in time and across branches, and each spike starts at the AIS.`
       : !peak ? (P.mode === 't' ? 'Press Fire synapses: branch 1\'s synapses fire the number of times set, at the interval set. Shaded on the time chart: synaptic channels open.' : 'Press Fire synapses: the synapses on the ticked branches all fire once, together. Shaded on the time chart: synaptic channels open.')
-      : startAt === null ? `No spike: the depolarization reached ${peak[iA].toFixed(0)} mV at the AIS, short of its threshold (${isFinite(thrAIS) ? fmtSigned(thrAIS, 0) : 'none'}). ${P.mode === 't' ? 'Fire more times, closer together, or add synapses.' : 'Tick more branches, add synapses, or move them closer.'}`
+      : startAt === null ? noSpike()
       : `The spike started in ${where(startAt)}, then ran down the axon and back into the cell body. Threshold, measured where the rise speeds past 20 mV/ms, was ${fmtSigned(thrAIS, 0)} at the AIS${isFinite(thrSoma) ? ' but ' + fmtSigned(thrSoma, 0) + ' at the cell body' : ''}.`;
   }
   // ---------- controls ----------
@@ -1387,7 +1426,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   playBtn.addEventListener('click', () => setRunning(!running));
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
   setMode('t', false); readouts();
-  window.SUM_AIS = { P, get M() { return M; }, fire, reset, advance, setMode, get startAt() { return startAt; }, get peak() { return peak; }, get thr() { return thrAIS; },
+  window.SUM_AIS = { P, get M() { return M; }, fire, reset, advance, setMode, get startAt() { return startAt; }, get peak() { return peak; }, get thr() { return thrAIS; }, get thrExp() { return thrExp; }, probe, readouts, drawCharts, 
     get spikes() { return spikes; }, idx: () => ({ iD: dIdx[0], iS, iA }) };
   let lastT = performance.now(), frame = 0;
   function loop(now) {

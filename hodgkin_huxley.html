@@ -271,9 +271,11 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <button id="hhAct" class="latch" aria-pressed="false"><span id="hhActLab">Stimulate</span></button>
         <button id="hhPlay" class="primary">Pause</button>
         <button id="hhReset">Reset</button>
+        <button id="hhSweep" data-for="nav hh" title="Current clamp: pulses from small to the size set, each from rest; every trace stays on the voltage chart">Sweep</button>
         <label for="hhSpeed" class="runlab">Speed</label>
         <input type="range" id="hhSpeed" min="0" max="125" value="70">
         <output id="hhSpeedo" for="hhSpeed"></output>
+        <span class="swline" data-for="nav hh">Sweep pulses from <input type="number" id="hhSwA" min="-200" max="300" step="any" value="10" aria-label="Smallest pulse, µA/cm²"> to <input type="number" id="hhSwB" min="-200" max="300" step="any" value="100" aria-label="Largest pulse, µA/cm²"> µA/cm² in <input type="number" id="hhSwN" min="2" max="20" step="1" value="8" aria-label="Number of steps"> steps</span>
       </div>
       <div class="legend">
         <span><i class="dot pos"></i>positive charge (conventional current)</span>
@@ -1389,12 +1391,36 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     label('I_C ' + fmtI(I[I.length - 1]), xc + 8, MID + 140, C.pos, 'left', '600 12px "IBM Plex Mono", monospace');
     label('g in mS/cm²; currents in µA/cm², + = outward', CWd - 12, CHd - 10, C.muted, 'right', '500 11.5px "IBM Plex Sans", sans-serif');
   }
+  // ---------- current-clamp sweep: pulses from small to the size set, each from rest; the traces stay ----------
+  const SWP = { on: false, amps: [], traces: [], amp: 0, I0: 0, n: 8, a: 10, b: 100 };
+  function nextSweep() {
+    if (SWP.on && SWP.amp != null && hist.V.length) SWP.traces.push({ V: hist.V.slice(), amp: SWP.amp });
+    if (!SWP.amps.length) { SWP.on = false; p.I = SWP.I0; return; }
+    SWP.amp = SWP.amps.shift(); p.I = SWP.amp; reset(); pulses.push(1); peak = s.V;
+  }
+  function startSweep() {
+    if (mode === 'sw') return;
+    SWP.I0 = p.I; SWP.traces = []; SWP.on = true; SWP.amp = null;
+    const n = Math.max(2, Math.round(SWP.n));
+    SWP.amps = Array.from({ length: n }, (_, k) => +(SWP.a + (SWP.b - SWP.a) * k / (n - 1)).toPrecision(3));
+    nextSweep(); setRunning(true);
+  }
+  function clearSweep() { if (SWP.on) p.I = SWP.I0; SWP.on = false; SWP.traces = []; }
+  const sweepCol = amp => mixc(C.pos, C.neg, SWP.b === SWP.a ? 1 : Math.max(0, Math.min(1, (amp - SWP.a) / (SWP.b - SWP.a))));
+  bindNum('hhSwA', v => SWP.a = v); bindNum('hhSwB', v => SWP.b = v); bindNum('hhSwN', v => SWP.n = v);
   function drawCharts() {
+    const swept = SWP.on || SWP.traces.length > 0;
     const refs = [{ v: p.E.K, color: C.k, label: 'E_K' }, { v: p.E.Na, color: C.na, label: 'E_Na' }];
     if (mode === 'sw') refs.push({ v: vInf(), color: C.accent, dash: [6, 4], width: 2, label: 'V∞' });
     else { refs.push({ v: rest.V, color: C.muted, dash: [2, 3], width: 1.6, label: 'rest' }); if (isFinite(thr)) refs.push({ v: thr, color: C.accent, dash: [6, 4], width: 2, label: 'threshold' }); }
-    drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series: [{ ys: hist.V, color: C.ink, width: 2.4 }], refs, ylabel: 'mV', xlabel: 'time (ms), 0 = now' });
-    const o = { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, xlabel: 'time (ms), 0 = now' };
+    if (swept) {   // every trace from the start of its own pulse, on one time axis
+      const N = Math.max(hist.V.length, ...SWP.traces.map(tr => tr.V.length)), xs = Array.from({ length: N }, (_, i) => (i + 1) * SAMPLE_MS);
+      const series = SWP.traces.map(tr => ({ ys: tr.V, n: tr.V.length, color: sweepCol(tr.amp), width: 1.6, label: String(tr.amp) }));
+      if (SWP.on) series.push({ ys: hist.V, n: hist.V.length, color: sweepCol(SWP.amp), width: 2.6, label: String(SWP.amp) });
+      drawChart(vc, { xs, x0: 0, x1: WIN, on: xs.map(t => t >= 1 && t < 1 + p.dur), w: CW, h: CH, key: 12, fixed: V_RANGE, series, refs, ylabel: 'mV', xlabel: 'time (ms); labels: pulse in µA/cm²' });
+    } else drawChart(vc, { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, fixed: V_RANGE, series: [{ ys: hist.V, color: C.ink, width: 2.4 }], refs, ylabel: 'mV', xlabel: 'time (ms), 0 = now' });
+    const o = swept ? { xs: hist.t, x0: 0, x1: WIN, on: hist.on, w: CW, h: CH, key: 14, xlabel: 'time (ms), this sweep' }
+                    : { xs: hist.t, x0: s.t - WIN, x1: s.t, pin: 'right', on: hist.on, w: CW, h: CH, key: 14, xlabel: 'time (ms), 0 = now' };
     if (view === 'g') drawChart(xc, { ...o, fixed: mode === 'sw' ? [0, 5] : [0, 50], ylabel: 'mS/cm²',
       series: [{ ys: hist.gNa, color: C.na, width: 2.4, label: 'g_Na' }, ...(mode === 'hh' ? [{ ys: hist.gK, color: C.k, width: 2.4, label: 'g_K' }] : []), { ys: hist.gL, color: C.k, dash: [5, 4], label: 'K⁺ leak' }] });
     else if (view === 'i') drawChart(xc, { ...o, fixed: mode === 'sw' ? [-200, 200] : [-3000, 3000], ylabel: 'µA/cm², outward +',
@@ -1434,7 +1460,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   }
   function fire(delays = [0]) { peak = s.V; delays.forEach(d => pulses.push(s.t + 0.1 + d)); }
   function setMode(m) {
-    mode = m; reset();
+    clearSweep(); mode = m; reset();
     document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
     document.querySelectorAll('[data-for]').forEach(e => e.hidden = !e.dataset.for.split(' ').includes(m));
     const gChip = document.querySelector('[data-hview="n"]'); gChip.hidden = m === 'sw';
@@ -1443,8 +1469,9 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   }
   document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
   chipGroup('hview', v => { view = v; readouts(); });
-  $('hhAct').addEventListener('click', () => { if (mode === 'sw') { sw = !sw; peak = s.V; actLabel(); } else fire(); });
-  $('hhReset').addEventListener('click', reset);
+  $('hhAct').addEventListener('click', () => { if (SWP.on || SWP.traces.length) { clearSweep(); reset(); } if (mode === 'sw') { sw = !sw; peak = s.V; actLabel(); } else fire(); });
+  $('hhReset').addEventListener('click', () => { clearSweep(); reset(); });
+  $('hhSweep').addEventListener('click', startSweep);
   const onp = (k, sub) => v => { if (sub) p.E[k] = v; else p[k] = v; if (s) recalc(); };
   bindRange('hI', v => fmtSigned(v, 0, ' µA/cm²'), onp('I'));
   bindRange('hDur', v => v.toFixed(1) + ' ms', onp('dur'));
@@ -1468,11 +1495,14 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
   window.addEventListener('hhkinetics', () => { WIN = niceT(10 * KIN.slow); SAMPLE_MS = WIN / 1000; setMode(mode); });
   setMode('hh');
-  window.HH_CIRC = { setMode, fire, setSwitch: on => { if (sw !== on) $('hhAct').click(); }, get mode() { return mode; } };
+  window.HH_CIRC = { setMode, fire, setSwitch: on => { if (sw !== on) $('hhAct').click(); }, get mode() { return mode; }, sweep: startSweep, get sweeps() { return SWP; } };
   let lastT = performance.now(), frame = 0;
   function loop(now) {
     const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
-    if (running) { advance(dt * speed); stepDots(); }
+    if (running) {
+      advance(dt * (SWP.on ? Math.max(speed, WIN / 1.5) : speed)); stepDots();   // a sweep runs each trace in about 1.5 s
+      if (SWP.on && s.t >= WIN) nextSweep();
+    }
     draw(); drawMem(); drawCharts();
     if (frame++ % 6 === 0) readouts();
     requestAnimationFrame(loop);

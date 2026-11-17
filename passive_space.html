@@ -204,6 +204,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 .reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
 .reflist .why{color:var(--muted);font-size:13.5px}
 .reflist a{color:var(--accent)}
+.runbar .swline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:var(--muted)}
+.runbar input[type=number]{width:68px;font:13px var(--font-mono);padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -253,16 +255,18 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <div class="runbar">
         <button id="lSwitch" class="latch" aria-pressed="false"><span id="lSwitchLab">Current on</span></button>
         <button id="lPlay" class="primary">Pause</button>
+        <button id="lSweep" title="One step after another, each from rest; every trace stays on the voltage chart">Sweep</button>
         <label for="lSpeed" class="runlab">Speed</label>
         <input type="range" id="lSpeed" min="0" max="100" value="45">
         <output id="lSpeedo" for="lSpeed"></output>
+        <span class="swline">Sweep <span id="lSwWhat">the current</span> from <input type="number" id="lSwA" step="any" aria-label="Sweep from"> to <input type="number" id="lSwB" step="any" aria-label="Sweep to"> <span id="lSwUnit">µA/cm²</span> in <input type="number" id="lSwN" min="2" max="20" step="1" aria-label="Number of steps"> steps</span>
       </div>
       <div class="legend">
         <span><i class="dot pos"></i>positive charge (conventional current)</span>
         <span><i class="dot k"></i>through each patch's membrane (r<sub>m</sub>)</span>
         <span id="lLegSw"><i class="dot na"></i>through patch 1's Na⁺ channels</span>
       </div>
-      <div class="cgrid three">
+      <div class="cgrid even">
         <div class="ccol">
           <p class="sect-title">Voltage in each patch over time</p>
           <canvas id="lVt" aria-label="Voltage of each patch against time"></canvas>
@@ -277,6 +281,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <div class="btns" id="lIonChips" role="group" aria-label="Which current"></div>
           <canvas id="lIt" aria-label="One membrane current over time, one line per patch"></canvas>
         </div>
+        <div class="ccol">
+          <div class="charthead"><p class="sect-title">Settled voltage and current in each patch (V–I)</p>
+            <div class="btns" role="group" aria-label="Axes"><button class="chip" data-lvi="vi" aria-pressed="true">V–I</button><button class="chip" data-lvi="iv" aria-pressed="false">I–V</button><button class="chip" id="lVIClear">Clear</button></div></div>
+          <div class="btns" id="lVIKinds" role="group" aria-label="Which current"></div>
+          <canvas id="lVI" aria-label="One point per patch each time the row settles: the chosen current against each patch's voltage"></canvas>
+          <p class="caption" id="lVIcap"></p>
+        </div>
       </div>
     </div>
     <div class="help" role="tabpanel" id="pane-circhelp" aria-labelledby="tab-circhelp" hidden>
@@ -288,6 +299,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Voltage along the row:</b> black, the voltage now, every 5 µm along the row; dashed, where it will settle; dotted (current injection only), e<sup>−x/λ</sup> for comparison. The patches are 50 µm apart.</li>
         <li><b>Membrane currents over time:</b> the current through each patch's membrane, outward positive, one line per patch, coloured as on the voltage chart. The buttons choose which: each ion's channels (leak and switched together), each branch in the two-battery circuit, or the capacitor's current, I<sub>C</sub>. Patch 1's switched current flows only there; further along, only the leaks and the capacitor carry current, smaller and later.</li>
         <li><b>Over space:</b> every kind of membrane current along the row at this moment, one line each, against distance from patch 1. While the switch is on and the row settles, the capacitor's current I<sub>C</sub> spreads along the row and dies away; once settled, it is zero everywhere and the ions' currents balance the current arriving along the cytoplasm.</li>
+        <li><b>V–I:</b> each time the whole row settles, one point per patch, coloured as on the voltage chart (pale: switch off). <b>I into patch 1</b> plots each patch's settled voltage against the current injected into patch 1: the slopes are resistances, largest at patch 1 and smaller farther along. The other buttons plot each patch's own current of one kind (an ion's channels, a branch, or <b>Total I</b>, all its channels) against its own voltage; the dashed line is that kind's battery. V–I puts the current across, I–V the voltage.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-circlook" aria-labelledby="tab-circlook" hidden>
@@ -366,15 +378,17 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       </div>
       <canvas id="sPic" aria-label="A dendrite with a synapse at the chosen distance, joined at the right to the cell body, which is recorded from"></canvas>
       <!-- the synapse's slider runs under the dendrite, the same way: its right-hand end is next to the cell body -->
-      <div class="sposrow"><input type="range" id="sPos" min="0" max="590" step="10" value="300" aria-label="Synapse distance from the cell body"></div>
+      <div class="sposrow"><input type="range" id="sPos" min="0" max="590" step="10" value="300" aria-label="Injection distance from the cell body"></div>
       <div class="runbar">
         <button id="sFire" class="primary">Inject pulse</button>
         <button id="sClear">Clear</button>
-        <span class="runlab">Synapse at</span>
+        <button id="sSweep" title="One input after another, each traced as it runs; every input adds a point to the distance chart">Sweep</button>
+        <span class="runlab" id="sPosLab">Injection distance</span>
         <output id="sPoso" for="sPos"></output>
         <label class="check" for="sNorm"><input type="checkbox" id="sNorm">each scaled to its own peak</label>
+        <span class="swline">Sweep <select id="sSwWhat" aria-label="What the sweep steps"><option value="both">the current and the distance</option><option value="I">the current</option><option value="pos" id="sSwPosOpt">the injection distance</option></select> from <input type="number" id="sSwA" step="any" aria-label="Sweep from"> to <input type="number" id="sSwB" step="any" aria-label="Sweep to"> <span id="sSwUnit">pA</span> in <input type="number" id="sSwN" min="2" max="12" step="1" aria-label="Number of steps"> steps<span id="sSwPos2" hidden>, at each of the distances from <input type="number" id="sSwA2" step="any" aria-label="Distances from"> to <input type="number" id="sSwB2" step="any" aria-label="Distances to"> µm in <input type="number" id="sSwN2" min="2" max="12" step="1" aria-label="Number of distances"> steps</span></span>
       </div>
-      <div class="cgrid even">
+      <div class="cgrid three">
         <div class="ccol">
           <p class="sect-title">Voltage at the cell body, one trace per Fire</p>
           <canvas id="sVs" aria-label="The cell body's voltage after each synaptic input, one trace per distance"></canvas>
@@ -383,6 +397,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <p class="sect-title">The last input: where it went in (dashed) and at the cell body</p>
           <canvas id="sVl" aria-label="Voltage at the synapse and at the cell body after the last input"></canvas>
         </div>
+        <div class="ccol">
+          <div class="charthead"><p class="sect-title" id="sDistTitle">Peak at the cell body against distance</p>
+            <div class="btns" role="group" aria-label="What to plot"><button class="chip" data-sdist="pk" aria-pressed="true">Peak</button><button class="chip" data-sdist="rt" aria-pressed="false">Rise time</button></div></div>
+          <canvas id="sDist" aria-label="One point per input: the peak, or the rise time, at the cell body against the input's distance from it, one line per current"></canvas>
+          <p class="caption" id="sDistCap"></p>
+        </div>
       </div>
     </div>
     <div class="help" role="tabpanel" id="pane-synhelp" aria-labelledby="tab-synhelp" hidden>
@@ -390,14 +410,15 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>The drawing:</b> a dendrite 600 µm long with the cell body at its right-hand end. The input, a synapse or an electrode (teal), sits at the distance set: move it with the slider under the dendrite, whose right-hand end is next to the cell body, or click on the dendrite. Another electrode records in the cell body.</li>
         <li><b>The input,</b> at the place set: a <b>synapse</b>, whose current rises in the time set (half a millisecond to start with) and dies away (an EPSP), or an <b>electrode</b> injecting a square pulse of steady current for the length set. The dendrite is the circuit's cable, with the circuit's diameter, cytoplasm, resting leak and C; the cell body is a sphere 20 µm across, with the same membrane.</li>
         <li><b>Left chart:</b> the change in voltage at the cell body after each Fire, one trace per distance, coloured from red (close) to blue (far). Tick <b>each scaled to its own peak</b> to stretch every trace to the same height and compare their shapes alone.</li>
-        <li><b>Right chart:</b> the last input only: the voltage where it went in (dashed) and at the cell body (solid), on the same scale.</li>
+        <li><b>Middle chart:</b> the last input only: the voltage where it went in (dashed) and at the cell body (solid), on the same scale.</li>
+        <li><b>Right chart:</b> one point per input, at its distance from the cell body: <b>Peak</b>, the largest change in voltage at the cell body, or <b>Rise time</b>, how long that change takes to climb from 10% to 90% of its peak. Points with the same current (the pulse's height or the EPSP's peak) are joined into one line, coloured from blue (smallest) to red (largest). Sweep the current and the distance to draw a line for each current.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-synlook" aria-labelledby="tab-synlook" hidden>
       <ul>
         <li>Fire at 50 µm, then at 300 and 550 µm. Farther out, the bump at the cell body is smaller, peaks later and lasts longer.</li>
         <li>Tick "each scaled to its own peak": the far input is not only smaller but a different shape, slower to rise and slower to fall. The dendrite has filtered it.</li>
-        <li>On the right, for an input far out: where it goes in, the bump is tall and quick, because the thin dendrite there has little membrane, and so little capacitance, to charge. By the cell body most of the current has leaked out on the way, and what is left is spread out in time.</li>
+        <li>In the middle chart, for an input far out: where it goes in, the bump is tall and quick, because the thin dendrite there has little membrane, and so little capacitance, to charge. By the cell body most of the current has leaked out on the way, and what is left is spread out in time.</li>
         <li>Electrode: a 10 ms square pulse close to the cell body gives a square-ish step there, rounded at the corners by τ. Far out it arrives as a slow, low hump that never flattens into a step: the dendrite smooths the pulse's sharp edges away.</li>
         <li>Make the dendrite wider (the circuit's diameter): λ grows and far inputs lose less. Raise the membrane leak: λ and τ shrink, far inputs fade more but every bump is shorter.</li>
       </ul>
@@ -409,6 +430,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <span class="vnum" id="sPk">—</span>
       <div class="vrow"><span>peak change in voltage</span></div>
       <div class="vrow"><span>time to peak</span><b id="sTp">—</b></div>
+      <div class="vrow"><span>rise time, 10% to 90% of the peak</span><b id="sRt">—</b></div>
       <div class="vrow"><span>width at half the peak</span><b id="sHw">—</b></div>
       <div class="vrow"><span>peak where it went in</span><b id="sSyn">—</b></div>
       <div class="vrow"><span>reaching the cell body: its peak ÷ the peak where it went in</span><b id="sRatio">—</b></div>
@@ -723,6 +745,58 @@ function drawChart(c, o) {
   c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
   c.textBaseline = 'alphabetic';
 }
+// A V–I chart: groups of points (V, I), each group joined in order and drawn in its colour, the latest point ringed.
+// o: { groups: [{ pts: [{ V, I }], col, label }], last: { V, I, col } | null, vi: true (I across, V up) or false
+//      (V across, I up), vR: [lo, hi] (mV), iR: [lo, hi], iLab, vLab: axis labels, refs: [{ V, col, label }]: dashed
+//      lines at a voltage (a battery: where a kind of current is zero) }
+function drawVI(c, W, H, o) {
+  const L = 62, R = 92, T = 14, B = 40, pw = W - L - R, ph = H - T - B;
+  const xr = o.vi ? o.iR : o.vR, yr = o.vi ? o.vR : o.iR;
+  const [x0, x1] = ChartZoom.x(c.canvas, xr[0], xr[1]), [y0, y1] = ChartZoom.y(c.canvas, yr[0], yr[1]);
+  ChartZoom.bind(c.canvas, () => drawVI(c, W, H, o));
+  const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = y => T + (y1 - y) / (y1 - y0) * ph;
+  const at = (V, I) => o.vi ? [sx(I), sy(V)] : [sx(V), sy(I)];
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
+  const step = s => { const p = Math.pow(10, Math.floor(Math.log10(s))), f = s / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; };
+  const num = v => (v < 0 ? '−' : '') + Math.abs(+v.toPrecision(4));
+  const ys = step((y1 - y0) / 5), xs = step((x1 - x0) / 6);
+  for (let v = Math.ceil(y0 / ys) * ys; v <= y1 + 1e-9; v += ys) {
+    const zero = Math.abs(v) < ys / 1e3; c.strokeStyle = zero ? C.muted : C.line; c.lineWidth = zero ? 1.2 : 0.8;
+    c.beginPath(); c.moveTo(L, sy(v)); c.lineTo(L + pw, sy(v)); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(zero ? '0' : num(v), L - 6, sy(v));
+  }
+  for (let x = Math.ceil(x0 / xs) * xs; x <= x1 + 1e-9; x += xs) {
+    const zero = Math.abs(x) < xs / 1e3; c.strokeStyle = zero ? C.muted : C.line; c.lineWidth = zero ? 1.2 : 0.8;
+    c.beginPath(); c.moveTo(sx(x), T); c.lineTo(sx(x), T + ph); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(zero ? '0' : num(x), sx(x), T + ph + 12);
+  }
+  c.textAlign = 'left'; fillSub(c, o.vi ? o.iLab : o.vLab, L, H - 9);
+  c.save(); c.translate(14, T + ph); c.rotate(-Math.PI / 2); fillSub(c, o.vi ? o.vLab : o.iLab, 0, 0); c.restore();
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  for (const r of o.refs || []) {
+    const [x, y] = at(r.V, 0); c.strokeStyle = r.col; c.lineWidth = 1.2; c.setLineDash([6, 4]); c.beginPath();
+    o.vi ? (c.moveTo(L, y), c.lineTo(L + pw, y)) : (c.moveTo(x, T), c.lineTo(x, T + ph)); c.stroke(); c.setLineDash([]);
+    c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = r.col; c.textAlign = 'left'; fillSub(c, r.label, o.vi ? L + 4 : x + 4, o.vi ? y - 8 : T + 10);
+  }
+  for (const g of o.groups) {
+    if (!g.pts.length) continue;
+    const pts = g.pts.map(p => at(p.V, p.I)).sort((a, b) => a[0] - b[0]);
+    if (pts.length > 1) { c.strokeStyle = g.col; c.globalAlpha = 0.5; c.lineWidth = 1.6; c.beginPath(); pts.forEach(([x, y], k) => k ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.globalAlpha = 1; }
+    c.fillStyle = g.col; for (const [x, y] of pts) { c.beginPath(); c.arc(x, y, 4, 0, 6.283); c.fill(); }
+  }
+  if (o.last) { const [x, y] = at(o.last.V, o.last.I); c.strokeStyle = C.ink; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 8, 0, 6.283); c.stroke(); }
+  c.restore();
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
+  // the groups' labels at the right, by the last point of each
+  c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
+  const labs = o.groups.filter(g => g.pts.length && g.label).map(g => { const p = g.pts.map(q => at(q.V, q.I)).sort((a, b) => a[0] - b[0]).at(-1); return { y: Math.max(T + 6, Math.min(T + ph - 4, p[1])), t: g.label, c: g.col }; }).sort((a, b) => a.y - b.y);
+  for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 13) labs[k].y = labs[k - 1].y + 13;
+  // labels pushed past the bottom (lines bunched there) move back up
+  for (let k = labs.length - 1; k >= 0; k--) labs[k].y = Math.min(labs[k].y, k === labs.length - 1 ? T + ph - 4 : labs[k + 1].y - 13);
+  labs.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, L + pw + 6, l.y); });
+  c.textBaseline = 'alphabetic';
+}
 function chipGroup(attr, onPick) {
   const bs = document.querySelectorAll(`[data-${attr}]`);
   bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(b.dataset[attr]); }));
@@ -976,8 +1050,59 @@ function chipGroup(attr, onPick) {
     MemSlice.draw(mc, MW, MH, C, { where: 'dendrite', slice: [0.12, 0.88], cap, channels, labels, flows, ions: MIONS });
   }
   const patchCol = k => mixc(C.neg, C.pos, P.n > 1 ? k / (P.n - 1) : 0);
+  // ---------- sweep: one step after another, each from rest; the traces stay ----------
+  // Current injection steps the current into patch 1 (current clamp). The other circuits step the resistance of
+  // patch 1's switched branch (R_1, or 1/g of the Na⁺ or mixed channels), closing the switch once per step.
+  // On from SW_ON to SW_OFF ms. Patch 1's trace is solid, the last patch's dashed, both in the step's colour.
+  const SWS = { I: { a: -20, b: 20, n: 6 }, R: { a: 0.5, b: 4, n: 6 } };
+  const swKind = () => P.mode === 'inj' ? 'I' : 'R';
+  const SWP = { on: false, vals: [], traces: [], v: null, k: 0, n: 0, saved: null }, SW_ON = 2, SW_OFF = 24;
+  function swApply(v) {
+    if (P.mode === 'inj') P.I = v; else if (P.mode === 'bat') P.R1 = v;
+    else if (P.mode === 'g') P.gNa = 1 / v; else P.mNa = P.mK = 1 / (2 * v);   // the mixed channels: half Na⁺, half K⁺
+  }
+  const swF = () => SWP.n > 1 ? SWP.k / (SWP.n - 1) : 1;
+  function nextSweep() {
+    if (SWP.on && SWP.v != null && hist.V.length) SWP.traces.push({ v: SWP.v, f: swF(), V1: hist.V.map(v => v[0]), Vn: hist.V.map(v => v[v.length - 1]) });
+    if (!SWP.vals.length) { SWP.on = false; Object.assign(P, SWP.saved); setSw(false); return; }
+    SWP.k = SWP.n - SWP.vals.length; SWP.v = SWP.vals.shift(); swApply(SWP.v); setSw(false); reset();
+  }
+  function startSweep() {
+    if (SWP.on) Object.assign(P, SWP.saved);
+    const S = SWS[swKind()], n = Math.max(2, Math.round(S.n));
+    SWP.saved = { I: P.I, R1: P.R1, gNa: P.gNa, mNa: P.mNa, mK: P.mK };
+    SWP.traces = []; SWP.on = true; SWP.v = null; SWP.n = n;
+    SWP.vals = Array.from({ length: n }, (_, k) => +(S.a + (S.b - S.a) * k / (n - 1)).toPrecision(3));
+    nextSweep(); setRunning(true);
+  }
+  function clearSweep() { if (SWP.on) Object.assign(P, SWP.saved); SWP.on = false; SWP.traces = []; }
+  // run the sweep's model time, closing and opening the switch exactly at SW_ON and SW_OFF
+  function sweepAdvance(ms) {
+    const target = Math.min(t + ms, WIN);
+    for (const b of [SW_ON, SW_OFF]) if (t < b && b <= target) { advance(b - t); setSw(b === SW_ON); }
+    if (target > t) advance(target - t);
+    if (t >= WIN - 1e-9) nextSweep();
+  }
+  function swFields() {   // the boxes beside Sweep: what is stepped, in which units
+    const S = SWS[swKind()], R = swKind() === 'R';
+    $('lSwWhat').innerHTML = P.mode === 'inj' ? 'the current' : P.mode === 'bat' ? 'R<sub>1</sub>' : P.mode === 'g' ? 'the Na⁺ channels\' R (1/g)' : 'the mixed channels\' R (1/g)';
+    $('lSwUnit').textContent = R ? 'kΩ·cm²' : 'µA/cm²';
+    $('lSwA').value = S.a; $('lSwB').value = S.b; $('lSwN').value = S.n;
+    for (const id of ['lSwA', 'lSwB']) { $(id).min = R ? 0.1 : -200; $(id).max = R ? 50 : 200; }
+  }
+  for (const [id, key] of [['lSwA', 'a'], ['lSwB', 'b'], ['lSwN', 'n']]) $(id).addEventListener('input', e => { const v = parseFloat(e.target.value);
+    if (isFinite(v) && (key !== 'n' || v >= 2) && !(swKind() === 'R' && key !== 'n' && v <= 0)) SWS[swKind()][key] = v; });
+  const sweepCol = f => mixc(C.pos, C.neg, f);
   function drawCharts() {
     const n = P.n, g = P.mode !== 'inj', fixed = g ? [-100, 40] : [-5, 45];
+    if (SWP.on || SWP.traces.length) {   // every trace from the start of its own step: patch 1 solid, patch n dashed
+      const cur = SWP.on && SWP.v != null ? [{ v: SWP.v, f: swF(), V1: hist.V.map(v => v[0]), Vn: hist.V.map(v => v[v.length - 1]), now: true }] : [], R = swKind() === 'R';
+      const all = [...SWP.traces, ...cur], N = Math.max(1, ...all.map(tr => tr.V1.length)), xs = Array.from({ length: N }, (_, i) => (i + 1) * SAMPLE_MS);
+      const series = all.flatMap(tr => [{ ys: tr.Vn, n: tr.Vn.length, color: sweepCol(tr.f), width: 1.2, dash: [4, 3] },
+                                        { ys: tr.V1, n: tr.V1.length, color: sweepCol(tr.f), width: tr.now ? 2.6 : 1.8, label: (!R && tr.v > 0 ? '+' : '') + tr.v }]);
+      drawChart(vt, { xs, x0: 0, x1: WIN, on: xs.map(x => x >= SW_ON && x < SW_OFF), w: CW, h: CH, fixed: R ? fixed : [-45, 45], ylabel: R ? 'mV' : 'mV from rest',
+        xlabel: `time (ms); solid patch 1, dashed patch ${n}; ${R ? 'R in kΩ·cm²' : 'µA/cm²'}`, series });
+    } else
     drawChart(vt, { xs: hist.t, x0: Math.max(0, t - WIN), x1: Math.max(WIN, t), pin: 'right', on: hist.on, w: CW, h: CH, fixed, ylabel: 'mV', xlabel: `time, the last ${WIN} ms`,
       series: Array.from({ length: n }, (_, k) => ({ ys: hist.V.map(v => v[k]), color: patchCol(n - 1 - k), width: k === 0 ? 2.4 : 1.6, label: String(k + 1) })) });
     const ds = xFine(), ss = solve(Infinity), lam = lambda(), x0r = -DX / 2, x1r = (n - 0.5) * DX;
@@ -1008,13 +1133,66 @@ function chipGroup(attr, onPick) {
   const setSw = on => { sw = on; $('lSwitch').setAttribute('aria-pressed', String(on)); $('lSwitchLab').textContent = SWLAB[P.mode][0]; $('lSwitch').style.setProperty('--on', SWLAB[P.mode][1]); };
   const LEG = { inj: ['pos', 'from the current source into patch 1'], bat: ['accent', 'through patch 1\'s branch 1 (R<sub>1</sub>, E<sub>1</sub>)'], g: ['na', 'through patch 1\'s Na⁺ channels'], full: ['accent', 'through patch 1\'s mixed channels'] };
   function setMode(m) {
-    P.mode = m; setSw(false); reset(); ionChips();
+    clearSweep(); P.mode = m; setSw(false); reset(); swFields(); ionChips(); viPts = new Map(); viLast = null; viButtons();
     document.querySelectorAll('[data-lfor]').forEach(r => r.hidden = !r.dataset.lfor.split(' ').includes(m));
     $('lLegSw').innerHTML = `<i class="dot ${LEG[m][0]}" style="background:var(--${LEG[m][0]})"></i>${LEG[m][1]}`;
   }
   chipGroup('lmode', setMode);
   chipGroup('liview', v => { iView = v; drawCharts(); });
-  $('lSwitch').addEventListener('click', () => setSw(!sw));
+  // ---------- V–I: one point per patch each time the row settles ----------
+  // When every patch is within 0.05 mV of where it is heading, the patches' voltages and currents are kept, one set per
+  // state (switch and patch 1's voltage). "I into patch 1" plots every patch's voltage against the current injected
+  // into patch 1: patch 1's slope is the input resistance, and farther patches' are smaller. The other buttons plot each
+  // patch's own current of one kind (leak and switched channels together) against its own voltage: Ohm's law, with
+  // every patch on the same line through that kind's battery; "Total I" is all of a patch's channels together.
+  const VIW = CW, VIH = CH, vic = setupCanvas($('lVI'), VIW, VIH);
+  const VIK = {
+    inj: [['inj', 'I into patch 1', 'accent'], ['leak', 'I_leak', 'k']],
+    bat: [['total', 'Total I', 'ink'], ['b1', 'I_1', 'accent'], ['b2', 'I_2', 'muted']],
+    g: [['total', 'Total I', 'ink'], ['Na', 'I_Na', 'na'], ['K', 'I_K', 'k']],
+    full: [['total', 'Total I', 'ink'], ['Na', 'I_Na', 'na'], ['K', 'I_K', 'k'], ['Cl', 'I_Cl', 'cl']],
+  };
+  let viPts = new Map(), viLast = null, viKind = 'inj', viAxes = 'vi';
+  function viRecord() {
+    if (!Vf.length) return;
+    const ss = byPatch(solve(Infinity)); if (ss.some((v, k) => Math.abs(V[k] - v) > 0.05)) return;
+    const key = (sw ? 1 : 0) + '|' + ss[0].toFixed(1);
+    if (viPts.has(key)) return;
+    const I = ionCurrents(ss, ss.map(() => 0), 1); delete I.C;
+    I.total = ss.map((_, k) => Object.values(I).reduce((a, arr) => a + arr[k], 0));
+    I.inj = ss.map(() => P.mode === 'inj' && sw ? P.I : 0);
+    viPts.set(key, { sw, V: ss, I }); viLast = key;
+  }
+  function viButtons() {
+    const ks = VIK[P.mode]; if (!ks.some(k => k[0] === viKind)) viKind = ks[0][0];
+    $('lVIKinds').innerHTML = ks.map(([k, l, col]) => `<button class="chip" data-lvik="${k}" aria-pressed="${k === viKind}"><i class="dot" style="background:var(--${col})"></i>${l.replace(/_([A-Za-z0-9]+)/, '<sub>$1</sub>')}</button>`).join('');
+    document.querySelectorAll('[data-lvik]').forEach(b => b.addEventListener('click', () => { viKind = b.dataset.lvik; viButtons(); drawVIl(); }));
+  }
+  function drawVIl() {
+    const n = P.n, inj = P.mode === 'inj', [, label] = VIK[P.mode].find(k => k[0] === viKind), pts = [...viPts.values()];
+    const groups = [];
+    for (let k = 0; k < n; k++) for (const on of inj ? [true] : [false, true]) {
+      const col = on ? patchCol(n - 1 - k) : mixc(patchCol(n - 1 - k), C.surface, 0.45);
+      groups.push({ pts: pts.filter(q => inj || q.sw === on).filter(q => q.V.length === n).map(q => ({ V: q.V[k], I: q.I[viKind][k] })), col,
+                    label: on && (k === 0 || k === n - 1) ? 'patch ' + (k + 1) : '' });
+    }
+    const E = { leak: 0, b1: P.E1, b2: P.E2, Na: P.mode === 'full' ? P.fENa : P.ENa, K: P.mode === 'full' ? P.fEK : P.EK, Cl: P.fECl }[viKind];
+    const lq = viLast && viPts.get(viLast);
+    drawVI(vic, VIW, VIH, { groups, vi: viAxes === 'vi', last: lq && lq.V.length === n ? { V: lq.V[0], I: lq.I[viKind][0] } : null,
+      vR: inj ? [-20, 60] : [-100, 40], iR: inj ? [-40, 60] : [-120, 120], vLab: 'settled V (mV)', iLab: label + ' (µA/cm², outward +)',
+      refs: E !== undefined ? [{ V: E, col: C.muted, label: 'E ' + fmtSigned(E, 0) }] : [] });
+    const sl = k => { const q = pts.filter(q => q.V.length === n && q.I.inj[0] !== 0); return q.length ? q[0].V[k] / q[0].I.inj[0] : NaN; };
+    $('lVIcap').innerHTML = viKind === 'inj'
+      ? `Every patch's settled voltage against the current injected into patch 1. Patch 1's slope is the row's input resistance${isFinite(sl(0)) ? ` (${sl(0).toFixed(2)} kΩ·cm²)` : ''}; each patch further along has a smaller slope${isFinite(sl(n - 1)) ? ` (patch ${n}: ${sl(n - 1).toFixed(2)})` : ''}, as less of the current's effect reaches it. Turn the current on at different sizes to add points.`
+      : viKind === 'total'
+      ? `All of a patch's channels together. Once the row has settled, patch 1's channels pass current in and the others pass the same amount out: it flows along the cytoplasm from patch 1 to the rest, so over the whole row the channels' currents add up to zero.`
+      : `Each kind of channel follows Ohm's law, I = g(V − E): every patch's points lie on the same straight line, crossing zero at that kind's battery (dashed). Patch 1's switched channels add a steeper line of their own while the switch is on.`;
+  }
+  chipGroup('lvi', a => { viAxes = a; drawVIl(); });
+  $('lVIClear').addEventListener('click', () => { viPts = new Map(); viLast = null; drawVIl(); });
+
+  $('lSwitch').addEventListener('click', () => { if (SWP.on || SWP.traces.length) { clearSweep(); reset(); } setSw(!sw); });
+  $('lSweep').addEventListener('click', startSweep);
   bindRange('lN', v => v + ' patches', v => { P.n = v; if (V.length) reset(); });
   bindRange('lD', v => v.toFixed(1) + ' µm', v => { P.d = v; });
   bindRange('lRi', v => v + ' Ω·cm', v => { P.Ri = v; });
@@ -1036,15 +1214,15 @@ function chipGroup(attr, onPick) {
   playBtn.addEventListener('click', () => setRunning(!running));
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
   setMode('inj');
-  window.SPACE_CIRC = { P, get V() { return V; }, advance, reset, setSw, setMode, lambda, gc, leak, get hist() { return hist; } };
+  window.SPACE_CIRC = { P, get V() { return V; }, advance, reset, setSw, setMode, lambda, gc, leak, get hist() { return hist; }, get viPts() { return [...viPts.values()]; }, get sweeps() { return SWP; } };
   let last = performance.now(), frame = 0;
   function loop(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (running) advance(dt * speed);
-    draw(); drawMem(); drawCharts(); if (frame++ % 6 === 0) readouts();
+    if (running) SWP.on ? sweepAdvance(dt * Math.max(speed, WIN / 1.5)) : advance(dt * speed);   // a sweep runs each step in about 1.5 s
+    viRecord(); draw(); drawMem(); drawCharts(); drawVIl(); if (frame++ % 6 === 0) readouts();
     requestAnimationFrame(loop);
   }
-  colorHooks.push(() => { draw(); drawMem(); drawCharts(); });
+  colorHooks.push(() => { draw(); drawMem(); drawCharts(); drawVIl(); });
   Frames.sim(() => running, 'lPlay', ['lSwitch']);
   requestAnimationFrame(loop);
 })();
@@ -1093,7 +1271,10 @@ function chipGroup(attr, onPick) {
     let k = 0; tr.soma.forEach((v, i) => { if (v > tr.soma[k]) k = i; });
     const pk = tr.soma[k], h = pk / 2;
     let i0 = k, i1 = k; while (i0 > 0 && tr.soma[i0] > h) i0--; while (i1 < tr.soma.length - 1 && tr.soma[i1] > h) i1++;
-    return { pk, tp: tr.t[k] - 1, hw: tr.t[i1] - tr.t[i0], syn: Math.max(...tr.syn) };   // tp: from the input's start
+    // when the rise first passes a fraction of the peak, between samples by straight line
+    const cross = f => { const y = f * pk; let i = 0; while (i < k && tr.soma[i] < y) i++; if (!i) return tr.t[0];
+      const a = tr.soma[i - 1], b = tr.soma[i]; return tr.t[i - 1] + (b > a ? (y - a) / (b - a) : 0) * (tr.t[i] - tr.t[i - 1]); };
+    return { pk, tp: tr.t[k] - 1, hw: tr.t[i1] - tr.t[i0], rt: cross(0.9) - cross(0.1), syn: Math.max(...tr.syn) };   // tp: from the input's start
   }
   // ---------- the picture: the dendrite, the synapse, the cell body on the right ----------
   const PWd = 1000, PHd = 150, pc = setupCanvas($('sPic'), PWd, PHd), XT = 40, XS = 880, YD = 78;
@@ -1128,35 +1309,125 @@ function chipGroup(attr, onPick) {
   const CWs = 560, CHs = 320, cs = setupCanvas($('sVs'), CWs, CHs), cl = setupCanvas($('sVl'), CWs, CHs);
   function drawCharts() {
     const xs = last ? last.t : [0, TEND];
-    const top = S.norm ? 110 : Math.max(1, ...traces.map(tr => stats(tr).pk)) * 1.15;
+    const list = SWT.length ? SWT : traces, nOf = tr => tr === last && reveal != null ? reveal : undefined;
+    const top = S.norm ? 110 : Math.max(1, ...list.map(tr => stats(tr).pk)) * 1.15;
     drawChart(cs, { xs, x0: 0, x1: TEND, w: CWs, h: CHs, fixed: [S.norm ? -5 : -top * 0.05, top], ylabel: S.norm ? '% of its own peak' : 'ΔV at the cell body (mV)', xlabel: S.kind === 'pulse' ? 'time (ms); the pulse starts at 1 ms' : 'time (ms); the synapse fires at 1 ms',
-      series: traces.map(tr => { const pk = stats(tr).pk; return { ys: tr.soma.map(v => S.norm ? 100 * v / pk : v), color: colOf(tr.pos), width: tr === last ? 2.6 : 1.8, label: tr.pos + ' µm' }; }) });
+      series: list.map(tr => { const pk = stats(tr).pk; return { ys: tr.soma.map(v => S.norm ? 100 * v / pk : v), n: nOf(tr), color: tr.col || colOf(tr.pos), width: tr === last ? 2.6 : 1.8, label: tr.lab || tr.pos + ' µm' }; }) });
     const top2 = last ? Math.max(...last.syn) * 1.1 : 1;
     drawChart(cl, { xs, x0: 0, x1: TEND, w: CWs, h: CHs, fixed: [-top2 * 0.05, top2], ylabel: 'ΔV (mV)', xlabel: 'time (ms)',
-      series: last ? [{ ys: last.syn, color: C.accent, width: 2, dash: [6, 4], label: S.kind === 'pulse' ? 'electrode' : 'synapse' }, { ys: last.soma, color: colOf(last.pos), width: 2.6, label: 'cell body' }] : [] });
+      series: last ? [{ ys: last.syn, n: nOf(last), color: C.accent, width: 2, dash: [6, 4], label: S.kind === 'pulse' ? 'electrode' : 'synapse' }, { ys: last.soma, n: nOf(last), color: last.col || colOf(last.pos), width: 2.6, label: 'cell body' }] : [] });
   }
   function readouts() {
     $('sLam').textContent = lamD().toFixed(0) + ' / ' + LD + ' µm';
-    if (!last) { ['sPk', 'sTp', 'sHw', 'sSyn', 'sRatio'].forEach(id => $(id).textContent = '—'); return; }
+    if (!last) { ['sPk', 'sTp', 'sRt', 'sHw', 'sSyn', 'sRatio'].forEach(id => $(id).textContent = '—'); return; }
     const st = stats(last);
-    $('sPk').textContent = '+' + st.pk.toFixed(2) + ' mV'; $('sTp').textContent = st.tp.toFixed(1) + ' ms'; $('sHw').textContent = st.hw.toFixed(1) + ' ms';
+    $('sPk').textContent = '+' + st.pk.toFixed(2) + ' mV'; $('sTp').textContent = st.tp.toFixed(1) + ' ms'; $('sRt').textContent = st.rt.toFixed(1) + ' ms'; $('sHw').textContent = st.hw.toFixed(1) + ' ms';
     $('sSyn').textContent = '+' + st.syn.toFixed(1) + ' mV'; $('sRatio').textContent = (100 * st.pk / st.syn).toFixed(0) + ' %';
   }
-  const redraw = () => { drawPic(); drawCharts(); readouts(); };
-  function fire() { last = fireAt(S.pos); traces = traces.filter(tr => tr.pos !== S.pos).concat([last]).slice(-8); redraw(); }
+
+  // ---------- the peak (or the rise time) at the cell body against the input's distance, one line per current ----------
+  // Every input adds a point { pos, I, pk, rt }. Drawn with drawVI, distance across in place of current. The dendrite
+  // is passive, so at every distance the peak is in proportion to the current (each current's line a scaled copy of
+  // the others) and the rise time does not depend on it at all (the lines lie on top of each other). Cleared with the traces.
+  const DW = 560, DH = 320, dc = setupCanvas($('sDist'), DW, DH);
+  let viP = [], distY = 'pk';
+  const curCol = (I, lo, hi) => hi > lo ? mixc(C.pos, C.neg, (I - lo) / (hi - lo)) : C.ink;   // as a current sweep's traces: smallest blue, largest red
+  function drawDist() {
+    const rt = distY === 'rt', val = q => rt ? q.rt : q.pk;
+    const Is = [...new Set(viP.map(q => q.I))].sort((a, b) => a - b), lo = Is[0], hi = Is.at(-1);
+    const groups = Is.map(I => ({ I, qs: viP.filter(q => q.I === I).sort((a, b) => a.pos - b.pos) }))
+      .map(g => ({ ...g, pts: g.qs.map(q => ({ I: q.pos, V: val(q) })), col: curCol(g.I, lo, hi), label: g.I + ' pA' }));
+    const top = Math.max(rt ? 1 : 2, ...viP.map(val)) * 1.15, lq = viP.at(-1);
+    drawVI(dc, DW, DH, { groups, vi: true, last: lq ? { I: lq.pos, V: val(lq) } : null, vR: [-top * 0.05, top], iR: [-20, 600],
+      vLab: rt ? 'rise time at the cell body, 10–90% (ms)' : 'peak ΔV at the cell body (mV)', iLab: 'distance from the cell body (µm)', refs: [] });
+    $('sDistTitle').textContent = rt ? 'Rise time at the cell body against distance' : 'Peak at the cell body against distance';
+    // the line with the widest spread of distances (the largest current, if several tie) for the numbers
+    const g = groups.filter(g => g.qs.length > 1).sort((a, b) => (b.qs.at(-1).pos - b.qs[0].pos) - (a.qs.at(-1).pos - a.qs[0].pos) || b.I - a.I)[0];
+    const n = g && g.qs[0], f = g && g.qs.at(-1), many = Is.length > 1;
+    $('sDistCap').innerHTML = !viP.length ? 'Each input adds a point at its distance. Fire at a few distances, or sweep the current and the distance to draw a line for each current.'
+      : !g ? 'Each line is one current: fire the same current at another distance to draw its line.'
+      : rt ? `Farther out, the bump rises more slowly by the time it reaches the cell body: ${n.rt.toFixed(1)} ms from ${n.pos} µm, ${f.rt.toFixed(1)} ms from ${f.pos} µm. The dendrite's capacitance smooths it on the way.` +
+        (many ? ' The current makes no difference: every current\'s line falls on the same curve. A passive dendrite changes how big an input is, never its shape.' : '')
+      : `Farther out, less of the input reaches the cell body: with ${g.I} pA, ${n.pk.toFixed(2)} mV from ${n.pos} µm but ${f.pk.toFixed(2)} mV from ${f.pos} µm, ${(100 * f.pk / n.pk).toFixed(0)}% as much.` +
+        (many ? ' Each line is one current. The dendrite is passive, so twice the current gives twice the peak at every distance: the lines are scaled copies of each other.' : '');
+  }
+  chipGroup('sdist', a => { distY = a; drawDist(); });
+  const redraw = () => { drawPic(); drawCharts(); readouts(); drawDist(); };
+  // ---------- sweep: one input after another, at one distance with growing current or at one current along the
+  // dendrite; each trace is drawn out as it runs and stays on the charts (all of them, not one per distance) ----------
+  // what: 'I' (one distance, growing current), 'pos' (one current, along the dendrite) or 'both' (every current at every distance)
+  const SWS = { what: 'both', I: { a: 10, b: 60, n: 6 }, pos: { a: 0, b: 550, n: 6 } };
+  let SWT = [], swTimer = null, reveal = null, swSaved = null;
+  function stopSweep(keep) {
+    clearTimeout(swTimer); swTimer = null; reveal = null;
+    if (swSaved) { S.I = swSaved.I; S.pos = swSaved.pos; swSaved = null; }
+    if (!keep) SWT = [];
+  }
+  function sweep() {
+    stopSweep(); traces = []; last = null;
+    const what = SWS.what, both = what === 'both';
+    const vals = o => { const n = Math.max(2, Math.min(12, Math.round(o.n))); return Array.from({ length: n }, (_, k) => o.a + (o.b - o.a) * k / (n - 1)); };
+    const Is = what === 'pos' ? [S.I] : vals(SWS.I).map(v => +v.toPrecision(3));
+    const ps = what === 'I' ? [S.pos] : vals(SWS.pos).map(v => Math.max(0, Math.min(590, Math.round(v / 10) * 10)));
+    const runs = Is.flatMap((I, i) => ps.map((pos, j) => ({ I, pos, i, j })));   // both: each current along the dendrite in turn
+    swSaved = { I: S.I, pos: S.pos };
+    let k = 0;
+    const stepNext = () => {
+      if (k >= runs.length) { stopSweep(true); redraw(); return; }
+      const r = runs[k]; S.I = r.I; S.pos = r.pos;
+      if (both && r.j === 0) SWT = [];   // the left chart shows one current's row of distances at a time
+      const tr = fireAt(S.pos), N = tr.t.length, st = stats(tr);
+      tr.lab = what === 'I' ? S.I + ' pA' : S.pos + ' µm'; tr.col = what === 'I' ? mixc(C.pos, C.neg, r.i / (Is.length - 1)) : colOf(S.pos);
+      SWT.push(tr); last = tr; drawPic();
+      viP = viP.filter(q => !(q.pos === S.pos && q.I === S.I)).concat([{ pos: S.pos, I: S.I, pk: st.pk, rt: st.rt }]);
+      reveal = 0;
+      const grow = () => {   // the trace drawn out over about 0.7 s (0.2 s in a sweep of both, which runs many more)
+        reveal = Math.min(N, reveal + Math.ceil(N / (both ? 6 : 20))); drawCharts();
+        if (reveal < N) swTimer = setTimeout(grow, 33);
+        else { reveal = null; readouts(); drawDist(); k++; swTimer = setTimeout(stepNext, both ? 60 : 200); }
+      };
+      grow();
+    };
+    stepNext();
+  }
+  // the first set of fields is the current's (or, sweeping the distance alone, the distance's); the second, shown
+  // when sweeping both, the distances
+  const sw1 = () => SWS[SWS.what === 'both' ? 'I' : SWS.what];
+  function swFields() {
+    const o = sw1(), both = SWS.what === 'both';
+    $('sSwWhat').value = SWS.what; $('sSwUnit').textContent = SWS.what === 'pos' ? 'µm from the cell body' : 'pA';
+    $('sSwA').value = o.a; $('sSwB').value = o.b; $('sSwN').value = o.n;
+    $('sSwPos2').hidden = !both; $('sSwA2').value = SWS.pos.a; $('sSwB2').value = SWS.pos.b; $('sSwN2').value = SWS.pos.n;
+  }
+  $('sSwWhat').addEventListener('change', e => { SWS.what = e.target.value; swFields(); });
+  const swOk = (key, v) => isFinite(v) && (key !== 'n' || v >= 2);
+  for (const [id, key] of [['sSwA', 'a'], ['sSwB', 'b'], ['sSwN', 'n']]) $(id).addEventListener('input', e => { const v = parseFloat(e.target.value); if (swOk(key, v)) sw1()[key] = v; });
+  for (const [id, key] of [['sSwA2', 'a'], ['sSwB2', 'b'], ['sSwN2', 'n']]) $(id).addEventListener('input', e => { const v = parseFloat(e.target.value); if (swOk(key, v)) SWS.pos[key] = v; });
+  $('sSweep').addEventListener('click', sweep);
+  swFields();
+  function fire() {
+    stopSweep();
+    last = fireAt(S.pos); traces = traces.filter(tr => tr.pos !== S.pos).concat([last]).slice(-8);
+    const st = stats(last);
+    viP = viP.filter(q => !(q.pos === S.pos && q.I === S.I)).concat([{ pos: S.pos, I: S.I, pk: st.pk, rt: st.rt }]);
+    redraw();
+  }
   bindRange('sPos', v => v + ' µm from the cell body', v => { S.pos = v; drawPic(); });
   bindRange('sI', v => v + ' pA', v => { S.I = v; });
   bindRange('sTau', v => v.toFixed(1) + ' ms', v => { S.tau = v; });
   bindRange('sDur', v => v.toFixed(1) + ' ms', v => { S.dur = v; });
   chipGroup('skind', k => {
-    S.kind = k; traces = []; last = null;   // one kind of input per chart
+    stopSweep(); S.kind = k; traces = []; last = null; viP = [];   // one kind of input per chart
     document.querySelectorAll('[data-sfor]').forEach(r => r.hidden = r.dataset.sfor !== k);
     $('sFire').textContent = k === 'pulse' ? 'Inject pulse' : 'Fire synapse';
+    $('sPosLab').textContent = k === 'pulse' ? 'Injection distance' : 'Synapse at';
+    $('sPos').setAttribute('aria-label', k === 'pulse' ? 'Injection distance from the cell body' : 'Synapse distance from the cell body');
+    $('sSwPosOpt').textContent = k === 'pulse' ? 'the injection distance' : 'the synapse\'s distance';
     redraw();
   });
   $('sNorm').addEventListener('change', e => { S.norm = e.target.checked; drawCharts(); });
   $('sFire').addEventListener('click', fire);
-  $('sClear').addEventListener('click', () => { traces = []; last = null; redraw(); });
+  $('sClear').addEventListener('click', () => { stopSweep(); traces = []; last = null; viP = []; redraw(); });
   $('sPic').addEventListener('click', e => {   // click on the dendrite to move the synapse there
     const r = $('sPic').getBoundingClientRect(), x = (e.clientX - r.left) / r.width * PWd;
     if (x < XT - 10 || x > XS - 30) return;
@@ -1167,7 +1438,7 @@ function chipGroup(attr, onPick) {
   document.querySelectorAll('[data-lmode]').forEach(b => b.addEventListener('click', () => setTimeout(readouts, 0)));
   colorHooks.push(redraw);
   ChartZoom.bind(cs.canvas, drawCharts); ChartZoom.bind(cl.canvas, drawCharts);
-  window.SPACE_SYN = { fireAt, stats, fire, S, get traces() { return traces; } };
+  window.SPACE_SYN = { fireAt, stats, fire, sweep, S, get traces() { return traces; }, get viP() { return viP; }, get sweepTraces() { return SWT; } };
   redraw();
 })();
 

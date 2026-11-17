@@ -217,6 +217,9 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 .reads{display:flex;flex-wrap:wrap;gap:4px 22px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .reads b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
 @media (max-width:1100px){.simgrid{grid-template-columns:1fr}.settings{position:static;max-height:none;order:-1}}
+.runbar .swline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:var(--muted)}
+.runbar .swline[hidden]{display:none}
+.runbar input[type=number]{width:68px;font:13px var(--font-mono);padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 </style>
 <body>
 <div class="floatbar" role="group" aria-label="Simulation">
@@ -316,7 +319,9 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <button id="p2Glu">Glutamate only</button>
         <button id="p2Dep">Depolarize Post only</button>
         <button id="p2Both" class="primary">Both together</button>
+        <button id="p2Sweep" title="Glutamate with Post held at one level after another, from rest (−70 mV) to +10 mV; every trace stays on the charts">Sweep</button>
         <button id="p2Play" class="primary">Pause</button>
+        <span class="swline">Sweep: glutamate with Post held from <input type="number" id="p2SwA" min="-100" max="40" step="any" value="-70" aria-label="Lowest level, mV"> to <input type="number" id="p2SwB" min="-100" max="40" step="any" value="10" aria-label="Highest level, mV"> mV in <input type="number" id="p2SwN" min="2" max="20" step="1" value="5" aria-label="Number of steps"> steps</span>
       </div>
       <div class="legend">
         <span><i class="dot ca"></i>Ca²⁺ (one dot ≈ 0.15 µM)</span><span><i class="dot ca"></i>NMDA receptor, with a dark Mg²⁺ plug while blocked</span><span><i class="dot na"></i>AMPA receptor</span>
@@ -999,13 +1004,16 @@ $('setApv').addEventListener('change', e => { SET.apv = e.target.checked; setCha
   const pic = setupCanvas($('p2pic'), PW, PH), cv = setupCanvas($('p2V'), CHW, CHH), cc = setupCanvas($('p2C'), CHW, CHH);
   const P = { mode: 'both' }, T = 150, GLU = 10, DEP = [5, 85];
   let r = null, t = T, supra = NaN;
-  const sim = mode => simSpine({ T, Rn: SET.Rn, glu: mode === 'dep' ? [] : [GLU], dep: mode === 'glu' ? [] : [DEP], Vdep: SET.Vdep, nA: SET.nA, nN: SET.apv ? 0 : 2, mg: SET.mg, sample: 0.5 });
+  // the sweep: glutamate with Post held at each level in turn; each finished trace stays on the charts
+  const SWP = { on: false, levels: [], traces: [], level: null, a: -70, b: 10, n: 5 };
+  for (const [id, k] of [['p2SwA', 'a'], ['p2SwB', 'b'], ['p2SwN', 'n']]) $(id).addEventListener('input', e => { const v = parseFloat(e.target.value); if (isFinite(v) && (k !== 'n' || v >= 2)) SWP[k] = v; });
+  const sim = (mode, Vdep = SET.Vdep) => simSpine({ T, Rn: SET.Rn, glu: mode === 'dep' ? [] : [GLU], dep: mode === 'glu' ? [] : [DEP], Vdep, nA: SET.nA, nN: SET.apv ? 0 : 2, mg: SET.mg, sample: 0.5 });
   const peakCa = x => Math.max(...x.ca);
   function run() {
-    r = sim(P.mode);
+    r = SWP.on ? sim('both', SWP.level) : sim(P.mode);
     // how much more Ca²⁺ the two together give than the two alone added up
     const cs = { glu: 0, dep: 0, both: 0 };
-    for (const m of Object.keys(cs)) cs[m] = m === P.mode ? peakCa(r) : peakCa(sim(m));
+    for (const m of Object.keys(cs)) cs[m] = m === P.mode ? peakCa(r) : peakCa(sim(m, SWP.on ? SWP.level : SET.Vdep));
     supra = cs.both / (cs.glu + cs.dep);
   }
   function draw() {
@@ -1013,13 +1021,24 @@ $('setApv').addEventListener('change', e => { SET.apv = e.target.checked; setCha
     const rel = P.mode !== 'dep';
     drawSpines(pic, { Rn: SET.Rn, VhA: r.Vh[i], VhB: r.Vb[i], Vd: r.Vd[i], Vs: r.Vs[i], caA: r.ca[i], caB: r.cb[i], caIn: i ? clamp((r.ca[i] - r.ca[i - 1]) / 0.5 / 0.15) : 0,
       nA: SET.nA, nB: SET.nA, headA: 1, headB: 1, spikeU: rel && tt < GLU && tt > GLU - 5 ? (tt - GLU + 5) / 5 : null, fuse: rel && tt < GLU + 60 ? clamp((tt - GLU) / 2) : 0,
-      glu: rel && tt > GLU ? Math.exp(-(tt - GLU) / 15) : 0, gluP: clamp((tt - GLU) / 1.5), blocked: SET.mg ? 1 - mgFree(r.Vh[i], 1) : 0, mg: SET.mg, held: r.dep[i] ? SET.Vdep : 0,
+      glu: rel && tt > GLU ? Math.exp(-(tt - GLU) / 15) : 0, gluP: clamp((tt - GLU) / 1.5), blocked: SET.mg ? 1 - mgFree(r.Vh[i], 1) : 0, mg: SET.mg, held: r.dep[i] ? (SWP.on ? SWP.level : SET.Vdep) : 0,
       badges: [{ text: 'CaMKII level reached', color: C.accent, on: clamp((r.ca[i] - TH_CAMK + 0.5) / 0.5) }] });
+    const swept = SWP.on || SWP.traces.length > 0;
+    if (swept) {   // head A's voltage and Ca²⁺ at each level, every trace on the same axes
+      const lc = L => mixc(C.pos, C.neg, SWP.b === SWP.a ? 1 : Math.max(0, Math.min(1, (L - SWP.a) / (SWP.b - SWP.a)))), lab = L => fmtSigned(L, 0).replace(' mV', '');
+      const all = [...SWP.traces, ...(SWP.on ? [{ L: SWP.level, Vh: r.Vh, ca: r.ca, n, now: true }] : [])];
+      drawChart(cv, { x0: 0, x1: T, fixed: [-75, 15], xlabel: 'time (ms); labels: Post held at (mV)', ylabel: 'voltage (mV)', xs: r.t,
+        series: all.map(o => ({ ys: o.Vh, n: o.n ?? o.Vh.length, color: lc(o.L), width: o.now ? 2.4 : 1.6, label: lab(o.L) })) });
+      drawChart(cc, { x0: 0, x1: T, fixed: [0, 14], xlabel: 'time (ms)', ylabel: 'Ca²⁺ (µM)', xs: r.t, r: 104,
+        refs: [{ v: TH_CAMK, color: C.accent, label: 'CaMKII level' }, { v: KD_CN, color: C.k, label: 'calcineurin', dash: [2, 3] }],
+        series: all.map(o => ({ ys: o.ca, n: o.n ?? o.ca.length, color: lc(o.L), width: o.now ? 2.4 : 1.6, label: 'A ' + lab(o.L) })) });
+    } else {
     drawChart(cv, { x0: 0, x1: T, fixed: [-75, 15], xlabel: 'time (ms)', ylabel: 'voltage (mV)', xs: r.t,
       series: [{ ys: r.Vd, n, color: C.accent, label: 'Dendrite', dash: [5, 4], width: 1.6 }, { ys: r.Vh, n, color: C.pos, label: 'Head A' }] });
     drawChart(cc, { x0: 0, x1: T, fixed: [0, 14], xlabel: 'time (ms)', ylabel: 'Ca²⁺ (µM)', xs: r.t, r: 104,
       refs: [{ v: TH_CAMK, color: C.accent, label: 'CaMKII level' }, { v: KD_CN, color: C.k, label: 'calcineurin', dash: [2, 3] }],
       series: [{ ys: r.cb, n, color: C.k, label: 'Spine B', dash: [5, 4] }, { ys: r.ca, n, color: C.ca, label: 'Spine A' }] });
+    }
     drawMem(tt, i);
     const done = n === r.t.length;
     $('p2caA').textContent = done ? peakCa(r).toFixed(2) + ' µM' : '…';
@@ -1044,8 +1063,20 @@ $('setApv').addEventListener('change', e => { SET.apv = e.target.checked; setCha
         block: SET.apv ? 'APV' : '', label: 'NMDA receptor', sub: SET.mg ? 'Mg²⁺ block ' + Math.round(100 * (1 - B)) + ' %' : 'no Mg²⁺' },
       { x: 710, ion: 'k', col: C.k, o: memO[2], label: 'K⁺ leak' } ] });
   }
-  player('p2Play', ['p2Glu', 'p2Dep', 'p2Both'], d => { if (t >= T) return false; t = Math.min(T, t + SET.speed * d / 1000); return true; }, draw);
-  const fire = mode => { P.mode = mode; run(); t = 0; draw(); };
+  function nextLevel() {
+    if (SWP.level != null) SWP.traces.push({ L: SWP.level, Vh: r.Vh.slice(), ca: r.ca.slice() });
+    if (!SWP.levels.length) { SWP.on = false; return false; }
+    SWP.level = SWP.levels.shift(); run(); t = 0; return true;
+  }
+  player('p2Play', ['p2Glu', 'p2Dep', 'p2Both', 'p2Sweep'], d => {
+    if (t >= T) return SWP.on ? nextLevel() || (draw(), false) : false;
+    t = Math.min(T, t + (SWP.on ? Math.max(SET.speed, T / 1.5) : SET.speed) * d / 1000); return true;   // a sweep runs each trace in about 1.5 s
+  }, draw);
+  const fire = mode => { SWP.on = false; SWP.traces = []; P.mode = mode; run(); t = 0; draw(); };
+  $('p2Sweep').addEventListener('click', () => {
+    P.mode = 'both'; SWP.on = true; SWP.traces = []; SWP.level = null; const n = Math.max(2, Math.round(SWP.n)); SWP.levels = Array.from({ length: n }, (_, k) => Math.round(SWP.a + (SWP.b - SWP.a) * k / (n - 1)));
+    nextLevel(); draw();
+  });
   $('p2Glu').addEventListener('click', () => fire('glu'));
   $('p2Dep').addEventListener('click', () => fire('dep'));
   $('p2Both').addEventListener('click', () => fire('both'));

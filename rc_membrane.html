@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="frames.js"></script>
+<script src="membrane.js"></script>
 <script src="breadboard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Passive Properties: Time</title>
@@ -195,6 +196,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 .reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
 .reflist .why{color:var(--muted);font-size:13.5px}
 .reflist a{color:var(--accent)}
+.runbar .swline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:var(--muted)}
+.runbar input[type=number]{width:68px;font:13px var(--font-mono);padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -241,12 +244,15 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="cgrid">
       <div class="ccol">
         <canvas id="circ" aria-label="Circuit diagram with moving charges"></canvas>
+        <canvas id="cMem" aria-label="The same membrane as a slice: each branch's channels under it, ions passing through at the rate of its current, and the charge on the bilayer"></canvas>
         <div class="runbar">
           <button id="cSwitch" class="latch" aria-pressed="false"><span id="cSwitchLab">Current on</span></button>
           <button id="cPlay" class="primary">Pause</button>
+          <button id="cSweep" title="One step after another, each from rest; every trace stays on the voltage chart">Sweep</button>
           <label for="cSpeed" class="runlab">Speed</label>
           <input type="range" id="cSpeed" min="0" max="100" value="40">
           <output id="cSpeedo" for="cSpeed"></output>
+          <span class="swline">Sweep <span id="cSwWhat">the current</span> from <input type="number" id="cSwA" step="any" aria-label="Sweep from"> to <input type="number" id="cSwB" step="any" aria-label="Sweep to"> <span id="cSwUnit">µA/cm²</span> in <input type="number" id="cSwN" min="2" max="20" step="1" aria-label="Number of steps"> steps</span>
         </div>
         <div class="legend">
           <span><i class="dot pos"></i>positive charge (conventional current)</span>
@@ -263,6 +269,11 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="charthead"><p class="sect-title">Where the current goes</p>
           <div class="btns"><button class="chip" data-cview="i" aria-pressed="true">Currents</button><button class="chip" data-cview="q" aria-pressed="false">Charge moved</button></div></div>
         <canvas id="cIchart" aria-label="Branch currents over time"></canvas>
+        <div class="charthead"><p class="sect-title">Settled voltage and current (V–I)</p>
+          <div class="btns" role="group" aria-label="Axes"><button class="chip" data-cvi="vi" aria-pressed="true">V–I</button><button class="chip" data-cvi="iv" aria-pressed="false">I–V</button><button class="chip" id="cVIClear">Clear</button></div></div>
+        <div class="btns" id="cVIKinds" role="group" aria-label="Which current"></div>
+        <canvas id="cVIchart" aria-label="One point each time the voltage settles: the chosen current against the voltage"></canvas>
+        <p class="caption" id="cVIcap"></p>
       </div>
     </div>
     </div>
@@ -273,6 +284,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Dots:</b> moving positive charge (conventional current), coloured by the branch it went through. Each dot carries the same charge as one + or − mark on the capacitor plates, so you can watch dots arriving at a plate turn into marks. Current is positive when it flows from inside to outside, the usual sign for membrane currents.</li>
         <li><b>Membrane potential chart:</b> the black line is V; the shading marks when the switch is closed. The dotted line is V<sub>∞</sub>, where V is heading.</li>
         <li><b>Where the current goes:</b> Currents shows each branch's current and the capacitor current I<sub>C</sub>. Charge moved shows the charge each one has carried since the switch last changed.</li>
+        <li><b>V–I:</b> one point each time the voltage settles: the chosen current against the settled voltage (V–I puts the current across, I–V the voltage). <b>Total I</b> is all the channels together; the other buttons pick one kind, an ion's channels or a branch. Points with the switch off are pale. A kind's dashed line is its battery, where its current is zero. Change a setting and let V settle again to add a point; Clear starts afresh.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-circlook" aria-labelledby="tab-circlook" hidden>
@@ -320,9 +332,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="row"><label for="cE2">E<sub>2</sub></label><input type="range" id="cE2" min="-110" max="90" step="1" value="-86"><output id="cE2o" for="cE2"></output></div>
       </div>
       <div class="sgroup" data-for="full">
-        <div class="row"><label for="cMNa"><i class="dot na"></i>mixed g<sub>Na</sub></label><input type="range" id="cMNa" min="0" max="2" step="0.05" value="0.35"><output id="cMNao" for="cMNa"></output></div>
-        <div class="row"><label for="cMK"><i class="dot k"></i>mixed g<sub>K</sub></label><input type="range" id="cMK" min="0" max="2" step="0.05" value="0.35"><output id="cMKo" for="cMK"></output>
-          <span class="hint">one switch opens both parts of the mixed channel; each part uses the same battery as its ion's leak</span></div>
+        <div class="row"><label for="cMix"><i class="dot" style="background:var(--accent)"></i>mixed g</label><input type="range" id="cMix" min="0" max="4" step="0.1" value="0.7"><output id="cMixo" for="cMix"></output>
+          <span class="hint">the mixed channels, opened by the switch: half the conductance passes Na⁺, half K⁺, each part with the same battery as its ion's leak</span></div>
       </div>
       <div class="sgroup" data-for="full">
         <div class="row"><label for="cFGNa"><i class="dot na"></i>leak g<sub>Na</sub></label><input type="range" id="cFGNa" min="0" max="0.5" step="0.01" value="0.03"><output id="cFGNao" for="cFGNa"></output></div>
@@ -819,6 +830,56 @@ function drawChart(c, o) {
   c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
   c.textBaseline = 'alphabetic';
 }
+// A V–I chart: groups of points (V, I), each group joined in order and drawn in its colour, the latest point ringed.
+// o: { groups: [{ pts: [{ V, I }], col, label }], last: { V, I, col } | null, vi: true (I across, V up) or false
+//      (V across, I up), vR: [lo, hi] (mV), iR: [lo, hi], iLab, vLab: axis labels, refs: [{ V, col, label }]: dashed
+//      lines at a voltage (a battery: where a kind of current is zero) }
+function drawVI(c, W, H, o) {
+  const L = 62, R = 92, T = 14, B = 40, pw = W - L - R, ph = H - T - B;
+  const xr = o.vi ? o.iR : o.vR, yr = o.vi ? o.vR : o.iR;
+  const [x0, x1] = ChartZoom.x(c.canvas, xr[0], xr[1]), [y0, y1] = ChartZoom.y(c.canvas, yr[0], yr[1]);
+  ChartZoom.bind(c.canvas, () => drawVI(c, W, H, o));
+  const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = y => T + (y1 - y) / (y1 - y0) * ph;
+  const at = (V, I) => o.vi ? [sx(I), sy(V)] : [sx(V), sy(I)];
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
+  const step = s => { const p = Math.pow(10, Math.floor(Math.log10(s))), f = s / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; };
+  const num = v => (v < 0 ? '−' : '') + Math.abs(+v.toPrecision(4));
+  const ys = step((y1 - y0) / 5), xs = step((x1 - x0) / 6);
+  for (let v = Math.ceil(y0 / ys) * ys; v <= y1 + 1e-9; v += ys) {
+    const zero = Math.abs(v) < ys / 1e3; c.strokeStyle = zero ? C.muted : C.line; c.lineWidth = zero ? 1.2 : 0.8;
+    c.beginPath(); c.moveTo(L, sy(v)); c.lineTo(L + pw, sy(v)); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(zero ? '0' : num(v), L - 6, sy(v));
+  }
+  for (let x = Math.ceil(x0 / xs) * xs; x <= x1 + 1e-9; x += xs) {
+    const zero = Math.abs(x) < xs / 1e3; c.strokeStyle = zero ? C.muted : C.line; c.lineWidth = zero ? 1.2 : 0.8;
+    c.beginPath(); c.moveTo(sx(x), T); c.lineTo(sx(x), T + ph); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(zero ? '0' : num(x), sx(x), T + ph + 12);
+  }
+  c.textAlign = 'left'; fillSub(c, o.vi ? o.iLab : o.vLab, L, H - 9);
+  c.save(); c.translate(14, T + ph); c.rotate(-Math.PI / 2); fillSub(c, o.vi ? o.vLab : o.iLab, 0, 0); c.restore();
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  for (const r of o.refs || []) {
+    const [x, y] = at(r.V, 0); c.strokeStyle = r.col; c.lineWidth = 1.2; c.setLineDash([6, 4]); c.beginPath();
+    o.vi ? (c.moveTo(L, y), c.lineTo(L + pw, y)) : (c.moveTo(x, T), c.lineTo(x, T + ph)); c.stroke(); c.setLineDash([]);
+    c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = r.col; c.textAlign = 'left'; fillSub(c, r.label, o.vi ? L + 4 : x + 4, o.vi ? y - 8 : T + 10);
+  }
+  for (const g of o.groups) {
+    if (!g.pts.length) continue;
+    const pts = g.pts.map(p => at(p.V, p.I)).sort((a, b) => a[0] - b[0]);
+    if (pts.length > 1) { c.strokeStyle = g.col; c.globalAlpha = 0.5; c.lineWidth = 1.6; c.beginPath(); pts.forEach(([x, y], k) => k ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.globalAlpha = 1; }
+    c.fillStyle = g.col; for (const [x, y] of pts) { c.beginPath(); c.arc(x, y, 4, 0, 6.283); c.fill(); }
+  }
+  if (o.last) { const [x, y] = at(o.last.V, o.last.I); c.strokeStyle = C.ink; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 8, 0, 6.283); c.stroke(); }
+  c.restore();
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
+  // the groups' labels at the right, by the last point of each
+  c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
+  const labs = o.groups.filter(g => g.pts.length && g.label).map(g => { const p = g.pts.map(q => at(q.V, q.I)).sort((a, b) => a[0] - b[0]).at(-1); return { y: Math.max(T + 6, Math.min(T + ph - 4, p[1])), t: g.label, c: g.col }; }).sort((a, b) => a.y - b.y);
+  for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 13) labs[k].y = labs[k - 1].y + 13;
+  labs.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, L + pw + 6, l.y); });
+  c.textBaseline = 'alphabetic';
+}
 function chipGroup(attr, onPick) {
   const bs = document.querySelectorAll(`[data-${attr}]`);
   bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(b.dataset[attr]); }));
@@ -954,11 +1015,13 @@ function chipGroup(attr, onPick) {
   function moveDots(I, iC, h) {
     const b = [...I, iC];
     for (const s of segs) { s.I = s.f(b); s.q += s.I * h; }
+    memAcc(I, h);
   }
   function stepDots() {
     const big = Math.max(...segs.map(s => Math.abs(s.q * KPX)));
     const k = big > MAXSTEP ? MAXSTEP / big : 1;
     for (const s of segs) { s.o = ((s.o + s.q * KPX * k) % SP + SP) % SP; s.q = 0; }
+    memStep();
   }
 
   // ---------- drawing ----------
@@ -1125,6 +1188,14 @@ function chipGroup(attr, onPick) {
       : mode === 'full'
       ? [{ v: p.fEK, color: C.k, label: 'E_K' }, { v: p.fECl, color: C.cl, label: 'E_Cl' }, { v: p.fENa, color: C.na, label: 'E_Na' }, { v: Vinf, color: C.accent, dash: [2, 3], width: 2, label: 'V∞' }]
       : [{ v: Vinf, color: C.accent, dash: [2, 3], width: 2, label: 'V∞' }];
+    const swept = SWP.on || SWP.traces.length > 0, xw = swept ? { x0: 0, x1: WIN } : { x0: t - WIN, x1: t, pin: 'right' };
+    if (swept) {   // every trace from the start of its own step
+      const all = [...SWP.traces, ...(SWP.on && SWP.v != null ? [{ v: SWP.v, f: SWP.n > 1 ? SWP.k / (SWP.n - 1) : 1, V: hist.V, now: true }] : [])], R = swKind() === 'R';
+      const N = Math.max(1, ...all.map(o => o.V.length)), xs = Array.from({ length: N }, (_, i) => (i + 1) * SAMPLE_MS);
+      drawChart(vc, { xs, x0: 0, x1: WIN, on: xs.map(x => x >= SW_ON && x < SW_OFF), w: CW, h: CH, key: 12, fixed: V_RANGE, refs: refs.filter(r => r.label !== 'V∞'),
+        series: all.map(o => ({ ys: o.V, n: o.V.length, color: sweepCol(o.f), width: o.now ? 2.6 : 1.8, label: (!R && o.v > 0 ? '+' : '') + o.v })),
+        ylabel: 'mV', xlabel: R ? 'time (ms); labels: R in kΩ·cm²' : 'time (ms); labels: current in µA/cm²' });
+    } else
     drawChart(vc, { xs: hist.t, x0: t - WIN, x1: t, pin: 'right', on: hist.on, w: CW, h: CH, key: 15, fixed: V_RANGE,
       series: [{ ys: hist.V, color: C.ink, width: 2.4 }], refs, ylabel: 'mV', xlabel: `last ${WIN} ms` });
     // Conductance change: the two channel currents and I_C. Current injection: I_R, I_C and their sum,
@@ -1153,9 +1224,9 @@ function chipGroup(attr, onPick) {
          { ys: q4, color: C.cl, label: 'Cl⁻ in' }, { ys: hist.qC, color: C.pos, width: 2.6, label: 'on C' }]
       : [{ ys: q1, color: C.ink, label: 'through R' }, { ys: hist.qC, color: C.pos, width: 2.6, label: 'on C' },
          { ys: sum(q1, hist.qC), color: C.accent, dash: [6, 4], label: 'R + C' }];
-    if (cview === 'i') drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, pin: 'right', on: hist.on, w: CW, h: CH, key: 15, fixed: I_RANGE[mode],
+    if (cview === 'i') drawChart(ic, { xs: hist.t, ...xw, on: hist.on, w: CW, h: CH, key: 15, fixed: I_RANGE[mode],
       series: iSeries, ylabel: 'µA/cm², outward +', xlabel: `last ${WIN} ms` });
-    else drawChart(ic, { xs: hist.t, x0: t - WIN, x1: t, pin: 'right', on: hist.on, restart: true, w: CW, h: CH, key: 15, fixed: Q_RANGE[mode],
+    else drawChart(ic, { xs: hist.t, ...xw, on: hist.on, restart: true, w: CW, h: CH, key: 15, fixed: Q_RANGE[mode],
       series: qSeries, ylabel: 'nC/cm² since the switch', xlabel: `last ${WIN} ms` });
   }
   function readouts() {
@@ -1200,9 +1271,127 @@ function chipGroup(attr, onPick) {
     buildSegs();
   }
 
-  chipGroup('mode', m => { mode = m; reset(); captions(); });
+  // ---------- the same membrane as a slice (membrane.js): each branch's channels under it ----------
+  // Ions pass through each pore at the rate of its branch current: cations in (down) when the current is inward,
+  // Cl⁻ the other way. The bilayer under the capacitor carries its charge, one sign per Q0 as on the plates.
+  const MW = CWd, MH = 320, mc = setupCanvas($('cMem'), MW, MH), MIONS = MemSlice.ions(MW);
+  let memO = [], memQ = [];
+  function memChannels() {   // [channel, which branch currents it carries, +1 for an anion]
+    const on = sw ? 1 : 0;
+    if (mode === 'inj') return [[{ x: XS[0], kind: 'electrode', ion: 'pos', active: sw, label: 'electrode' }, [0]], [{ x: XS[1], ion: 'pos', col: C.ink, label: 'leak channels (R)' }, [1]]];
+    if (mode === 'g') return [[{ x: XS[0], ion: 'na', col: C.na, act: on, open: on, label: 'Na⁺ channels' }, [0]], [{ x: XS[1], ion: 'k', col: C.k, label: 'K⁺ channels' }, [1]]];
+    if (mode === 'bat') return [[{ x: XS[0], ion: 'pos', col: C.accent, act: on, open: on, label: 'branch 1' }, [0]], [{ x: XS[1], ion: 'pos', col: C.muted, label: 'branch 2' }, [1]]];
+    return [[{ x: XF.stem, ion: 'pos', col: C.accent, act: on, open: on, label: 'mixed channels' }, [0, 1]], [{ x: XF.Na, ion: 'na', col: C.na, label: 'Na⁺ leak' }, [2]],
+            [{ x: XF.K, ion: 'k', col: C.k, label: 'K⁺ leak' }, [3]], [{ x: XF.Cl, ion: 'cl', col: C.cl, label: 'Cl⁻ leak' }, [4], 1]];
+  }
+  function memAcc(I, h) {
+    const chs = memChannels();
+    if (memO.length !== chs.length) { memO = chs.map(() => Math.random() * MemSlice.SP); memQ = chs.map(() => 0); }
+    chs.forEach(([, ks, anion], k) => { memQ[k] += (anion ? 1 : -1) * ks.reduce((a, i) => a + I[i], 0) * h; });
+  }
+  function memStep() { memO = MemSlice.step(memO, memQ.map(q => q * KPX), MAXSTEP); memQ = memQ.map(() => 0); }
+  function drawMem() {
+    const chs = memChannels();
+    if (memO.length !== chs.length) { memO = chs.map(() => Math.random() * MemSlice.SP); memQ = chs.map(() => 0); }
+    MemSlice.draw(mc, MW, MH, C, { where: 'cell', cap: { x: capX(), q: p.C * V / Q0 }, ions: MIONS, channels: chs.map(([ch], k) => ({ ...ch, o: memO[k] })) });
+  }
+
+  // ---------- sweep: one step after another, each from rest; the traces stay ----------
+  // Current injection steps the current (current clamp). The other circuits step the resistance of the branch on the
+  // switch (R_1, or 1/g of the Na⁺ or mixed channels), closing the switch once per step. On from SW_ON to SW_OFF ms.
+  const SWS = { I: { a: -20, b: 20, n: 6 }, R: { a: 0.5, b: 4, n: 6 } };
+  const swKind = () => mode === 'inj' ? 'I' : 'R';
+  const SWP = { on: false, vals: [], traces: [], v: null, k: 0, n: 0, saved: null }, SW_ON = 2, SW_OFF = 24;
+  function swApply(v) {
+    if (mode === 'inj') p.I = v; else if (mode === 'bat') p.R1 = v;
+    else if (mode === 'g') p.gNa = 1 / v; else p.mNa = p.mK = 1 / (2 * v);   // the mixed channels: half Na⁺, half K⁺
+  }
+  function nextSweep() {
+    if (SWP.on && SWP.v != null && hist.V.length) SWP.traces.push({ v: SWP.v, f: SWP.n > 1 ? SWP.k / (SWP.n - 1) : 1, V: hist.V.slice() });
+    if (!SWP.vals.length) { SWP.on = false; Object.assign(p, SWP.saved); setSwitch(false); return; }
+    SWP.k = SWP.n - SWP.vals.length; SWP.v = SWP.vals.shift(); swApply(SWP.v); reset();
+  }
+  function startSweep() {
+    if (SWP.on) Object.assign(p, SWP.saved);
+    const S = SWS[swKind()], n = Math.max(2, Math.round(S.n));
+    SWP.saved = { I: p.I, R1: p.R1, gNa: p.gNa, mNa: p.mNa, mK: p.mK };
+    SWP.traces = []; SWP.on = true; SWP.v = null; SWP.n = n;
+    SWP.vals = Array.from({ length: n }, (_, k) => +(S.a + (S.b - S.a) * k / (n - 1)).toPrecision(3));
+    nextSweep(); setRunning(true);
+  }
+  function clearSweep() { if (SWP.on) Object.assign(p, SWP.saved); SWP.on = false; SWP.traces = []; }
+  function sweepAdvance(ms) {   // the sweep's model time, the switch changed exactly at SW_ON and SW_OFF
+    const target = Math.min(t + ms, WIN);
+    for (const b of [SW_ON, SW_OFF]) if (t < b && b <= target) { advance(b - t); stepDots(); setSwitch(b === SW_ON); }
+    if (target > t) advance(target - t);
+    if (t >= WIN - 1e-9) nextSweep();
+  }
+  function swFields() {   // the boxes beside Sweep: what is stepped, in which units
+    const S = SWS[swKind()], R = swKind() === 'R';
+    $('cSwWhat').innerHTML = mode === 'inj' ? 'the current' : mode === 'bat' ? 'R<sub>1</sub>' : mode === 'g' ? 'the Na⁺ channels\' R (1/g)' : 'the mixed channels\' R (1/g)';
+    $('cSwUnit').textContent = R ? 'kΩ·cm²' : 'µA/cm²';
+    $('cSwA').value = S.a; $('cSwB').value = S.b; $('cSwN').value = S.n;
+    for (const id of ['cSwA', 'cSwB']) { $(id).min = R ? 0.1 : -200; $(id).max = R ? 50 : 200; }
+  }
+  for (const [id, key] of [['cSwA', 'a'], ['cSwB', 'b'], ['cSwN', 'n']]) $(id).addEventListener('input', e => { const v = parseFloat(e.target.value);
+    if (isFinite(v) && (key !== 'n' || v >= 2) && !(swKind() === 'R' && key !== 'n' && v <= 0)) SWS[swKind()][key] = v; });
+  const sweepCol = f => mixc(C.pos, C.neg, f);
+
+
+  // ---------- V–I: one point each time the voltage settles ----------
+  // Each time V has settled (within 0.05 mV of V∞), the settled voltage and the currents there are kept, one point
+  // per state (switch and V∞). The buttons choose which current: all the channels together, or one kind (an ion's
+  // channels, leak and switched together, or a branch). Points are grouped by the switch, since a switched kind's
+  // conductance differs with it. Cleared when the circuit changes.
+  const VIW = CW, VIH = 280, vic = setupCanvas($('cVIchart'), VIW, VIH);
+  const VIKINDS = {
+    inj: [['total', 'Total I', 'ink']],
+    bat: [['total', 'Total I', 'ink'], ['b1', 'I_1', 'accent'], ['b2', 'I_2', 'muted']],
+    g: [['total', 'Total I', 'ink'], ['Na', 'I_Na', 'na'], ['K', 'I_K', 'k']],
+    full: [['total', 'Total I', 'ink'], ['Na', 'I_Na', 'na'], ['K', 'I_K', 'k'], ['Cl', 'I_Cl', 'cl']],
+  };
+  let viPts = new Map(), viLast = null, viKind = 'total', viAxes = 'vi';
+  function viKinds(v) {   // every kind of current at voltage v, µA/cm², outward +: the channels', not the source's
+    const I = currents(v), out = {};
+    if (mode === 'inj') out.total = I[1];
+    if (mode === 'bat') { out.b1 = I[0]; out.b2 = I[1]; out.total = I[0] + I[1]; }
+    if (mode === 'g') { out.Na = I[0]; out.K = I[1]; out.total = I[0] + I[1]; }
+    if (mode === 'full') { out.Na = I[0] + I[2]; out.K = I[1] + I[3]; out.Cl = I[4]; out.total = I.reduce((a, b) => a + b, 0); }
+    return out;
+  }
+  function viRecord() {
+    const { Vinf } = steady();
+    if (Math.abs(V - Vinf) > 0.05) return;
+    const key = (sw ? 1 : 0) + '|' + Vinf.toFixed(1);
+    if (viPts.has(key)) return;
+    viPts.set(key, { V: Vinf, sw, I: viKinds(Vinf) }); viLast = key;
+  }
+  function viButtons() {
+    const ks = VIKINDS[mode]; if (!ks.some(k => k[0] === viKind)) viKind = 'total';
+    $('cVIKinds').innerHTML = ks.map(([k, l, col]) => `<button class="chip" data-cvik="${k}" aria-pressed="${k === viKind}"><i class="dot" style="background:var(--${col})"></i>${l.replace(/_([A-Za-z0-9]+)/, '<sub>$1</sub>')}</button>`).join('');
+    document.querySelectorAll('[data-cvik]').forEach(b => b.addEventListener('click', () => { viKind = b.dataset.cvik; viButtons(); drawVIc(); }));
+  }
+  function drawVIc() {
+    const [, label, colName] = VIKINDS[mode].find(k => k[0] === viKind), col = C[colName], pts = [...viPts.values()];
+    const grp = on => ({ pts: pts.filter(q => mode === 'inj' || q.sw === on).map(q => ({ V: q.V, I: q.I[viKind] })), col: on ? col : mixc(col, C.surface, 0.45),
+                         label: mode === 'inj' ? '' : on ? 'switch on' : 'switch off' });
+    const E = { b1: p.E1, b2: p.E2, Na: mode === 'full' ? p.fENa : p.ENa, K: mode === 'full' ? p.fEK : p.EK, Cl: p.fECl }[viKind];
+    const lastQ = viLast && viPts.get(viLast);
+    drawVI(vic, VIW, VIH, { groups: mode === 'inj' ? [grp(true)] : [grp(false), grp(true)], vi: viAxes === 'vi', last: lastQ ? { V: lastQ.V, I: lastQ.I[viKind] } : null,
+      vR: mode === 'inj' ? [-40, 120] : [-110, 70], iR: I_RANGE[mode], vLab: 'settled V (mV)', iLab: label + ' (µA/cm², outward +)',
+      refs: E !== undefined ? [{ V: E, col, label: 'E ' + fmtSigned(E, 0) }] : [] });
+    $('cVIcap').innerHTML = viKind !== 'total'
+      ? `Each kind of channel follows Ohm's law, I = g(V − E): its points lie on a straight line that crosses zero at its battery, E (dashed), with slope g. A switched kind has two lines, one for each position of the switch.`
+      : mode === 'inj' ? `At each settled point all the injected current leaves through the channels, so the points lie on a line through zero whose slope is the membrane's resistance, 1/g = ${(1 / p.gL).toFixed(1)} kΩ·cm². Turn the current on at different sizes to add points.`
+      : `Once V has settled, the channels' currents add up to zero, whatever the voltage: in goes as much as out, and every point sits at zero current. Choose a single kind of current to see how they balance.`;
+  }
+  chipGroup('cvi', a => { viAxes = a; drawVIc(); });
+  $('cVIClear').addEventListener('click', () => { viPts = new Map(); viLast = null; drawVIc(); });
+  window.RC_VI = { get pts() { return [...viPts.values()]; }, get sweeps() { return SWP; } };   // for tests
+  chipGroup('mode', m => { clearSweep(); mode = m; reset(); swFields(); captions(); viPts = new Map(); viLast = null; viButtons(); });
   chipGroup('cview', v => { cview = v; captions(); });
-  $('cSwitch').addEventListener('click', () => setSwitch(!sw));
+  $('cSwitch').addEventListener('click', () => { if (SWP.on || SWP.traces.length) { clearSweep(); reset(); } setSwitch(!sw); });
+  $('cSweep').addEventListener('click', startSweep);
   const speedFrom = v => Math.pow(10, -1 + v * 0.02);   // ms of model time per second: 0.1 to 10
   bindRange('cSpeed', v => { const s = speedFrom(v); return (s < 1 ? s.toFixed(2) : s.toFixed(1)) + ' ms/s'; }, v => speed = speedFrom(v));
   bindRange('cC', v => v.toFixed(1) + ' µF/cm²', v => p.C = v);
@@ -1213,7 +1402,7 @@ function chipGroup(attr, onPick) {
   bindRange('cGNa', v => v.toFixed(2) + ' mS/cm²', v => p.gNa = v);
   bindRange('cENa', v => fmtSigned(v, 0), v => p.ENa = v);
   const mS = v => v.toFixed(2) + ' mS/cm²';
-  bindRange('cMNa', mS, v => p.mNa = v); bindRange('cMK', mS, v => p.mK = v);
+  bindRange('cMix', mS, v => { p.mNa = p.mK = v / 2; });
   bindRange('cFGNa', mS, v => p.fgNa = v); bindRange('cFGK', mS, v => p.fgK = v); bindRange('cFGCl', mS, v => p.fgCl = v);
   bindRange('cFENa', v => fmtSigned(v, 0), v => p.fENa = v); bindRange('cFEK', v => fmtSigned(v, 0), v => p.fEK = v);
   bindRange('cFECl', v => fmtSigned(v, 0), v => p.fECl = v);
@@ -1229,16 +1418,16 @@ function chipGroup(attr, onPick) {
   playBtn.addEventListener('click', () => setRunning(!running));
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
 
-  reset(); captions();
+  reset(); captions(); viButtons(); swFields();
   let last = performance.now(), frame = 0;
   function loop(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (running) { advance(dt * speed); stepDots(); }
-    draw(); drawCharts();
+    if (running) { SWP.on ? sweepAdvance(dt * Math.max(speed, WIN / 1.5)) : advance(dt * speed); stepDots(); }   // a sweep runs each step in about 1.5 s
+    viRecord(); draw(); drawMem(); drawCharts(); drawVIc();
     if (frame++ % 6 === 0) readouts();
     requestAnimationFrame(loop);
   }
-  colorHooks.push(() => { draw(); drawCharts(); });
+  colorHooks.push(() => { draw(); drawMem(); drawCharts(); drawVIc(); });
   Frames.sim(() => running, 'cPlay', ['cSwitch']);   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
