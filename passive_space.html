@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <script src="frames.js"></script>
 <script src="membrane.js"></script>
+<script src="breadboard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Passive Properties: Space</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1225,6 +1226,27 @@ function chipGroup(attr, onPick) {
   playBtn.addEventListener('click', () => setRunning(!running));
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
   setMode('inj');
+  // Newt: this row of patches as it's set now, on the Breadboard simulator (per cm² of a patch, in F, S, V and A):
+  // every patch its capacitor and resting branches, patch 1 its switched branch or injected current, the cytoplasm between them
+  NewtBreadboard.add(playBtn, () => {
+    const S = g => g * 1e-3, mv = e => e * 1e-3, m = P.mode, comps = [], links = [];
+    for (let k = 0; k < P.n; k++) {
+      const ch = [], first = k === 0;
+      if (m === 'inj') ch.push({ name: 'R', g: S(P.gm) });
+      else if (m === 'g') { if (first) ch.push({ name: 'Na⁺', g: S(P.gNa), E: mv(P.ENa), switch: true, closed: sw }); ch.push({ name: 'K⁺', g: S(P.gm), E: mv(P.EK) }); }
+      else if (m === 'bat') { if (first) ch.push({ name: 'Battery 1', g: 1e-3 / P.R1, E: mv(P.E1), switch: true, closed: sw }); ch.push({ name: 'Battery 2', g: 1e-3 / P.R2, E: mv(P.E2) }); }
+      else {
+        const gm = P.mNa + P.mK;
+        if (first && gm > 0) ch.push({ name: 'Mixed channel', g: S(gm), E: mv((P.mNa * P.fENa + P.mK * P.fEK) / gm), switch: true, closed: sw });
+        ch.push({ name: 'Na⁺ leak', g: S(P.fgNa), E: mv(P.fENa) }, { name: 'K⁺ leak', g: S(P.fgK), E: mv(P.fEK) }, { name: 'Cl⁻ leak', g: S(P.fgCl), E: mv(P.fECl) });
+      }
+      const c = { name: 'Patch ' + (k + 1), C: P.C * 1e-6, channels: ch };
+      if (first && m === 'inj') c.stim = { I: P.I * 1e-6 };
+      comps.push(c);
+      if (k) links.push({ from: k - 1, to: k, g: S(gc()) });
+    }
+    return { title: 'a row of membrane patches', compartments: comps, links };
+  });
   window.SPACE_CIRC = { P, get V() { return V; }, advance, reset, setSw, setMode, lambda, gc, leak, get hist() { return hist; }, get viPts() { return [...viPts.values()]; }, get sweeps() { return SWP; } };
   let last = performance.now(), frame = 0;
   function loop(now) {
