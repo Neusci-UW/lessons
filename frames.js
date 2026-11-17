@@ -46,7 +46,23 @@
         if (!playingOf(s)) document.getElementById(button)?.click();
       });
   }
-  window.Frames = { sim, poke, pauseAll };
+  // Chromium can throw away a canvas's drawing and hand the canvas back blank ('contextlost', then
+  // 'contextrestored' on each canvas), e.g. when its GPU process restarts (after sleep or a display change); Qt
+  // WebEngine without a screen (QT_QPA_PLATFORM=offscreen) does it every half second. The loops repaint on their
+  // next frame, but a chart drawn only when a control moves (a calculator's) would stay blank until someone touched it. So right after a burst of restores
+  // (every canvas's, in one go), redraw everything: the page's readColors() (which reruns its colorHooks, and they
+  // redraw every canvas) and whatever the page registered with Frames.onRestore(fn); then wake the loops. Without
+  // delay: a context can be lost again soon after it comes back.
+  const restorers = [];
+  let restoreTimer = 0;
+  function restored() {
+    restoreTimer = 0;
+    const fns = (typeof readColors === 'function' ? [readColors] : []).concat(restorers);
+    for (const f of fns) { try { f(); } catch (e) { console.error(e); } }
+    poke();
+  }
+  window.addEventListener('contextrestored', () => { clearTimeout(restoreTimer); restoreTimer = setTimeout(restored, 0); }, true);
+  window.Frames = { sim, poke, pauseAll, onRestore: fn => { restorers.push(fn); } };
 
   for (const ev of ['pointerdown', 'wheel', 'keydown', 'input', 'change', 'click', 'scroll'])
     window.addEventListener(ev, changed, { capture: true, passive: true });

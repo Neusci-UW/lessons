@@ -1566,7 +1566,8 @@ function thin(xs, yss, max = 1400) {
 // =====================================================================================
 (() => {
   let kind = 'cat';
-  const KW = 560, KH = 300, cx = setupCanvas($('kIV'), KW, KH);
+  // a square plot: drawChart's margins are 62 left, 70 right (this chart's keys), 14 top, 42 bottom
+  const KW = 560, KH = KW - 62 - 70 + 14 + 42, cx = setupCanvas($('kIV'), KW, KH);
   const ids = ['kR', 'kENa', 'kEK', 'kECl', 'kG', 'kV', 'kRest', 'kThr'];
   const fm = { kR: v => '1 : ' + (1 / Math.pow(10, v)).toFixed(2) + ' (' + Math.pow(10, v).toFixed(2) + '×)', kG: v => v.toFixed(1) + ' nS' };
   ids.forEach(id => { const el = $(id), out = $(id + 'o'); const f = () => out.textContent = (fm[id] || (v => fmtSigned(v, 0)))(parseFloat(el.value)); el.addEventListener('input', f); f(); });

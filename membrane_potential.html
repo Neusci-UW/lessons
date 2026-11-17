@@ -2078,6 +2078,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   }));
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(calcGHK, 0));
   new MutationObserver(() => setTimeout(calcGHK, 0)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  Frames.onRestore(() => calcGHK());   // the calculator's charts, drawn only on input, after the browser hands its canvases back blank
 
   // ---------- lessons ----------
   // What a lesson (lesson.js; lesson files in questions/) may read, set up and hide on this page

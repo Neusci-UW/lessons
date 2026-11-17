@@ -834,8 +834,10 @@ function drawChart(c, o) {
 // o: { groups: [{ pts: [{ V, I }], col, label }], last: { V, I, col } | null, vi: true (I across, V up) or false
 //      (V across, I up), vR: [lo, hi] (mV), iR: [lo, hi], iLab, vLab: axis labels, refs: [{ V, col, label }]: dashed
 //      lines at a voltage (a battery: where a kind of current is zero) }
+// drawVI's margins, and the canvas height that makes its plot square for a canvas W wide
+const VIM = { L: 62, R: 92, T: 14, B: 40 }, viSquareH = W => W - VIM.L - VIM.R + VIM.T + VIM.B;
 function drawVI(c, W, H, o) {
-  const L = 62, R = 92, T = 14, B = 40, pw = W - L - R, ph = H - T - B;
+  const { L, R, T, B } = VIM, pw = W - L - R, ph = H - T - B;
   const xr = o.vi ? o.iR : o.vR, yr = o.vi ? o.vR : o.iR;
   const [x0, x1] = ChartZoom.x(c.canvas, xr[0], xr[1]), [y0, y1] = ChartZoom.y(c.canvas, yr[0], yr[1]);
   ChartZoom.bind(c.canvas, () => drawVI(c, W, H, o));
@@ -1343,7 +1345,7 @@ function chipGroup(attr, onPick) {
   // per state (switch and V∞). The buttons choose which current: all the channels together, or one kind (an ion's
   // channels, leak and switched together, or a branch). Points are grouped by the switch, since a switched kind's
   // conductance differs with it. Cleared when the circuit changes.
-  const VIW = CW, VIH = 280, vic = setupCanvas($('cVIchart'), VIW, VIH);
+  const VIW = CW, VIH = viSquareH(VIW), vic = setupCanvas($('cVIchart'), VIW, VIH);   // a square plot
   const VIKINDS = {
     inj: [['total', 'Total I', 'ink']],
     bat: [['total', 'Total I', 'ink'], ['b1', 'I_1', 'accent'], ['b2', 'I_2', 'muted']],
@@ -1377,8 +1379,17 @@ function chipGroup(attr, onPick) {
                          label: mode === 'inj' ? '' : on ? 'switch on' : 'switch off' });
     const E = { b1: p.E1, b2: p.E2, Na: mode === 'full' ? p.fENa : p.ENa, K: mode === 'full' ? p.fEK : p.EK, Cl: p.fECl }[viKind];
     const lastQ = viLast && viPts.get(viLast);
-    drawVI(vic, VIW, VIH, { groups: mode === 'inj' ? [grp(true)] : [grp(false), grp(true)], vi: viAxes === 'vi', last: lastQ ? { V: lastQ.V, I: lastQ.I[viKind] } : null,
-      vR: mode === 'inj' ? [-40, 120] : [-110, 70], iR: I_RANGE[mode], vLab: 'settled V (mV)', iLab: label + ' (µA/cm², outward +)',
+    // the axes fit the points (and the battery's line), with a little room around and a smallest span; zero current is
+    // always in view, and zero voltage when V is measured from rest (injecting current)
+    const fit = (vals, min, zero = true) => {
+      if (!vals.length) vals = [0];
+      let lo = Math.min(...vals, ...(zero ? [0] : [])), hi = Math.max(...vals, ...(zero ? [0] : []));
+      if (hi - lo < min) { const c = (hi + lo) / 2; lo = Math.min(lo, c - min / 2); hi = Math.max(hi, c + min / 2); }
+      const pad = (hi - lo) * 0.1; return [lo - pad, hi + pad];
+    };
+    const groups = mode === 'inj' ? [grp(true)] : [grp(false), grp(true)], all = groups.flatMap(g => g.pts);
+    drawVI(vic, VIW, VIH, { groups, vi: viAxes === 'vi', last: lastQ ? { V: lastQ.V, I: lastQ.I[viKind] } : null,
+      vR: fit(all.map(q => q.V).concat(E !== undefined ? [E] : []), 10, mode === 'inj'), iR: fit(all.map(q => q.I), 4), vLab: 'settled V (mV)', iLab: label + ' (µA/cm², outward +)',
       refs: E !== undefined ? [{ V: E, col, label: 'E ' + fmtSigned(E, 0) }] : [] });
     $('cVIcap').innerHTML = viKind !== 'total'
       ? `Each kind of channel follows Ohm's law, I = g(V − E): its points lie on a straight line that crosses zero at its battery, E (dashed), with slope g. A switched kind has two lines, one for each position of the switch.`

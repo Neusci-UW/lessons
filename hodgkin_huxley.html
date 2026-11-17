@@ -1514,29 +1514,35 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
 
 // ---------- calculator charts: fixed axes, curves, labels at the right edge ----------
 const KCW = 600, KCH = 400, KL = 58, KR = 84, KTP = 14, KB = 34, KPW = KCW - KL - KR, KPH = KCH - KTP - KB;
+// a chart's size and plot area: the shared one, and a square plot for charts of one quantity against another
+// (set on the canvas's context as c.kg; kAxes, kLine and kTags use it)
+const kGeom = H => ({ W: KCW, H, L: KL, R: KR, T: KTP, B: KB, PW: KPW, PH: H - KTP - KB });
+const KG = kGeom(KCH), KSQ = kGeom(KPW + KTP + KB);
 const ksg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
 const kmv = (v, d = 1) => isFinite(v) ? (v < 0 ? '−' : '+') + Math.abs(v).toFixed(d) + ' mV' : '—';
 function kAxes(c, x0, x1, y0, y1, xlab, ylab, xstep, ystep) {
   [x0, x1] = ChartZoom.x(c.canvas, x0, x1); [y0, y1] = ChartZoom.y(c.canvas, y0, y1);   // the zoom arrows (chartzoom.js)
   xstep = ChartZoom.step(c.canvas, 'x', xstep); ystep = ChartZoom.step(c.canvas, 'y', ystep);
-  const sx = x => KL + (x - x0) / (x1 - x0) * KPW, sy = v => KTP + (y1 - Math.max(y0, Math.min(y1, v))) / (y1 - y0) * KPH;
-  c.fillStyle = C.surface; c.fillRect(0, 0, KCW, KCH);
+  const g = c.kg || KG, { L, T, B, PW, PH } = g;
+  const sx = x => L + (x - x0) / (x1 - x0) * PW, sy = v => T + (y1 - Math.max(y0, Math.min(y1, v))) / (y1 - y0) * PH;
+  c.fillStyle = C.surface; c.fillRect(0, 0, g.W, g.H);
   c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.lineWidth = 0.8;
   for (let v = Math.ceil(y0 / ystep) * ystep; v <= y1 + 1e-9; v += ystep) {
-    c.strokeStyle = Math.abs(v) < 1e-9 ? C.muted : C.line; c.beginPath(); c.moveTo(KL, sy(v)); c.lineTo(KL + KPW, sy(v)); c.stroke();
-    c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(ksg(+v.toPrecision(4)), KL - 6, sy(v));
+    c.strokeStyle = Math.abs(v) < 1e-9 ? C.muted : C.line; c.beginPath(); c.moveTo(L, sy(v)); c.lineTo(L + PW, sy(v)); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(ksg(+v.toPrecision(4)), L - 6, sy(v));
   }
   for (let x = Math.ceil(x0 / xstep) * xstep; x <= x1 + 1e-9; x += xstep) {
-    c.strokeStyle = C.line; c.beginPath(); c.moveTo(sx(x), KTP); c.lineTo(sx(x), KTP + KPH); c.stroke();
-    c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(+x.toPrecision(4), sx(x), KCH - KB + 12);
+    c.strokeStyle = C.line; c.beginPath(); c.moveTo(sx(x), T); c.lineTo(sx(x), T + PH); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(+x.toPrecision(4), sx(x), g.H - B + 12);
   }
-  c.fillText(xlab, KL + KPW / 2, KCH - 8);
-  c.save(); c.translate(12, KTP + KPH / 2); c.rotate(-Math.PI / 2); c.fillText(ylab, 0, 0); c.restore();
-  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(KL + 0.5, KTP + 0.5, KPW - 1, KPH - 1);
-  return { sx, sy };
+  c.fillText(xlab, L + PW / 2, g.H - 8);
+  c.save(); c.translate(12, T + PH / 2); c.rotate(-Math.PI / 2); c.fillText(ylab, 0, 0); c.restore();
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, PW - 1, PH - 1);
+  return { sx, sy, g };
 }
 function kLine(c, a, xs, ys, col, width, dash) {
-  c.save(); c.beginPath(); c.rect(KL, KTP, KPW, KPH); c.clip();
+  const g = a.g || c.kg || KG;
+  c.save(); c.beginPath(); c.rect(g.L, g.T, g.PW, g.PH); c.clip();
   c.strokeStyle = col; c.lineWidth = width; c.setLineDash(dash || []); c.lineJoin = 'round'; c.beginPath();
   xs.forEach((x, k) => k ? c.lineTo(a.sx(x), a.sy(ys[k])) : c.moveTo(a.sx(x), a.sy(ys[k])));
   c.stroke(); c.restore();
@@ -1545,7 +1551,8 @@ function kTags(c, list) {
   c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
   list.sort((a, b) => a.y - b.y);
   for (let k = 1; k < list.length; k++) if (list[k].y - list[k - 1].y < 13) list[k].y = list[k - 1].y + 13;
-  list.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, KCW - KR + 6, Math.max(KTP + 4, Math.min(KTP + KPH - 2, l.y))); });
+  const g = c.kg || KG;
+  list.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, g.W - g.R + 6, Math.max(g.T + 4, Math.min(g.T + g.PH - 2, l.y))); });
 }
 
 // =====================================================================================
@@ -1558,7 +1565,8 @@ function kTags(c, list) {
   const num = id => parseFloat($(id).value);
   const fmt = { kT: v => v.toFixed(2) + ' ms', kGK: fmtG, kGNa: v => fmtG(v, 3), kEK: v => ksg(v) + ' mV', kENa: v => ksg(v) + ' mV',
     kGCl: fmtG, kECl: v => ksg(v) + ' mV', kGNaM: v => v + ' mS/cm²', kGKM: v => v + ' mS/cm²', kC: v => v.toFixed(1) + ' µF/cm²' };
-  const ivc = setupCanvas($('kIVChart'), KCW, KCH), rc = setupCanvas($('kRefrChart'), KCW, KCH), gc = setupCanvas($('kGateChart'), KCW, KCH);
+  const ivc = setupCanvas($('kIVChart'), KCW, KSQ.H), rc = setupCanvas($('kRefrChart'), KCW, KCH), gc = setupCanvas($('kGateChart'), KCW, KCH);
+  ivc.kg = KSQ;   // the I–V chart's plot is square
   [ivc, rc, gc].forEach(x => ChartZoom.bind(x.canvas, () => update()));
   let TREC = 5;
   let zoom = 'all', cache = null;
@@ -1624,7 +1632,7 @@ function kTags(c, list) {
     ring(m.cr.stable, C.ink); ring(m.cr.thr, C.accent);
     if (m.refr && m.t < TREC) {   // where the membrane actually is at time t
       kLine(ivc, a, [at.V, at.V], [y0, y1], C.ink, 1, [2, 4]);
-      ivc.font = '600 11px "IBM Plex Sans", sans-serif'; ivc.fillStyle = C.ink; ivc.textAlign = 'left'; ivc.fillText('V now', Math.min(a.sx(at.V) + 4, KL + KPW - 40), KTP + 12);
+      ivc.font = '600 11px "IBM Plex Sans", sans-serif'; ivc.fillStyle = C.ink; ivc.textAlign = 'left'; ivc.fillText('V now', Math.min(a.sx(at.V) + 4, a.g.L + a.g.PW - 40), a.g.T + 12);
     }
     kTags(ivc, lab);
   }
@@ -1720,7 +1728,8 @@ function kTags(c, list) {
   const num = id => parseFloat($(id).value);
   const fmt = { vV0: v => ksg(v) + ' mV', vV1: v => ksg(v) + ' mV', vENa: v => ksg(v) + ' mV', vEK: v => ksg(v) + ' mV', vGNa: v => v + ' mS/cm²', vGK: v => v + ' mS/cm²' };
   let TMAX = 5;
-  const ic = setupCanvas($('vIChart'), KCW, KCH), gcv = setupCanvas($('vGChart'), KCW, KCH), xcv = setupCanvas($('vXChart'), KCW, KCH), ivc = setupCanvas($('vIVChart'), KCW, KCH);
+  const ic = setupCanvas($('vIChart'), KCW, KCH), gcv = setupCanvas($('vGChart'), KCW, KCH), xcv = setupCanvas($('vXChart'), KCW, KCH), ivc = setupCanvas($('vIVChart'), KCW, KSQ.H);
+  ivc.kg = KSQ;   // the I–V chart's plot is square
   [ic, gcv, xcv, ivc].forEach(x => ChartZoom.bind(x.canvas, () => update()));
   const tau = V => { const r = rates(V); return { m: 1 / (r.am + r.bm), h: 1 / (r.ah + r.bh), n: 1 / (r.an + r.bn) }; };
   // the clamp: gates, conductances and currents at time t after the step from V0 to V1

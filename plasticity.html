@@ -1201,7 +1201,8 @@ $('setApv').addEventListener('change', e => { SET.apv = e.target.checked; setCha
 // The calculator: the NMDA I–V curve, and LTP or LTD for any protocol
 // =====================================================================================
 (() => {
-  const cn = setupCanvas($('kNChart'), CHW, CHH), cp = setupCanvas($('kPChart'), CHW, CHH);
+  // the I–V chart's plot is square: drawChart's margins are 62 left, 110 right (this chart's keys), 14 top, 42 bottom
+  const NH = CHW - 62 - 110 + 14 + 42, cn = setupCanvas($('kNChart'), CHW, NH), cp = setupCanvas($('kPChart'), CHW, CHH);
   const v = id => +$(id).value;
   let curve = null, curveKey = '';
   function nmda() {
@@ -1210,7 +1211,7 @@ $('setApv').addEventListener('change', e => { SET.apv = e.target.checked; setCha
     $('kI').textContent = fmtSigned(I, 1, ' pA'); $('kCa').textContent = (caRel * 100).toFixed(0) + ' %';
     $('kNForm').textContent = `I = g · free · (V − 0) = ${g.toFixed(1)} nS × ${fr.toFixed(3)} × ${V} mV = ${I.toFixed(1)} pA`;
     const vs = Array.from({ length: 141 }, (_, i) => -100 + i);
-    drawChart(cn, { x0: -100, x1: 40, fixed: [-120, 50], xlabel: 'V (mV)', ylabel: 'I (pA)', xs: vs, r: 110,
+    drawChart(cn, { x0: -100, x1: 40, fixed: [-120, 50], xlabel: 'V (mV)', ylabel: 'I (pA)', xs: vs, r: 110, h: NH,
       series: [{ ys: vs.map(x => g * x), color: C.muted, dash: [5, 4], width: 1.5, label: 'no Mg²⁺' },
                { ys: vs.map(x => g * mgFree(x, mg) * x), color: C.ca, label: mg.toFixed(1) + ' mM Mg²⁺' },
                { ys: vs.map(x => -60 * mgFree(x, mg) * Math.max(0, 130 - x) / 200), color: C.pos, width: 1.5, label: 'Ca²⁺ entry' }],

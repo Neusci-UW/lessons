@@ -749,8 +749,10 @@ function drawChart(c, o) {
 // o: { groups: [{ pts: [{ V, I }], col, label }], last: { V, I, col } | null, vi: true (I across, V up) or false
 //      (V across, I up), vR: [lo, hi] (mV), iR: [lo, hi], iLab, vLab: axis labels, refs: [{ V, col, label }]: dashed
 //      lines at a voltage (a battery: where a kind of current is zero) }
+// drawVI's margins, and the canvas height that makes its plot square for a canvas W wide
+const VIM = { L: 62, R: 92, T: 14, B: 40 }, viSquareH = W => W - VIM.L - VIM.R + VIM.T + VIM.B;
 function drawVI(c, W, H, o) {
-  const L = 62, R = 92, T = 14, B = 40, pw = W - L - R, ph = H - T - B;
+  const { L, R, T, B } = VIM, pw = W - L - R, ph = H - T - B;
   const xr = o.vi ? o.iR : o.vR, yr = o.vi ? o.vR : o.iR;
   const [x0, x1] = ChartZoom.x(c.canvas, xr[0], xr[1]), [y0, y1] = ChartZoom.y(c.canvas, yr[0], yr[1]);
   ChartZoom.bind(c.canvas, () => drawVI(c, W, H, o));
@@ -1145,7 +1147,7 @@ function chipGroup(attr, onPick) {
   // into patch 1: patch 1's slope is the input resistance, and farther patches' are smaller. The other buttons plot each
   // patch's own current of one kind (leak and switched channels together) against its own voltage: Ohm's law, with
   // every patch on the same line through that kind's battery; "Total I" is all of a patch's channels together.
-  const VIW = CW, VIH = CH, vic = setupCanvas($('lVI'), VIW, VIH);
+  const VIW = CW, VIH = viSquareH(VIW), vic = setupCanvas($('lVI'), VIW, VIH);   // a square plot
   const VIK = {
     inj: [['inj', 'I into patch 1', 'accent'], ['leak', 'I_leak', 'k']],
     bat: [['total', 'Total I', 'ink'], ['b1', 'I_1', 'accent'], ['b2', 'I_2', 'muted']],
@@ -1178,8 +1180,17 @@ function chipGroup(attr, onPick) {
     }
     const E = { leak: 0, b1: P.E1, b2: P.E2, Na: P.mode === 'full' ? P.fENa : P.ENa, K: P.mode === 'full' ? P.fEK : P.EK, Cl: P.fECl }[viKind];
     const lq = viLast && viPts.get(viLast);
+    // the axes fit the points (and the battery's line), with a little room around and a smallest span; zero current is
+    // always in view, and zero voltage when V is measured from rest (injecting current)
+    const fit = (vals, min, zero = true) => {
+      if (!vals.length) vals = [0];
+      let lo = Math.min(...vals, ...(zero ? [0] : [])), hi = Math.max(...vals, ...(zero ? [0] : []));
+      if (hi - lo < min) { const c = (hi + lo) / 2; lo = Math.min(lo, c - min / 2); hi = Math.max(hi, c + min / 2); }
+      const pad = (hi - lo) * 0.1; return [lo - pad, hi + pad];
+    };
+    const all = groups.flatMap(g => g.pts);
     drawVI(vic, VIW, VIH, { groups, vi: viAxes === 'vi', last: lq && lq.V.length === n ? { V: lq.V[0], I: lq.I[viKind][0] } : null,
-      vR: inj ? [-20, 60] : [-100, 40], iR: inj ? [-40, 60] : [-120, 120], vLab: 'settled V (mV)', iLab: label + ' (µA/cm², outward +)',
+      vR: fit(all.map(p => p.V).concat(E !== undefined ? [E] : []), 10, inj), iR: fit(all.map(p => p.I), 4), vLab: 'settled V (mV)', iLab: label + ' (µA/cm², outward +)',
       refs: E !== undefined ? [{ V: E, col: C.muted, label: 'E ' + fmtSigned(E, 0) }] : [] });
     const sl = k => { const q = pts.filter(q => q.V.length === n && q.I.inj[0] !== 0); return q.length ? q[0].V[k] / q[0].I.inj[0] : NaN; };
     $('lVIcap').innerHTML = viKind === 'inj'

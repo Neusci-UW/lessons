@@ -99,7 +99,7 @@ header p{max-width:90ch}
 .gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
 .gformula .res{font-size:14px;font-weight:600}
 .calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
-@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+@media (max-width:1000px){.calc-body{grid-template-columns:minmax(0,1fr)}}
 .calc-out{display:flex;flex-direction:column;gap:12px}
 .calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
@@ -576,57 +576,70 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
   </div>
 </section>
 
-<section class="card calc" id="cable-calc">
+<section class="card calc" id="cv-calc">
   <div class="calc-head">
-    <span class="sect-title">Cable calculator</span>
+    <span class="sect-title">Conduction velocity calculator</span>
   </div>
-  <p class="caption">How far a voltage change spreads along an axon (λ) and how fast the membrane charges (τ, as in lesson 2). Together they set how quickly each patch ahead of a spike is brought to threshold.</p>
+  <p class="caption">How fast a spike travels along an axon, and how long it takes to get where it is going. Wider axons and myelin both let current spread farther ahead of the spike, so the next patch reaches threshold sooner. The speeds are measured in this page's simulation, with the motor neuron's channels and nodes.</p>
   <div class="calc-body">
     <div class="gsliders">
       <div class="gion">
         <div class="gh">Axon</div>
-        <div class="gr"><label for="kD">d</label><input type="range" id="kD" min="-0.3" max="3" step="0.01" value="1.08"><output id="kDo" for="kD"></output></div>
-        <div class="gr"><label for="kRi">R<sub>i</sub></label><input type="range" id="kRi" min="20" max="200" step="1" value="35"><output id="kRio" for="kRi"></output></div>
-        <div class="gr" id="kWrapsRow"><label for="kWraps">Myelin</label><input type="range" id="kWraps" min="0" max="200" step="1" value="100"><output id="kWrapso" for="kWraps"></output></div>
-        <span class="caption">diameter, the resistivity of the cytoplasm inside it, and (myelinated) how many times myelin wraps it</span>
+        <div class="gr"><label for="kD">d</label><input type="range" id="kD" min="-0.6" max="3" step="0.01" value="1.08"><output id="kDo" for="kD"></output></div>
+        <div class="gr"><label for="kWraps">Myelin</label><input type="range" id="kWraps" min="0" max="200" step="1" value="100"><output id="kWrapso" for="kWraps"></output></div>
+        <div class="gr"><label for="kT">T</label><input type="range" id="kT" min="0" max="40" step="0.5" value="37"><output id="kTo" for="kT"></output></div>
+        <span class="caption">the axon's diameter, how many times myelin wraps it (none: a bare axon), and the temperature</span>
       </div>
       <div class="gion">
-        <div class="gh">Membrane at rest</div>
-        <div class="gr"><label for="kG">g<sub>m</sub></label><input type="range" id="kG" min="-1.5" max="1" step="0.01" value="-0.4"><output id="kGo" for="kG"></output></div>
-        <div class="gr"><label for="kC">C<sub>m</sub></label><input type="range" id="kC" min="0.3" max="2" step="0.05" value="1"><output id="kCo" for="kC"></output></div>
-        <span class="caption" id="kMemCap">all the channels open at rest (Σg, lesson 1) and the capacitance, per cm² of bare membrane. Each wrap of myelin adds two membranes in series, so it divides both by 2 × wraps</span>
+        <div class="gh">The trip</div>
+        <div class="gr"><label for="kL">Trip</label><input type="range" id="kL" min="-2" max="0.3" step="0.01" value="0"><output id="kLo" for="kL"></output></div>
+        <span class="caption">how far the spike has to go: 1 m is about spinal cord to foot, 10 cm elbow to fingertip</span>
+      </div>
+      <div class="gion">
+        <div class="gh">Real fibres</div>
+        <div class="btns" role="group" aria-label="Real fibres">
+          <button type="button" class="chip" data-kfib="12,100,37" aria-pressed="false">Muscle (Aα)</button>
+          <button type="button" class="chip" data-kfib="8,66,37" aria-pressed="false">Touch (Aβ)</button>
+          <button type="button" class="chip" data-kfib="3,25,37" aria-pressed="false">Sharp pain (Aδ)</button>
+          <button type="button" class="chip" data-kfib="1,0,37" aria-pressed="false">Burning pain (C)</button>
+          <button type="button" class="chip" data-kfib="476,0,18.5" aria-pressed="false">Squid giant axon</button>
+        </div>
+        <div class="btns"><button type="button" id="kFromSim">Copy from the simulation</button></div>
       </div>
     </div>
     <div class="calc-out">
-      <div class="out"><span class="big" id="kLam">—</span><span class="caption">length constant λ</span></div>
-      <div class="es"><span>τ <b id="kTau">—</b></span><span>left after 1 mm <b id="kLeft">—</b></span><span>r<sub>i</sub> <b id="kRiL">—</b></span></div>
+      <div class="out"><span class="big" id="kV">—</span><span class="caption">conduction velocity</span></div>
+      <div class="es"><span>the trip takes <b id="kTrip">—</b></span><span>a bare axon as fast would be <b id="kEq">—</b> wide</span><span>λ <b id="kLam">—</b></span><span>τ <b id="kTau">—</b></span></div>
       <div class="gformula" id="kFormula" aria-live="polite"></div>
       <div class="tabs" role="tablist" aria-label="Calculator charts">
-        <button type="button" role="tab" id="tab-kx" aria-controls="pane-kx" aria-selected="true">Spread with distance</button>
-        <button type="button" role="tab" id="tab-kt" aria-controls="pane-kt" aria-selected="false" tabindex="-1">Charging over time</button>
+        <button type="button" role="tab" id="tab-kd" aria-controls="pane-kd" aria-selected="true">Speed against diameter</button>
+        <button type="button" role="tab" id="tab-ktrip" aria-controls="pane-ktrip" aria-selected="false" tabindex="-1">The trip</button>
         <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
       </div>
-      <div class="stage" role="tabpanel" id="pane-kx" aria-labelledby="tab-kx">
-        <canvas id="kXChart" aria-label="A steady voltage change against distance along the axon"></canvas>
+      <div class="stage" role="tabpanel" id="pane-kd" aria-labelledby="tab-kd">
+        <canvas id="kDChart" style="max-width:560px;margin:0 auto" aria-label="Conduction velocity against axon diameter, bare and myelinated, with real fibre types"></canvas>
       </div>
-      <div class="stage" role="tabpanel" id="pane-kt" aria-labelledby="tab-kt" hidden>
-        <canvas id="kTChart" aria-label="The membrane charging against time"></canvas>
+      <div class="stage" role="tabpanel" id="pane-ktrip" aria-labelledby="tab-ktrip" hidden>
+        <canvas id="kTripChart" aria-label="How long the spike takes to travel the distance set, in your axon and in each kind of real fibre"></canvas>
       </div>
       <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
-        <h4>Spread with distance</h4>
+        <h4>Speed against diameter</h4>
         <ul>
-          <li><b>Black curve:</b> a steady voltage change held at x = 0, as a percentage of its size there: V(x) = V<sub>0</sub>e<sup>−x/λ</sup>. Current leaks out through the membrane all along the way, so less is left the farther you go.</li>
-          <li><b>Dot:</b> one length constant along, where 37% is left. By 3λ only 5% is left.</li>
+          <li>Both axes go up in factors of 10. <b>Dashed grey:</b> a bare axon. Its speed grows with the square root of its diameter, so four times wider is only twice as fast.</li>
+          <li><b>Black:</b> a myelinated axon with the wraps set. Where it stops, the axon is too wide for that much myelin: its internodes (100 diameters long) leak too much current, and the spike dies out before the next node.</li>
+          <li><b>Teal, dotted:</b> myelin that grows with the axon, as in real nerves (about 8 wraps per µm of diameter). Speed then grows about in proportion to the diameter. The boxes are real fibre types, with their range of diameters and speeds (teal: myelinated, orange: bare).</li>
+          <li><b>The dot</b> is your axon. The red dotted line runs from it across to the bare line: where it lands is how wide a bare axon would need to be to go as fast.</li>
         </ul>
-        <h4>Charging over time</h4>
+        <h4>The trip</h4>
         <ul>
-          <li>The membrane of one patch charging toward a new voltage, as in lesson 2: 63% of the way after one τ. With myelin the capacitance and the leak both fall, so τ hardly changes, but λ grows a lot.</li>
+          <li>How long your axon and each kind of real fibre take to carry a spike over the distance set. Stub your toe: the sharp pain (Aδ) arrives well before the burning ache (C).</li>
+        </ul>
+        <h4>Where the numbers come from</h4>
+        <ul>
+          <li>Each speed was measured in this page's simulation, between two electrodes, with the motor neuron's channels at 37 °C. Warmer membranes are faster: about 1.35 times for every 10 °C.</li>
         </ul>
       </div>
       <p class="caption" id="kCap"></p>
-      <div class="btns">
-        <button id="kFromSim">Copy from the simulation</button>
-      </div>
     </div>
   </div>
 </section>
@@ -1343,54 +1356,189 @@ Frames.sim(() => running, 'apPlay', ['apFire']);   // frames.js: starts paused, 
 requestAnimationFrame(loop);
 </script>
 <script>
-// ---------- cable calculator: λ and τ of a passive axon, solved exactly ----------
-// λ = √(d / (4 R_i g_m)) and τ = C_m / g_m. Myelin cuts g_m and C_m by the same factor as the simulation.
+// ---------- conduction velocity calculator ----------
+// The speeds are the simulation's own: measured between electrodes B and C with the motor neuron's settings (its
+// node channels; internodes 100 diameters long, their bare-membrane C and leak divided by 2 × wraps) at 37 °C, for
+// the diameters (µm) and wraps below; null: the spike died out. Between them, straight lines in log–log. Measured
+// with this page's model on 2026-11-17: re-measure if the model changes.
 (() => {
-  const kc = setupCanvas($('kXChart'), CW, CH), tk = setupCanvas($('kTChart'), CW, CH);
-  const val = () => ({ d: Math.pow(10, +$('kD').value), Ri: +$('kRi').value, g: Math.pow(10, +$('kG').value), c: +$('kC').value });
-  const lam = (d, Ri, g) => Math.sqrt(d * 1e-4 / (4 * Ri * g * 1e-3)) * 10;   // mm, from µm, Ω·cm, mS/cm²
-  function update() {
-    // each wrap of myelin adds two membranes in series, so its capacitance and leak both fall as 1 / (2 × wraps);
-    // the simulation's 0.5% is 100 wraps
-    // (no wraps: a bare axon)
-    const wraps = +$('kWraps').value, myel = wraps > 0, cut = myel ? 1 / (2 * wraps) : 1;
-    const v = val(), f = cut, g = v.g * f, c = v.c * f;
-    $('kWrapso').textContent = myel ? wraps + (wraps === 1 ? ' wrap' : ' wraps') : 'none';
-    const L = lam(v.d, v.Ri, g), Lbare = lam(v.d, v.Ri, v.g), tau = c / g;
-    $('kDo').textContent = fmtLen(v.d / 1000); $('kRio').textContent = v.Ri + ' Ω·cm';
-    $('kGo').textContent = fmt3(v.g) + ' mS/cm²'; $('kCo').textContent = v.c.toFixed(2) + ' µF/cm²';
-    $('kLam').textContent = fmtLen(L); $('kTau').textContent = fmtTime(tau);
-    $('kLeft').textContent = (100 * Math.exp(-1 / L)).toPrecision(2) + ' %';
-    const riL = v.Ri / (Math.PI * (v.d * 1e-4 / 2) ** 2) / 10 / 1e6;   // MΩ per mm
-    $('kRiL').textContent = fmt3(riL) + ' MΩ/mm';
-    const gm = myel ? `${fmt3(v.g)} / ${2 * wraps}` : fmt3(v.g);
-    $('kFormula').innerHTML =
-      `λ = √( d / (4 R<sub>i</sub> g<sub>m</sub>) ) = √( ${fmt3(v.d)} µm / (4 × ${v.Ri} Ω·cm × ${gm} mS/cm²) ) = <span class="res">${fmtLen(L)}</span><br>` +
-      `τ = C<sub>m</sub> / g<sub>m</sub> = ${myel ? `(${v.c.toFixed(2)} / ${2 * wraps}) / (${gm})` : `${v.c.toFixed(2)} / ${gm}`} = <span class="res">${fmtTime(tau)}</span>`;
-    $('kCap').innerHTML = `A steady voltage change falls to 37% after λ = ${fmtLen(L)} and to 5% after 3λ = ${fmtLen(3 * L)}. ` +
-      (myel ? `Myelin makes λ ${fmt3(L / Lbare)} times longer than on the bare axon, while τ stays the same.` : 'Four times the diameter doubles λ; so does a quarter of the leak.');
-    // spread with distance
-    const x1 = 100, N = 200,   // fixed: 0–100 mm covers every cell's λ (the motor axon's myelin, about 24 mm)
-      xs = Array.from({ length: N + 1 }, (_, k) => k / N * x1);
-    const series = [{ xs, ys: xs.map(x => 100 * Math.exp(-x / L)), color: C.ink, width: 2.4 }];
-    plot(kc, { x0: 0, x1, y0: 0, y1: 100, ystep: 25, plus: true, xlabel: 'distance (mm)', ylabel: 'V, % of V₀', series, refs: [{ v: 37, color: C.accent, label: '37%' }], vlines: [{ x: L, color: C.accent }] });
-    // charging over time
-    const t1 = 15, ts =   // fixed: 0–15 ms, about five τ for every cell
-      Array.from({ length: N + 1 }, (_, k) => k / N * t1);
-    plot(tk, { x0: 0, x1: t1, y0: 0, y1: 100, ystep: 25, plus: true, xlabel: 'time (ms)', ylabel: 'V, % of the way there',
-      series: [{ xs: ts, ys: ts.map(t => 100 * (1 - Math.exp(-t / tau))), color: C.ink, width: 2.4 }], refs: [{ v: 63, color: C.accent, label: '63%' }], vlines: [{ x: tau, color: C.accent }] });
+  const CV_D = [0.25, 0.5, 1, 2, 4, 8, 12, 16, 32], CV_W = [25, 30, 40, 50, 75, 100, 150, 200];
+  const CV_TAB = [   // m/s: a row per diameter, a column per number of wraps
+    [5.01, 5.2, 5.47, 5.65, 5.91, 6.06, 6.21, 6.27],
+    [8.17, 8.68, 9.43, 9.92, 10.7, 11.2, 11.7, 12],
+    [12.3, 13.4, 15.1, 16.3, 18.4, 19.8, 21.4, 22.3],
+    [17.1, 18.9, 22, 24.6, 29.2, 32.5, 36.7, 39.3],
+    [21.8, 24.7, 29.8, 34.1, 42.6, 49.1, 58.4, 64.9],
+    [24.6, 29.1, 36.8, 43.5, 57.1, 68.2, 85.2, 98.2],
+    [null, 28.7, 39.3, 47.8, 65.3, 79.4, 102, 120],
+    [null, null, 38.2, 49.1, 70.1, 87.1, 114, 136],
+    [null, null, null, null, 69.4, 98.4, 140, 175],
+  ];
+  const BARE = 1.97;                       // m/s × √(d / 1 µm): bare axons (measured 0.25 µm: 1.00, 1: 1.97, 4: 4.01, 16: 8.02)
+  const Q10 = 1.35;                        // 10 °C warmer is this much faster (measured 1.29–1.44)
+  const wMin = d => 2.2 * d;               // fewer wraps and the spike dies out (12 µm fails at 25, 16 µm at 30, 32 µm at 50)
+  const realWraps = d => 100 * d / 12;     // real nerves: myelin about in proportion to the axon (12 µm: 100 wraps)
+  const REF = [   // real fibres: ranges of diameter (µm) and speed (m/s), myelinated or bare, and a typical speed for the trip
+    { name: 'C', what: 'burning pain', d: [0.4, 1.2], v: [0.5, 2], my: false, typ: 1 },
+    { name: 'Aδ', what: 'sharp pain', d: [2, 5], v: [5, 30], my: true, typ: 15 },
+    { name: 'Aβ', what: 'touch', d: [6, 12], v: [35, 75], my: true, typ: 55 },
+    { name: 'Aα', what: 'muscle', d: [12, 20], v: [70, 120], my: true, typ: 95 },
+    { name: 'squid', what: 'giant axon, 18 °C', d: [400, 600], v: [18, 25], my: false },
+  ];
+  const lg = Math.log10, tempF = T => Math.pow(Q10, (T - 37) / 10);
+  // through points (x, y), straight lines in log–log; the end lines carry on past the ends; null points are skipped
+  function interp(xs, ys, x) {
+    const pts = xs.map((v, k) => [lg(v), ys[k] == null ? null : lg(ys[k])]).filter(p => p[1] != null), lx = lg(x);
+    let k = 0; while (k < pts.length - 2 && lx > pts[k + 1][0]) k++;
+    const [x0, y0] = pts[k], [x1, y1] = pts[k + 1];
+    return 10 ** (y0 + (y1 - y0) * (lx - x0) / (x1 - x0));
   }
-  ['kD', 'kRi', 'kG', 'kC', 'kWraps'].forEach(id => $(id).addEventListener('input', update));
+  const vBare = (d, T) => BARE * Math.sqrt(d) * tempF(T);
+  function vMyel(d, w, T) {   // null: the spike dies out
+    if (w < wMin(d)) return null;
+    return Math.max(interp(CV_D, CV_TAB.map(r => interp(CV_W, r, w)), d), BARE * Math.sqrt(d)) * tempF(T);
+  }
+  const speed = (d, w, T) => w > 0 ? vMyel(d, w, T) : vBare(d, T);
+  // λ and τ: the bare axon's resting membrane, or under myelin the leak and C of bare membrane divided by 2 × wraps
+  const GBARE = restState(CELLS[0].axNa, CELLS[0].axK).g;
+  const lam = (d, g) => Math.sqrt(d * 1e-4 / (4 * RI * g * 1e-3)) * 10;   // mm, from µm, Ω·cm, mS/cm²
+
+  const fmtV = v => fmt3(v) + ' m/s', fmtD = d => fmtLen(d / 1000);
+  const fmtTrip = ms => ms >= 1000 ? fmt3(ms / 1000) + ' s' : fmtTime(ms);
+  const fmtDist = m => m >= 1 ? fmt3(m) + ' m' : fmt3(m * 100) + ' cm';
+
+  // ---------- speed against diameter: log–log, a square plot ----------
+  const DW = 600, DL = 62, DR = 124, DT = 14, DB = 42, PS = DW - DL - DR, DH = PS + DT + DB;
+  const dc = setupCanvas($('kDChart'), DW, DH);
+  const ticks = (e0, e1) => {   // 1, 10, 100 …; and 2 and 5 between them when less than two factors of 10 show
+    const out = [], fine = e1 - e0 < 2;
+    for (let e = Math.floor(e0); e <= Math.ceil(e1); e++) for (const m of fine ? [1, 2, 5] : [1]) { const v = m * 10 ** e; if (lg(v) >= e0 - 1e-9 && lg(v) <= e1 + 1e-9) out.push(v); }
+    return out;
+  };
+  const num = v => String(+v.toPrecision(v >= 1 ? 3 : 2));
+  function drawD(m) {
+    const c = dc, [x0, x1] = ChartZoom.x(c.canvas, -1, 3), [y0, y1] = ChartZoom.y(c.canvas, -1, lg(300));
+    const sx = d => DL + (lg(d) - x0) / (x1 - x0) * PS, sy = v => DT + (y1 - lg(v)) / (y1 - y0) * PS;
+    c.fillStyle = C.surface; c.fillRect(0, 0, DW, DH);
+    c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.lineWidth = 0.8;
+    for (const v of ticks(x0, x1)) { const x = sx(v); c.strokeStyle = C.line; c.beginPath(); c.moveTo(x, DT); c.lineTo(x, DT + PS); c.stroke(); c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(num(v), x, DT + PS + 12); }
+    for (const v of ticks(y0, y1)) { const y = sy(v); c.strokeStyle = C.line; c.beginPath(); c.moveTo(DL, y); c.lineTo(DL + PS, y); c.stroke(); c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(num(v), DL - 6, y); }
+    c.textAlign = 'left'; c.fillText('axon diameter (µm)', DL, DH - 9);
+    c.save(); c.translate(14, DT + PS / 2); c.rotate(-Math.PI / 2); c.textAlign = 'center'; c.fillText('conduction velocity (m/s)', 0, 0); c.restore();
+    c.save(); c.beginPath(); c.rect(DL, DT, PS, PS); c.clip();
+    // real fibres
+    c.font = '600 11px "IBM Plex Sans", sans-serif';
+    for (const r of REF) {
+      const xa = sx(r.d[0]), xb = sx(r.d[1]), ya = sy(r.v[1]), yb = sy(r.v[0]), col = r.my ? C.accent : C.na;
+      c.fillStyle = col; c.globalAlpha = 0.13; c.fillRect(xa, ya, xb - xa, yb - ya); c.globalAlpha = 1;
+      c.strokeStyle = col; c.lineWidth = 1; c.strokeRect(xa + 0.5, ya + 0.5, xb - xa - 1, yb - ya - 1);
+      c.fillStyle = col; c.textAlign = r.name === 'squid' ? 'right' : 'left'; c.fillText(r.name, r.name === 'squid' ? xa - 4 : xb + 4, (ya + yb) / 2);
+    }
+    // the lines, across the diameters shown; a myelinated one stops where the spike would die out
+    const line = (f, col, dash, width, from = -Infinity, to = Infinity) => {
+      c.strokeStyle = col; c.lineWidth = width; c.setLineDash(dash); c.beginPath(); let on = false;
+      for (let k = 0; k <= 240; k++) {
+        const d = 10 ** (x0 + (x1 - x0) * k / 240), v = d < from || d > to ? null : f(d);
+        if (v == null) { on = false; continue; }
+        on ? c.lineTo(sx(d), sy(v)) : c.moveTo(sx(d), sy(v)); on = true;
+      }
+      c.stroke(); c.setLineDash([]);
+    };
+    line(d => vBare(d, m.T), C.muted, [6, 4], 2);
+    line(d => vMyel(d, realWraps(d), m.T), C.accent, [2, 3], 2.2, 1, 24);   // real myelinated fibres run from about 1 to 20 µm
+    if (m.w > 0) {
+      const dEnd = m.w / 2.2;
+      line(d => vMyel(d, m.w, m.T), C.ink, [], 2.4, -Infinity, dEnd);
+      const vEnd = vMyel(dEnd, m.w, m.T), xe = sx(dEnd), ye = sy(vEnd);   // where it stops: a cross
+      c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath(); c.moveTo(xe - 5, ye - 5); c.lineTo(xe + 5, ye + 5); c.moveTo(xe + 5, ye - 5); c.lineTo(xe - 5, ye + 5); c.stroke();
+    }
+    if (m.v != null) {
+      if (m.w > 0 && m.dEq > m.d * 1.05) {   // across to the bare line: how wide a bare axon would need to be
+        c.strokeStyle = C.pos; c.lineWidth = 1.4; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(sx(m.d), sy(m.v)); c.lineTo(sx(m.dEq), sy(m.v)); c.stroke(); c.setLineDash([]);
+        c.fillStyle = C.pos; c.beginPath(); c.arc(sx(m.dEq), sy(m.v), 3.5, 0, 6.283); c.fill();
+      }
+      c.fillStyle = C.ink; c.beginPath(); c.arc(sx(m.d), sy(m.v), 5.5, 0, 6.283); c.fill(); c.strokeStyle = C.surface; c.lineWidth = 2; c.stroke();
+    } else {   // the spike dies out: a dashed line at this diameter
+      c.strokeStyle = C.pos; c.lineWidth = 1.4; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(sx(m.d), DT); c.lineTo(sx(m.d), DT + PS); c.stroke(); c.setLineDash([]);
+      c.fillStyle = C.pos; c.textAlign = 'left'; c.fillText('spike dies out', Math.min(sx(m.d) + 5, DL + PS - 84), DT + 12);
+    }
+    c.restore();
+    c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(DL + 0.5, DT + 0.5, PS - 1, PS - 1);
+    // the key, in the right margin
+    const key = [[C.muted, [6, 4], 'bare'], ...(m.w > 0 ? [[C.ink, [], m.w + ' wraps']] : []), [C.accent, [2, 3], 'myelin growing', 'with the axon'], [C.pos, [2, 3], 'bare, as fast']];
+    let ky = DT + 8; c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
+    for (const [col, dash, t1, t2] of key) {
+      c.strokeStyle = col; c.lineWidth = 2; c.setLineDash(dash); c.beginPath(); c.moveTo(DL + PS + 8, ky); c.lineTo(DL + PS + 26, ky); c.stroke(); c.setLineDash([]);
+      c.fillStyle = col; c.fillText(t1, DL + PS + 31, ky); if (t2) { ky += 13; c.fillText(t2, DL + PS + 31, ky); }
+      ky += 19;
+    }
+  }
+
+  // ---------- the trip: how long each kind of fibre takes ----------
+  const TW = 600, TH = 250, tc = setupCanvas($('kTripChart'), TW, TH);
+  function drawTrip(m) {
+    const c = tc, rows = [{ name: 'your axon', v: m.v, me: true }, ...REF.filter(r => r.typ).reverse().map(r => ({ name: `${r.name} (${r.what})`, v: r.typ }))];
+    const ms = rows.map(r => r.v ? m.L / r.v * 1000 : null), [x0, x1] = ChartZoom.x(c.canvas, 0, Math.max(...ms.filter(t => t != null)) * 1.18);
+    const LL = 150, RR = 24, T = 12, B = 34, pw = TW - LL - RR, rh = (TH - T - B) / rows.length, sx = t => LL + (t - x0) / (x1 - x0) * pw;
+    c.fillStyle = C.surface; c.fillRect(0, 0, TW, TH);
+    c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.lineWidth = 0.8;
+    const st = niceStep((x1 - x0) / 5);
+    for (let t = Math.ceil(x0 / st) * st; t <= x1 + 1e-9; t += st) { const x = sx(t); c.strokeStyle = C.line; c.beginPath(); c.moveTo(x, T); c.lineTo(x, TH - B); c.stroke(); c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t ? fmtTrip(t) : '0', x, TH - B + 12); }
+    c.textAlign = 'left'; c.fillText(`time to travel ${fmtDist(m.L)}`, LL, TH - 8);
+    rows.forEach((r, k) => {
+      const y = T + k * rh + rh / 2;
+      c.font = (r.me ? '600 ' : '500 ') + '12.5px "IBM Plex Sans", sans-serif'; c.fillStyle = r.me ? C.accent : C.ink; c.textAlign = 'right'; c.fillText(r.name, LL - 8, y);
+      c.font = '11px "IBM Plex Mono", monospace'; c.textAlign = 'left';
+      if (ms[k] == null) { c.fillStyle = C.pos; c.fillText('the spike dies out', LL + 6, y); return; }
+      const xb = Math.max(LL + 2, Math.min(LL + pw, sx(ms[k])));
+      c.fillStyle = r.me ? C.accent : C.muted; c.globalAlpha = r.me ? 1 : 0.55; c.fillRect(LL, y - rh * 0.28, xb - LL, rh * 0.56); c.globalAlpha = 1;
+      c.fillStyle = C.ink; c.fillText(fmtTrip(ms[k]), Math.min(xb + 5, TW - 58), y);
+    });
+    c.strokeStyle = C.line; c.lineWidth = 1; c.beginPath(); c.moveTo(LL + 0.5, T); c.lineTo(LL + 0.5, TH - B); c.stroke();
+  }
+
+  // ---------- the numbers ----------
+  function update() {
+    const d = 10 ** +$('kD').value, w = +$('kWraps').value, T = +$('kT').value, L = 10 ** +$('kL').value;
+    const v = speed(d, w, T), tf = tempF(T), bare = vBare(d, T), dEq = v ? (v / (BARE * tf)) ** 2 : NaN, trip = v ? L / v * 1000 : NaN;
+    $('kDo').textContent = fmtD(d); $('kWrapso').textContent = w ? w + (w === 1 ? ' wrap' : ' wraps') : 'none';
+    $('kTo').textContent = T.toFixed(1) + ' °C'; $('kLo').textContent = fmtDist(L);
+    $('kV').textContent = v ? fmtV(v) : 'dies out';
+    $('kTrip').textContent = v ? fmtTrip(trip) : '—';
+    $('kEq').textContent = v && w > 0 ? fmtD(dEq) : '—';
+    const g = w > 0 ? GCL / (2 * w) : GBARE, cm = w > 0 ? CM / (2 * w) : CM;
+    $('kLam').textContent = fmtLen(lam(d, g)); $('kTau').textContent = fmtTime(cm / g);
+    const warm = T === 37 ? '' : ` × 1.35<sup>(${fmt3(T)} − 37)/10</sup>`, dd = fmt3(d);
+    $('kFormula').innerHTML = (w === 0
+      ? `bare: v = ${BARE} m/s × √(d / 1 µm)${warm} = ${BARE} × √${dd}${T === 37 ? '' : ' × ' + tf.toFixed(2)} = <span class="res">${fmtV(v)}</span>`
+      : v == null
+      ? `${w} wraps on a ${fmtD(d)} axon: fewer than about 2.2 × d = ${Math.ceil(wMin(d))} wraps, so <span class="res">the spike dies out</span>`
+      : `myelinated: v = ${fmtV(v / tf)}, measured in the simulation at 37 °C${T === 37 ? '' : warm + ' = ' + fmtV(v)}<br>` +
+        `the same axon bare: ${BARE} × √${dd}${T === 37 ? '' : ' × ' + tf.toFixed(2)} = ${fmtV(bare)}, so myelin makes it <span class="res">${fmt3(v / bare)} times</span> faster`) +
+      (v ? `<br>time = distance / v = ${fmtDist(L)} / ${fmtV(v)} = <span class="res">${fmtTrip(trip)}</span>` : '');
+    const v100 = vMyel(d, 100, T);
+    $('kCap').innerHTML = v == null
+      ? `Too little myelin for an axon this wide. Its internodes are ${fmtLen(d / 10)} long (100 diameters), and the current leaks out through them before it reaches the next node. It needs at least about ${Math.ceil(wMin(d))} wraps.`
+      : w > 0
+      ? `Myelin makes this ${fmtD(d)} axon ${fmt3(v / bare)} times faster than it would be bare. To go as fast without myelin, an axon would have to be ${fmtD(dEq)} wide${dEq >= 1000 ? ': that is why vertebrates wrap their fast axons in myelin, while the squid built one giant bare axon' : ''}.`
+      : `A bare axon: four times wider is only twice as fast. ` + (v100 ? `Wrapped 100 times in myelin, the same axon would carry the spike at ${fmtV(v100)}.` : `100 wraps of myelin would not be enough for an axon this wide: it would need about ${Math.ceil(wMin(d))}.`);
+    const m = { d, w, T, L, v, dEq };
+    drawD(m); drawTrip(m);
+  }
+  [dc, tc].forEach(x => ChartZoom.bind(x.canvas, update));
+  const chips = document.querySelectorAll('[data-kfib]'), unpress = b => chips.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  ['kD', 'kWraps', 'kT', 'kL'].forEach(id => $(id).addEventListener('input', () => { if (id !== 'kL') unpress(null); update(); }));
+  chips.forEach(b => b.addEventListener('click', () => {
+    const [d, w, T] = b.dataset.kfib.split(',').map(Number);
+    $('kD').value = lg(d); $('kWraps').value = w; $('kT').value = T; unpress(b); update();
+  }));
   $('kFromSim').addEventListener('click', () => {
-    $('kD').value = Math.log10(P.d); $('kRi').value = RI;
-    // under myelin there are no voltage-gated channels, only the leak
-    $('kG').value = Math.log10(P.myel ? GCL : restState(P.axNa, P.axK).g); $('kC').value = CM;
-    $('kWraps').value = P.myel ? P.wraps : 0;
-    update();
+    $('kD').value = lg(P.d); $('kWraps').value = P.myel ? P.wraps : 0; $('kT').value = P.T; unpress(null); update();
   });
   const recolor = () => setTimeout(() => { readColors(); update(); }, 0);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
   new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  Frames.onRestore?.(update);   // the charts, drawn only on input, after the browser hands its canvases back blank (frames.js)
   $('kFromSim').click();
 })();
 </script>
