@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="frames.js"></script>
+<script src="breadboard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Summation and the Spike Trigger Zone</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -157,6 +158,8 @@ legend{padding:0;margin-bottom:8px}
 .row[hidden]{display:none}
 input[type=range]{width:100%;accent-color:var(--accent)}
 .check{display:flex;align-items:center;gap:8px;font-size:14px}
+.segrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.checks{display:flex;flex-wrap:wrap;gap:6px 14px}
 input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
@@ -166,6 +169,8 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--s
 .theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
 .theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
 .deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
 .deriv p{margin:6px 0}
 .deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
 .mj-fail{display:none}
@@ -207,7 +212,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 <div class="wrap">
 <header>
   <h1>Adding up inputs: summation and where the spike starts</h1>
-  <p>One synapse almost never makes a neuron fire. A neuron adds up hundreds of small inputs, and only if the total, at one special place at the start of the axon, reaches threshold do its voltage-gated Na⁺ channels (lesson 3) take over and fire a spike. See why inputs add on the membrane's capacitor, then follow them through a whole neuron from the dendrite to the axon initial segment.</p>
+  <p>One synapse almost never makes a neuron fire. A neuron adds up hundreds of small inputs, and only if the total, at one special place at the start of the axon, reaches threshold do its voltage-gated Na⁺ channels (lesson 4) take over and fire a spike. See why inputs add on the membrane's capacitor, then follow them through a whole neuron from the dendrite to the axon initial segment.</p>
   <div class="intro">
     <section class="introbox" aria-labelledby="goalsTitle">
       <span class="sect-title" id="goalsTitle">You'll be able to</span>
@@ -323,7 +328,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <button type="button" role="tab" id="tab-aislook" aria-controls="pane-aislook" aria-selected="false" tabindex="-1">What to look for</button>
     </div>
     <div class="stage" role="tabpanel" id="pane-ais" aria-labelledby="tab-ais">
-      <canvas id="neu" aria-label="A neuron: dendrite with synapses, cell body, axon hillock, axon initial segment and axon, coloured by voltage"></canvas>
+      <div class="segrow">
+        <span class="sect-title">Inputs</span>
+        <div class="seg" role="group" aria-label="How the inputs arrive">
+          <button type="button" data-amode="t" aria-pressed="true">Temporal: one branch, inputs in a row</button><button type="button" data-amode="s" aria-pressed="false">Spatial: four branches at once</button><button type="button" data-amode="r" aria-pressed="false">Realistic: six branches, inputs at random</button>
+        </div>
+      </div>
+      <canvas id="neu" aria-label="A neuron: dendritic branches with spines and synapses, cell body, axon hillock, axon initial segment and axon, coloured by voltage"></canvas>
       <div class="runbar">
         <button id="aFire" class="primary">Fire synapses</button>
         <button id="aPlay" class="primary">Pause</button>
@@ -351,17 +362,21 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     </div>
     <div class="help" role="tabpanel" id="pane-aishelp" aria-labelledby="tab-aishelp" hidden>
       <ul>
-        <li><b>The picture:</b> the cell is coloured by its voltage, blue at rest to red at the peak. From the left: a dendrite with its synapses (small teal knobs), the cell body, the axon hillock narrowing into the axon, and the axon initial segment (AIS, bracketed). The brightness of the orange shading on the AIS shows its density of Na⁺ channels.</li>
-        <li><b>Voltage along the cell:</b> the black line is the voltage now; the dashed line is the highest each place reached since you fired. Shaded bands mark the dendrite, the cell body and the AIS. The dotted teal line is the threshold measured at the AIS during the last spike: the voltage at which its rise sped past 20 mV/ms, as experimenters often define it.</li>
-        <li><b>Over time:</b> recordings at D (the dendrite, where the synapses are), S (the cell body) and A (the middle of the AIS).</li>
-        <li><b>The model</b> is lesson 3's Hodgkin–Huxley circuit, one copy per short piece of membrane, with the cytoplasm connecting neighbours (as on lesson 4).</li>
+        <li><b>The picture:</b> the cell is coloured by its voltage, blue at rest to red at the peak. From the left: the dendritic branches, covered in spines (small knobs on short necks, where excitatory synapses land); the synapses are the teal boutons on the larger spines, lit while their channels are open. Then the cell body, the axon hillock narrowing into the axon, and the axon initial segment (AIS, bracketed). The brightness of the orange shading on the AIS shows its density of Na⁺ channels.</li>
+        <li><b>Inputs:</b> <b>Temporal</b>, one branch, whose synapses fire the number of times set, at the interval set. <b>Spatial</b>, four branches, the ticked ones firing once, all at the same moment. <b>Realistic</b>, six branches, every synapse firing on its own at random times, at the rate set, for as long as the simulation runs: inputs separate in both space and time, as a neuron in the brain receives them.</li>
+        <li><b>Voltage along the cell:</b> the black line is the voltage now; the dashed line is the highest each place reached since you fired. Shaded: the AIS; the grey band is the cell body. The dotted teal line is the threshold measured at the AIS during the last spike: the voltage at which it started to shoot up (faster than 20 mV per ms), as experimenters often define it.</li>
+        <li><b>Over time:</b> recordings at S (the cell body) and A (the middle of the AIS), and on the branches: D (where the synapses are) with one branch; each ticked branch, in its colour, in Spatial; in Realistic, a tick along the bottom for every input, in its branch's colour. <b>Voltage along the cell</b> draws one line per branch, in its colour, each joined to the cell body and axon.</li>
+        <li><b>The model</b> is the Hodgkin–Huxley circuit of lesson 4's axon (lesson 8 takes it apart), one copy per short piece of membrane, with the cytoplasm connecting neighbours (as in lesson 4).</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-aislook" aria-labelledby="tab-aislook" hidden>
       <ul>
-        <li>Fire a few synapses far out on the dendrite: the voltage there is large, but by the cell body it has decayed a lot. Move them closer and more arrives. This is the cable: the dendrite leaks current across its wall on the way.</li>
+        <li>Fire a few synapses far out on the dendrite: the voltage there is large, but by the cell body it has decayed a lot. Move them closer and more arrives. This is the cable of lesson 3: the dendrite leaks current across its wall on the way.</li>
         <li>Raise the number of synapses: the sum at the AIS reaches threshold (the dotted line) and the AIS fires first. The A trace rises before the S trace, and the spike runs on down the axon and back into the cell body.</li>
-        <li>Remove the AIS's Na⁺ channels, or move it far from the cell body, and the same synapses can no longer fire the cell. Turn on the inhibitory synapse at the cell body: its Cl⁻ conductance is a leak that shunts the sum.</li>
+        <li>Remove the AIS's Na⁺ channels, or move it far from the cell body, and the same synapses can no longer fire the cell. Turn on the inhibitory synapse at the cell body: its open Cl⁻ channels are an extra leak, so the summed current escapes before it reaches the axon (a shunt).</li>
+        <li>Temporal: one input at a time does little; four in a row, 3 ms apart, ride on each other and fire the cell. Spread them 15 ms apart and they no longer add up.</li>
+        <li>Spatial: one branch alone barely moves the cell body; untick branches to find how many it takes. All four together fire it, though no branch's own synapses come close.</li>
+        <li>Realistic: the cell fires irregularly, whenever enough inputs happen to bunch up. Turn the rate down a little and it falls silent; up a little and it fires much faster. Turn on the inhibitory synapse and the same inputs fire it far less.</li>
       </ul>
     </div>
   </section>
@@ -373,18 +388,24 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <div class="vrow"><span>threshold at the AIS (measured)</span><b id="aThr">—</b></div>
       <div class="vrow"><span>peak at the dendrite synapses / cell body / AIS</span><b id="aPeaks">—</b></div>
       <div class="vrow"><span>spike started at</span><b id="aStartAt">—</b></div>
+      <div class="vrow" data-afor="r" hidden><span>firing rate, last second</span><b id="aFreq">—</b></div>
     </div>
     <fieldset>
       <legend class="sect-title">The cell</legend>
       <div class="sgroup">
         <span class="gtitle">Excitatory synapses</span>
-        <div class="row wide2"><label for="aN"><i class="dot syn"></i>Synapses</label><input type="range" id="aN" min="1" max="60" step="1" value="25"><output id="aNo" for="aN"></output>
-          <span class="hint">firing together: spatial summation</span></div>
+        <div class="row wide2"><label for="aN"><i class="dot syn"></i>Synapses per branch</label><input type="range" id="aN" min="1" max="60" step="1" value="10"><output id="aNo" for="aN"></output>
+          <span class="hint">each on a spine</span></div>
         <div class="row wide2"><label for="aG">Each one</label><input type="range" id="aG" min="0.05" max="1" step="0.05" value="0.3"><output id="aGo" for="aG"></output></div>
         <div class="row wide2"><label for="aPos">Distance from cell body</label><input type="range" id="aPos" min="40" max="360" step="10" value="150"><output id="aPoso" for="aPos"></output></div>
-        <div class="row wide2"><label for="aNP">Times</label><input type="range" id="aNP" min="1" max="6" step="1" value="1"><output id="aNPo" for="aNP"></output>
+        <div class="row wide2" data-afor="t"><label for="aNP">Times</label><input type="range" id="aNP" min="1" max="8" step="1" value="4"><output id="aNPo" for="aNP"></output>
           <span class="hint">repeated at the interval below: temporal summation</span></div>
-        <div class="row wide2"><label for="aDt">Interval</label><input type="range" id="aDt" min="0.5" max="20" step="0.5" value="2"><output id="aDto" for="aDt"></output></div>
+        <div class="row wide2" data-afor="t"><label for="aDt">Interval</label><input type="range" id="aDt" min="0.5" max="20" step="0.5" value="3"><output id="aDto" for="aDt"></output></div>
+        <div class="row wide2" data-afor="s" hidden><span class="lab">Branches that fire</span><span class="checks">
+          <label class="check" for="aB1"><input type="checkbox" id="aB1" checked>1</label><label class="check" for="aB2"><input type="checkbox" id="aB2" checked>2</label><label class="check" for="aB3"><input type="checkbox" id="aB3" checked>3</label><label class="check" for="aB4"><input type="checkbox" id="aB4" checked>4</label></span>
+          <span class="hint">all together, once: spatial summation</span></div>
+        <div class="row wide2" data-afor="r" hidden><label for="aRate">Rate</label><input type="range" id="aRate" min="1" max="40" step="1" value="22"><output id="aRateo" for="aRate"></output>
+          <span class="hint">how often each synapse fires, at random</span></div>
         <label class="check" for="aInh"><input type="checkbox" id="aInh"><i class="dot k"></i>Inhibitory synapse on the cell body (always on, Cl⁻)</label>
       </div>
       <div class="sgroup">
@@ -436,12 +457,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
 <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Each kind of open channel pulls the voltage toward its own target, and rest is where the pulls balance. A membrane with many open channels is leaky: the current from an input escapes through them, so each input moves the voltage less.</p>
       <h3>Each kind of channel is a resistor with a battery</h3>
       <p>From lessons 1 and 2: Ohm's law says current is conductance times voltage, and an ion channel's voltage is the <em>driving force</em>, how far the membrane voltage V is from that ion's Nernst potential E:</p>
       <div class="eq">\[ I_\mathrm{K} = g_\mathrm{K}\,(V - E_\mathrm{K}), \quad I_\mathrm{Na} = g_\mathrm{Na}\,(V - E_\mathrm{Na}), \quad I_\mathrm{Cl} = g_\mathrm{Cl}\,(V - E_\mathrm{Cl}) \]</div>
       <p>At rest the three channel types are open a little, and each pulls the voltage toward its own battery. The voltage settles where the currents cancel, and that is a conductance-weighted average of the batteries:</p>
       <div class="eq">\[ V_\mathrm{rest} = \frac{g_\mathrm{K}E_\mathrm{K} + g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{Cl}E_\mathrm{Cl}}{g_\mathrm{K} + g_\mathrm{Na} + g_\mathrm{Cl}} \]</div>
-      <p>So whichever channel is open most wins the tug of war. Mostly K⁺ leak channels: rest near E<sub>K</sub> (about −86 mV). Add some Na⁺ leak: rest moves up, toward +60 mV. Cl⁻ sits at about −82 mV in a mature neuron (which pumps Cl⁻ out), close to rest, so it mostly anchors the voltage in place.</p>
+      <p>So whichever channel is open most wins the tug of war. Mostly K⁺ leak channels: rest near E<sub>K</sub> (about −86 mV). Add some Na⁺ leak: rest moves up, toward E<sub>Na</sub> (about +60 mV). Cl⁻ sits at about −82 mV in a mature neuron (which pumps Cl⁻ out), close to rest, so it mostly anchors the voltage in place.</p>
 
       <h3>Why this matters for firing</h3>
       <p>Two things about the resting conductances decide whether inputs can fire the cell. First, <b>where rest is</b>: the farther V<sub>rest</sub> is below the threshold, the more depolarization a neuron needs. Second, <b>how big the total conductance is</b>: a leaky membrane (big Σg) lets input current escape, so each input changes the voltage less and for a shorter time. Both are set by the same sliders.</p>
@@ -466,6 +488,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
 <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Each input puts a little charge on the membrane, which raises the voltage, and the charge then leaks away over a few milliseconds. If the next input arrives before the last has leaked away, they stack up: temporal summation. Inputs at different synapses charge the same membrane, so they add up too: spatial summation.</p>
       <h3>One input</h3>
       <p>A synapse opens channels that let in positive charge, a current I<sub>syn</sub>. As in lesson 2, that current has two places to go: onto the capacitor, which changes the voltage, or out through the resting channels, which does not. Together:</p>
       <div class="eq">\[ C\,\frac{dV}{dt} = -\,g\,(V - V_\mathrm{rest}) + I_\mathrm{syn}(t), \qquad g = g_\mathrm{K} + g_\mathrm{Na} + g_\mathrm{Cl} \]</div>
@@ -478,7 +501,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p>A large τ (large C, small g) means more summation. A short interval T means more too.</p>
 
       <h3>Spatial summation</h3>
-      <p>Inputs at different synapses add for a different reason: all their currents flow into the same membrane and charge the same capacitor. Ten synapses at once put ten times the charge on it. In a real cell that membrane is spread out, and a dendrite is a leaky cable, so an input far from the cell body arrives smaller. How far a voltage change spreads along a cable is its length constant λ, set by how leaky the wall is compared with how easily current flows down the inside.</p>
+      <p>Inputs at different synapses add for a different reason: all their currents flow into the same membrane and charge the same capacitor. Ten synapses at once put ten times the charge on it. In a real cell that membrane is spread out, and a dendrite is a leaky cable, so an input far from the cell body arrives smaller. How far a voltage change spreads along a cable is its length constant λ (lesson 3), set by how leaky the wall is compared with how easily current flows down the inside.</p>
 
       <h3>Shunting</h3>
       <p>An input that opens extra channels adds conductance. An inhibitory Cl⁻ synapse near the cell body, with a battery close to rest, does almost nothing by itself, but it adds conductance for the excitatory current to leak through. That is why inhibition near the cell body can veto the sum.</p>
@@ -498,11 +521,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
 <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Inputs land on the dendrites and cell body, which cannot fire a spike themselves. Their sum spreads to the start of the axon, the initial segment, which is packed with Na⁺ channels. That is where the voltage first crosses threshold, so that is where the spike starts.</p>
       <h3>The cell adds up, the initial segment decides</h3>
-      <p>A neuron receives its inputs on its dendrites and cell body, which have few of lesson 3's voltage-gated Na⁺ channels. Those inputs are only local voltage changes that spread along the cell like the cable above: no spike. The sum flows to the axon's first stretch, the <b>axon hillock</b> and <b>axon initial segment</b> (AIS), the first 20 to 60 µm of axon. That is where the cell's output is decided.</p>
+      <p>A neuron receives its inputs on its dendrites and cell body, which have few of lesson 4's voltage-gated Na⁺ channels. Those inputs are only local voltage changes that spread along the cell as along lesson 3's cable: no spike. The sum flows to the axon's first stretch, the <b>axon hillock</b> and <b>axon initial segment</b> (AIS), the first 20 to 60 µm of axon. That is where the cell's output is decided.</p>
       <h3>Why there</h3>
       <ul>
-        <li><b>Many more Na⁺ channels.</b> The AIS has a very high density, and some are of a type that opens at lower voltage. More Na⁺ channels means the inward current beats the outward currents at a lower voltage (lesson 3's tug of war), so its threshold is the lowest on the cell: the same summed depolarization, a few mV at the cell body, is enough to push the AIS past it.</li>
+        <li><b>Many more Na⁺ channels.</b> The AIS has a very high density, and some are of a type that opens at lower voltage. More Na⁺ channels means the inward current beats the outward currents at a lower voltage (a tug of war between Na⁺ in and K⁺ out that lesson 8 looks at closely), so its threshold is the lowest on the cell: the same summed depolarization, a few mV at the cell body, is enough to push the AIS past it.</li>
         <li><b>Small, so it charges fast.</b> A patch of thin axon has little capacitance to charge, so a little current moves its voltage a lot. The big cell body is a large capacitor and moves slowly.</li>
         <li><b>It sees the sum.</b> The cell body is the junction where all dendrites meet, so its voltage (and the AIS's, one short step away) is the sum of everything the dendrites delivered.</li>
       </ul>
@@ -528,7 +552,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <h3>Where these ideas come from</h3>
       <p>The original papers behind this lesson, oldest first.</p>
       <ol class="reflist">
-        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The gates m, h and n and the threshold of a spike (lesson 3). The channels in the cell here are theirs.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The gates m, h and n and the threshold of a spike (lesson 8). The channels in the cell here are theirs.</span></li>
         <li><b>Rall W (1959).</b> Branching dendritic trees and motoneuron membrane resistivity. <i>Experimental Neurology</i> 1:491–527. <a href="https://doi.org/10.1016/0014-4886(59)90046-9" target="_blank" rel="noopener">doi:10.1016/0014-4886(59)90046-9</a><br><span class="why">Dendrites as leaky cables: how an input's voltage decays on its way to the cell body, and how inputs sum.</span></li>
         <li><b>Coombs JS, Curtis DR, Eccles JC (1957).</b> The generation of impulses in motoneurones. <i>Journal of Physiology</i> 139:232–249. <a href="https://doi.org/10.1113/jphysiol.1957.sp005888" target="_blank" rel="noopener">doi:10.1113/jphysiol.1957.sp005888</a><br><span class="why">Recording from motor neurons: the spike begins at the initial segment, before the cell body.</span></li>
         <li><b>Stuart G, Schiller J, Sakmann B (1997).</b> Action potential initiation and propagation in rat neocortical pyramidal neurons. <i>Journal of Physiology</i> 505:617–632. <a href="https://doi.org/10.1111/j.1469-7793.1997.617ba.x" target="_blank" rel="noopener">doi:10.1111/j.1469-7793.1997.617ba.x</a><br><span class="why">Recordings at the axon, cell body and dendrites of the same neuron: the spike starts in the axon, and runs back into the cell body.</span></li>
@@ -564,7 +588,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="gh">Membrane</div>
         <div class="gr"><label for="kC">C</label><input type="range" id="kC" min="0.2" max="3" step="0.1" value="1"><output id="kCo" for="kC"></output></div>
         <div class="gr"><label for="kThrIn">Threshold</label><input type="range" id="kThrIn" min="-75" max="-40" step="1" value="-64"><output id="kThrIno" for="kThrIn"></output></div>
-        <span class="caption">the voltage the inputs must reach; lesson 3's circuit, with these leaks, needs about −64 mV</span>
+        <span class="caption">the voltage the inputs must reach; lesson 8's circuit, with these leaks, needs about −64 mV</span>
       </div>
       <div class="gion">
         <div class="gh"><i class="dot syn"></i> Input</div>
@@ -595,7 +619,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <h4>Summation</h4>
         <ul>
           <li><b>Black curve:</b> the voltage as the train arrives (the teal triangles). <b>Dashed grey:</b> one input alone. <b>Dashed teal:</b> threshold. <b>Dotted:</b> rest.</li>
-          <li>If the train crosses threshold, a real neuron's voltage-gated channels would take over there and fire a spike (lesson 3).</li>
+          <li>If the train crosses threshold, a real neuron's voltage-gated channels would take over there and fire a spike (lesson 4).</li>
         </ul>
         <h4>Peak vs interval</h4>
         <ul>
@@ -678,7 +702,7 @@ function drawChart(c, o) {
     for (let i = 0; i <= o.xs.length; i++) {
       const on = i < o.xs.length && o.on[i];
       if (on && a < 0) a = i;
-      if (!on && a >= 0) { const xa = sx(o.xs[a]), xb = sx(o.xs[i - 1]); c.fillRect(Math.max(L, xa), T, Math.min(L + pw, xb) - Math.max(L, xa), ph); a = -1; }
+      if (!on && a >= 0) { const xa = Math.max(L, sx(o.xs[a])), xb = Math.min(L + pw, sx(o.xs[i - 1])); if (xb > xa) c.fillRect(xa, T, xb - xa, ph); a = -1; }
     }
     c.globalAlpha = 1;
   }
@@ -735,7 +759,7 @@ function chipGroup(attr, onPick) {
 // The shared model: Hodgkin–Huxley channels with resting (leak) conductances, at 25 °C.
 // A patch of membrane: C dV/dt = −Σ g_i (V − E_i), with fixed leak g for K⁺, Na⁺ and Cl⁻, the gated Na⁺
 // (ḡ m³h) and K⁺ (ḡ n⁴) conductances, and the synapse's g_syn(t) with its battery at 0 mV.
-// Units: µF/cm², mS/cm², mV, ms, µA/cm². Same gating rates as lesson 3 (V measured from −65 mV).
+// Units: µF/cm², mS/cm², mV, ms, µA/cm². Same gating rates as lesson 4 (V measured from −65 mV).
 // =====================================================================================
 const KTM = 25.7, PHI = Math.pow(3, (25 - 6.3) / 10);          // RT/F (mV) and the speed-up of the gates at 25 °C
 const EREV = { K: KTM * Math.log(5 / 140), Na: KTM * Math.log(145 / 14), Cl: -KTM * Math.log(148.5 / 6), syn: 0 };   // mM; mature neurons keep Cl⁻ low inside
@@ -821,6 +845,12 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const p = { C: 1, gKL: 0.12, gNaL: 0.005, gCl: 0.02, gNaM: 0, gKM: 0 };
   let gIn = 0.05, nIn = 3, dtIn = 4, speed = 3, running = true, showLin = true;
   let s = mkPatch(p), evs = [], sampleAcc = 0, single = null;
+  // Newt: this patch on the Breadboard simulator (per cm², in F, S, V), the synapse opened by the Stimulator
+  NewtBreadboard.add($('capPlay'), () => ({ title: 'the membrane as a capacitor', compartments: [{ name: 'Patch', C: p.C * 1e-6,
+    channels: [{ name: 'Synapse', g: gIn * 1e-3, E: EREV.syn * 1e-3, gate: 'stim',
+                 train: { n: nIn, interval: dtIn * 1e-3, width: SYN_NORM * (SYN_TD - SYN_TR) * 1e-3 } },
+               { name: 'K⁺ leak', g: p.gKL * 1e-3, E: EREV.K * 1e-3 }, { name: 'Na⁺ leak', g: p.gNaL * 1e-3, E: EREV.Na * 1e-3 },
+               { name: 'Cl⁻ leak', g: p.gCl * 1e-3, E: EREV.Cl * 1e-3 }] }] }));
   const hist = { t: [], V: [], lin: [], on: [] };
   // ---------- one input alone, for the "sum of single inputs" line ----------
   function computeSingle() {
@@ -957,40 +987,57 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     requestAnimationFrame(loop);
   }
   colorHooks.push(() => { draw(); drawCharts(); });
-  Frames.sim(() => running, 'capPlay');   // frames.js: starts paused, pauses itself when left alone
+  Frames.sim(() => running, 'capPlay', ['capFire']);   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
 // =====================================================================================
 // Part 4: the cell. Part 3's circuit, one copy per short piece of membrane, joined by the cytoplasm (as on
-// lesson 3): a dendrite (1.5 µm wide, 400 µm long), the cell body, the axon
-// hillock, the axon initial segment (AIS) and the axon. Units: cm, µF, mS, µA, mV, ms; densities per cm².
-// The step is semi-implicit (a tridiagonal solve), as in lesson 3.
+// lesson 4): dendritic branches (1.5 µm wide) meeting at the cell body, the axon hillock, the axon initial
+// segment (AIS) and the axon. Units: cm, µF, mS, µA, mV, ms; densities per cm².
+// Three ways to give it input (P.mode):
+//   't' temporal: one branch, its synapses firing a train of inputs at an interval;
+//   's' spatial: four branches, the ticked ones firing once, all together;
+//   'r' realistic: six branches, every synapse firing at random times at the rate set.
+// The cell is a tree: every piece of membrane is joined to one neighbour nearer the cell body (its parent, par[i]),
+// and the cell body is the root. Each step is semi-implicit, solved exactly by eliminating from the tips of the
+// branches and of the axon in to the cell body, then substituting back out (a tree version of lesson 4's
+// tridiagonal solve). Synapses sit on spines; the spines are drawn, and their current enters the branch under them.
 // =====================================================================================
 (() => {
   const RI = 150, CMEM = 1;                                    // Ω·cm, µF/cm²
   const LEAK = { gKL: 0.12, gNaL: 0.005, gCl: 0.02 };             // the circuit's resting conductances (mS/cm²)
-  const DEND_L = 400, DEND_D = 1.5, DEND_DX = 5, AX_D = 1.2, AX_L = 200, AX_DX = 2, HILL_D = 3;
+  const DEND_D = 1.5, AX_D = 1.2, AX_L = 200, HILL_D = 3;
   const SOMA = { na: 0.25, k: 0.25 }, HILL = { na: 0.5, k: 0.5 }, AXON = { na: 1.5, k: 1 };   // gated densities, × the squid axon's
-  const P = { n: 25, gS: 0.3, pos: 150, np: 1, dt: 2, inh: false, aisNa: 20, start: 10, len: 30, somaD: 20, leak: 1 };
+  // each mode's cell: branches, their length and piece size, the axon's piece size, the time step and the time charts' window.
+  // The realistic mode runs much longer stretches of time, so its pieces and step are coarser to keep the page quick.
+  const MODES = {
+    t: { nb: 1, L: 400, dx: 5, adx: 2, h: HHDT, win: 30, sample: 0.02 },
+    s: { nb: 4, L: 300, dx: 5, adx: 2, h: HHDT, win: 30, sample: 0.02 },
+    r: { nb: 6, L: 300, dx: 10, adx: 4, h: 0.02, win: 300, sample: 0.2 },
+  };
+  const P = { mode: 't', n: 8, gS: 0.3, pos: 150, np: 4, dt: 3, on: [true, true, true, true], rate: 15, inh: false,
+    aisNa: 20, start: 10, len: 30, somaD: 20, leak: 1 };
   const INH_G = 15e-6;                                         // mS (15 nS) of steady Cl⁻ conductance on the cell body
   const um = 1e-4;                                             // cm per µm
-  let M = null, evs = [], synIdx = [], iD = 0, iS = 0, iA = 0, running = true, speed = 2, sampleAcc = 0;
-  let peak = null, startAt = null, firedAt = -1, hist = [], thrAIS = NaN, thrSoma = NaN;
-  const WIN = 30, SAMPLE_MS = 0.02;
+  let M = null, evs = [], syns = [], dIdx = [], iS = 0, iA = 0, running = true, speed = 2, sampleAcc = 0;
+  let peak = null, startAt = null, firedAt = -1, hist = [], ticks = [], spikes = [], thrAIS = NaN, thrSoma = NaN, aisWasUp = false;
+  const MD = () => MODES[P.mode];
 
   function build() {
-    const R = P.somaD / 2, parts = [];
-    for (let k = 0; k < DEND_L / DEND_DX; k++) parts.push({ type: 'dend', l: DEND_DX, d: DEND_D, x: -R - DEND_L + (k + 0.5) * DEND_DX, dens: { na: 0, k: 0 } });
+    const md = MD(), R = P.somaD / 2, parts = [];
+    for (let b = 0; b < md.nb; b++)
+      for (let k = 0; k < md.L / md.dx; k++) parts.push({ type: 'dend', b, k, l: md.dx, d: DEND_D, x: -R - md.L + (k + 0.5) * md.dx, dens: { na: 0, k: 0 } });
     parts.push({ type: 'soma', l: 0, d: P.somaD, x: 0, dens: SOMA });
-    for (let a = 0; a < AX_L; a += AX_DX) {
-      const xm = a + AX_DX / 2, inAIS = xm >= P.start && xm < P.start + P.len, hill = xm < P.start;
+    for (let a = 0; a < AX_L; a += md.adx) {
+      const xm = a + md.adx / 2, inAIS = xm >= P.start && xm < P.start + P.len, hill = xm < P.start;
       const d = hill ? HILL_D + (AX_D - HILL_D) * (xm / Math.max(P.start, 1e-6)) : AX_D;
-      parts.push({ type: inAIS ? 'ais' : hill ? 'hill' : 'ax', l: AX_DX, d, x: R + xm, dens: inAIS ? { na: P.aisNa, k: P.aisNa / 2 } : hill ? HILL : AXON });
+      parts.push({ type: inAIS ? 'ais' : hill ? 'hill' : 'ax', l: md.adx, d, x: R + xm, dens: inAIS ? { na: P.aisNa, k: P.aisNa / 2 } : hill ? HILL : AXON });
     }
     const n = parts.length, f = () => new Float64Array(n);
-    const m = { n, parts, x: f(), A: f(), cm: f(), gNa: f(), gK: f(), gKL: f(), gNaL: f(), gCl: f(), G: f(), V: f(), mm: f(), h: f(), nn: f(), gsyn: f(),
-      lo: f(), b: f(), rr: f(), cp: f(), dp: f(), Vn: f(), t: 0 };
+    const m = { n, nb: md.nb, per: md.L / md.dx, parts, x: f(), A: f(), cm: f(), gNa: f(), gK: f(), gKL: f(), gNaL: f(), gCl: f(), Gu: f(), Gsum: f(), V: f(), mm: f(), h: f(), nn: f(), gsyn: f(),
+      bP: f(), rP: f(), d: f(), e: f(), par: new Int32Array(n), order: [], t: 0 };
+    iS = md.nb * m.per;
     const Ra = parts.map(pt => pt.type === 'soma' ? 0 : RI * (pt.l * um / 2) / (Math.PI * (pt.d * um / 2) ** 2));   // Ω, half a piece
     parts.forEach((pt, i) => {
       m.x[i] = pt.x;
@@ -998,23 +1045,31 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
       m.cm[i] = CMEM * m.A[i];
       m.gNa[i] = GNA * pt.dens.na * m.A[i]; m.gK[i] = GK * pt.dens.k * m.A[i];
       m.gKL[i] = LEAK.gKL * P.leak * m.A[i]; m.gNaL[i] = LEAK.gNaL * P.leak * m.A[i]; m.gCl[i] = LEAK.gCl * P.leak * m.A[i];
+      // the parent: along a branch the next piece in (the last one joins the cell body); along the axon the one before
+      m.par[i] = pt.type === 'soma' ? -1 : pt.type === 'dend' ? (pt.k === m.per - 1 ? iS : i + 1) : i - 1;
+      if (m.par[i] >= 0) m.Gu[i] = 1000 / (Ra[i] + Ra[m.par[i]]);   // mS through the cytoplasm
     });
-    for (let i = 0; i < n - 1; i++) m.G[i] = 1000 / (Ra[i] + Ra[i + 1]);   // mS through the cytoplasm
+    for (let i = 0; i < n; i++) if (m.par[i] >= 0) { m.Gsum[i] += m.Gu[i]; m.Gsum[m.par[i]] += m.Gu[i]; }
+    // the tips first, the cell body last: the branches from their tips in, then the axon from its end back
+    for (let i = 0; i < iS; i++) m.order.push(i);
+    for (let i = n - 1; i > iS; i--) m.order.push(i);
+    m.order.push(iS);
     M = m;
-    iS = parts.findIndex(pt => pt.type === 'soma');
     const ais = parts.map((pt, i) => pt.type === 'ais' ? i : -1).filter(i => i >= 0);
-    iA = ais.length ? ais[Math.floor(ais.length / 2)] : iS + 1 + Math.round((P.start + P.len / 2) / AX_DX);
+    iA = ais.length ? ais[Math.floor(ais.length / 2)] : iS + 1 + Math.round((P.start + P.len / 2) / md.adx);
     placeSynapses();
     thrAIS = thrSoma = NaN;
   }
-  // the synapses spread evenly over 100 µm of dendrite around their distance from the cell body
+  // the piece of branch b at a distance from the cell body's edge (µm)
+  const at = (b, dist) => { const md = MD(), k = Math.round((md.L - dist) / md.dx - 0.5); return b * M.per + Math.max(0, Math.min(M.per - 1, k)); };
+  // each branch's synapses spread evenly over 100 µm around their distance from the cell body; each on a spine
   function placeSynapses() {
-    const R = P.somaD / 2, lo = Math.max(10, P.pos - 50), hi = Math.min(DEND_L - 5, P.pos + 50);
-    synIdx = Array.from({ length: P.n }, (_, k) => {
-      const dist = P.n === 1 ? P.pos : lo + (hi - lo) * k / (P.n - 1), x = -R - dist;
-      return Math.max(0, Math.min(iS - 1, Math.round((x - M.x[0]) / DEND_DX)));
-    });
-    const R2 = -R - P.pos; iD = Math.max(0, Math.min(iS - 1, Math.round((R2 - M.x[0]) / DEND_DX)));
+    const L = MD().L, lo = Math.max(10, Math.min(P.pos, L - 10) - 50), hi = Math.min(L - 5, Math.min(P.pos, L - 10) + 50);
+    syns = []; dIdx = [];
+    for (let b = 0; b < M.nb; b++) {
+      for (let k = 0; k < P.n; k++) syns.push({ b, k, i: at(b, P.n === 1 ? P.pos : lo + (hi - lo) * k / (P.n - 1)) });
+      dIdx.push(at(b, Math.min(P.pos, L - 10)));
+    }
   }
   function restAll() {
     for (let i = 0; i < M.n; i++) {
@@ -1025,64 +1080,86 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     M.t = 0;
   }
   function step(dt) {
-    const m = M, n = m.n, V = m.V;
+    const m = M, n = m.n, V = m.V, { bP, rP, d, e, par, Gu } = m;
     for (let i = 0; i < n; i++) {
-      const r = rates(V[i]), g = (al, be, x) => { const tau = 1 / (al + be), xi = al * tau; return xi + (x - xi) * Math.exp(-dt / tau); };
-      if (m.gNa[i] > 0 || m.gK[i] > 0) { m.mm[i] = g(r.am, r.bm, m.mm[i]); m.h[i] = g(r.ah, r.bh, m.h[i]); m.nn[i] = g(r.an, r.bn, m.nn[i]); }
+      if (m.gNa[i] > 0 || m.gK[i] > 0) {
+        const r = rates(V[i]), g = (al, be, x) => { const tau = 1 / (al + be), xi = al * tau; return xi + (x - xi) * Math.exp(-dt / tau); };
+        m.mm[i] = g(r.am, r.bm, m.mm[i]); m.h[i] = g(r.ah, r.bh, m.h[i]); m.nn[i] = g(r.an, r.bn, m.nn[i]);
+      }
       const gNa = m.gNa[i] * m.mm[i] ** 3 * m.h[i] + m.gNaL[i], gK = m.gK[i] * m.nn[i] ** 4 + m.gKL[i];
       const gInh = P.inh && i === iS ? INH_G : 0, gs = m.gsyn[i];
-      const gl = i > 0 ? m.G[i - 1] : 0, gr = i < n - 1 ? m.G[i] : 0;
-      m.lo[i] = gl;
-      m.b[i] = m.cm[i] / dt + gNa + gK + m.gCl[i] + gInh + gs + gl + gr;
-      m.rr[i] = m.cm[i] / dt * V[i] + gNa * EREV.Na + gK * EREV.K + (m.gCl[i] + gInh) * EREV.Cl + gs * EREV.syn;
+      bP[i] = m.cm[i] / dt + gNa + gK + m.gCl[i] + gInh + gs + m.Gsum[i];
+      rP[i] = m.cm[i] / dt * V[i] + gNa * EREV.Na + gK * EREV.K + (m.gCl[i] + gInh) * EREV.Cl + gs * EREV.syn;
     }
-    const { lo, b, rr, cp, dp, Vn, G } = m;
-    cp[0] = -G[0] / b[0]; dp[0] = rr[0] / b[0];
-    for (let i = 1; i < n; i++) { const w = b[i] + lo[i] * cp[i - 1]; cp[i] = i < n - 1 ? -G[i] / w : 0; dp[i] = (rr[i] + lo[i] * dp[i - 1]) / w; }
-    Vn[n - 1] = dp[n - 1];
-    for (let i = n - 2; i >= 0; i--) Vn[i] = dp[i] - cp[i] * Vn[i + 1];
-    for (let i = 0; i < n; i++) V[i] = Vn[i];
+    // in from the tips: each piece's voltage as d + e × its parent's, its parent's equation updated with it
+    for (const i of m.order) {
+      const p = par[i]; if (p < 0) continue;
+      d[i] = rP[i] / bP[i]; e[i] = Gu[i] / bP[i];
+      bP[p] -= Gu[i] * e[i]; rP[p] += Gu[i] * d[i];
+    }
+    V[iS] = rP[iS] / bP[iS];
+    for (let k = m.order.length - 2; k >= 0; k--) { const i = m.order[k]; V[i] = d[i] + e[i] * V[par[i]]; }
     m.t += dt;
   }
-  function reset() { build(); restAll(); evs = []; hist = []; peak = null; startAt = null; firedAt = -1; sampleAcc = 0; }
-  // threshold as experimenters measure it: the voltage at which the rise speeds past 20 mV/ms
+  function reset() { build(); restAll(); evs = []; hist = []; ticks = []; spikes = []; peak = null; startAt = null; firedAt = -1; sampleAcc = 0; aisWasUp = false; }
+  // the synapses that fire: temporal, branch 1's, a train; spatial, the ticked branches', once
   function fire() {
-    for (let k = 0; k < P.np; k++) evs.push({ t: M.t + 0.2 + k * P.dt, g: P.gS * 1e-6 });   // nS → mS
+    if (P.mode === 'r') return;
+    const t0 = M.t + 0.2, g = P.gS * 1e-6;   // nS → mS
+    syns.forEach((s, j) => {
+      if (P.mode === 't') for (let k = 0; k < P.np; k++) evs.push({ t: t0 + k * P.dt, g, s: j });
+      else if (P.on[s.b]) evs.push({ t: t0, g, s: j });
+    });
     peak = Float64Array.from(M.V); startAt = null; firedAt = M.t; thrAIS = thrSoma = NaN;
   }
   function advance(ms) {
-    let left = ms;
+    const md = MD(); let left = ms;
     while (left > 1e-9) {
-      const h = Math.min(left, HHDT);
-      const g1 = synG(evs, M.t + h);
-      M.gsyn.fill(0); if (g1 > 0) for (const i of synIdx) M.gsyn[i] += g1;
+      const h = Math.min(left, md.h);
+      if (P.mode === 'r') {   // every synapse fires at random, P.rate times a second on average
+        const pr = P.rate * h / 1000, g = P.gS * 1e-6;
+        syns.forEach((s, j) => { if (Math.random() < pr) { const t = M.t + Math.random() * h; evs.push({ t, g, s: j }); ticks.push({ t, b: s.b }); } });
+      }
+      M.gsyn.fill(0);
+      let open = 0;
+      for (const ev of evs) { const g = ev.g * synShape(M.t + h - ev.t); if (g > 0) { M.gsyn[syns[ev.s].i] += g; open += g; } }
       const before = startAt === null && peak ? Float64Array.from(M.V) : null, va = M.V[iA], vs = M.V[iS];
       step(h); left -= h;
-      if (peak && isNaN(thrAIS) && (M.V[iA] - va) / h > 20) thrAIS = va;
+      if (isNaN(thrAIS) && (M.V[iA] - va) / h > 20 && (peak || P.mode === 'r')) thrAIS = va;
       if (peak && isNaN(thrSoma) && (M.V[iS] - vs) / h > 20) thrSoma = vs;
       if (peak) for (let i = 0; i < M.n; i++) if (M.V[i] > peak[i]) peak[i] = M.V[i];
       if (before) for (let i = 0; i < M.n; i++) if (before[i] < -10 && M.V[i] >= -10) { startAt = i; break; }
+      const up = M.V[iA] > -10; if (up && !aisWasUp) spikes.push(M.t); aisWasUp = up;
       sampleAcc += h;
-      if (sampleAcc >= SAMPLE_MS) {
-        sampleAcc -= SAMPLE_MS;
-        hist.push({ t: M.t, D: M.V[iD], S: M.V[iS], A: M.V[iA], on: g1 > 0.02 * P.gS * 1e-6 });
-        while (hist.length && hist[0].t < M.t - WIN) hist.shift();
+      if (sampleAcc >= md.sample) {
+        sampleAcc -= md.sample;
+        hist.push({ t: M.t, D: dIdx.map(i => M.V[i]), S: M.V[iS], A: M.V[iA], on: open > 0.02 * P.gS * 1e-6 });
+        while (hist.length && hist[0].t < M.t - md.win) hist.shift();
       }
     }
     evs = evs.filter(e => M.t - e.t < 40);
+    ticks = ticks.filter(k => k.t >= M.t - md.win);
+    spikes = spikes.filter(t => t >= M.t - 1000);
   }
 
-  // ---------- the neuron picture, in lesson 3's style ----------
-  const NW = 1000, NH = 270, YC = 128, X0 = 40, X1 = 930, nc = setupCanvas($('neu'), NW, NH);
-  const xmin = () => -(P.somaD / 2 + DEND_L), xmax = () => P.somaD / 2 + AX_L;
+  // ---------- the neuron picture, in lesson 4's style ----------
+  const NW = 1000, X0 = 40, X1 = 930;
+  const SHAPE = { t: { NH: 270, off: [0] }, s: { NH: 330, off: [-84, -28, 28, 84] }, r: { NH: 360, off: [-110, -66, -22, 22, 66, 110] } };
+  let NH = 270, YC = 128, nc = null;
+  function sizeCanvas() { NH = SHAPE[P.mode].NH; YC = Math.round(NH / 2) - 7; nc = setupCanvas($('neu'), NW, NH); }
+  const xmin = () => -(P.somaD / 2 + MD().L), xmax = () => P.somaD / 2 + AX_L;
   const px = x => X0 + (x - xmin()) / (xmax() - xmin()) * (X1 - X0);
+  // a branch on screen: it leaves the cell body fanned out and runs parallel to the others beyond about 60 µm
+  const FAN = 60;
+  const by = (b, dist) => { const u = Math.max(0, Math.min(1, dist / FAN)); return YC + SHAPE[P.mode].off[b] * u * u * (3 - 2 * u); };
+  const bpt = (b, x) => [px(x), by(b, -x)];   // x: µm along the cell (negative on the dendrites)
+  const BRC = () => [C.syn, C.k, C.ea, C.cl, mixc(C.k, C.cl, 0.5), C.a];   // the branches' colours, on the charts too
   function vrgb(V) { const t = Math.max(0, Math.min(1, (V + 75) / 125)), p = rgb(C.pos), q = rgb(C.neg); return p.map((v, i) => v * t + q[i] * (1 - t)); }
   const shade = (a, k = 0) => `rgb(${a.map(v => Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k))).join(',')})`;
   const vcolor = (V, k) => shade(vrgb(V), k);
-  // side branches off the dendrite: [where along it (µm from the cell body), angle, length]; fixed, decorative
-  const TWIGS = [[60, -0.9, 34], [120, 0.8, 30], [190, -0.7, 40], [250, 0.9, 34], [320, -0.8, 30], [370, 0.7, 26]];
-  // extra dendrites on the cell body, coloured by its voltage
-  const SDENDS = [[-1.9, 34], [1.95, 30], [-2.5, 26], [2.6, 24]];
+  // short dendrites on the cell body, above and below, coloured by its voltage
+  const SDENDS = [[-1.75, 30], [1.8, 28]];
+  const hash = k => { const s = Math.sin(k * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
   function pipette(tx, ty, ux, uy, len, w, tint) {
     const c = nc; c.save(); c.translate(tx, ty); c.rotate(Math.atan2(uy, ux));
     c.beginPath(); c.moveTo(0, -0.6); c.lineTo(len * 0.4, -w * 0.4); c.lineTo(len, -w); c.lineTo(len, w); c.lineTo(len * 0.4, w * 0.4); c.lineTo(0, 0.6); c.closePath();
@@ -1093,49 +1170,71 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     c.restore();
   }
   function drawNeuron() {
-    const c = nc, n = M.n, R = P.somaD / 2, sr = Math.max(14, px(R) - px(0)), edge = C.memdark;
-    const dh = 6.5, ah = 3;                                  // half widths of the dendrite and the axon (px)
-    const somaCol = vcolor(M.V[iS]);
+    const c = nc, n = M.n, R = P.somaD / 2, sr = Math.max(14, px(R) - px(0)), edge = C.memdark, md = MD();
+    const dh = 6, ah = 3;                                    // half widths of a branch and of the axon (px)
+    const somaCol = vcolor(M.V[iS]), SX = px(0);
     c.fillStyle = C.bath; c.fillRect(0, 0, NW, NH);
     const x0i = i => px(M.x[i] - M.parts[i].l / 2), x1i = i => px(M.x[i] + M.parts[i].l / 2);
-    // glow wherever the membrane is depolarized past −40 mV
-    c.save(); c.shadowColor = C.pos; c.shadowBlur = 16; c.fillStyle = C.pos; c.globalAlpha = 0.5;
-    for (let i = 0; i < n; i++) {
-      if (i === iS || M.V[i] < -40) continue;
-      let j = i; while (j + 1 < n && j + 1 !== iS && M.V[j + 1] >= -40) j++;
-      const hw = i < iS ? dh : ah; c.fillRect(x0i(i), YC - hw, Math.max(2, x1i(j) - x0i(i)), 2 * hw); i = j;
-    }
-    if (M.V[iS] >= -40) { c.beginPath(); c.arc(px(0), YC, sr, 0, 6.283); c.fill(); }
-    c.restore();
     const curve = (xa, ya, cx, cy, xb, yb) => Array.from({ length: 11 }, (_, k) => { const t = k / 10, u = 1 - t; return [u * u * xa + 2 * u * t * cx + t * t * xb, u * u * ya + 2 * u * t * cy + t * t * yb]; });
     const taper = (pts, w0, w1, col, extra) => { c.lineCap = 'round'; c.strokeStyle = col;
       for (let k = 1; k < pts.length; k++) { c.lineWidth = w0 + (w1 - w0) * k / (pts.length - 1) + extra; c.beginPath(); c.moveTo(...pts[k - 1]); c.lineTo(...pts[k]); c.stroke(); } };
-    // side twigs of the dendrite, each coloured by the voltage where it leaves
-    const twigs = TWIGS.map(([d, a, len]) => {
-      const i = Math.max(0, Math.min(iS - 1, Math.round((-R - d - M.x[0]) / DEND_DX))), x = px(-R - d), dy = Math.sign(a);
-      return [curve(x, YC + dy * dh * 0.6, x - 6, YC + dy * (dh + len * 0.5), x - len * Math.cos(Math.abs(a)) * 0.9, YC + dy * (dh + len)), vcolor(M.V[i])];
+    // the branches' points: each piece's two ends, the last one reaching into the cell body
+    const ends = b => { const out = []; for (let k = 0; k < M.per; k++) { const i = b * M.per + k; out.push([i, bpt(b, M.x[i] - M.parts[i].l / 2), bpt(b, M.x[i] + M.parts[i].l / 2)]); } return out; };
+    const brs = Array.from({ length: M.nb }, (_, b) => ends(b));
+    // glow wherever the membrane is depolarized past −40 mV
+    c.save(); c.shadowColor = C.pos; c.shadowBlur = 16; c.strokeStyle = C.pos; c.fillStyle = C.pos; c.globalAlpha = 0.5; c.lineCap = 'round';
+    brs.forEach(br => br.forEach(([i, a, z]) => { if (M.V[i] >= -40) { c.lineWidth = 2 * dh; c.beginPath(); c.moveTo(...a); c.lineTo(...z); c.stroke(); } }));
+    for (let i = iS + 1; i < n; i++) if (M.V[i] >= -40) c.fillRect(x0i(i), YC - ah, Math.max(2, x1i(i) - x0i(i)), 2 * ah);
+    if (M.V[iS] >= -40) { c.beginPath(); c.arc(SX, YC, sr, 0, 6.283); c.fill(); }
+    c.restore();
+    // spines all along each branch, alternately above and below, coloured by the voltage of the branch under them;
+    // a synapse's spine is a little bigger, with its bouton against the head
+    const synAt = new Map(); syns.forEach((s, j) => synAt.set(s.b * 1000 + s.k, j));
+    const gOpen = new Float64Array(syns.length); for (const ev of evs) gOpen[ev.s] += ev.g * synShape(M.t - ev.t);
+    const spine = (x, y, side, col, big) => {
+      const nl = big ? 7 : 5, hr = big ? 3.2 : 2.2, yh = y + side * (dh + nl);
+      c.strokeStyle = edge; c.lineWidth = 3; c.beginPath(); c.moveTo(x, y + side * dh * 0.7); c.lineTo(x, yh); c.stroke();
+      c.strokeStyle = col; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, y + side * dh * 0.7); c.lineTo(x, yh); c.stroke();
+      c.fillStyle = col; c.beginPath(); c.arc(x, yh + side * hr * 0.6, hr, 0, 6.283); c.fill(); c.strokeStyle = edge; c.lineWidth = 1; c.stroke();
+      return yh + side * hr * 1.6;
+    };
+    brs.forEach((br, b) => {
+      // the plain spines, spaced along the branch (not on the first 15 µm), seeded so they stay put
+      for (let k = 0, x = xmin() + 4; x < -R - 15; k++, x += 9 + 4 * hash(k + b * 50)) {
+        const [sx, sy] = bpt(b, x), i = at(b, -x - R), side = hash(k * 3 + b) > 0.5 ? 1 : -1;
+        spine(sx, sy, side, vcolor(M.V[i]), false);
+      }
     });
-    const sd = SDENDS.map(([a, len]) => { const dx = Math.cos(a), dy = Math.sin(a), sx = px(0);
-      return curve(sx + dx * sr * 0.8, YC + dy * sr * 0.8, sx + dx * (sr + len * 0.5) + 4, YC + dy * (sr + len * 0.5), sx + dx * (sr + len), YC + dy * (sr + len)); });
-    twigs.forEach(([p]) => taper(p, 4, 1.4, edge, 2)); sd.forEach(p => taper(p, 6, 1.6, edge, 2));
-    twigs.forEach(([p, col]) => taper(p, 4, 1.4, col, 0)); sd.forEach(p => taper(p, 6, 1.6, somaCol, 0));
+    // the branches: an outline, then each piece in its voltage's colour
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    brs.forEach((br, b) => {
+      c.strokeStyle = edge; c.lineWidth = 2 * dh + 3; c.beginPath(); c.moveTo(...br[0][1]); br.forEach(([, , z]) => c.lineTo(...z)); c.lineTo(SX, YC); c.stroke();
+    });
+    brs.forEach(br => br.forEach(([i, a, z]) => { c.strokeStyle = vcolor(M.V[i]); c.lineWidth = 2 * dh; c.beginPath(); c.moveTo(...a); c.lineTo(...z); c.stroke(); }));
+    brs.forEach(br => { const [, , z] = br[br.length - 1]; c.strokeStyle = somaCol; c.lineWidth = 2 * dh; c.beginPath(); c.moveTo(...z); c.lineTo(SX, YC); c.stroke(); });
     c.lineCap = 'butt';
-    // the dendrite: each piece coloured by its voltage, shaded as a tube, its tip rounded
-    for (let i = 0; i < iS; i++) { c.fillStyle = vcolor(M.V[i]); c.fillRect(x0i(i) - 0.3, YC - dh, x1i(i) - x0i(i) + 0.6, 2 * dh); }
-    c.fillStyle = vcolor(M.V[0]); c.beginPath(); c.arc(x0i(0), YC, dh, Math.PI / 2, 3 * Math.PI / 2); c.fill();
+    // the synapses' spines and boutons, lit while their channels are open
+    syns.forEach((s, j) => {
+      const [sx, sy] = bpt(s.b, M.x[s.i]), side = s.k % 2 ? 1 : -1, x = sx + (s.k % 3 - 1) * 1.5;
+      const yt = spine(x, sy, side, vcolor(M.V[s.i]), true), lit = Math.min(1, gOpen[j] / (P.gS * 1e-6)), fires = P.mode !== 's' || P.on[s.b];
+      c.globalAlpha = fires ? 1 : 0.35;
+      c.strokeStyle = C.syn; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, yt + side * 3); c.lineTo(x + (s.k % 4 - 1.5) * 2, yt + side * 10); c.stroke();
+      c.fillStyle = mixc(C.syn, C.surface, 0.3 + 0.7 * lit); c.beginPath(); c.arc(x, yt + side * 3, 3.4, 0, 6.283); c.fill(); c.stroke();
+      c.globalAlpha = 1;
+    });
+    // short dendrites on the cell body
+    const sd = SDENDS.map(([a, len]) => { const dx = Math.cos(a), dy = Math.sin(a);
+      return curve(SX + dx * sr * 0.8, YC + dy * sr * 0.8, SX + dx * (sr + len * 0.5) + 4, YC + dy * (sr + len * 0.5), SX + dx * (sr + len), YC + dy * (sr + len)); });
+    sd.forEach(p => taper(p, 6, 1.6, edge, 2)); sd.forEach(p => taper(p, 6, 1.6, somaCol, 0)); c.lineCap = 'butt';
     const tube = (y, hw) => { const g = c.createLinearGradient(0, y - hw, 0, y + hw);
       g.addColorStop(0, 'rgba(255,255,255,0.10)'); g.addColorStop(0.25, 'rgba(255,255,255,0.32)'); g.addColorStop(0.55, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,0.25)'); return g; };
-    c.fillStyle = tube(YC, dh); c.fillRect(x0i(0), YC - dh, px(-R) - x0i(0), 2 * dh);
-    c.strokeStyle = edge; c.lineWidth = 1.5; c.beginPath();
-    c.moveTo(x0i(0), YC - dh); c.lineTo(px(-R) + 2, YC - dh); c.moveTo(x0i(0), YC + dh); c.lineTo(px(-R) + 2, YC + dh);
-    c.moveTo(x0i(0), YC - dh); c.arc(x0i(0), YC, dh, -Math.PI / 2, -3 * Math.PI / 2, true); c.stroke();
     // axon pieces, then the hillock drawn over the first stretch
     for (let i = iS + 1; i < n; i++) { c.fillStyle = vcolor(M.V[i]); c.fillRect(x0i(i) - 0.3, YC - ah, x1i(i) - x0i(i) + 0.6, 2 * ah); }
     const xe = px(xmax());
     c.fillStyle = tube(YC, ah); c.fillRect(px(R), YC - ah, xe - px(R), 2 * ah);
     c.strokeStyle = edge; c.lineWidth = 1.5; c.beginPath(); c.moveTo(px(R), YC - ah); c.lineTo(xe, YC - ah); c.moveTo(px(R), YC + ah); c.lineTo(xe, YC + ah); c.stroke();
-    const hEnd = Math.max(px(R + Math.max(P.start, 4)), px(0) + sr + 6), iH = Math.min(n - 1, iS + 1 + Math.round(Math.max(P.start, 4) / AX_DX));
-    const hy = sr * 0.55, hx = px(0) + Math.sqrt(Math.max(0, sr * sr - hy * hy)) - 1;
+    const hEnd = Math.max(px(R + Math.max(P.start, 4)), SX + sr + 6), iH = Math.min(n - 1, iS + 1 + Math.round(Math.max(P.start, 4) / md.adx));
+    const hy = sr * 0.55, hx = SX + Math.sqrt(Math.max(0, sr * sr - hy * hy)) - 1;
     const hg = c.createLinearGradient(hx, 0, hEnd, 0); hg.addColorStop(0, somaCol); hg.addColorStop(1, vcolor(M.V[iH]));
     c.beginPath(); c.moveTo(hx, YC - hy); c.bezierCurveTo(hx + 10, YC - hy, hEnd - 10, YC - ah, hEnd + 1, YC - ah);
     c.lineTo(hEnd + 1, YC + ah); c.bezierCurveTo(hEnd - 10, YC + ah, hx + 10, YC + hy, hx, YC + hy); c.closePath();
@@ -1143,8 +1242,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     c.strokeStyle = edge; c.lineWidth = 1.5; c.beginPath();
     c.moveTo(hx, YC - hy); c.bezierCurveTo(hx + 10, YC - hy, hEnd - 10, YC - ah, hEnd + 1, YC - ah);
     c.moveTo(hx, YC + hy); c.bezierCurveTo(hx + 10, YC + hy, hEnd - 10, YC + ah, hEnd + 1, YC + ah); c.stroke();
-    // the cell body, as on lesson 3: irregular, lit from the top left, with its nucleus
-    const SX = px(0);
+    // the cell body, as on lesson 4: irregular, lit from the top left, with its nucleus
     const blob = () => { c.beginPath(); for (let k = 0; k <= 48; k++) { const th = k / 48 * 6.283, r = sr * (1 + 0.05 * Math.sin(3 * th + 0.6) + 0.03 * Math.sin(5 * th + 1.3)); k ? c.lineTo(SX + r * Math.cos(th), YC + r * Math.sin(th)) : c.moveTo(SX + r * Math.cos(th), YC + r * Math.sin(th)); } c.closePath(); };
     const sg = c.createRadialGradient(SX - sr * 0.35, YC - sr * 0.4, sr * 0.1, SX, YC, sr * 1.05);
     sg.addColorStop(0, vcolor(M.V[iS], 0.35)); sg.addColorStop(0.6, somaCol); sg.addColorStop(1, vcolor(M.V[iS], -0.25));
@@ -1164,29 +1262,25 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     c.font = '600 12px "IBM Plex Sans", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText('axon initial segment', (a0 + a1) / 2 + 30, yb + 13);
     c.fillStyle = C.muted;
-    c.fillText('cell body', SX, YC + sr + 30); c.fillText('dendrite', px(-R - 200), YC + 46); c.fillText('axon', px(R + 160), YC + 16);
+    c.fillText('cell body', SX, YC + sr + 30); c.fillText('axon', px(R + 160), YC + 16);
+    if (M.nb === 1) c.fillText('dendrite', px(-R - 200), YC + 46);
+    // each branch's number at its tip, in its colour (as on the charts)
+    if (M.nb > 1) brs.forEach((br, b) => { const [x, y] = br[0][1]; c.fillStyle = BRC()[b]; c.font = '700 13px "IBM Plex Sans", sans-serif'; c.fillText(String(b + 1), x - 14, y); });
     // axon terminals
     const tcol = vcolor(M.V[n - 1]), tips = [[18, -16], [24, 0], [18, 16]];
     const tb = tips.map(([dx, dy]) => curve(xe - 1, YC, xe + dx * 0.45, YC + dy * 0.15, xe + dx - 4, YC + dy));
     tb.forEach(p => taper(p, ah * 1.6, 2, edge, 2)); tb.forEach(p => taper(p, ah * 1.6, 2, tcol, 0));
     tips.forEach(([dx, dy]) => { c.beginPath(); c.arc(xe + dx, YC + dy, 4.5, 0, 6.283); c.fillStyle = tcol; c.fill(); c.strokeStyle = edge; c.lineWidth = 1.5; c.stroke(); });
     c.lineCap = 'butt';
-    // synapses: boutons touching the dendrite, alternately above and below, lit while their channels are open
-    const gNow = synG(evs, M.t), lit = Math.min(1, gNow / (P.gS * 1e-6));
-    synIdx.forEach((i, k) => {
-      const x = (x0i(i) + x1i(i)) / 2 + (k % 3 - 1) * 1.5, up = k % 2 === 0, y = YC + (up ? -1 : 1) * (dh + 6);
-      c.strokeStyle = C.syn; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (k % 4 - 1.5) * 2, y + (up ? -8 : 8)); c.stroke();
-      c.fillStyle = mixc(C.syn, C.surface, 0.35 + 0.65 * lit); c.beginPath(); c.arc(x, y, 3.6, 0, 6.283); c.fill(); c.stroke();
-    });
     if (P.inh) {   // the inhibitory synapse, on top of the cell body
       const x = SX + sr * 0.5, y = YC - sr * 0.95;
       c.fillStyle = C.k; c.strokeStyle = C.k; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 8, y - 14); c.stroke();
       c.beginPath(); c.arc(x, y - 1, 5, 0, 6.283); c.fill();
     }
-    // recording sites D, S, A
+    // recording sites: D (one branch only), S, A
     const tag = (t, col, x, y) => { c.font = '700 14px "IBM Plex Sans", sans-serif'; c.fillStyle = col; c.textAlign = 'left'; c.fillText(t, x, y); };
-    const xD = (x0i(iD) + x1i(iD)) / 2, xA = (x0i(iA) + x1i(iA)) / 2;
-    pipette(xD, YC + dh * 0.3, -0.25, 1, 56, 3.5, C.syn); tag('D', C.syn, xD - 30, YC + 66);
+    const xA = (x0i(iA) + x1i(iA)) / 2;
+    if (M.nb === 1) { const [xD] = bpt(0, M.x[dIdx[0]]); pipette(xD, YC + dh * 0.3, -0.25, 1, 56, 3.5, C.syn); tag('D', C.syn, xD - 30, YC + 66); }
     pipette(SX + sr * 0.2, YC + sr * 0.3, 0.3, 1, 60, 4, C.ink); tag('S', C.ink, SX + sr * 0.2 + 22, YC + sr * 0.3 + 60);
     pipette(xA, YC - ah * 0.4, 0.25, -1, 56, 3.5, C.na); tag('A', C.na, xA + 20, YC - 58);
     // distance scale, from the cell body's centre
@@ -1203,34 +1297,53 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   // ---------- charts ----------
   const CW = 560, CH = 340, pc = setupCanvas($('aProf'), CW, CH), tc = setupCanvas($('aTime'), CW, CH);
   function drawCharts() {
-    const xs = Array.from(M.x), isAIS = M.parts.map(pt => pt.type === 'ais');
-    const series = [{ ys: Array.from(M.V), color: C.ink, width: 2.4, label: 'now' }];
-    if (peak) series.unshift({ ys: Array.from(peak), color: C.accent, width: 1.6, dash: [6, 4], label: 'peak' });
+    const md = MD(), per = M.per, rest = Array.from(M.V.slice(iS));   // the cell body and the axon, shared by every branch
+    const xs = Array.from(M.x.slice(0, per)).concat(Array.from(M.x.slice(iS)));
+    const isAIS = Array(per).fill(false).concat(M.parts.slice(iS).map(pt => pt.type === 'ais'));
+    const brV = (arr, b) => Array.from(arr.slice(b * per, (b + 1) * per)).concat(Array.from(arr.slice(iS)));
+    const series = M.nb === 1 ? [{ ys: brV(M.V, 0), color: C.ink, width: 2.4, label: 'now' }]
+      : Array.from({ length: M.nb }, (_, b) => ({ ys: brV(M.V, b), color: BRC()[b], width: 1.8, label: String(b + 1) }));
+    if (peak) {   // the highest each place reached; on several branches, the highest of any branch at that distance
+      const env = Array.from({ length: per }, (_, k) => Math.max(...Array.from({ length: M.nb }, (_, b) => peak[b * per + k]))).concat(Array.from(peak.slice(iS)));
+      series.unshift({ ys: env, color: C.accent, width: 1.6, dash: [6, 4], label: 'peak' });
+    }
     drawChart(pc, { xs, x0: xmin(), x1: xmax(), on: isAIS, w: CW, h: CH, key: 13, fixed: [-90, 50], series,
       refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'AIS thr.' }] : [],
-      ylabel: 'mV', xlabel: 'µm from the cell body (dendrite left, axon right; AIS shaded)' });
-    // the cell body's extent, as a band
+      ylabel: 'mV', xlabel: M.nb === 1 ? 'µm from the cell body (dendrite left, axon right; AIS shaded)' : 'µm from the cell body (each branch left, in its colour; axon right)' });
     ChartZoom.bind(pc.canvas, drawCharts);
     const [zx0, zx1] = ChartZoom.x(pc.canvas, xmin(), xmax());
     const L = 62, R = 96, pw = CW - L - R, sx = x => Math.max(L, Math.min(L + pw, L + (x - zx0) / (zx1 - zx0) * pw));
     pc.fillStyle = C.muted; pc.globalAlpha = 0.12; pc.fillRect(sx(-P.somaD / 2), 14, Math.max(2, sx(P.somaD / 2) - sx(-P.somaD / 2)), CH - 44); pc.globalAlpha = 1;
-    const t1 = M.t;
-    drawChart(tc, { xs: hist.map(h => h.t), x0: t1 - WIN, x1: t1, pin: 'right', on: hist.map(h => h.on), w: CW, h: CH, key: 14, fixed: [-90, 50],
-      series: [{ ys: hist.map(h => h.D), color: C.syn, label: 'D' }, { ys: hist.map(h => h.S), color: C.ink, width: 2.2, label: 'S' }, { ys: hist.map(h => h.A), color: C.na, width: 2.2, label: 'A' }],
-      refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'thr.' }] : [],
-      ylabel: 'mV', xlabel: `last ${WIN} ms` });
+    const t1 = M.t, ser = [];
+    if (P.mode === 't') ser.push({ ys: hist.map(h => h.D[0]), color: C.syn, label: 'D' });
+    if (P.mode === 's') for (let b = 0; b < M.nb; b++) if (P.on[b]) ser.push({ ys: hist.map(h => h.D[b]), color: BRC()[b], width: 1.4, label: String(b + 1) });
+    ser.push({ ys: hist.map(h => h.S), color: C.ink, width: 2.2, label: 'S' }, { ys: hist.map(h => h.A), color: C.na, width: 2.2, label: 'A' });
+    drawChart(tc, { xs: hist.map(h => h.t), x0: t1 - md.win, x1: t1, pin: 'right', on: P.mode === 'r' ? null : hist.map(h => h.on), w: CW, h: CH, key: 14, fixed: [-90, 50],
+      series: ser, refs: isFinite(thrAIS) ? [{ v: thrAIS, color: C.accent, dash: [2, 3], width: 1.6, label: 'thr.' }] : [],
+      ylabel: 'mV', xlabel: `last ${md.win} ms` + (P.mode === 'r' ? '; ticks: inputs, in their branch\'s colour' : '') });
+    if (P.mode === 'r') {   // each input as a tick along the bottom, in its branch's colour
+      const [x0, x1] = ChartZoom.x(tc.canvas, t1 - md.win, t1, 'right'), T = 14, ph = CH - T - 30, tsx = t => L + (t - x0) / (x1 - x0) * pw;
+      for (const k of ticks) { const x = tsx(k.t); if (x < L || x > L + pw) continue; tc.strokeStyle = BRC()[k.b]; tc.lineWidth = 1.2; tc.beginPath(); tc.moveTo(x, T + ph - 9); tc.lineTo(x, T + ph - 1); tc.stroke(); }
+    }
   }
   const where = i => { const t = M.parts[i].type, end = P.somaD / 2 + P.start + P.len;
-    return t === 'ais' ? 'the AIS' : t === 'soma' ? 'the cell body' : t === 'dend' ? 'the dendrite' : t === 'hill' ? 'the hillock' : M.x[i] < end + 8 ? 'the far end of the AIS' : 'the axon'; };
+    return t === 'ais' ? 'the AIS' : t === 'soma' ? 'the cell body' : t === 'dend' ? (M.nb > 1 ? 'branch ' + (M.parts[i].b + 1) : 'the dendrite') : t === 'hill' ? 'the hillock' : M.x[i] < end + 8 ? 'the far end of the AIS' : 'the axon'; };
   function readouts() {
+    const r = P.mode === 'r';
     $('aVnum').textContent = fmtSigned(M.V[iA]);
     $('aVsoma').textContent = fmtSigned(M.V[iS]);
-    $('aThr').textContent = isFinite(thrAIS) ? fmtSigned(thrAIS) + (isFinite(thrSoma) ? ' (cell body ' + fmtSigned(thrSoma, 0) + ')' : '') : peak ? 'not reached' : 'fire to measure';
-    $('aPeaks').textContent = peak ? `${peak[iD].toFixed(0)} / ${peak[iS].toFixed(0)} / ${peak[iA].toFixed(0)} mV` : '—';
-    $('aStartAt').textContent = startAt === null ? (peak ? 'no spike' : '—') : `${where(startAt)}, ${Math.round(M.x[startAt] - (M.x[startAt] > 0 ? P.somaD / 2 : -P.somaD / 2))} µm`;
-    $('aCap').innerHTML = !peak ? 'Press Fire synapses. Shaded on the time chart: synaptic channels open.'
-      : startAt === null ? `No spike: the depolarization reached ${peak[iA].toFixed(0)} mV at the AIS, short of its threshold (${isFinite(thrAIS) ? fmtSigned(thrAIS, 0) : 'none'}). Add synapses, move them closer, or fire them repeatedly.`
-      : `The spike started in ${where(startAt)}, then ran down the axon and back into the cell body. Threshold, measured where the rise speeds past 20 mV/ms, was ${fmtSigned(thrAIS, 0)} at the AIS${isFinite(thrSoma) ? ' but ' + fmtSigned(thrSoma, 0) + ' at the cell body, which only fired because the AIS spike charged it' : ''}.`;
+    $('aThr').textContent = isFinite(thrAIS) ? fmtSigned(thrAIS) + (isFinite(thrSoma) ? ' (cell body ' + fmtSigned(thrSoma, 0) + ')' : '') : peak || r ? 'not reached' : 'fire to measure';
+    const dpk = peak ? Math.max(...dIdx.map((i, b) => P.mode !== 's' || P.on[b] ? peak[i] : -Infinity)) : NaN;
+    $('aPeaks').textContent = peak ? `${dpk.toFixed(0)} / ${peak[iS].toFixed(0)} / ${peak[iA].toFixed(0)} mV` : '—';
+    $('aStartAt').textContent = r ? '—' : startAt === null ? (peak ? 'no spike' : '—') : `${where(startAt)}, ${Math.round(Math.abs(M.x[startAt]) - P.somaD / 2)} µm`;
+    const span = Math.min(1000, M.t), rate = span > 50 ? spikes.length / span * 1000 : NaN;
+    $('aFreq').textContent = isFinite(rate) ? rate.toFixed(0) + ' spikes/s' : '—';
+    const nIn = syns.length * P.rate;
+    $('aCap').innerHTML = r
+      ? `${M.nb} branches × ${P.n} synapses, each firing at random ${P.rate} times a second: about ${nIn.toLocaleString()} inputs a second in all. One alone does almost nothing; the cell fires when enough of them bunch up in time and across branches, and each spike starts at the AIS.`
+      : !peak ? (P.mode === 't' ? 'Press Fire synapses: branch 1\'s synapses fire the number of times set, at the interval set. Shaded on the time chart: synaptic channels open.' : 'Press Fire synapses: the synapses on the ticked branches all fire once, together. Shaded on the time chart: synaptic channels open.')
+      : startAt === null ? `No spike: the depolarization reached ${peak[iA].toFixed(0)} mV at the AIS, short of its threshold (${isFinite(thrAIS) ? fmtSigned(thrAIS, 0) : 'none'}). ${P.mode === 't' ? 'Fire more times, closer together, or add synapses.' : 'Tick more branches, add synapses, or move them closer.'}`
+      : `The spike started in ${where(startAt)}, then ran down the axon and back into the cell body. Threshold, measured where the rise speeds past 20 mV/ms, was ${fmtSigned(thrAIS, 0)} at the AIS${isFinite(thrSoma) ? ' but ' + fmtSigned(thrSoma, 0) + ' at the cell body' : ''}.`;
   }
   // ---------- controls ----------
   const rebuild = () => { if (M) reset(); };
@@ -1239,6 +1352,8 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   bindRange('aPos', v => v + ' µm', v => { P.pos = v; M && placeSynapses(); });
   bindRange('aNP', v => v + (v === 1 ? ' time' : ' times'), v => P.np = v);
   bindRange('aDt', v => v.toFixed(1) + ' ms', v => P.dt = v);
+  bindRange('aRate', v => v + ' /s', v => P.rate = v);
+  [1, 2, 3, 4].forEach(k => $('aB' + k).addEventListener('change', e => { P.on[k - 1] = e.target.checked; }));
   $('aInh').addEventListener('change', e => { P.inh = e.target.checked; });
   bindRange('aNa', v => v + '× squid', v => { P.aisNa = v; rebuild(); });
   bindRange('aStart', v => v + ' µm', v => { P.start = v; rebuild(); });
@@ -1246,15 +1361,34 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   bindRange('aSoma', v => v + ' µm', v => { P.somaD = v; rebuild(); });
   bindRange('aLeak', v => v.toFixed(2) + '×', v => { P.leak = v; rebuild(); });
   const speedFrom = v => Math.pow(10, -1.5 + v * 0.02);
-  bindRange('aSpeed', v => { const x = speedFrom(v); return (x < 1 ? x.toFixed(2) : x.toFixed(1)) + ' ms/s'; }, v => speed = speedFrom(v));
+  // the realistic mode runs 20 times faster at the same slider setting: its inputs come tens of ms apart
+  const speedNow = () => speedFrom(+$('aSpeed').value) * (P.mode === 'r' ? 20 : 1);
+  bindRange('aSpeed', v => { const x = speedFrom(v) * (P.mode === 'r' ? 20 : 1); return (x < 1 ? x.toFixed(2) : x.toFixed(1)) + ' ms/s'; }, () => speed = speedNow());
+  // each mode starts with settings that show its point; the controls only it uses show only in it
+  // (tested: temporal, 10 synapses fired 4 times 3 ms apart fire the cell and once does not; spatial, 10 per branch
+  // fire it with all four branches and not with three; realistic, 6 per branch at 1 nS: the cell's firing climbs steeply
+  // with the rate, from mostly silent at 20 /s through tens of spikes/s at 22–24 (varying a lot from run to run, as
+  // the inputs are random) to over 100 at 28; with the inhibitory synapse on, 24 /s gives none)
+  const DEFAULTS = { t: { aN: 10, aNP: 4, aDt: 3, aG: 0.3 }, s: { aN: 10, aG: 0.3 }, r: { aN: 6, aRate: 22, aG: 1 } };
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  function setMode(m, defaults = true) {
+    P.mode = m;
+    document.querySelectorAll('[data-amode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.amode === m)));
+    document.querySelectorAll('[data-afor]').forEach(el => el.hidden = !el.dataset.afor.includes(m));
+    if (defaults) Object.entries(DEFAULTS[m]).forEach(([id, v]) => set(id, v));
+    sizeCanvas(); reset(); set('aSpeed', $('aSpeed').value);
+    $('aFire').hidden = m === 'r';
+  }
+  document.querySelectorAll('[data-amode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.amode)));
   $('aFire').addEventListener('click', fire);
   $('aReset').addEventListener('click', reset);
   const playBtn = $('aPlay');
   const setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
   playBtn.addEventListener('click', () => setRunning(!running));
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
-  reset(); readouts();
-  window.SUM_AIS = { P, get M() { return M; }, fire, reset, advance, get startAt() { return startAt; }, get peak() { return peak; }, get thr() { return thrAIS; }, idx: () => ({ iD, iS, iA }) };
+  setMode('t', false); readouts();
+  window.SUM_AIS = { P, get M() { return M; }, fire, reset, advance, setMode, get startAt() { return startAt; }, get peak() { return peak; }, get thr() { return thrAIS; },
+    get spikes() { return spikes; }, idx: () => ({ iD: dIdx[0], iS, iA }) };
   let lastT = performance.now(), frame = 0;
   function loop(now) {
     const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
@@ -1264,7 +1398,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
     requestAnimationFrame(loop);
   }
   colorHooks.push(() => { drawNeuron(); drawCharts(); });
-  Frames.sim(() => running, 'aPlay');   // frames.js: starts paused, pauses itself when left alone
+  Frames.sim(() => running, 'aPlay', ['aFire']);   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1399,7 +1533,7 @@ function kTags(c, list) {
   const check = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
   const cardOf = { ion: ['tab-ion', 'play', 'ion-card'], cap: ['tab-cap', 'capPlay', 'cap-card'], circ: ['tab-circ', 'hhPlay', 'circ-card'], ais: ['tab-ais', 'aPlay', 'ais-card'] };
   const go = k => { const [tab, play, card] = cardOf[k]; showTab($(tab)); running(play); into(card); };
-  const neuron = (opts) => { set('aNa', opts.na ?? 20); set('aPos', opts.pos ?? 150); set('aN', opts.n ?? 25); set('aNP', 1); check('aInh', !!opts.inh); go('ais'); $('aFire').click(); };
+  const neuron = (opts) => { press('[data-amode="t"]'); set('aNa', opts.na ?? 20); set('aPos', opts.pos ?? 150); set('aN', opts.n ?? 25); set('aNP', 1); check('aInh', !!opts.inh); go('ais'); $('aFire').click(); };
   document.querySelectorAll('[data-sutry]').forEach(b => b.addEventListener('click', () => {
     const [what, id, v] = b.dataset.sutry.split(':');
     if (what === 'ions') { set('nSyn', 6); go('ion'); $('synBtn').click(); }

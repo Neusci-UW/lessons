@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="frames.js"></script>
+<script src="breadboard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Action Potential Travels</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -157,6 +158,8 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--s
 .theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
 .theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
 .deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
 .deriv p{margin:6px 0}
 .deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
 .mj-fail{display:none}
@@ -208,14 +211,14 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 <div class="wrap">
 <header>
   <h1>Sending a signal: the action potential travels</h1>
-  <p>A neuron has to get a message from one end to the other, sometimes a metre away, from your spinal cord to your toes. It does it with an action potential: a spike of voltage that regenerates itself as it moves along the axon. Fire one, block it, and change the axon, then explain what you see with the theory below, using what you learned in lessons 1 and 2.</p>
+  <p>A neuron has to get a message from one end to the other, sometimes a metre away, from your spinal cord to your toes. It does it with an action potential: a spike of voltage that regenerates itself as it moves along the axon. Fire one, block it, and change the axon, then explain what you see with the theory below, using what you learned in lessons 1 to 3.</p>
   <div class="intro">
     <section class="introbox" aria-labelledby="goalsTitle">
       <span class="sect-title" id="goalsTitle">You'll be able to</span>
       <ul>
         <li>build the spike from lesson 1's ideas: Na⁺ current in and K⁺ current out, each set by its driving force V − E (Nernst), with the membrane's capacitor in between (lesson 2: I<sub>C</sub> = C dV/dt)</li>
         <li>explain why a spike is all-or-none: past threshold, Na⁺ coming in beats K⁺ going out, and more Na⁺ channels open</li>
-        <li>explain how it travels: current spreads ahead inside the axon and charges the next patch of membrane, with the same time constant τ as in lesson 2, until that patch reaches threshold too</li>
+        <li>explain how it travels: current spreads ahead inside the axon and charges the next patch of membrane (lesson 3's spread along a cable, with lesson 2's time constant τ) until that patch reaches threshold too</li>
         <li>explain the cell body's part: it is a big capacitor that has to charge (τ, lesson 2) before the spike can start in the axon</li>
         <li>predict how axon diameter and myelin change the conduction velocity</li>
       </ul>
@@ -282,9 +285,10 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <p class="caption">A snapshot, with distance measured from the cell body. The spike is the bump. Dashed lines are the Nernst potentials from lesson 1: the spike never goes above E<sub>Na</sub> or below E<sub>K</sub>.</p>
         </div>
         <div class="ccol">
-          <p class="sect-title">Currents</p>
+          <div class="charthead"><p class="sect-title">Currents</p>
+            <div class="btns" role="group" aria-label="Current shown as"><button class="chip" data-iunit="mm" aria-pressed="true">per mm of axon</button><button class="chip" data-iunit="cm2" aria-pressed="false">per cm² of membrane</button></div></div>
           <canvas id="xiChart" aria-label="Membrane currents against distance along the axon"></canvas>
-          <p class="caption">On a myelinated axon, at the nodes. Where the spike is, Na⁺ goes in and K⁺ comes out. Just ahead of it, I<sub>C</sub> is positive while I<sub>Na</sub> is still near zero: the next patch is being charged, by current that came along the inside of the axon, before its own channels open.</p>
+          <p class="caption">On a myelinated axon, at the nodes. Per mm of axon: all the current crossing each mm of membrane, so a wider axon, with more membrane, carries more. Per cm² of membrane: the current density, the same for any size of axon. Where the spike is, Na⁺ goes in and K⁺ comes out. Just ahead of it, I<sub>C</sub> is positive while I<sub>Na</sub> is still near zero: the next patch is being charged, by current that came along the inside of the axon, before its own channels open.</p>
         </div>
       </div>
       <p class="sect-title">Over time</p>
@@ -297,6 +301,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="ccol">
           <div class="charthead"><p class="sect-title">At electrode B</p>
             <div class="btns"><button class="chip" data-iview="i" aria-pressed="true">Currents</button><button class="chip" data-iview="g" aria-pressed="false">Gates</button></div></div>
+          <div class="btns" id="iUnitBtns" role="group" aria-label="Current shown as"><button class="chip" data-iunit="mm" aria-pressed="true">per mm of axon</button><button class="chip" data-iunit="cm2" aria-pressed="false">per cm² of membrane</button></div>
           <canvas id="iChart" aria-label="Membrane currents or channel gates at electrode B against time"></canvas>
           <p class="caption" id="iCap"></p>
         </div>
@@ -305,19 +310,19 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="help" role="tabpanel" id="pane-axhelp" aria-labelledby="tab-axhelp" hidden>
       <ul>
         <li><b>The drawing:</b> a neuron coloured by its membrane potential, blue at rest and red at the top of a spike. Electrode A is in the cell body, at the left, and the axon runs away from it to its terminals at the right; B and C are on the axon (drag them, or use the sliders under Settings). Choose which electrodes stimulate with the A, B and C buttons by the Stimulus slider, one or several at once; the rest record. Each electrode has its own colour, the same on the charts; a stimulating one is labelled "stimulating" in orange.</li>
-        <li><b>Cell:</b> each choice sets the temperature, the ion concentrations (as on the Membrane potential page), the sizes and whether the axon is myelinated. Change any setting and the menu says Custom.</li>
+        <li><b>Cell:</b> each choice sets the temperature, the ion concentrations (as in lesson 1), the sizes and whether the axon is myelinated. Change any setting and the menu says Custom.</li>
         <li><b>Initiation site:</b> the orange bracket marks the start of the axon, just past the cell body. This is where the spike starts: the first membrane with enough voltage-gated channels to reach threshold.</li>
         <li><b>The model:</b> the cell body and each short piece of axon is a patch of membrane like the one in lesson 2: Na⁺, K⁺ and Cl⁻ channels, each a resistor with its Nernst battery, and a capacitor. Neighbouring patches are joined by the cytoplasm, which acts as a resistor. The cell body has a quarter of the axon's voltage-gated channels, so it fires only because the axon next to it does.</li>
         <li><b>Myelin:</b> insulation wrapped around the axon in sections about 100 diameters long. The Myelin wraps slider sets how many times the membrane is wrapped (0 is none); more wraps insulate better and are drawn thicker. Too few and the spike fails: on the motor axon it needs about 25 wraps to get through. Only the bare gaps between them, the nodes of Ranvier (1 µm), have voltage-gated channels, packed far more densely than on a bare axon.</li>
-        <li><b>Currents at A:</b> positive is outward, as in lesson 2. I<sub>Na</sub> goes negative (inward) at the start of the spike and I<sub>K</sub> goes positive (outward) after it. I<sub>Cl</sub> is the small, always-open Cl⁻ leak. I<sub>C</sub> = C dV/dt is the current charging the membrane capacitor: positive while V rises.</li>
-        <li><b>Gates at A:</b> the fraction of Na⁺ activation gates open (m), Na⁺ inactivation gates still open (h) and K⁺ gates open (n). The conductances are g<sub>Na</sub>m³h and g<sub>K</sub>n⁴.</li>
+        <li><b>Currents at electrode B:</b> positive is outward, as in lesson 2. I<sub>Na</sub> goes negative (inward) at the start of the spike and I<sub>K</sub> goes positive (outward) after it. I<sub>Cl</sub> is the small, always-open Cl⁻ leak. I<sub>C</sub> = C dV/dt is the current charging the membrane capacitor: positive while V rises.</li>
+        <li><b>Gates at electrode B:</b> the fraction of Na⁺ activation gates open (m), Na⁺ inactivation gates still open (h) and K⁺ gates open (n). The conductances are g<sub>Na</sub>m³h and g<sub>K</sub>n⁴.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-axcav" aria-labelledby="tab-axcav" hidden>
       <ul>
         <li>Every cell uses Hodgkin and Huxley's squid-axon channels (1952), sped up 3× for every 10 °C, with more channels at nodes of Ranvier. Real mammalian channels differ in detail; the conduction velocities still come out in the right range.</li>
         <li>The squid channels stop working above about 30 °C when there are few of them (heat block, which real squid axons show too). The warm-blooded cells have more channels so they work at 37 °C.</li>
-        <li>The concentrations stay fixed, as on the Membrane potential page: one spike moves far too few ions to change them, and there is no pump here.</li>
+        <li>The concentrations stay fixed, as in lesson 1: one spike moves far too few ions to change them, and there is no pump here.</li>
         <li>The leak is treated as Cl⁻ channels. In real neurons the leak is a mix of channels.</li>
         <li>The cell body is a sphere with no dendrites in the model; the dendrites are only drawn. The picture is not to scale: the axon is drawn much wider than it is, and on a metre of axon the 1 µm nodes are far too small to see.</li>
       </ul>
@@ -330,7 +335,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li>Compare the cells. The motor axon is 12 µm wide and myelinated; the pain fibre is 1 µm and bare. Their speeds differ about a hundredfold, which is why a stubbed toe hurts twice: a sharp first pain, then a slow burning one.</li>
         <li>Take the myelin off the motor axon, as diseases like multiple sclerosis and Guillain–Barré syndrome do in patches. The bare axon has to charge far more membrane, so the spike slows about tenfold.</li>
         <li>Raise K⁺ outside. The resting voltage follows E<sub>K</sub> up (lesson 1). A little makes the cell easier to fire; more leaves the Na⁺ channels inactivated (h closed) at rest, and no stimulus can fire it. This is why high blood potassium is dangerous for nerves and the heart.</li>
-        <li>Set g<sub>Na</sub> to 0 (the toxin TTX, or a local anaesthetic). No spike, only a small bump that fades away with distance: passive spread, set by τ and the length constant λ.</li>
+        <li>Set g<sub>Na</sub> to 0 (the toxin TTX, or a local anaesthetic). No spike, only a small bump that fades away with distance, like a ripple spreading out: passive spread, as in lesson 3. How far it gets is set by the length constant λ.</li>
         <li>Fire twice quickly. The second spike fails if it comes too soon: the Na⁺ gates are still inactivated (h is low).</li>
       </ul>
     </div>
@@ -379,7 +384,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
   <span class="sect-title" id="startTitle">Start here</span>
   <ol class="steps">
     <li><button class="chip" data-aptry="spike">1 · Fire a spike</button> A pulse of current into the cell body, like synaptic input, starts a spike at the start of the axon. It travels away down the axon, and electrodes B and C record it as it passes.</li>
-    <li><button class="chip" data-aptry="weak">2 · Too weak</button> A smaller pulse only charges the membrane a little, like the RC circuit, and the voltage leaks away again.</li>
+    <li><button class="chip" data-aptry="weak">2 · Too weak</button> A smaller pulse only charges the membrane a little, like lesson 2's RC circuit, and the voltage leaks away again.</li>
     <li><button class="chip" data-aptry="ttx">3 · Block the Na⁺ channels</button> With g<sub>Na</sub> at zero (what the toxin TTX does), the same pulse goes nowhere.</li>
     <li><button class="chip" data-aptry="nomyel">4 · Take the myelin off</button> The same motor axon without its insulation: the spike slows from about 80 m/s to about 7.</li>
     <li><button class="chip" data-aptry="highk">5 · Raise K⁺ outside</button> As in lesson 1, E<sub>K</sub> moves up and the resting voltage follows it. At 10 mM a weaker stimulus fires the cell; at 16 mM nothing does.</li>
@@ -396,7 +401,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <dt>mV</dt><dd>millivolts, for voltage: the inside relative to the outside.</dd>
         <dt>ms</dt><dd>milliseconds, for time. A spike lasts about 0.3 ms in a warm mammalian axon and 2 ms in the cold squid axon; the Speed slider sets how many ms of model time pass per second, so the fast ones can be slowed down to watch.</dd>
         <dt>µA/cm²</dt><dd>microamps per cm² of membrane, for current, positive when it flows outward.</dd>
-        <dt>mA/cm²</dt><dd>milliamps per cm², 1000 µA/cm²: the current charts use it, since the currents at a node of Ranvier run to tens of thousands of µA/cm².</dd>
+        <dt>mA/cm²</dt><dd>milliamps per cm², 1000 µA/cm²: the current charts use it when set to per cm² of membrane, since the currents at a node of Ranvier run to tens of thousands of µA/cm².</dd>
+        <dt>µA/mm</dt><dd>microamps per mm of axon: all the current crossing the membrane of 1 mm of axon, the current charts' other setting. A wider axon has more membrane in each mm, so it carries more current; on a myelinated axon each node's current is shared over the stretch of axon it serves. The axis is scaled to each cell, so compare cells by the axis numbers: the squid axon carries about 100 times the pain fibre's current per mm, while myelin cuts the much wider motor axon's to about a tenth of the pain fibre's, since only the nodes carry current.</dd>
         <dt>mS/cm²</dt><dd>conductance, 1/resistance, per cm² of membrane.</dd>
         <dt>µF/cm²</dt><dd>capacitance per cm². Here C = 1 µF/cm², the usual value.</dd>
         <dt>mM</dt><dd>millimolar, for concentrations. They set the Nernst potentials, as in lesson 1.</dd>
@@ -408,7 +414,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <dt>mm, µm</dt><dd>millimetres and micrometres, for distance along the axon from the cell body, and for its diameter.</dd>
         <dt>nA</dt><dd>nanoamps, for the stimulus: the total current through the electrode into the cell body.</dd>
         <dt>m/s</dt><dd>conduction velocity. 1 mm per ms is 1 m/s.</dd>
-        <dt>λ</dt><dd>the length constant: how far a steady voltage change spreads along the axon before it has fallen to 37% (1/e) of its starting size. The axon's version of the time constant τ.</dd>
+        <dt>λ</dt><dd>the length constant: how far a steady voltage change spreads along the axon before it has fallen to 37% (1/e) of its starting size: the counterpart in space of the time constant τ (lesson 3).</dd>
         <dt>Ω·cm</dt><dd>resistivity of the cytoplasm: its resistance for a 1 cm cube. Here 35 Ω·cm.</dd>
       </dl>
     </div>
@@ -430,6 +436,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Nothing here is new. Each piece of membrane still has lesson 1's batteries (the ions' concentration differences) and resistors (the channels), lesson 2's capacitor (the membrane itself), and lesson 3's spread of current along the inside. What changes is that the Na⁺ and K⁺ channels open and close with the voltage; lesson 8 shows how.</p>
       <h3>What you already have</h3>
       <p>From lesson 1: each ion's channels act like a resistor in series with a battery, the Nernst potential E. The current is Ohm's law with the driving force V − E:</p>
       <div class="eq">\[ I_\mathrm{Na} = g_\mathrm{Na}\,(V - E_\mathrm{Na}), \qquad I_\mathrm{K} = g_\mathrm{K}\,(V - E_\mathrm{K}) \]</div>
@@ -445,6 +452,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> One patch of membrane fires a spike. Past threshold, Na⁺ rushes in and the voltage shoots up; then the Na⁺ channels plug themselves and K⁺ channels open, which brings it back down. A push too weak to reach threshold just fades away. Lesson 8 takes this step by step.</p>
       <h3>Three kinds of gate</h3>
       <ul>
         <li><b>Na⁺ activation gate (m):</b> opens quickly when the inside becomes less negative.</li>
@@ -458,7 +466,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p><b>3. Downstroke.</b> Two slower things now happen: h falls, shutting the Na⁺ channels, and n rises, opening K⁺ channels. Na⁺ current stops and K⁺ current carries V back down.</p>
       <p><b>4. Undershoot.</b> The K⁺ channels are slow to close, so for a few ms V dips closer to E<sub>K</sub> than at rest, until n falls back.</p>
       <details class="fullderiv"><summary>Why does the voltage run away at threshold?</summary>
-        <p>Near rest, write the total ionic current as a function of V. Where \(dI/dV\) of the instantaneous current is positive, the circuit is stable: a small push in V is met by a current that pushes back. Opening Na⁺ channels adds a negative slope (more depolarization gives more inward current), and when this negative slope is larger than the positive slope of the K⁺ and leak conductances, the net current points the same way as the push. That crossing point is the threshold.</p>
+        <p>Picture the total current through the membrane at each voltage, just after a quick push, before the slow gates have moved. Near rest, nudging V up makes more current flow out, mostly K⁺ and leak: the membrane pushes back and V returns. That is stable. Na⁺ channels do the opposite: nudge V up and more of them open, so more current flows in. Once that extra inward current outgrows the extra outward current, a nudge up gives a net inward current that pushes V further up. The voltage where this happens is the threshold. Lesson 8's threshold calculator draws this curve.</p>
+        <p>In the language of slopes: the circuit is stable where the instantaneous current rises with voltage (\(dI/dV > 0\)). The Na⁺ channels add a falling stretch, and threshold is where the total curve crosses zero on that stretch.</p>
       </details>
     </div>
     <aside class="try">
@@ -471,13 +480,14 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th6" aria-labelledby="tab-th6" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Inputs from other cells arrive at the cell body as small currents. The cell body is big, so it charges slowly, and it has few voltage-gated channels. The spike starts next door, at the start of the axon, where those channels are packed in.</p>
       <h3>Inputs arrive at the cell body</h3>
       <p>In a real neuron the inputs from other cells arrive on the dendrites and cell body, as small currents through synaptic channels. They are too small and too slow to start a spike on their own, and the cell body has few voltage-gated channels. What happens to them is the RC circuit of lesson 2: the cell body is a big capacitor, and the input current has to charge it.</p>
       <div class="eq">\[ \tau = \frac{C}{\Sigma g}, \qquad C = c_m \times (\text{membrane area}) \]</div>
       <p>A bigger cell body has more membrane area, so more capacitance. The same current moves its voltage more slowly. Part of the current also leaks into the axon.</p>
       <h3>Where the spike starts</h3>
       <p>The charge that builds up on the cell body flows into the nearest piece of axon, which has the voltage-gated channels. That piece reaches threshold first, and its spike is then what charges the next piece. The region where this happens, the axon hillock and the start of the axon (the initial segment), is the trigger zone of the neuron: the place where all the inputs are added up and where the decision to fire is made.</p>
-      <p>The spike goes down the axon, and also back into the cell body, which you can see on the grey trace in the Voltage at the electrodes chart.</p>
+      <p>The spike goes down the axon, and also back into the cell body, which you can see on the magenta trace (electrode A) in the Voltage at the electrodes chart.</p>
     </div>
     <aside class="try">
       <p><b>Try it</b></p>
@@ -487,11 +497,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> When one patch fires, current flows along the inside of the axon to the next patch and charges it up. When that patch reaches threshold it fires too, and passes the current on. Like a row of dominoes, each patch sets off the next, so the spike arrives at the far end as big as it started.</p>
       <h3>The patch next door</h3>
       <p>When one patch fires, its inside becomes positive. The inside of the axon is a continuous salty fluid, so current flows through it, along the axon, from the active patch toward the neighbouring patches that are still at rest. This is Ohm's law again: the cytoplasm is a resistor, and the voltage difference between two patches drives the current.</p>
       <p>That current goes into the next patch and has to go somewhere. Part of it leaves through that patch's leak channels, and the rest charges its capacitor, exactly as in lesson 2: \(I_C = C\,dV/dt\). The patch's voltage rises with the time constant \(\tau = C/\Sigma g\). If it rises past threshold, its own Na⁺ channels open and it fires, and the process repeats for the patch after it. The spike travels because each patch is a fresh amplifier for the next.</p>
       <h3>How far does passive spread go?</h3>
-      <p>With no voltage-gated channels (set g<sub>Na</sub> to 0) the spread dies away with distance, because current leaks out through the membrane all along the way. A steady change in V falls off as</p>
+      <p>With no voltage-gated channels (set g<sub>Na</sub> to 0) the spread dies away with distance, as in lesson 3, because current leaks out through the membrane all along the way. A steady change in V falls off as</p>
       <div class="eq">\[ V(x) = V_0\, e^{-x/\lambda}, \qquad \lambda = \sqrt{\frac{r_m}{r_i}} \]</div>
       <p>where \(r_m\) is the resistance of the membrane leak per unit length (higher is better, current stays inside) and \(r_i\) is the resistance of the cytoplasm per unit length (lower is better, current flows easily along). λ is the distance over which V falls to 37% of its starting value. The spike is regenerated all along the way, so it does not fade, but λ and τ set how quickly each patch gets charged to threshold, and so how fast the spike travels.</p>
       <details class="fullderiv"><summary>Where the length constant comes from</summary>
@@ -508,12 +519,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> A patch that has just fired needs a few milliseconds to recover before it can fire again. So the spike cannot turn back: the only patch ready to fire is the one ahead.</p>
       <h3>Why the spike only goes forward</h3>
       <p>The current from an active patch flows to both neighbours, so why doesn't the spike also run backward? Because the patch it just came from is <b>refractory</b>: its Na⁺ channels are inactivated (h is low) and its K⁺ channels are still open (n is high). That patch cannot fire again for a few ms, whatever the current it receives. The only neighbour that can fire is the one ahead.</p>
       <h3>Why it matters</h3>
       <ul>
         <li>It keeps signals moving in one direction along the axon.</li>
-        <li>It limits how often a neuron can fire, which is the highest firing rate of the cell.</li>
+        <li>It sets a limit on how often a neuron can fire: its highest firing rate.</li>
         <li>It explains why a local anaesthetic or TTX that blocks Na⁺ channels stops the signal: with no inward current there is nothing to regenerate.</li>
       </ul>
       <p>A spike started in the middle of an axon does travel both ways, because there is no refractory patch on either side to begin with. Stimulate at B or C instead of A to see it: one spike runs on to the terminals and another runs back toward the cell body. Whether that one gets in depends on the cell body's size. A big cell body is a large capacitor for the thin axon to charge, so on the motor neuron the backward spike stalls at the start of the axon and the cell body hardly moves; shrink the Cell body slider to 20 µm and it gets through and fires the cell body. Real motor neurons show the same thing. Stimulate at two electrodes at once and the spikes running toward each other meet and stop, each running into the other's refractory wake.</p>
@@ -526,10 +538,11 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> There are two ways to make the spike faster. Make the axon wider, so current flows along it more easily, or wrap it in myelin, an insulating sheath that stops current leaking out. Myelin works far better: a thin myelinated axon outruns a giant bare one.</p>
       <h3>Diameter</h3>
       <p>A wider axon has a wider cytoplasm, so \(r_i\) is smaller and current spreads farther ahead of the spike. The patch ahead charges faster, so the spike moves faster. The membrane area (and so the capacitance and leak) grows with the diameter too, so the net effect is that velocity rises with the square root of the diameter, \(v \propto \sqrt{d}\). Squid have giant axons for their escape jet for this reason. But it is an expensive way to be fast: a human nerve full of squid-sized axons would be metres wide.</p>
       <h3>Myelin</h3>
-      <p>Wrapping the axon in insulation makes the membrane act like a much thicker one: the capacitance falls and the leak falls, both by a large factor. Less capacitance means less charge to move to change V, so each patch charges faster (smaller τ for the same current). Less leak means a much larger λ, so current spreads much farther before it fades. Na⁺ channels sit only at the bare nodes, and the spike jumps from node to node, called <b>saltatory conduction</b>. The nodes are the only places where energy is spent on pumping ions back out, so myelin is cheaper too.</p>
+      <p>Wrapping the axon in insulation makes the membrane act like a much thicker one: the capacitance falls and the leak falls, both by a large factor. Less capacitance means less charge to move to change V, so the same current charges the membrane ahead faster. Less leak means a much larger λ, so current spreads much farther before it fades. Na⁺ channels sit only at the bare nodes, and the spike jumps from node to node, called <b>saltatory conduction</b>. The nodes are the only places where energy is spent on pumping ions back out, so myelin is cheaper too.</p>
       <p>On the motor neuron here, taking the myelin off the same 12 µm axon slows it from about 80 m/s to about 7 m/s. Thinner myelin is slower too, and below about 25 wraps the current leaks away through the sheath before the next node reaches threshold, so the spike stops. This is why a 12 µm myelinated axon is faster than a half-millimetre squid axon, and why diseases that damage myelin (multiple sclerosis, Guillain–Barré syndrome) slow or stop conduction: a bare internode has almost no Na⁺ channels, so the current from the last node leaks away charging it.</p>
       <details class="fullderiv"><summary>How the simulation models myelin</summary>
         <p>Internodes are 100 axon diameters long (1.2 mm for a 12 µm axon), with the capacitance and leak of bare membrane divided by 2 × the number of wraps (set with the Myelin wraps slider; 100 wraps, the default, is 0.5%) and no voltage-gated channels. Nodes are 1 µm long, with 20 times the squid axon's Na⁺ channels and always-open K⁺ channels, roughly as real mammalian nodes have. The first 30 µm of axon, the initial segment, is built like a node.</p>
@@ -548,7 +561,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <ol class="reflist">
         <li><b>Hodgkin AL, Huxley AF (1939).</b> Action potentials recorded from inside a nerve fibre. <i>Nature</i> 144:710–711. <a href="https://doi.org/10.1038/144710a0" target="_blank" rel="noopener">doi:10.1038/144710a0</a><br><span class="why">The first recording from inside an axon: the spike overshoots zero, so the inside briefly becomes positive.</span></li>
         <li><b>Hodgkin AL, Katz B (1949).</b> The effect of sodium ions on the electrical activity of the giant axon of the squid. <i>Journal of Physiology</i> 108:37–77. <a href="https://doi.org/10.1113/jphysiol.1949.sp004310" target="_blank" rel="noopener">doi:10.1113/jphysiol.1949.sp004310</a><br><span class="why">The Goldman–Hodgkin–Katz voltage equation, and the sodium hypothesis: the spike is a brief rise in Na⁺ permeability.</span></li>
-        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 3 to 5 are theirs, including the 3× speed-up per 10 °C.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 4, 6 and 8 are theirs, including the 3× speed-up per 10 °C.</span></li>
         <li><b>Hodgkin AL, Rushton WAH (1946).</b> The electrical constants of a crustacean nerve fibre. <i>Proceedings of the Royal Society of London B</i> 133:444–479. <a href="https://doi.org/10.1098/rspb.1946.0024" target="_blank" rel="noopener">doi:10.1098/rspb.1946.0024</a><br><span class="why">Cable theory for an axon: membrane resistance and capacitance, the time constant τ and the length constant λ.</span></li>
         <li><b>Hursh JB (1939).</b> Conduction velocity and diameter of nerve fibers. <i>American Journal of Physiology</i> 127:131–139. <a href="https://doi.org/10.1152/ajplegacy.1939.127.1.131" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1939.127.1.131</a><br><span class="why">In myelinated fibres, conduction velocity rises in proportion to fibre diameter (about 6 m/s per µm).</span></li>
         <li><b>Tasaki I (1939).</b> The electro-saltatory transmission of the nerve impulse and the effect of narcosis upon the nerve fiber. <i>American Journal of Physiology</i> 127:211–227. <a href="https://doi.org/10.1152/ajplegacy.1939.127.2.211" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1939.127.2.211</a><br><span class="why">Saltatory conduction: the impulse jumps from node to node and can skip a blocked node.</span></li>
@@ -667,16 +680,16 @@ function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), 
 // steady, with one resting state, so a node can't get stuck depolarized after a spike.
 const MAMMAL = { cin: [140, 14, 10.5], cout: [5, 143.5, 148.5] };   // lesson 1's defaults
 const CELLS = [
-  { id: 'motor', name: 'Human motor neuron (Aα fibre)', T: 37, ...MAMMAL, somaD: 60, d: 12, myel: true, len: 1000, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
+  { id: 'motor', iPeak: 0.011, name: 'Human motor neuron (Aα fibre)', T: 37, ...MAMMAL, somaD: 60, d: 12, myel: true, len: 1000, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
     stim: 20, speed: 1,
     note: 'From the spinal cord to a muscle in the foot: about a metre of myelinated axon, 12 µm wide. Real conduction velocity 70–120 m/s.' },
-  { id: 'cfib', name: 'Pain fibre (C fibre, unmyelinated)', T: 37, ...MAMMAL, somaD: 25, d: 1, myel: false, len: 30, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
+  { id: 'cfib', iPeak: 0.14, name: 'Pain fibre (C fibre, unmyelinated)', T: 37, ...MAMMAL, somaD: 25, d: 1, myel: false, len: 30, nodeNa: 20, nodeK: 10, nodeKL: 20, axNa: 3, axK: 1,
     stim: 5, speed: 4,
     note: 'Thin and unmyelinated: it carries slow, burning pain. Real conduction velocity 0.5–2 m/s. Its cell body sits in a dorsal root ganglion beside the spinal cord (drawn here as an ordinary cell body).' },
-  { id: 'frog', name: 'Frog sciatic nerve fibre (myelinated)', T: 20, cin: [120, 10, 10], cout: [2.5, 110, 112], somaD: 40, d: 12, myel: true, len: 100, nodeNa: 5, nodeK: 2, nodeKL: 5, axNa: 1, axK: 1,
+  { id: 'frog', iPeak: 0.0023, name: 'Frog sciatic nerve fibre (myelinated)', T: 20, cin: [120, 10, 10], cout: [2.5, 110, 112], somaD: 40, d: 12, myel: true, len: 100, nodeNa: 5, nodeK: 2, nodeKL: 5, axNa: 1, axK: 1,
     stim: 10, speed: 0.5,
     note: 'The classic preparation for studying myelinated nerve, at room temperature in frog Ringer’s solution (typical concentrations). Real conduction velocity about 20–40 m/s.' },
-  { id: 'squid', name: 'Squid giant axon', T: 6.3, cin: [400, 50, 52], cout: [20, 440, 560], somaD: 200, d: 476, myel: false, len: 80, nodeNa: 1, nodeK: 1, nodeKL: 1, axNa: 1, axK: 1,
+  { id: 'squid', iPeak: 12.4, name: 'Squid giant axon', T: 6.3, cin: [400, 50, 52], cout: [20, 440, 560], somaD: 200, d: 476, myel: false, len: 80, nodeNa: 1, nodeK: 1, nodeKL: 1, axNa: 1, axK: 1,
     stim: 5000, speed: 4,
     note: 'Where Hodgkin and Huxley measured the channels this model uses, at the temperature of their experiments and with the measured concentrations. Half a millimetre wide, for a fast escape jet. Real conduction velocity about 20 m/s at 18 °C.' },
 ];
@@ -722,7 +735,7 @@ let M = null;   // the built axon
 // A bare axon is cut into pieces no longer than λ/8, so a thin one needs many: a 1 µm pain fibre a metre long would
 // need about 18,000, too many to run (and its spike would take half a second to cross). So a bare axon is limited to
 // MAX_PIECES pieces, which sets how long it can be. A myelinated axon is built from internodes and has no such limit.
-const MAX_PIECES = 4000;
+const MAX_PIECES = 4000, MIN_PIECES = 1000;
 function maxLen() {   // mm
   return P.myel ? 1000 : Math.min(1000, MAX_PIECES * lambdaCm(restState(P.axNa, P.axK).g) / 8 * 10);
 }
@@ -736,8 +749,9 @@ function clampLen() {
 function build() {
   const r = P.d * 1e-4 / 2, L = P.len / 10, parts = [{ type: 'soma', l: 0 }];
   if (!P.myel) {
-    // pieces no longer than λ/8, or the spike's speed and threshold come out wrong (see maxLen)
-    const dx = lambdaCm(restState(P.axNa, P.axK).g) / 8, n = Math.min(MAX_PIECES, Math.ceil(L / dx));
+    // pieces no longer than λ/8, or the spike's speed and threshold come out wrong (see maxLen); and at least
+    // MIN_PIECES, so a short or thick axon (the squid's λ is ~6 mm) still draws a smooth spike along its length
+    const dx = lambdaCm(restState(P.axNa, P.axK).g) / 8, n = clamp(Math.ceil(L / dx), MIN_PIECES, MAX_PIECES);
     for (let i = 0; i < n; i++) parts.push({ type: 'ax', l: L / n });
   } else {
     parts.push({ type: 'node', l: IS_LEN * 1e-4 });
@@ -760,7 +774,22 @@ function build() {
     m.gKL[i] = p.type === 'node' ? GCL * P.nodeKL * P.gKPct / 100 * m.A[i] : 0;
   });
   for (let i = 0; i < n - 1; i++) m.G[i] = Math.PI * r * r / (RI * (m.l[i] + m.l[i + 1]) / 2) * 1000;   // mS through the cytoplasm
+  // blocks for the current charts (perMm): on a bare axon each piece; on a myelinated one a node (or the initial
+  // segment) with the internode after it. blkOf: the block each piece is in, by its first piece; blkEnd: one past its last.
+  m.blkOf = new Int32Array(n); m.blkEnd = new Int32Array(n); m.blkEnd[0] = 1;
+  for (let s = 1, i = 2; i <= n; i++) if (i === n || !P.myel || m.type[i] === 'node') { for (let j = s; j < i; j++) m.blkOf[j] = s; m.blkEnd[s] = i; s = i; }
   M = m;
+}
+// The current charts show current per mm of axon, not per cm² of membrane, so a wider axon, with more membrane in
+// each mm, shows a larger current. Each piece's current (µA/cm² × its area) is added up over its block and divided
+// by the block's length: on a myelinated axon a node's current is spread over the stretch of axon it serves.
+function perMm(a, i) {   // µA per mm
+  const s = M.blkOf[i], e = M.blkEnd[s]; let q = 0, L = 0;
+  for (let j = s; j < e; j++) { q += a[j] * M.A[j]; L += M.l[j]; }
+  // on a myelinated axon, every node's current over the same stretch, one node to the next: the last node has no
+  // internode after it, and dividing by its own 1 µm would make its current look a thousand times larger
+  if (P.myel && s > 0) L = Math.max(L, (100 * P.d + NODE_LEN) * 1e-4);
+  return L > 0 ? q / (L * 10) : 0;
 }
 function restAll() {   // every piece at its own resting state, then let the whole cell settle
   const s = restState(SOMA_DENS, SOMA_DENS), a = P.myel ? restState(P.nodeNa, P.nodeK, P.nodeKL) : restState(P.axNa, P.axK);
@@ -798,10 +827,25 @@ function step(dt, Istim) {   // Istim in µA, into each stimulating electrode's 
 // ---------- recording: what the electrodes see ----------
 const PULSE = 0.5;                         // ms
 // Fixed axes, the same for every cell: time charts show the last 30 ms (the C fibre's spike takes about 20 ms to
-// pass both electrodes), and current charts ±40 mA/cm², which the default cell's currents fill (the motor neuron's
-// nodes reach about 34 mA/cm²). Beyond them, lines are clipped. The distance charts follow the Length slider.
-// The model works in µA/cm²; the current charts show mA/cm², so the axis reads in whole numbers.
-const WINDOW = 30, I_TOP = 40, I_SCALE = 0.001;   // mA/cm², and µA → mA
+// pass both electrodes). The current charts per mm of axon are scaled to each cell, since its currents differ a
+// thousandfold between cells (iPeak on each cell, the peak along the axon in µA/mm, measured: the motor axon about 0.011 µA/mm, the frog
+// fibre 0.0023, the pain fibre 0.14, the squid axon 12; the myelinated ones are small because only the 1 µm nodes
+// carry current); changing the diameter scales it in proportion. Per cm² of membrane (the
+// current density) they are ±40 mA/cm² for every cell: the motor neuron's nodes reach about 34. Beyond the axis,
+// lines are clipped. The distance charts follow the Length slider.
+const WINDOW = 30, I_TOP_CM2 = 40;   // mA/cm²
+let iTopCell = { iPeak: 0.011, d: 12, myel: true };   // the cell last picked from the menu, for the per-mm axis
+function iTopMm() {   // µA per mm: the picked cell's peak, scaled with the diameter, with room above it, rounded up
+  // With the myelin taken off (or put on), the picked cell's peak no longer applies: go by the pain fibre (bare) or
+  // the motor axon (myelinated) instead. Either way the current per mm grows about as the diameter (the motor
+  // axon without myelin, 12 µm and bare, peaks at about 1.6 µA/mm, 12 times the 1 µm pain fibre).
+  const ref = P.myel === !!iTopCell.myel ? iTopCell : CELLS.find(c => c.id === (P.myel ? 'motor' : 'cfib'));
+  const v = 1.3 * ref.iPeak * P.d / ref.d, e = 10 ** Math.floor(Math.log10(v)), f = v / e;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e;
+}
+let iunit = 'mm';   // the current charts: 'mm' (per mm of axon) or 'cm2' (per cm² of membrane)
+const iAxis = () => { const t = iTopMm(); return iunit === 'mm' ? { y0: -t, y1: t, ystep: t / 2, ylabel: 'I (µA per mm of axon, outward +)' }
+  : { y0: -I_TOP_CM2, y1: I_TOP_CM2, ystep: I_TOP_CM2 / 2, yscale: 0.001, ylabel: 'I (mA/cm², outward +)' }; };
 let hist = [], nextSample = 0, stimT0 = -1, stims = [], tB = null, tC = null;
 // the piece under an electrode: on a myelinated axon, the nearest node, where the voltage-gated channels are
 function idx(frac) {
@@ -813,6 +857,28 @@ function idx(frac) {
 let iB = 1, iC = 1, stimSet = new Set([0]);
 const elIndex = e => e === 'A' ? 0 : e === 'B' ? iB : iC;
 function stimSites() { stimSet = new Set(P.stimAt.map(elIndex)); }
+// Newt: the cell on the Breadboard simulator (in F, S, V, A, s): the cell body and the axon lumped into four
+// sections, each its pieces' capacitance and channels added up. The voltage-gated channels can't be built from
+// parts, so each is a potentiometer set to how open it is now.
+function breadboardCircuit() {
+  const m = M, n = m.n, e = E(), k = Math.min(4, n - 1), groups = [[0]];
+  for (let g = 0; g < k; g++) { const a = 1 + Math.round(g * (n - 1) / k), b = 1 + Math.round((g + 1) * (n - 1) / k); groups.push(Array.from({ length: b - a }, (_, j) => a + j)); }
+  const sum = (ix, f) => ix.reduce((s, i) => s + f(i), 0);
+  const comps = groups.map((ix, g) => {
+    const I = sum(ix, i => stimSet.has(i) ? P.stim * 1e-3 : 0);
+    return { name: g ? `Axon ${g}` : 'Cell body', C: sum(ix, i => m.cm[i]) * 1e-6,
+      channels: [{ name: 'Na⁺', g: sum(ix, i => m.gNa[i] * m.mm[i] ** 3 * m.h[i]) * 1e-3, E: e.Na * 1e-3, vary: true },
+                 { name: 'K⁺', g: sum(ix, i => m.gK[i] * m.nn[i] ** 4 + m.gKL[i]) * 1e-3, E: e.K * 1e-3, vary: true },
+                 { name: 'Cl⁻ leak', g: sum(ix, i => m.gCl[i]) * 1e-3, E: e.Cl * 1e-3 }],
+      stim: I ? { I: I * 1e-6, width: PULSE * 1e-3 } : undefined };
+  });
+  const mid = ix => ix[Math.floor(ix.length / 2)], links = [];
+  for (let g = 0; g < groups.length - 1; g++) {   // the cytoplasm from one section's middle to the next one's
+    let r = 0; for (let i = mid(groups[g]); i < mid(groups[g + 1]); i++) r += 1 / m.G[i];
+    links.push({ from: g, to: g + 1, g: 1e-3 / r });
+  }
+  return { title: 'the action potential', compartments: comps, links };
+}
 function placeElectrodes() { iB = idx(P.xb); iC = idx(P.xc); stimSites(); hist = []; tB = tC = null; }
 function fire() { stimT0 = M.t; tB = tC = null; stims.push(M.t); }
 function resetAxon() { build(); restAll(); placeElectrodes(); hist = []; stims = []; nextSample = 0; stimT0 = -1; }
@@ -829,7 +895,8 @@ function advance(ms, budgetMs) {   // budgetMs: stop early (a long axon is slow 
     }
     if (M.t >= nextSample) {
       nextSample = M.t + sample;
-      hist.push({ t: M.t, VA: M.V[0], VB: M.V[iB], VC: M.V[iC], INa: M.INa[iB], IK: M.IK[iB], ICl: M.ICl[iB], IC: M.IC[iB], m: M.mm[iB], h: M.h[iB], n: M.nn[iB] });
+      hist.push({ t: M.t, VA: M.V[0], VB: M.V[iB], VC: M.V[iC], INa: perMm(M.INa, iB), IK: perMm(M.IK, iB), ICl: perMm(M.ICl, iB), IC: perMm(M.IC, iB),
+                dNa: M.INa[iB], dK: M.IK[iB], dCl: M.ICl[iB], dC: M.IC[iB], m: M.mm[iB], h: M.h[iB], n: M.nn[iB] });
       while (hist.length && hist[0].t < M.t - WINDOW * 1.1) hist.shift();
     }
   }
@@ -1022,12 +1089,34 @@ const CW = 640, CH = 300, L = 58, R = 64, T = 14, B = 34, ph = CH - T - B;
 const xc = setupCanvas($('xChart'), CW, CH), tc = setupCanvas($('tChart'), CW, CH), ic = setupCanvas($('iChart'), CW, CH), xic = setupCanvas($('xiChart'), CW, CH);
 // A line chart: o.series [{xs, ys, color, width, dash, label}], o.refs horizontal lines, o.vlines vertical lines,
 // o.spans shaded stretches of x (stimulus on, as lesson 2 shades the switch closed).
+// A smooth curve through points (pixels), for the charts along the axon. The spike's rising front is only a few
+// pieces of axon wide (on the pain fibre about 3 pieces, 0.1 mm), and a myelinated axon has its currents only at
+// the nodes, so straight lines between the points draw the front, zoomed in, as a jagged zigzag. More pieces would
+// cost too much computing.
+// Monotone cubic (Fritsch–Carlson): it passes through every point and never overshoots between them, so it adds no
+// peaks or dips the data does not have.
+function smoothPath(c, X, Y) {
+  const n = X.length, d = [], m = [];
+  for (let i = 0; i < n - 1; i++) d.push((Y[i + 1] - Y[i]) / ((X[i + 1] - X[i]) || 1e-9));
+  for (let i = 0; i < n; i++) m.push(i === 0 ? d[0] : i === n - 1 ? d[n - 2] : d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2);
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+    if (h > 9) { const t = 3 / Math.sqrt(h); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; }
+  }
+  c.moveTo(X[0], Y[0]);
+  for (let i = 0; i < n - 1; i++) {
+    const h = (X[i + 1] - X[i]) / 3;
+    c.bezierCurveTo(X[i] + h, Y[i] + m[i] * h, X[i + 1] - h, Y[i + 1] - m[i + 1] * h, X[i + 1], Y[i + 1]);
+  }
+}
 function plot(c, o) {
   const o0 = o; ChartZoom.bind(c.canvas, () => plot(c, o0));   // the zoom arrows (chartzoom.js); a scrolling chart keeps its newest edge
   const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1, o.scrolls ? 'right' : undefined), [y0, y1] = ChartZoom.y(c.canvas, o.y0, o.y1);
   o = { ...o, x0, x1, y0, y1, ystep: ChartZoom.step(c.canvas, 'y', o.ystep) };
   const W = o.w || CW, H = CH, pwid = W - L - R;
-  const sx = x => L + (x - o.x0) / (o.x1 - o.x0) * pwid, sy = v => T + (o.y1 - Math.max(o.y0, Math.min(o.y1, v))) / (o.y1 - o.y0) * ph;
+  const sx = x => L + (x - o.x0) / (o.x1 - o.x0) * pwid, sy = v => T + (o.y1 - Math.max(o.y0, Math.min(o.y1, v))) / (o.y1 - o.y0) * ph,
+        syLine = v => T + (o.y1 - Math.max(o.y0 - 10 * (o.y1 - o.y0), Math.min(o.y1 + 10 * (o.y1 - o.y0), v))) / (o.y1 - o.y0) * ph;   // a line past the edge runs on and is clipped, not flattened along it
   c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
   for (const sp of o.spans || []) {
     if (sp[1] < o.x0 || sp[0] > o.x1) continue;
@@ -1061,7 +1150,8 @@ function plot(c, o) {
     const per = s.dash && o.scrolls ? (s.dash[0] + s.dash[1]) * (o.x1 - o.x0) / pwid : 0, frac = per ? s.dash[0] / (s.dash[0] + s.dash[1]) : 1;
     const drawn = x => !per || ((x / per) % 1 + 1) % 1 < frac;
     const k = o.yscale || 1;   // o.yscale: units shown per unit of the data
-    s.xs.forEach((x, i) => { const X = sx(x), Y = sy(s.ys[i] * k); i && drawn(s.xs[i - 1]) ? c.lineTo(X, Y) : c.moveTo(X, Y); });
+    if (o.smooth && !per) smoothPath(c, s.xs.map(sx), s.ys.map(v => syLine(v * k)));
+    else s.xs.forEach((x, i) => { const X = sx(x), Y = syLine(s.ys[i] * k); i && drawn(s.xs[i - 1]) ? c.lineTo(X, Y) : c.moveTo(X, Y); });
     c.stroke(); c.setLineDash([]);
     if (s.label) tags.push({ y: sy(s.ys[s.ys.length - 1] * k), t: s.label, c: s.color });
   }
@@ -1083,7 +1173,7 @@ function drawCharts() {
   // along the axon: every piece (on a myelinated axon, the nodes, where the channels are)
   const along = []; for (let i = 1; i < n; i++) if (!P.myel || M.type[i] === 'node' || n < 1500) along.push(i);
   const xsA = along.map(i => M.xc[i]);
-  plot(xc, { x0: 0, x1: P.len, xscale: xsc, y0: -100, y1: 70, ystep: 50, xlabel: xlab, ylabel: 'V (mV)', refs: Vrefs(),
+  plot(xc, { x0: 0, x1: P.len, xscale: xsc, smooth: true, y0: -100, y1: 70, ystep: 50, xlabel: xlab, ylabel: 'V (mV)', refs: Vrefs(),
     vlines: [{ x: M.xc[iB], color: C.ink }, { x: M.xc[iC], color: C.accent }], series: [{ xs: xsA, ys: along.map(i => M.V[i]), color: C.ink, width: 2.4 }] });
   const [t0, t1] = timeAxis(), h = hist.filter(p => p.t >= t0), ts = h.map(p => p.t);
   const spans = stims.map(t => [t, t + PULSE]), tlab = 'time (ms)';
@@ -1091,16 +1181,17 @@ function drawCharts() {
   plot(tc, { scrolls: true, x0: t0, x1: t1, y0: -100, y1: 70, ystep: 50, xlabel: tlab, ylabel: 'V (mV)', refs: Vrefs(), spans, vlines: [cross(tB, C.ink), cross(tC, C.accent)],
     series: [{ xs: ts, ys: h.map(p => p.VA), color: C.ea, width: 2.4, label: 'A' }, { xs: ts, ys: h.map(p => p.VB), color: C.ink, width: 2.4, label: 'B' }, { xs: ts, ys: h.map(p => p.VC), color: C.accent, width: 2.4, label: 'C' }] });
   {
-    const pick = a => along.map(i => a[i]);
-    plot(xic, { x0: 0, x1: P.len, xscale: xsc, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, yscale: I_SCALE, xlabel: xlab, ylabel: 'I (mA/cm², outward +)',
-      series: [{ xs: xsA, ys: pick(M.INa), color: C.na, label: 'I_Na' }, { xs: xsA, ys: pick(M.IK), color: C.k, label: 'I_K' }, { xs: xsA, ys: pick(M.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: xsA, ys: pick(M.IC), color: C.pos, label: 'I_C', width: 2.4 }] });
+    const a = alongCurrents(along, ChartZoom.x(xic.canvas, 0, P.len));
+    plot(xic, { x0: 0, x1: P.len, xscale: xsc, smooth: true, ...iAxis(), xlabel: xlab,
+      series: [{ xs: a.xs, ys: a.Na, color: C.na, label: 'I_Na' }, { xs: a.xs, ys: a.K, color: C.k, label: 'I_K' }, { xs: a.xs, ys: a.Cl, color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: a.xs, ys: a.C, color: C.pos, label: 'I_C', width: 2.4 }] });
   }
   if (iview === 'g') {
-    plot(ic, { scrolls: true, x0: t0, x1: t1, y0: 0, y1: 1, ystep: 0.25, plus: true, spans, xlabel: tlab, ylabel: 'fraction of gates open at A',
+    plot(ic, { scrolls: true, x0: t0, x1: t1, y0: 0, y1: 1, ystep: 0.25, plus: true, spans, xlabel: tlab, ylabel: 'fraction of gates open at B',
       series: [{ xs: ts, ys: h.map(p => p.m), color: C.na, label: 'm' }, { xs: ts, ys: h.map(p => p.h), color: C.na, dash: [6, 4], label: 'h' }, { xs: ts, ys: h.map(p => p.n), color: C.k, label: 'n' }] });
   } else {
-    plot(ic, { scrolls: true, x0: t0, x1: t1, y0: -I_TOP, y1: I_TOP, ystep: I_TOP / 2, yscale: I_SCALE, xlabel: tlab, ylabel: 'I (mA/cm², outward +)', spans,
-      series: [{ xs: ts, ys: h.map(p => p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => p.IC), color: C.pos, label: 'I_C', width: 2.4 }] });
+    const d = iunit === 'cm2';
+    plot(ic, { scrolls: true, x0: t0, x1: t1, ...iAxis(), xlabel: tlab, spans,
+      series: [{ xs: ts, ys: h.map(p => d ? p.dNa : p.INa), color: C.na, label: 'I_Na' }, { xs: ts, ys: h.map(p => d ? p.dK : p.IK), color: C.k, label: 'I_K' }, { xs: ts, ys: h.map(p => d ? p.dCl : p.ICl), color: C.cl, label: 'I_Cl', width: 1.6 }, { xs: ts, ys: h.map(p => d ? p.dC : p.IC), color: C.pos, label: 'I_C', width: 2.4 }] });
   }
 }
 const CAPS = {
@@ -1111,6 +1202,50 @@ function setView(v) {
   iview = v;
   document.querySelectorAll('[data-iview]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.iview === v)));
   $('iCap').innerHTML = CAPS[v];
+  $('iUnitBtns').hidden = v !== 'i';
+}
+function setUnit(u) {
+  iunit = u;
+  document.querySelectorAll('[data-iunit]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.iunit === u)));
+  drawCharts();
+}
+
+// The currents along the axon, for the chart, in the unit it shows (iunit).
+// A myelinated axon: one point per node (perMm, or the node's own current per cm²).
+// A bare axon: one point per piece, and, when zoomed in far enough that the pieces are spread out, points in between.
+// The spike's rising front is only a few pieces wide, and the Na⁺ current there is a narrow tip, about one piece (on
+// the pain fibre 0.04 mm, against pieces of 0.03 mm), so joining the pieces' currents draws it as a jagged notch.
+// The voltage and the gates change more smoothly along the axon than the current does (it is their product), so in
+// between the pieces they are interpolated (monotone cubic: no overshoot, gates stay between 0 and 1) and each
+// current worked out from them with the model's own equations. Only the drawing changes: the model's pieces are not.
+function alongCurrents(along, [vx0, vx1]) {
+  const mm = iunit === 'mm';
+  if (P.myel) {
+    const ai = along.filter(i => M.blkOf[i] === i), pick = a => ai.map(i => mm ? perMm(a, i) : a[i]);
+    return { xs: ai.map(i => M.xc[i]), Na: pick(M.INa), K: pick(M.IK), Cl: pick(M.ICl), C: pick(M.IC) };
+  }
+  let shown = 0; for (const i of along) if (M.xc[i] >= vx0 && M.xc[i] <= vx1) shown++;
+  const S = clamp(Math.ceil(600 / Math.max(1, shown)), 1, 10);   // points per piece: about 600 across the chart
+  const e = E(), out = { xs: [], Na: [], K: [], Cl: [], C: [] };
+  // monotone cubic between pieces i and i+1 of an array, at fraction u (Fritsch–Carlson tangents, uniform pieces)
+  const tan = (a, i) => { const d0 = a[i] - a[i - 1], d1 = a[i + 1] - a[i]; return d0 * d1 <= 0 ? 0 : 2 * d0 * d1 / (d0 + d1); };
+  const at = (a, i, u, t0, t1) => { const p0 = a[i], p1 = a[i + 1], u2 = u * u, u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * p0 + (u3 - 2 * u2 + u) * t0 + (-2 * u3 + 3 * u2) * p1 + (u3 - u2) * t1; };
+  const push = (x, na, k, cl, c, f) => { out.xs.push(x); out.Na.push(na * f); out.K.push(k * f); out.Cl.push(cl * f); out.C.push(c * f); };
+  for (const i of along) {
+    const f = mm ? M.A[i] / (M.l[i] * 10) : 1;   // µA/cm² → µA per mm of this piece
+    push(M.xc[i], M.INa[i], M.IK[i], M.ICl[i], M.IC[i], f);
+    const j = i + 1;
+    if (S === 1 || j >= M.n - 1 || i < 2 || M.type[i] !== 'ax' || M.type[j] !== 'ax' || M.xc[j] < vx0 || M.xc[i] > vx1) continue;
+    const gNa = M.gNa[i] / M.A[i], gK = M.gK[i] / M.A[i], gCl = M.gCl[i] / M.A[i];   // mS/cm², the same along a bare axon
+    const T = [M.V, M.mm, M.h, M.nn, M.IC].map(a => [tan(a, i), tan(a, j)]);
+    for (let k = 1; k < S; k++) {
+      const u = k / S, V = at(M.V, i, u, ...T[0]), m = clamp(at(M.mm, i, u, ...T[1]), 0, 1), h = clamp(at(M.h, i, u, ...T[2]), 0, 1),
+            n = clamp(at(M.nn, i, u, ...T[3]), 0, 1), ic = at(M.IC, i, u, ...T[4]);
+      push(M.xc[i] + u * (M.xc[j] - M.xc[i]), gNa * m ** 3 * h * (V - e.Na), gK * n ** 4 * (V - e.K), gCl * (V - e.Cl), ic, f);
+    }
+  }
+  return out;
 }
 
 // ---------- readouts ----------
@@ -1177,6 +1312,7 @@ document.querySelectorAll('[data-stimel]').forEach(b => b.addEventListener('clic
 $('apReset').addEventListener('click', resetAxon);
 $('apPlay').addEventListener('click', () => { running = !running; $('apPlay').textContent = running ? 'Pause' : 'Play'; });
 document.querySelectorAll('[data-iview]').forEach(b => b.addEventListener('click', () => setView(b.dataset.iview)));
+document.querySelectorAll('[data-iunit]').forEach(b => b.addEventListener('click', () => setUnit(b.dataset.iunit)));
 
 // ---------- the cell menu ----------
 const cellSel = $('apCell'), cellNote = $('apCellNote');
@@ -1187,7 +1323,7 @@ function applyCell(id) {
     nodeNa: c.nodeNa, nodeK: c.nodeK, nodeKL: c.nodeKL, axNa: c.axNa, axK: c.axK, stim: c.stim, gNaPct: 100, gKPct: 100, xb: 0.25, xc: 0.75, stimAt: ['A'] });
   showStimAt(); clampLen();
   speed = c.speed;
-  cellSel.value = id; cellNote.textContent = c.note;
+  cellSel.value = id; cellNote.textContent = c.note; iTopCell = c;
   writeControls(); resetAxon();
 }
 function markCustom() { if (cellSel.value !== 'custom') { cellSel.value = 'custom'; cellNote.textContent = 'Your own settings, starting from the cell you picked.'; } }
@@ -1203,7 +1339,7 @@ function loop(now) {
 }
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { running = false; $('apPlay').textContent = 'Play'; }
 applyCell(DEFAULT_CELL); setView('i');
-Frames.sim(() => running, 'apPlay');   // frames.js: starts paused, pauses itself when left alone
+Frames.sim(() => running, 'apPlay', ['apFire']);   // frames.js: starts paused, pauses itself when left alone
 requestAnimationFrame(loop);
 </script>
 <script>
@@ -1299,6 +1435,7 @@ requestAnimationFrame(loop);
 })();
 </script>
 <!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script>NewtBreadboard.add(document.getElementById('apReset'), breadboardCircuit);</script>
 <script src="floatbar.js"></script>
 <script src="sliders.js"></script>
 </body>

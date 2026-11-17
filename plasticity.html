@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<script src="membrane.js"></script>
+<script src="breadboard.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spines and Plasticity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as summation.html and the other lessons. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --ea:#c0287a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:80ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+/* page sections, intro, tabs, help and units: the same look as membrane_potential.html */
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+header p{max-width:90ch}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help h4{margin:0 0 4px;font-size:13.5px;font-weight:600}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* RC calculator, styled like the GHK calculator in membrane_potential.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.gr[hidden]{display:none}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;gap:16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500}
+.gion[hidden]{display:none}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:1100px){.top{grid-template-columns:1fr}}
+.cgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.qbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.qlab{white-space:nowrap}
+.qlab b{color:var(--ink);font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums;display:inline-block;min-width:5ch}
+.qlab:first-child b{text-align:right}
+.qtrack{position:relative;height:16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);overflow:hidden}
+.qtrack::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid var(--muted)}
+.qfill{position:absolute;top:0;bottom:0;width:0}
+#iqInBar{right:50%}
+#iqOutBar{left:50%}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+#sim{cursor:grab;touch-action:none}
+#sim.dragging{cursor:grabbing}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.toolbar .spacer{flex:1}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.cl{background:var(--cl)}.dot.syn{background:var(--syn)}.dot.ea{background:var(--ea)}.dot.k{background:var(--k)}.dot.na{background:var(--na)}.dot.a{background:var(--a);width:12px;height:12px}
+.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg);border-radius:2px}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.top.stacked{grid-template-columns:1fr}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.sgroup{display:flex;flex-direction:column;gap:10px}.sgroup[hidden]{display:none}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:92px minmax(0,1fr) 104px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+.row[hidden]{display:none}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+/* theory card, styled like the GHK derivation in membrane_potential.html */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+/* on/off switch for the ion simulation's Na⁺ channels: label, track, state in words */
+button.toggle{display:inline-flex;align-items:center;gap:10px;border:0;background:none;padding:4px 2px;font-weight:600}
+button.toggle .track{width:42px;height:24px;border-radius:12px;background:var(--muted);position:relative;transition:background .15s;flex:none}
+button.toggle .thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:left .15s}
+button.toggle[aria-checked="true"] .track{background:var(--on,var(--na))}
+button.toggle[aria-checked="true"] .thumb{left:21px}
+button.toggle .tstate{font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--muted);min-width:52px;text-align:left}
+@media (prefers-reduced-motion:reduce){button.toggle .track,button.toggle .thumb{transition:none}}
+/* a button that stays down while it is on (the circuit's current, or its Na⁺ channels), filled in its colour */
+button.latch[aria-pressed=true]{background:var(--on,var(--accent));border-color:var(--on,var(--accent));color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.charthead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+
+/* this page */
+:root{--ca:#b8892a;--nt:#c0287a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ca:#e0bb5c;--nt:#f477b7}}
+:root[data-theme="dark"]{--ca:#e0bb5c;--nt:#f477b7}
+.cgrid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.cgrid.even,.cgrid.three{grid-template-columns:1fr}}
+.dot.ca{background:var(--ca)}.dot.nt{background:var(--nt)}.dot.ink{background:var(--ink)}.dot.acc{background:var(--accent)}
+.row.wide2{grid-template-columns:128px minmax(0,1fr) 104px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+/* one Settings column beside the three parts, which stays in view while they scroll past */
+.simgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.simparts{display:flex;flex-direction:column;gap:20px;min-width:0}
+.settings{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:12px}
+.sgrp{display:flex;flex-direction:column;gap:8px;padding:10px 8px 4px;border-top:1px solid var(--line);border-radius:6px}
+.sgrp .gtitle{font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sgrp .uses{font-size:12px;font-weight:400;color:var(--muted)}
+.sgrp.here{background:var(--bg);box-shadow:inset 3px 0 0 var(--accent)}
+.settings .row.wide2{grid-template-columns:112px minmax(0,1fr) 84px}
+.reads{display:flex;flex-wrap:wrap;gap:4px 22px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.reads b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+@media (max-width:1100px){.simgrid{grid-template-columns:1fr}.settings{position:static;max-height:none;order:-1}}
+</style>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbFire" data-copy="p1Fire" data-copy-also="p2Both p3Run" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="p1Play" data-copy-also="p2Play p3Play"></button>
+</div>
+<div class="wrap">
+<header>
+  <h1>Spines and plasticity: where a synapse decides to get stronger or weaker</h1>
+  <p>Most excitatory synapses in the brain end on a dendritic spine: a small head on a thin neck. The spine is the place where a synapse's strength is changed. Its NMDA receptors let Ca²⁺ in only when two things happen at once, its neck keeps that Ca²⁺ in its own head, and how much Ca²⁺ arrives decides whether the synapse is strengthened (LTP) or weakened (LTD). It builds on lesson 5's receptors and lesson 6's dendrites, and introduces a new glutamate receptor, the NMDA receptor, with its Mg²⁺ block.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>explain why NMDA receptors are coincidence detectors: Ca²⁺ flows only with glutamate bound <em>and</em> Post (the postsynaptic cell, as in lesson 5) depolarized enough to push Mg²⁺ out of the pore</li>
+        <li>predict LTP or LTD from the stimulation: a lot of Ca²⁺ fast (a 100 Hz tetanus, or pairing) gives LTP; a little Ca²⁺ for a long time (1 Hz for 15 min) gives LTD</li>
+        <li>explain that both are expressed as more or fewer AMPA receptors, and that blocking NMDA receptors (APV) prevents both without changing the ordinary EPSP</li>
+        <li>explain input specificity: only the stimulated spine changes, because its Ca²⁺ stays in its head</li>
+        <li>explain why an EPSP is biggest in the spine head and smaller and slower at the soma (lesson 2's RC filter, lesson 3's cable)</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-try="fire">1 · Fire one synapse</button> The EPSP is biggest in the spine head and arrives at the soma small and late.</li>
+    <li><button class="chip" data-try="both">2 · Glutamate and depolarization together</button> Far more Ca²⁺ than either alone, and only in the stimulated spine.</li>
+    <li><button class="chip" data-try="nomg">3 · Take the Mg²⁺ away</button> Now glutamate alone lets Ca²⁺ in.</li>
+    <li><button class="chip" data-try="tet">4 · A tetanus</button> 100 Hz for 1 s: a lot of Ca²⁺ fast, and the EPSP stays bigger for an hour (LTP).</li>
+    <li><button class="chip" data-try="lfs">5 · 1 Hz for 15 minutes</button> A little Ca²⁺ for a long time, and the EPSP gets smaller (LTD).</li>
+    <li><button class="chip" data-try="apv">6 · Block NMDA receptors</button> With APV the tetanus does nothing, yet the test EPSP is unchanged.</li>
+  </ol>
+</section>
+
+<div class="simgrid">
+<div class="simparts">
+<!-- =================== Part 1: the spine as a filter =================== -->
+<h3 class="part">1 · Spine and dendrite: where the EPSP is biggest</h3>
+<div class="top stacked">
+  <section class="card stage" id="p1-card">
+    <div class="tabs" role="tablist" aria-label="Spine">
+      <button type="button" role="tab" id="tab-p1" aria-controls="pane-p1" aria-selected="true">Spine</button>
+      <button type="button" role="tab" id="tab-p1help" aria-controls="pane-p1help" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-p1look" aria-controls="pane-p1look" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-p1" aria-labelledby="tab-p1">
+      <canvas id="p1pic" aria-label="A dendrite with two spines, each under a presynaptic terminal, and the soma, coloured by voltage"></canvas>
+      <div class="runbar">
+        <button id="p1Fire" class="primary">Fire synapse A</button>
+        <button id="p1Play" class="primary">Pause</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot neg" style="background:var(--cyto);border:1px solid var(--line)"></i>resting voltage</span><span><i class="dot pos"></i>depolarized</span>
+        <span><i class="dot na"></i>AMPA receptor</span><span><i class="dot ca"></i>NMDA receptor (dark plug: Mg²⁺)</span><span><i class="dot nt"></i>glutamate</span>
+        <span>recording sites: <i class="dot pos"></i>H head <i class="dot acc"></i>D dendrite <i class="dot ink"></i>S soma, the same colours on the charts</span>
+      </div>
+      <div class="cgrid even">
+        <div class="ccol"><p class="sect-title">Post: voltage at three places</p><canvas id="p1V" aria-label="Voltage in the spine head, the dendrite and the soma after one synapse fires"></canvas></div>
+        <div class="ccol"><p class="sect-title">The same EPSPs, each scaled to its own peak</p><canvas id="p1N" aria-label="The three EPSPs scaled to the same height, to compare their shapes"></canvas></div>
+      </div>
+      <div class="reads" aria-live="polite"><span>peak in head A <b id="p1pkH">—</b></span><span>dendrite <b id="p1pkD">—</b></span><span>soma <b id="p1pkS">—</b></span><span>soma ÷ head <b id="p1ratio">—</b></span></div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p1help" aria-labelledby="tab-p1help" hidden>
+      <ul>
+        <li><b>The drawing:</b> the soma on the left, a dendrite running right, and two spines on it, each under its own presynaptic terminal (Pre). Each spine is a head on a thin neck. Inside colour shows the voltage: pale at rest, red when depolarized.</li>
+        <li><b>The model:</b> four pieces of membrane, each a resistor and capacitor as in lesson 2 (head A, head B, the dendrite, the soma), joined by resistors: each neck, and the dendrite on its way to the soma. Synapse A's AMPA receptors work as in lesson 5; it also has NMDA receptors, the subject of Part 2.</li>
+        <li><b>Left chart:</b> the voltage at the three recording sites. <b>Right chart:</b> the same three, each divided by its own peak, so you can compare when they peak and how long they last whatever their size.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p1look" aria-labelledby="tab-p1look" hidden>
+      <ul>
+        <li>The head's EPSP is several times bigger than the soma's. The synaptic current has to cross the neck's resistance to get out of the head, so by Ohm's law the head sits I·R above the dendrite while the current flows.</li>
+        <li>The soma's EPSP peaks later and lasts longer: each step charges a bigger capacitor through a resistor, which smooths the signal out (a low-pass filter, lesson 2's τ = RC).</li>
+        <li>Make the neck thinner (more resistance): the head's EPSP gets much bigger, but the soma's hardly changes. The same charge still gets through, just more slowly.</li>
+        <li>Why distance matters was lesson 3's subject, and how many inputs add up at the soma, lesson 6's.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<!-- =================== Part 2: Ca²⁺ and NMDA receptors =================== -->
+<h3 class="part">2 · Ca²⁺ in the spine: NMDA receptors need two things at once</h3>
+<div class="top stacked">
+  <section class="card stage" id="p2-card">
+    <div class="tabs" role="tablist" aria-label="Calcium">
+      <button type="button" role="tab" id="tab-p2" aria-controls="pane-p2" aria-selected="true">Ca²⁺</button>
+      <button type="button" role="tab" id="tab-p2help" aria-controls="pane-p2help" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-p2look" aria-controls="pane-p2look" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-p2" aria-labelledby="tab-p2">
+      <canvas id="p2pic" aria-label="The two spines with Ca²⁺ shown as dots in each head and the Mg²⁺ block on the NMDA receptors"></canvas>
+      <canvas id="p2mem" aria-label="A slice of spine head A's membrane: an AMPA receptor, an NMDA receptor with its Mg²⁺ plug, K⁺ leak channels, and the charge on the membrane, with ions passing through"></canvas>
+      <div class="runbar">
+        <button id="p2Glu">Glutamate only</button>
+        <button id="p2Dep">Depolarize Post only</button>
+        <button id="p2Both" class="primary">Both together</button>
+        <button id="p2Play" class="primary">Pause</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot ca"></i>Ca²⁺ (one dot ≈ 0.15 µM)</span><span><i class="dot ca"></i>NMDA receptor, with a dark Mg²⁺ plug while blocked</span><span><i class="dot na"></i>AMPA receptor</span>
+        <span><i class="dot pos"></i>head A</span><span><i class="dot acc"></i>dendrite</span><span><i class="dot k"></i>spine B</span>
+      </div>
+      <div class="cgrid even">
+        <div class="ccol"><p class="sect-title">Post: voltage in head A and the dendrite</p><canvas id="p2V" aria-label="Voltage in spine head A and the dendrite"></canvas></div>
+        <div class="ccol"><p class="sect-title">Ca²⁺ in each spine head</p><canvas id="p2C" aria-label="Ca²⁺ concentration in spine heads A and B, with the levels that switch on CaMKII and calcineurin"></canvas></div>
+      </div>
+      <div class="reads" aria-live="polite"><span>peak Ca²⁺ in spine A <b id="p2caA">—</b></span><span>spine B <b id="p2caB">—</b></span><span>NMDA receptors free of Mg²⁺, at most <b id="p2free">—</b></span><span>both together ÷ (glutamate + depolarize) <b id="p2supra">—</b></span></div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p2help" aria-labelledby="tab-p2help" hidden>
+      <ul>
+        <li><b>Glutamate only:</b> synapse A releases glutamate once (at 10 ms). <b>Depolarize Post only:</b> an electrode holds the soma and dendrite at the voltage set on the right, for 80 ms, with no glutamate. <b>Both together:</b> the two at once, as in a pairing experiment.</li>
+        <li><b>Ca²⁺ chart:</b> Ca²⁺ in each head. It comes in through NMDA receptors (and a little through voltage-gated Ca²⁺ channels) and leaves by pumps and by spreading down the neck. Dashed lines: the levels that switch on the two enzymes of Part 3: calcineurin is half on at a low level, CaMKII needs a high one.</li>
+        <li><b>Spine B</b> sits on the same dendrite and is depolarized just as much, but its terminal releases nothing.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p2look" aria-labelledby="tab-p2look" hidden>
+      <ul>
+        <li>Glutamate alone: the NMDA receptors open, but at rest Mg²⁺ plugs nearly all of them, so only a little Ca²⁺ gets in. Depolarizing alone: the plug comes out, but with no glutamate the receptors are closed.</li>
+        <li>Both: the open, unplugged receptors let in many times more Ca²⁺ than the two separately added up. That is coincidence detection: Pre released glutamate <em>and</em> Post was depolarized.</li>
+        <li>Spine B gets almost no Ca²⁺ even though its voltage did the same thing. Whatever the Ca²⁺ does next happens only in spine A: input specificity.</li>
+        <li>Untick Mg²⁺: glutamate alone now lets in a lot of Ca²⁺, which is why low-Mg²⁺ solutions make slices prone to plasticity (and seizures).</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<!-- =================== Part 3: LTP and LTD =================== -->
+<h3 class="part">3 · LTP and LTD: the test pulse before and after</h3>
+<div class="top stacked">
+  <section class="card stage" id="p3-card">
+    <div class="tabs" role="tablist" aria-label="Plasticity">
+      <button type="button" role="tab" id="tab-p3" aria-controls="pane-p3" aria-selected="true">Experiment</button>
+      <button type="button" role="tab" id="tab-p3help" aria-controls="pane-p3help" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-p3look" aria-controls="pane-p3look" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-p3" aria-labelledby="tab-p3">
+      <canvas id="p3pic" aria-label="The two spines: spine A gains or loses AMPA receptors and its head grows or shrinks"></canvas>
+      <div class="runbar">
+        <button id="p3Run" class="primary">Run the experiment</button>
+        <button id="p3Play" class="primary">Pause</button>
+        <button id="p3Reset">Reset to 100%</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot na"></i>AMPA receptor</span><span><i class="dot ca"></i>Ca²⁺ / NMDA receptor</span>
+        <span><i class="dot pos"></i>spine A (gets the protocol)</span><span><i class="dot k"></i>spine B (test pulses only)</span>
+      </div>
+      <div class="cgrid three">
+        <div class="ccol"><p class="sect-title">Ca²⁺ in head A during induction</p><canvas id="p3C" aria-label="Ca²⁺ in spine A during the first seconds of the protocol, against the CaMKII and calcineurin levels"></canvas></div>
+        <div class="ccol"><p class="sect-title">Post: EPSP size, % of the start</p><canvas id="p3T" aria-label="Test EPSP size every 30 s, from 10 minutes before to 60 minutes after the protocol"></canvas></div>
+        <div class="ccol"><p class="sect-title">Post: test EPSP at the soma</p><canvas id="p3E" aria-label="The test EPSP at the soma before and an hour after the protocol"></canvas></div>
+      </div>
+      <p class="sect-title">Time-lapse: the same two spines, imaged before and after</p>
+      <canvas id="p3L" aria-label="Snapshots of spines A and B at 10 minutes before, and 1, 10 and 60 minutes after, the protocol"></canvas>
+      <div class="reads" aria-live="polite"><span>AMPA receptors in spine A <b id="p3nA">—</b></span><span>EPSP an hour later <b id="p3pct">—</b></span><span>spine B <b id="p3pctB">—</b></span><span>peak Ca²⁺ during the protocol <b id="p3caPk">—</b></span><span>above the CaMKII level <b id="p3above">—</b></span><span>calcineurin, highest <b id="p3cn">—</b></span></div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p3help" aria-labelledby="tab-p3help" hidden>
+      <ul>
+        <li><b>The experiment:</b> a small test pulse every 30 s measures the EPSP for 10 minutes (the baseline). Then synapse A gets one induction protocol (chosen on the right) while the test pulses stop. Then the test pulses run for another hour. Spine B gets the test pulses throughout but no protocol: it is the control.</li>
+        <li><b>Middle chart:</b> each dot is one test EPSP, as a percentage of its size at the very start (after Reset). The shaded band is the protocol.</li>
+        <li><b>Left chart:</b> Ca²⁺ in head A over the first seconds of the protocol, against the CaMKII and calcineurin levels. <b>Right chart:</b> the test EPSP at the soma before the protocol (grey) and an hour after (red).</li>
+        <li><b>The picture:</b> during the protocol, each pulse releases a puff of glutamate, Ca²⁺ floods in through the NMDA receptors, and labels show which enzyme it has switched on. Afterwards, AMPA receptors move one by one from a store inside the head into the membrane (LTP) or back into it (LTD), and the head grows or shrinks. The dashed outline is its size at the start.</li>
+        <li><b>Time-lapse:</b> both spines at four moments, as two-photon imaging of a single spine shows them: the receptors change within minutes, and the head keeps growing (or shrinking) for longer. Spine B is the control.</li>
+        <li>Time is compressed: the hour plays in a few seconds. Each run starts from where the last one left the synapse; Reset puts it back to the start.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p3look" aria-labelledby="tab-p3look" hidden>
+      <ul>
+        <li><b>Tetanus:</b> 100 pulses 10 ms apart. Each EPSP lands before the last has gone (temporal summation), Post depolarizes, the Mg²⁺ comes out, and Ca²⁺ climbs well above the CaMKII level. AMPA receptors are added and the EPSP stays bigger: LTP. The first few minutes are bigger still: post-tetanic potentiation, a short-lived presynaptic effect.</li>
+        <li><b>1 Hz:</b> each pulse gives only a little Ca²⁺, which never reaches the CaMKII level. But 900 of them keep calcineurin switched on, and AMPA receptors are removed: LTD.</li>
+        <li><b>Pairing:</b> only 1 Hz, but each pulse arrives while Post is depolarized, so each lets in a lot of Ca²⁺: LTP from a slow rate. What matters is the Ca²⁺, not the frequency itself.</li>
+        <li>Spine B never changes. With APV no protocol does anything, yet the test EPSP is just as big: it runs through AMPA receptors, and APV blocks only the NMDA receptors that start the change.</li>
+        <li>Run LTP, then 1 Hz: the potentiated synapse is brought back down (depotentiation).</li>
+      </ul>
+    </div>
+  </section>
+</div>
+</div>
+  <aside class="card settings" id="settings" aria-label="Settings">
+    <span class="sect-title">Settings</span>
+    <div class="sgrp" data-part="p1">
+      <div class="gtitle">The spine <span class="uses">all parts</span></div>
+      <div class="row wide2"><label for="setRn">Neck resistance</label><input type="range" id="setRn" min="50" max="1000" step="10" value="300"><output id="setRno" for="setRn"></output></div>
+      <p class="caption">a thin, long neck has more resistance, and holds Ca²⁺ in longer; real values are argued about, from tens to hundreds of MΩ</p>
+      <div class="row wide2"><label for="setNA"><i class="dot na"></i>AMPA receptors</label><input type="range" id="setNA" min="2" max="30" step="1" value="10"><output id="setNAo" for="setNA"></output></div>
+      <p class="caption">at the start; Part 3 changes them with LTP and LTD</p>
+    </div>
+    <div class="sgrp" data-part="p2">
+      <div class="gtitle">NMDA receptors and Ca²⁺ <span class="uses">Parts 2 and 3</span></div>
+      <label class="check" for="setMg"><input type="checkbox" id="setMg" checked>Mg²⁺ in the bath (1 mM)</label>
+      <label class="check" for="setApv"><input type="checkbox" id="setApv">Block NMDA receptors (APV)</label>
+      <div class="row wide2"><label for="setVdep">Depolarize Post to</label><input type="range" id="setVdep" min="-70" max="10" step="1" value="-10"><output id="setVdepo" for="setVdep"></output></div>
+      <p class="caption">for Part 2's Depolarize button and Part 3's pairing</p>
+    </div>
+    <div class="sgrp" data-part="p3">
+      <div class="gtitle">Induction protocol <span class="uses">Part 3</span></div>
+      <div class="btns">
+        <button class="chip" data-proto="tet" aria-pressed="true">Tetanus: 100 Hz for 1 s</button>
+        <button class="chip" data-proto="lfs" aria-pressed="false">1 Hz for 15 min</button>
+        <button class="chip" data-proto="pair" aria-pressed="false">Pairing: 100 pulses at 1 Hz, Post depolarized</button>
+      </div>
+    </div>
+    <div class="sgrp">
+      <div class="gtitle">Playback <span class="uses">Parts 1 and 2</span></div>
+      <div class="row wide2"><label for="setSpeed">Speed</label><input type="range" id="setSpeed" min="0" max="100" value="60"><output id="setSpeedo" for="setSpeed"></output></div>
+      <div class="btns"><button id="setReset">Reset everything</button></div>
+    </div>
+  </aside>
+</div>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="pltheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">The spine as a filter</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">NMDA receptors and Ca²⁺</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">LTP and LTD</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+<div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The synaptic current enters a tiny head and has to squeeze through the neck to reach the dendrite. By Ohm's law the head sits above the dendrite by the current times the neck's resistance, so the EPSP is biggest there. On its way to the soma it charges bigger and bigger capacitors through resistors, so it arrives smaller and slower.</p>
+      <h3>Ohm's law across the neck</h3>
+      <p>While the synaptic current I<sub>syn</sub> flows out of the head through the neck, the voltage difference across the neck is</p>
+      <div class="eq">\[ V_\mathrm{head} - V_\mathrm{dend} = I_\mathrm{syn}\,R_\mathrm{neck} \]</div>
+      <p>A few tens of pA through a few hundred MΩ is several mV, so the head can depolarize much more than the dendrite. That is useful for Part 2: a bigger depolarization in the head pushes more Mg²⁺ out of its own NMDA receptors.</p>
+      <h3>A low-pass filter</h3>
+      <p>Each piece of membrane is lesson 2's RC circuit. The head is tiny (small C), so it charges in a fraction of a millisecond. The dendrite and soma are big capacitors, charged through resistors, so they rise and fall more slowly: each step is a low-pass filter with its own τ = RC. A fast, tall EPSP in the head becomes a slow, small one at the soma.</p>
+      <h3>How much does the neck matter?</h3>
+      <p>The size of the neck's resistance is still argued about: estimates range from tens to hundreds of MΩ, and necks change shape with activity. What is not in doubt is that the neck holds Ca²⁺ in the head (Part 2). Most of the attenuation on the way to the soma happens along the dendrite, the subject of lessons 3 and 6.</p>
+      <details class="fullderiv">
+        <summary>Show the equations</summary>
+        <p>Each compartment obeys lesson 2's equation with an extra current for each neighbour it is joined to. For the head:</p>
+        <div class="eq">\[ C_\mathrm{head}\frac{dV_\mathrm{head}}{dt} = -g_\mathrm{L}(V_\mathrm{head} - E_\mathrm{L}) - \frac{V_\mathrm{head} - V_\mathrm{dend}}{R_\mathrm{neck}} - I_\mathrm{syn} \]</div>
+        <p>The dendrite has the same terms for the leak, for each neck (with the sign turned round) and for the resistance to the soma. Here C<sub>head</sub> = 0.5 pF, the dendrite 20 pF and the soma 60 pF, each with τ = 20 ms at rest, and 500 MΩ between the dendrite and the soma.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="thin">Neck 1000 MΩ</button> The head's EPSP more than doubles; the soma's barely moves.</p>
+      <p><button class="chip" data-try="wide">Neck 50 MΩ</button> The head and the dendrite move almost together.</p>
+    </aside>
+  </div>
+
+<div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> An NMDA receptor is a channel that glutamate opens, but at rest a Mg²⁺ ion sits in its pore and blocks it. Depolarization pushes the Mg²⁺ out. So Ca²⁺ flows only when Pre released glutamate and Post is depolarized at the same time.</p>
+      <h3>A channel with a voltage-dependent plug</h3>
+      <p>Like any synaptic current in lesson 5, the NMDA current is a conductance times a driving force, multiplied by the fraction of receptors not plugged by Mg²⁺:</p>
+      <div class="eq">\[ I_\mathrm{NMDA} = g_\mathrm{NMDA}\cdot f_\mathrm{free}(V)\cdot(V - E_\mathrm{NMDA}), \qquad f_\mathrm{free}(V) = \frac{1}{1 + \frac{[\mathrm{Mg^{2+}}]}{3.57\ \mathrm{mM}}\,e^{-0.062\,V}} \]</div>
+      <p>With 1 mM Mg²⁺, about 4 % are free at −70 mV, 14 % at −50 mV and 65 % at −10 mV. So the same glutamate lets through many times more current, and Ca²⁺, when Post is depolarized.</p>
+      <h3>Where the depolarization comes from</h3>
+      <ul>
+        <li><b>Many inputs at once, or fast:</b> summation (lesson 6) depolarizes the dendrite; a tetanus does this by itself.</li>
+        <li><b>A spike that runs back</b> from the axon into the dendrites (a back-propagating action potential), arriving just after the glutamate.</li>
+        <li><b>An electrode</b> holding Post depolarized: the pairing protocol of experiments.</li>
+      </ul>
+      <h3>Why the Ca²⁺ stays in its spine</h3>
+      <p>The neck is narrow, and the head has its own pumps and Ca²⁺-binding proteins, so Ca²⁺ is removed before much can spread to the dendrite or its neighbours. Each spine is its own small Ca²⁺ compartment, so each synapse's strength can be changed on its own: input specificity.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="glu">Glutamate only</button> A little Ca²⁺: Mg²⁺ blocks most of the receptors.</p>
+      <p><button class="chip" data-try="both">Both together</button> Far more than the two added up.</p>
+      <p><button class="chip" data-try="nomg">No Mg²⁺</button> Glutamate alone is enough.</p>
+      <p><button class="chip" data-try="weakdep">Depolarize only to −50 mV</button> Too little to unplug many receptors.</p>
+    </aside>
+  </div>
+
+<div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Ca²⁺ in the spine switches on two enzymes. A lot of Ca²⁺, fast, switches on CaMKII, which adds AMPA receptors: LTP. A little Ca²⁺ for a long time switches on calcineurin, which takes AMPA receptors away: LTD. The same ion gives opposite results depending on how much arrives and for how long.</p>
+      <h3>Two enzymes, two levels</h3>
+      <ul>
+        <li><b>CaMKII</b> (Ca²⁺/calmodulin-dependent kinase II) needs a high Ca²⁺ level. Once on, it adds phosphate groups to AMPA receptors and to the proteins that hold them, and brings more AMPA receptors into the synapse. Each glutamate release now opens more channels: a bigger EPSP.</li>
+        <li><b>Calcineurin</b> is a phosphatase (it removes phosphate groups). It responds to much less Ca²⁺ but slowly, so a modest rise has to be kept up for minutes. It leads to AMPA receptors being pulled back into the cell: a smaller EPSP.</li>
+      </ul>
+      <p>When both are on, as during a tetanus, CaMKII wins. The test pulses every 30 s give too little Ca²⁺, too rarely, to switch on either.</p>
+      <h3>Why the frequency matters</h3>
+      <p>At 100 Hz each EPSP arrives before the last has gone, so Post depolarizes, Mg²⁺ comes out, and every pulse lets in more Ca²⁺ than the one before. At 1 Hz each EPSP is over long before the next, so Post stays near rest and each pulse lets in only a little. Pairing breaks the link: a 1 Hz pulse with Post held depolarized lets in as much as a tetanus does.</p>
+      <h3>Early and late LTP</h3>
+      <p>In the first hour, LTP is mostly receptors moved into the synapse and existing proteins modified, as modelled here. Lasting longer needs new proteins made in the cell, and the spine head grows to hold the extra receptors (drawn here as a bigger head A after LTP). Without that, early LTP fades within a few hours.</p>
+      <details class="fullderiv">
+        <summary>Show the rule used here</summary>
+        <p>The protocols are run at 1 ms steps. Each pulse adds Ca²⁺ in proportion to the fraction of NMDA receptors free of Mg²⁺ at that moment's voltage, and Ca²⁺ is removed with τ = 30 ms. CaMKII collects the time Ca²⁺ spends above its level (3 µM); calcineurin follows Ca²⁺ / (Ca²⁺ + 0.5 µM) with τ = 10 s, and LTD collects the time it spends above 0.1:</p>
+        <div class="eq">\[ \Delta w = 0.25\!\int\!\big([\mathrm{Ca^{2+}}] - 3\big)_+\,dt \;-\; 0.0015\!\int\!\big(\text{calcineurin} - 0.1\big)_+\,dt \]</div>
+        <p>w is the number of AMPA receptors as a fraction of the start (10 receptors), kept between 40 % and 220 %. This is a simplified version of the Ca²⁺-level rule of Lisman (1989) and Shouval, Bear and Cooper (2002).</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="tet">Tetanus</button> Ca²⁺ above the CaMKII level for most of a second: LTP.</p>
+      <p><button class="chip" data-try="lfs">1 Hz for 15 min</button> Never above the CaMKII level, but calcineurin builds up: LTD.</p>
+      <p><button class="chip" data-try="pair">Pairing</button> 1 Hz, but with Post depolarized: LTP.</p>
+      <p><button class="chip" data-try="apv">Tetanus with APV</button> No Ca²⁺, no change.</p>
+    </aside>
+  </div>
+
+<div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Bliss TVP, Lømo T (1973).</b> Long-lasting potentiation of synaptic transmission in the dentate area of the anaesthetized rabbit following stimulation of the perforant path. <i>Journal of Physiology</i> 232:331–356. <a href="https://doi.org/10.1113/jphysiol.1973.sp010273" target="_blank" rel="noopener">doi:10.1113/jphysiol.1973.sp010273</a><br><span class="why">The discovery of LTP: a brief tetanus made the EPSP bigger for hours.</span></li>
+        <li><b>Collingridge GL, Kehl SJ, McLennan H (1983).</b> Excitatory amino acids in synaptic transmission in the Schaffer collateral-commissural pathway of the rat hippocampus. <i>Journal of Physiology</i> 334:33–46. <a href="https://doi.org/10.1113/jphysiol.1983.sp014478" target="_blank" rel="noopener">doi:10.1113/jphysiol.1983.sp014478</a><br><span class="why">Blocking NMDA receptors prevents LTP but leaves the ordinary EPSP alone.</span></li>
+        <li><b>Nowak L, Bregestovski P, Ascher P, Herbet A, Prochiantz A (1984).</b> Magnesium gates glutamate-activated channels in mouse central neurones. <i>Nature</i> 307:462–465. <a href="https://doi.org/10.1038/307462a0" target="_blank" rel="noopener">doi:10.1038/307462a0</a><br><span class="why">The Mg²⁺ block, found at the same time by Mayer, Westbrook and Guthrie (Nature 309:261).</span></li>
+        <li><b>Lisman J (1989).</b> A mechanism for the Hebb and the anti-Hebb processes underlying learning and memory. <i>PNAS</i> 86:9574–9578. <a href="https://doi.org/10.1073/pnas.86.23.9574" target="_blank" rel="noopener">doi:10.1073/pnas.86.23.9574</a><br><span class="why">High Ca²⁺ switches on a kinase (LTP), modest Ca²⁺ a phosphatase (LTD).</span></li>
+        <li><b>Jahr CE, Stevens CF (1990).</b> Voltage dependence of NMDA-activated macroscopic conductances predicted by single-channel kinetics. <i>Journal of Neuroscience</i> 10:3178–3182. <a href="https://doi.org/10.1523/JNEUROSCI.10-09-03178.1990" target="_blank" rel="noopener">doi:10.1523/JNEUROSCI.10-09-03178.1990</a><br><span class="why">The Mg²⁺ block equation used here.</span></li>
+        <li><b>Dudek SM, Bear MF (1992).</b> Homosynaptic long-term depression in area CA1 of hippocampus and effects of N-methyl-D-aspartate receptor blockade. <i>PNAS</i> 89:4363–4367. <a href="https://doi.org/10.1073/pnas.89.10.4363" target="_blank" rel="noopener">doi:10.1073/pnas.89.10.4363</a><br><span class="why">1 Hz for 15 minutes gives LTD, and it too needs NMDA receptors.</span></li>
+        <li><b>Yuste R, Denk W (1995).</b> Dendritic spines as basic functional units of neuronal integration. <i>Nature</i> 375:682–684. <a href="https://doi.org/10.1038/375682a0" target="_blank" rel="noopener">doi:10.1038/375682a0</a><br><span class="why">Ca²⁺ imaging of single spines: each spine is its own Ca²⁺ compartment.</span></li>
+        <li><b>Shouval HZ, Bear MF, Cooper LN (2002).</b> A unified model of NMDA receptor-dependent bidirectional synaptic plasticity. <i>PNAS</i> 99:10831–10836. <a href="https://doi.org/10.1073/pnas.152343099" target="_blank" rel="noopener">doi:10.1073/pnas.152343099</a><br><span class="why">A model in which the Ca²⁺ level alone decides LTP or LTD, the idea behind Part 3.</span></li>
+        <li><b>Malenka RC, Bear MF (2004).</b> LTP and LTD: an embarrassment of riches. <i>Neuron</i> 44:5–21. <a href="https://doi.org/10.1016/j.neuron.2004.09.012" target="_blank" rel="noopener">doi:10.1016/j.neuron.2004.09.012</a><br><span class="why">A review of how LTP and LTD are made and expressed.</span></li>
+        <li><b>Matsuzaki M, Honkura N, Ellis-Davies GCR, Kasai H (2004).</b> Structural basis of long-term potentiation in single dendritic spines. <i>Nature</i> 429:761–766. <a href="https://doi.org/10.1038/nature02617" target="_blank" rel="noopener">doi:10.1038/nature02617</a><br><span class="why">LTP at a single spine makes its head grow, and only that spine's.</span></li>
+        <li><b>Harnett MT, Makara JK, Spruston N, Kath WL, Magee JC (2012).</b> Synaptic amplification by dendritic spines enhances input cooperativity. <i>Nature</i> 491:599–602. <a href="https://doi.org/10.1038/nature11554" target="_blank" rel="noopener">doi:10.1038/nature11554</a><br><span class="why">Evidence that the neck's resistance is large enough to boost the head's EPSP; one side of the debate in Part 1.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="pl-calc">
+  <div class="calc-head"><span class="sect-title">Plasticity calculator</span></div>
+  <div class="tabs" role="tablist" aria-label="Calculator">
+    <button type="button" role="tab" id="tab-kn" aria-controls="pane-kn" aria-selected="true">NMDA receptors and Mg²⁺</button>
+    <button type="button" role="tab" id="tab-kp" aria-controls="pane-kp" aria-selected="false" tabindex="-1">LTP or LTD?</button>
+    <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+  </div>
+  <div class="calc-body" role="tabpanel" id="pane-kn" aria-labelledby="tab-kn">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh"><i class="dot ca"></i> NMDA receptors</div>
+        <div class="gr"><label for="kV">V</label><input type="range" id="kV" min="-100" max="40" step="1" value="-70"><output id="kVo" for="kV"></output></div>
+        <div class="gr"><label for="kMg">[Mg²⁺]</label><input type="range" id="kMg" min="0" max="2" step="0.1" value="1"><output id="kMgo" for="kMg"></output></div>
+        <div class="gr"><label for="kG">g<sub>NMDA</sub></label><input type="range" id="kG" min="0.1" max="5" step="0.1" value="1"><output id="kGo" for="kG"></output></div>
+        <span class="caption">g<sub>NMDA</sub> is the conductance with every receptor open and unplugged; [Mg²⁺] is outside the cell (about 1 mM in the body)</span>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kFree">—</span><span class="caption">of the receptors free of Mg²⁺</span></div>
+      <div class="es"><span>I<sub>NMDA</sub> <b id="kI">—</b></span><span>Ca²⁺ entry <b id="kCa">—</b></span></div>
+      <div class="gformula" id="kNForm" aria-live="polite"></div>
+      <canvas id="kNChart" aria-label="NMDA current against voltage, with and without Mg²⁺, and Ca²⁺ entry"></canvas>
+      <p class="caption">With Mg²⁺ the current shrinks toward zero at negative voltages, so the curve bends into a J; without it the line is straight, like AMPA's. Ca²⁺ entry is largest between about −30 and −10 mV, where the receptors are unplugged but Ca²⁺ is still pushed hard into the cell.</p>
+    </div>
+  </div>
+  <div class="calc-body" role="tabpanel" id="pane-kp" aria-labelledby="tab-kp" hidden>
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh"><i class="dot pos"></i> Protocol at synapse A</div>
+        <div class="gr"><label for="kF">Frequency</label><input type="range" id="kF" min="-1" max="2.3" step="0.01" value="0"><output id="kFo" for="kF"></output></div>
+        <div class="gr"><label for="kN">Pulses</label><input type="range" id="kN" min="10" max="900" step="10" value="900"><output id="kNo" for="kN"></output></div>
+        <div class="gr"><label for="kHold">Post held at</label><input type="range" id="kHold" min="-75" max="0" step="5" value="-75"><output id="kHoldo" for="kHold"></output></div>
+        <label class="check" for="kApv"><input type="checkbox" id="kApv">Block NMDA receptors (APV)</label>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kOut">—</span><span class="caption" id="kOutWhat">EPSP an hour later</span></div>
+      <div class="es"><span>peak Ca²⁺ <b id="kCaPk">—</b></span><span>above the CaMKII level <b id="kAbove">—</b></span><span>calcineurin, highest <b id="kCn">—</b></span><span>protocol lasts <b id="kDur">—</b></span></div>
+      <div class="gformula" id="kPForm" aria-live="polite"></div>
+      <canvas id="kPChart" aria-label="Predicted change in the EPSP against stimulation frequency, for the same number of pulses"></canvas>
+      <p class="caption">The curve repeats Dudek and Bear's experiment: the same number of pulses at each frequency. Low frequencies weaken the synapse, high ones strengthen it. In this model the switch comes between 50 and 100 Hz; in their slices it came near 10 Hz, because a real dendrite adds up EPSPs more than this model's Post does.</p>
+    </div>
+  </div>
+  <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+    <h4>NMDA receptors and Mg²⁺</h4>
+    <ul>
+      <li><b>Amber curve:</b> the NMDA current at each voltage, with the Mg²⁺ set above. <b>Dashed grey:</b> the same receptors with no Mg²⁺. <b>Red:</b> Ca²⁺ entry (inward, so drawn downward), in proportion to the receptors free of Mg²⁺ times Ca²⁺'s driving force. The dot is the voltage set above.</li>
+      <li>Ca²⁺ entry is given as a percentage of what the same receptors would let in at −70 mV with no Mg²⁺ at all.</li>
+    </ul>
+    <h4>LTP or LTD?</h4>
+    <ul>
+      <li>The same model as Part 3: each pulse lets in Ca²⁺ according to how depolarized Post is; CaMKII responds to the time Ca²⁺ spends above its level, calcineurin to a little Ca²⁺ kept up for minutes. The answer is the EPSP an hour later as a percentage of before, kept between 40 % and 220 %.</li>
+      <li><b>Curve:</b> the answer for every frequency, with the pulses, holding voltage and APV set above. The dot is your protocol: red above 100 %, purple below.</li>
+      <li>Try 900 pulses at 1 Hz (LTD), 100 pulses at 100 Hz (LTP), then 1 Hz with Post held at −10 mV (LTP at a low frequency).</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ---------- shared: colours, number formats, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','syn','ea','a','pos','neg','cyto','bath','mem','memdark','ca','nt'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const TAU = Math.PI * 2;
+const hash = i => { const s = Math.sin(i * 12.9898) * 43758.5453; return s - Math.floor(s); };   // fixed scatter, no flicker
+const fmtSigned = (v, d = 1, u = ' mV') => isFinite(v) ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d) + u : '—';
+function setupCanvas(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; }
+function bindRange(id, fmt, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmt(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// Canvas text with subscripts: "I_Na" draws I with a subscript Na (the letters and digits after
+// the underscore), in the current font, size and alignment.
+function fillSub(c, text, x, y) {
+  if (!text.includes('_')) { c.fillText(text, x, y); return; }
+  const parts = [], re = /_([A-Za-z0-9∞]+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { parts.push([text.slice(last, m.index), false], [m[1], true]); last = re.lastIndex; }
+  parts.push([text.slice(last), false]);
+  const font = c.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]);
+  const subFont = font.replace(/[\d.]+px/, (size * 0.72).toFixed(1) + 'px');
+  const w = parts.map(([t, sub]) => { c.font = sub ? subFont : font; return c.measureText(t).width; });
+  const total = w.reduce((a, b) => a + b, 0), align = c.textAlign;
+  let px = align === 'center' ? x - total / 2 : align === 'right' || align === 'end' ? x - total : x;
+  c.textAlign = 'left';
+  parts.forEach(([t, sub], i) => { c.font = sub ? subFont : font; c.fillText(t, px, y + (sub ? size * 0.28 : 0)); px += w[i]; });
+  c.font = font; c.textAlign = align;
+}
+function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+
+// A chart with a fixed y range (o.fixed; the zoom arrows from chartzoom.js stretch it) and x tick values.
+// Series take o.xs unless they bring their own xs; s.n draws only the first n points (a run still playing);
+// s.dots draws points (NaN points are skipped); o.span shades a stretch of x; refs are dashed horizontal lines;
+// o.xticks and o.xfmt choose the x ticks and their labels (a log axis); o.dots marks single points.
+const CHW = 560, CHH = 320;
+function drawChart(c, o) {
+  const W = o.w || CHW, H = o.h || CHH, key = 11;
+  const L = 62, R = o.r || 96, T = 14, B = 42, pw = W - L - R, ph = H - T - B;
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  const [lo, hi] = ChartZoom.y(c.canvas, o.fixed[0], o.fixed[1]);
+  const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1);
+  ChartZoom.bind(c.canvas, () => drawChart(c, o));
+  const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
+  if (o.span) { const a = clamp(sx(o.span[0]), L, L + pw), b = clamp(sx(o.span[1]), L, L + pw); c.fillStyle = C.na; c.globalAlpha = 0.14; c.fillRect(a, T, Math.max(3, b - a), ph); c.globalAlpha = 1; }
+  const stp = niceStep((hi - lo) / 5);
+  c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.textAlign = 'right';
+  for (let v = Math.ceil(lo / stp) * stp; v <= hi + 1e-9; v += stp) {
+    const y = sy(v); c.strokeStyle = C.line; c.lineWidth = 0.8;
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke();
+    const r = Math.abs(v) < stp / 1e3 ? 0 : +v.toPrecision(4);
+    c.fillStyle = C.muted; c.fillText((r < 0 ? '−' : '') + Math.abs(r), L - 6, y);
+  }
+  c.save(); c.translate(14, T + ph / 2); c.rotate(-Math.PI / 2); c.textAlign = 'center'; c.fillText(o.ylabel, 0, 0); c.restore();
+  const xstp = niceStep((x1 - x0) / 6), xt = o.xticks ? o.xticks.filter(v => v >= x0 - 1e-9 && v <= x1 + 1e-9) : [];
+  if (!o.xticks) for (let v = Math.ceil(x0 / xstp - 1e-9) * xstp; v <= x1 + 1e-9; v += xstp) xt.push(v);
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  for (const v of xt) {
+    const x = sx(v); c.strokeStyle = C.line; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(x, T + ph); c.lineTo(x, T + ph + 4); c.stroke();
+    const r = Math.abs(v) < xstp / 1e3 ? 0 : +v.toPrecision(4);
+    c.fillStyle = C.muted; c.fillText(o.xfmt ? o.xfmt(v) : (r < 0 ? '−' : '') + Math.abs(r), x, T + ph + 6);
+  }
+  c.textBaseline = 'middle'; c.textAlign = 'left'; c.fillText(o.xlabel, L, H - 9);
+  const labels = [];
+  for (const r of o.refs || []) {
+    const y = sy(r.v);
+    c.strokeStyle = r.color; c.lineWidth = 1.2; c.setLineDash(r.dash || [6, 4]);
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.setLineDash([]);
+    if (r.label) labels.push({ y, t: r.label, c: r.color });
+  }
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  for (const s of o.series) {
+    const xs = s.xs || o.xs, n = Math.min(s.n ?? xs.length, xs.length);
+    if (n < 1) continue;
+    c.strokeStyle = c.fillStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round';
+    if (s.dots) {
+      for (let i = 0; i < n; i++) if (isFinite(s.ys[i])) { c.beginPath(); c.arc(sx(xs[i]), sy(s.ys[i]), 2.6, 0, TAU); c.fill(); }
+    } else {
+      c.setLineDash(s.dash || []); c.beginPath();
+      for (let i = 0; i < n; i++) i ? c.lineTo(sx(xs[i]), sy(s.ys[i])) : c.moveTo(sx(xs[i]), sy(s.ys[i]));
+      c.stroke(); c.setLineDash([]);
+    }
+    if (s.label) { let j = n - 1; while (j > 0 && !isFinite(s.ys[j])) j--; labels.push({ y: sy(s.ys[j]), t: s.label, c: s.color }); }
+  }
+  for (const d of o.dots || []) { c.fillStyle = d.color; c.beginPath(); c.arc(sx(d.x), sy(d.y), 5, 0, TAU); c.fill(); }
+  c.restore();
+  labels.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < key + 2) labels[i].y = labels[i - 1].y + key + 2;
+  c.font = `600 ${key}px "IBM Plex Sans", sans-serif`; c.textAlign = 'left';
+  labels.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, L + pw + 6, Math.max(T + 4, Math.min(H - 6, l.y))); });
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
+  c.textBaseline = 'alphabetic';
+}
+
+// A simulation's Play/Pause button and its frame loop. step(ms of real time) moves the run on and says
+// whether anything changed; draw() redraws. Registered with frames.js, so it starts paused and a stimulus
+// button (triggers) starts it.
+function player(playId, triggers, step, draw) {
+  const S = { running: true }, btn = $(playId);
+  const label = () => { btn.textContent = S.running ? 'Pause' : 'Play'; };
+  btn.addEventListener('click', () => { S.running = !S.running; label(); });
+  label();
+  let last = performance.now();
+  const loop = now => { const d = Math.min(100, now - last); last = now; if (S.running && step(d)) draw(); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+  Frames.sim(() => S.running, playId, triggers);
+  return S;
+}
+const speedOf = v => 0.5 * Math.pow(400, v / 100);     // slider 0–100 → 0.5–200 ms of model time per second
+const fmtSpeed = v => (v < 1 ? v.toFixed(2) : v < 10 ? v.toFixed(1) : v.toFixed(0)) + ' ms per s';
+
+// =====================================================================================
+// The model. Units: mV, ms, nS, pA, pF (pA / pF = mV/ms).
+// Four compartments, each lesson 2's RC: spine head A (with synapse A), spine head B (no transmitter
+// reaches it), a dendrite segment, the soma. Each neck joins its head to the dendrite; the dendrite is
+// joined to the soma. Exponential Euler, so it is stable at every neck setting.
+// =====================================================================================
+const E_L = -70, CH = 0.5, CD = 20, CS = 60, GDS = 2, G1 = 0.05;   // pF; GDS nS (500 MΩ); G1: one receptor's peak nS
+const mgFree = (V, mg) => 1 / (1 + mg / 3.57 * Math.exp(-0.062 * V));   // Jahr & Stevens (1990)
+const peakNorm = (tr, td) => { const tp = tr * td / (td - tr) * Math.log(td / tr); return 1 / (Math.exp(-tp / td) - Math.exp(-tp / tr)); };
+const NORM_A = peakNorm(0.2, 2), NORM_N = peakNorm(3, 60);     // AMPA rise 0.2, decay 2 ms; NMDA rise 3, decay 60 ms
+// o: T (ms), Rn (MΩ), glu (release times), dep ([from, to] spans the soma and dendrite are held at Vdep),
+//    nA, nN (receptor counts), mg (Mg²⁺ present), sample (ms between stored points)
+function simSpine(o) {
+  const dt = 0.025, n = Math.round(o.T / dt), every = Math.max(1, Math.round((o.sample || 0.1) / dt));
+  const gn = 1000 / o.Rn, gLh = CH / 20, gLd = CD / 20, gLs = CS / 20;
+  const tauNeck = 0.1 * o.Rn, kCa = 0.0006, kV = 0.0015;   // Ca²⁺ leaves down the neck in 0.1 ms per MΩ; kV: voltage-gated entry
+  let Vh = E_L, Vb = E_L, Vd = E_L, Vs = E_L, ca = 0, cb = 0, maxFree = 0;
+  const r = { t: [], Vh: [], Vb: [], Vd: [], Vs: [], ca: [], cb: [], dep: [] };
+  for (let i = 0; i <= n; i++) {
+    const t = i * dt;
+    let sA = 0, sN = 0;
+    for (const tg of o.glu) { const s = t - tg; if (s > 0) { sA += NORM_A * (Math.exp(-s / 2) - Math.exp(-s / 0.2)); sN += NORM_N * (Math.exp(-s / 60) - Math.exp(-s / 3)); } }
+    const gA = o.nA * G1 * sA, gN = o.nN * G1 * sN, B = o.mg ? mgFree(Vh, 1) : 1;
+    let gc = 0; for (const [a, b] of o.dep || []) if (t >= a && t < b) gc = 50;   // the electrode holding Post
+    let G = gLh + gn + gA + gN * B, Vi = (gLh * E_L + gn * Vd) / G; Vh = Vi + (Vh - Vi) * Math.exp(-dt * G / CH);
+    G = gLh + gn; Vi = (gLh * E_L + gn * Vd) / G; Vb = Vi + (Vb - Vi) * Math.exp(-dt * G / CH);
+    G = gLd + 2 * gn + GDS + gc; Vi = (gLd * E_L + gn * (Vh + Vb) + GDS * Vs + gc * o.Vdep) / G; Vd = Vi + (Vd - Vi) * Math.exp(-dt * G / CD);
+    G = gLs + GDS + gc; Vi = (gLs * E_L + GDS * Vd + gc * o.Vdep) / G; Vs = Vi + (Vs - Vi) * Math.exp(-dt * G / CS);
+    // Ca²⁺ (µM): in through unplugged NMDA receptors (driving force toward E_Ca ≈ +130 mV) and a little through
+    // voltage-gated channels; out by pumps (30 ms) and down the neck
+    ca += dt * (kCa * gN * B * Math.max(0, 130 - Vh) * 100 + kV * Math.max(0, Vh + 30) - ca / 30 - ca / tauNeck);
+    cb += dt * (kV * Math.max(0, Vb + 30) - cb / 30 - cb / tauNeck);
+    if (gN > 0.01) maxFree = Math.max(maxFree, B);
+    if (i % every === 0) { r.t.push(t); r.Vh.push(Vh); r.Vb.push(Vb); r.Vd.push(Vd); r.Vs.push(Vs); r.ca.push(ca); r.cb.push(cb); r.dep.push(gc > 0); }
+  }
+  r.maxFree = maxFree; r.T = o.T; return r;
+}
+// Induction protocols, at 1 ms steps (15 minutes of 1 Hz is under 20 ms of work). Each pulse adds Ca²⁺ in proportion
+// to the NMDA receptors free of Mg²⁺ at that moment's voltage; Post's voltage sums the pulses (10 mV each, τ 15 ms:
+// a tetanus recruits many fibres) or is held at −10 mV for pairing. CaMKII collects the time Ca²⁺ spends above
+// TH_CAMK; calcineurin follows Ca²⁺/(Ca²⁺ + KD_CN) slowly, and LTD collects the time it spends above TH_CN.
+const TH_CAMK = 3, KD_CN = 0.5, TH_CN = 0.1;
+const PROTOS = { tet: { f: 100, n: 100 }, lfs: { f: 1, n: 900 }, pair: { f: 1, n: 100, dep: true } };
+function induce(proto, apv, vdep = -10, mg = true) {
+  const P = PROTOS[proto], per = 1000 / P.f, Tend = P.n * per + 60000;
+  let V = E_L, ca = 0, camk = 0, cn = 0, D = 0, pulses = 0, above = 0, caPk = 0, cnPk = 0;
+  const win = proto === 'tet' ? 1500 : 5000, ct = [], cy = [], cns = [];
+  for (let t = 0; t < Tend; t++) {
+    V -= (V - E_L) / 15;
+    if (pulses < P.n && t >= pulses * per) {
+      pulses++;
+      if (!P.dep) V = Math.min(-10, V + 10);
+      const Vp = P.dep ? vdep : V;
+      ca += 0.7 * (mg ? mgFree(Vp, 1) : 1) / mgFree(E_L, 1) * (130 - Vp) / 200 * (apv ? 0.03 : 1);
+    }
+    ca -= ca / 30;
+    if (ca > TH_CAMK) { camk += (ca - TH_CAMK) / 1000; above++; }
+    cn += (ca / (ca + KD_CN) - cn / 10) / 1000;
+    D += Math.max(0, cn - TH_CN) / 1000;
+    caPk = Math.max(caPk, ca); cnPk = Math.max(cnPk, cn);
+    if (t < win && t % 2 === 0) { ct.push(t / 1000); cy.push(ca); cns.push(cn); }
+  }
+  return { dW: 0.25 * camk - 0.0015 * D, ct, cy, cn: cns, win: win / 1000, dur: P.n * per / 60000, ptp: proto === 'tet' && !apv ? 0.6 : 0, caPk, cnPk, above: above / 1000 };
+}
+
+// The calculator's protocol, event by event: between pulses, once Ca²⁺ has gone, jump ahead analytically
+// (calcineurin decays with τ 10 s, Post with τ 15 ms), so 900 pulses at 0.1 Hz cost no more than at 100 Hz.
+function protocol(f, n, held, apv) {
+  const per = 1000 / f, tauCn = 10000;
+  let V = E_L, ca = 0, camk = 0, cn = 0, D = 0, above = 0, caPk = 0, cnPk = 0;
+  const lose = T => { if (cn > TH_CN) { const Tx = Math.min(T, tauCn * Math.log(cn / TH_CN)); D += (tauCn * cn * (1 - Math.exp(-Tx / tauCn)) - TH_CN * Tx) / 1000; } cn *= Math.exp(-T / tauCn); };
+  for (let p = 0; p <= n; p++) {
+    const span = p < n ? per : 60000;   // after the last pulse, a minute more
+    let t = 0;
+    if (p < n) {
+      if (held == null) V = Math.min(-10, V + 10);
+      const Vp = held ?? V;
+      ca += 0.7 * mgFree(Vp, 1) / mgFree(E_L, 1) * (130 - Vp) / 200 * (apv ? 0.03 : 1);
+    }
+    for (; t < span && (ca > 0.002 || V - E_L > 0.05); t++) {
+      V -= (V - E_L) / 15; ca -= ca / 30;
+      if (ca > TH_CAMK) { camk += (ca - TH_CAMK) / 1000; above++; }
+      cn += (ca / (ca + KD_CN) - cn / 10) / 1000; D += Math.max(0, cn - TH_CN) / 1000;
+      caPk = Math.max(caPk, ca); cnPk = Math.max(cnPk, cn);
+    }
+    if (t < span) { lose(span - t); V = E_L + (V - E_L) * Math.exp(-(span - t) / 15); ca = 0; }
+  }
+  return { w: clamp(1 + 0.25 * camk - 0.0015 * D, 0.4, 2.2), caPk, cnPk, above: above / 1000 };
+}
+// ---------- the picture: soma, dendrite, two spines under their presynaptic terminals ----------
+// s: Rn (MΩ); VhA, VhB, Vd, Vs (mV); caA, caB (µM); caIn (Ca²⁺ flowing into head A, 0–1); nA, nB (AMPA receptors;
+// a fraction while one is moving in or out); headA, headB, neckA (sizes, 1 = the start); ghost (head A's starting
+// size, dashed); glu (transmitter in cleft A, 0–1) and gluP (how far it has crossed, 0–1); spikeU (a spike on A's
+// axon, 0–1, or null); fuse (A's vesicle fusing, 0–1); blocked (A's NMDA receptors plugged by Mg²⁺, 0–1); mg;
+// held (mV, the electrode holding Post); elec (recording sites); badges ([{ text, color, on }] beside head A);
+// caption (top left). Ca²⁺ dots drift with the clock, so the picture is still while nothing is playing.
+const PW = 900, PH = 280, LH = 230;   // LH: the time-lapse strip
+const ease = x => x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+// receptor slots fill from the top of the head outwards, so adding or removing one never moves the others:
+// slots 1 and 2 are the NMDA receptors, the rest AMPA
+const slotJ = i => i === 0 ? 0 : i % 2 ? (i + 1) / 2 : -i / 2;
+const ampaSlot = k => k === 0 ? 0 : k + 2;
+function drawSpines(c, s) {
+  const W = PW, H = PH, yD = H - 48, dh = 30, now = performance.now();
+  const vcol = V => mixc(C.pos, C.cyto, clamp((V - E_L) / 40));
+  c.fillStyle = C.bath; c.fillRect(0, 0, W, H);
+  const mem = (path, w = 7) => { c.lineJoin = 'round'; c.lineWidth = w; c.strokeStyle = C.memdark; path(); c.stroke(); c.lineWidth = w * 0.4; c.strokeStyle = C.mem; path(); c.stroke(); };
+  const dend = () => { c.beginPath(); c.roundRect(100, yD - dh / 2, W - 90, dh, dh / 2); };
+  c.fillStyle = vcol(s.Vd); dend(); c.fill(); mem(dend);
+  const soma = () => { c.beginPath(); c.arc(70, yD, 52, 0, TAU); };
+  c.fillStyle = vcol(s.Vs); soma(); c.fill(); mem(soma);
+  c.font = '12px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('Soma', 70, yD + 4); c.textAlign = 'left'; c.fillText('Dendrite', W - 84, yD + 1);
+  if (s.held) {
+    c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath(); c.moveTo(20, 96); c.lineTo(58, yD - 20); c.stroke();
+    c.fillStyle = C.ink; c.fillText(`Post held at ${fmtSigned(s.held, 0)}`, 8, 84);
+  }
+  if (s.caption) { c.font = '600 13px "IBM Plex Sans", sans-serif'; c.fillStyle = C.ink; c.fillText(s.caption, 10, 18); c.font = '12px "IBM Plex Sans", sans-serif'; }
+  const nw0 = clamp(15 - s.Rn / 75, 3, 14);
+  const by = yD - dh / 2 - 50 - 22 * 0.4 - 22 - 40;   // the terminals stay put; a growing head reaches up toward its terminal
+  const spines = [
+    { x: W * 0.42, sc: s.headA, nw: nw0 * (s.neckA || 1), V: s.VhA, ca: s.caA, caIn: s.caIn || 0, n: s.nA, lab: 'Spine A', glu: s.glu || 0, gluP: s.gluP ?? 1, spikeU: s.spikeU, fuse: s.fuse || 0, blocked: s.blocked, ghost: s.ghost },
+    { x: W * 0.72, sc: s.headB, nw: nw0, V: s.VhB, ca: s.caB, caIn: 0, n: s.nB, lab: 'Spine B', glu: 0, gluP: 0, spikeU: null, fuse: 0, blocked: s.mg ? 1 - mgFree(s.VhB, 1) : 0 }];
+  spines.forEach((sp, k) => {
+    const rx = 30 * sp.sc, ry = 22 * sp.sc, yh = yD - dh / 2 - 50 - ry * 0.4, top = yh - ry, nw = sp.nw;
+    const a0 = Math.asin(clamp(nw / 2 / rx));
+    const shape = () => { c.beginPath(); c.moveTo(sp.x - nw / 2, yD - dh / 2 + 2); c.lineTo(sp.x - nw / 2, yh + ry * Math.cos(a0));
+      c.ellipse(sp.x, yh, rx, ry, 0, Math.PI / 2 + a0, Math.PI * 2.5 - a0); c.lineTo(sp.x + nw / 2, yD - dh / 2 + 2); };
+    c.fillStyle = vcol(sp.V); shape(); c.fill(); mem(shape, 6);
+    c.fillStyle = vcol(s.Vd); c.fillRect(sp.x - nw / 2 + 2, yD - dh / 2 - 3, nw - 4, 9);   // the neck opens into the dendrite
+    if (sp.ghost) { c.save(); c.setLineDash([4, 4]); c.strokeStyle = C.muted; c.lineWidth = 1.2; c.beginPath(); c.ellipse(sp.x, yD - dh / 2 - 50 - 22 * 0.4, 30, 22, 0, 0, TAU); c.stroke(); c.restore(); }
+    // Ca²⁺ in the head, one dot per 0.15 µM, drifting
+    c.fillStyle = C.ca;
+    const nca = Math.round(clamp(sp.ca / 0.15, 0, 60));
+    for (let i = 0; i < nca; i++) {
+      const a = hash(i + k * 99) * TAU + now * 0.0008 * (hash(i + 3) - 0.5), rr = (0.25 + 0.55 * Math.sqrt(hash(i * 3 + 7 + k))) * (0.9 + 0.1 * Math.sin(now * 0.003 + i));
+      c.beginPath(); c.arc(sp.x + Math.cos(a) * rx * rr, yh + Math.sin(a) * ry * rr, 2, 0, TAU); c.fill();
+    }
+    // Ca²⁺ leaving down the neck
+    const nNeck = Math.round(clamp(sp.ca / 0.8, 0, 6)), neckLen = yD - dh / 2 - (yh + ry * Math.cos(a0));
+    for (let i = 0; i < nNeck; i++) { const u = (now / 900 + i / 6) % 1; c.globalAlpha = 1 - u; c.beginPath(); c.arc(sp.x + (hash(i + 40) - 0.5) * (nw - 5), yh + ry * Math.cos(a0) + u * neckLen, 1.8, 0, TAU); c.fill(); }
+    c.globalAlpha = 1;
+    // receptors: AMPA in their slots; one moving in from (or out to) a store inside the head while the count changes
+    const full = Math.floor(sp.n + 1e-6), frac = sp.n - full, spread = 0.12;
+    const slotXY = i => { const a = -Math.PI / 2 + slotJ(i) * spread; return [sp.x + Math.cos(a) * rx, yh + Math.sin(a) * ry, a]; };
+    const rec = (x, y, a, col, alpha = 1) => { c.save(); c.globalAlpha = alpha; c.translate(x, y); c.rotate(a + Math.PI / 2); c.fillStyle = col; c.fillRect(-2.5, -5, 5, 10); c.restore(); };
+    for (let q = 0; q < full; q++) { const [x, y, a] = slotXY(ampaSlot(q)); rec(x, y, a, C.na); }
+    if (frac > 0.01) {
+      const [x, y, a] = slotXY(ampaSlot(full)), ex = sp.x, ey = yh + ry * 0.35, e = ease(frac);
+      c.strokeStyle = C.na; c.lineWidth = 1.2; c.globalAlpha = 0.5; c.beginPath(); c.arc(ex, ey, 6, 0, TAU); c.stroke(); c.globalAlpha = 1;   // the store (an endosome)
+      rec(ex + (x - ex) * e, ey + (y - ey) * e, a, C.na, 0.35 + 0.65 * frac);
+    }
+    for (const i of [1, 2]) {   // NMDA receptors; the dark Mg²⁺ plug moves out of the pore as it unblocks
+      const [x, y, a] = slotXY(i); rec(x, y, a, C.ca);
+      const out = 6.5 + (1 - sp.blocked) * 9;
+      c.save(); c.translate(x, y); c.rotate(a + Math.PI / 2);
+      if (s.mg !== false) { c.globalAlpha = 0.25 + 0.75 * sp.blocked; c.fillStyle = C.ink; c.beginPath(); c.arc(0, -out, 2.4, 0, TAU); c.fill(); }
+      // Ca²⁺ streaming in through an open, unplugged receptor
+      if (sp.caIn > 0.05) { c.fillStyle = C.ca; for (let j = 0; j < 4; j++) { const u = (now / 450 + j / 4 + i * 0.13) % 1; c.globalAlpha = sp.caIn * (1 - u); c.beginPath(); c.arc(0, -4 + u * 22, 2, 0, TAU); c.fill(); } }
+      c.restore();
+    }
+    // the presynaptic terminal, its axon, and a spike running down it
+    const ax0 = [sp.x - 110, 0], axc = [sp.x - 70, by - 30], ax1 = [sp.x - 30, by - 12];
+    c.strokeStyle = C.memdark; c.lineWidth = 7; c.beginPath(); c.moveTo(...ax0); c.quadraticCurveTo(...axc, ...ax1); c.stroke();
+    const bulb = () => { c.beginPath(); c.ellipse(sp.x, by, 44, 22, 0, 0, TAU); };
+    c.fillStyle = sp.spikeU != null && sp.spikeU > 0.9 ? mixc(C.pos, C.cyto, 0.35) : C.cyto; bulb(); c.fill(); mem(bulb, 6);
+    if (sp.spikeU != null) {
+      const u = clamp(sp.spikeU), q = (p, i) => (1 - u) ** 2 * ax0[i] + 2 * (1 - u) * u * axc[i] + u * u * ax1[i];
+      c.fillStyle = C.pos; c.globalAlpha = 0.85; c.beginPath(); c.arc(q(0, 0), q(0, 1), 6, 0, TAU); c.fill(); c.globalAlpha = 1;
+    }
+    c.fillStyle = C.nt;
+    for (let i = 0; i < 6; i++) {
+      let vx = sp.x - 25 + i * 10, vy = by + (i % 2 ? 4 : -4), vr = 4;
+      if (i === 3 && sp.fuse > 0) { vy += sp.fuse * 14; vr = 4 * (1 - sp.fuse); }   // the docked vesicle fuses and empties
+      if (vr < 0.3) continue;
+      c.globalAlpha = 0.6; c.beginPath(); c.arc(vx, vy, vr, 0, TAU); c.fill();
+    }
+    c.globalAlpha = 1;
+    // glutamate crossing the cleft, fading as it is cleared
+    const ng = Math.round(clamp(sp.glu) * 18), gap = Math.max(4, top - by - 24);
+    for (let i = 0; i < ng; i++) {
+      const d = clamp(sp.gluP * (0.5 + hash(i + 50)));
+      c.globalAlpha = 0.4 + 0.6 * clamp(sp.glu); c.beginPath(); c.arc(sp.x - 10 + (hash(i + 5) - 0.5) * (20 + 50 * d), by + 22 + d * gap, 1.8, 0, TAU); c.fill();
+    }
+    c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'left'; c.font = '12px "IBM Plex Sans", sans-serif';
+    c.fillText(sp.lab, sp.x + rx + 12, yh); if (k === 0) c.fillText('Pre', sp.x + 52, by);
+    c.fillText('neck', sp.x + nw / 2 + 6, yD - dh / 2 - 12);
+    if (k === 0 && s.badges) {   // the enzymes switched on in head A
+      let y = yh - 12;
+      c.font = '600 12px "IBM Plex Sans", sans-serif'; c.textAlign = 'right';
+      for (const b of s.badges) {
+        if (b.on <= 0.02) continue;
+        const tw = c.measureText(b.text).width + 14, x1 = sp.x - rx - 14;
+        c.globalAlpha = b.on; c.fillStyle = b.color; c.beginPath(); c.roundRect(x1 - tw, y - 10, tw, 20, 10); c.fill();
+        c.fillStyle = C.surface; c.fillText(b.text, x1 - 7, y + 0.5); c.globalAlpha = 1; y += 24;
+      }
+      c.textAlign = 'left'; c.font = '12px "IBM Plex Sans", sans-serif';
+    }
+  });
+  if (s.elec) {
+    const tag = (x, y, t, col) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, 8, 0, TAU); c.fill(); c.fillStyle = C.surface; c.font = '600 10px "IBM Plex Sans", sans-serif'; c.textAlign = 'center'; c.fillText(t, x, y + 0.5); };
+    const yh = yD - dh / 2 - 50 - 22 * s.headA * 0.4;
+    tag(W * 0.42 - 30 * s.headA - 14, yh, 'H', C.pos); tag(W * 0.42 + 26, yD, 'D', C.accent); tag(70, yD - 26, 'S', C.ink);
+  }
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+}
+
+
+
+// =====================================================================================
+// The Settings box: one set of settings for all three parts. A part registers onSet(key => ...) to hear changes.
+// =====================================================================================
+// Newt: Part 1's circuit on the Breadboard simulator (in F, S, V, s): head A, head B, the dendrite and the soma, each
+// a leak and a capacitor, joined by the necks and the dendrite's path to the soma; head A's AMPA receptors opened by
+// the Stimulator. (The NMDA receptors are left out: their Mg²⁺ block depends on the voltage, which no part can do,
+// and at rest they pass almost nothing.)
+function breadboardCircuit() {
+  const pF = 1e-12, nS = 1e-9, gn = 1000 / SET.Rn * nS, leak = (C, name) => ({ name, g: C / 20 * nS, E: E_L * 1e-3 });
+  return { title: 'the spine', compartments: [
+    { name: 'Head A', C: CH * pF, channels: [{ name: 'AMPA receptors', g: SET.nA * G1 * nS, E: 0, gate: 'stim',
+        train: { n: 1, width: NORM_A * (2 - 0.2) * 1e-3 } }, leak(CH, 'Head A leak')] },
+    { name: 'Head B', C: CH * pF, channels: [leak(CH, 'Head B leak')] },
+    { name: 'Dendrite', C: CD * pF, channels: [leak(CD, 'Dendrite leak')] },
+    { name: 'Soma', C: CS * pF, channels: [leak(CS, 'Soma leak')] }],
+    links: [{ from: 0, to: 2, g: gn }, { from: 1, to: 2, g: gn }, { from: 2, to: 3, g: GDS * nS }] };
+}
+const SET = { Rn: 300, nA: 10, mg: true, apv: false, Vdep: -10, speed: speedOf(60) }, setHooks = [];
+const onSet = f => setHooks.push(f);
+const setChanged = k => setHooks.forEach(f => f(k));
+bindRange('setRn', v => v + ' MΩ', v => { SET.Rn = v; setChanged('Rn'); });
+bindRange('setNA', v => v + '', v => { SET.nA = v; setChanged('nA'); });
+bindRange('setVdep', v => fmtSigned(v, 0), v => { SET.Vdep = v; setChanged('Vdep'); });
+bindRange('setSpeed', v => fmtSpeed(speedOf(v)), v => { SET.speed = speedOf(v); });
+$('setMg').addEventListener('change', e => { SET.mg = e.target.checked; setChanged('mg'); });
+$('setApv').addEventListener('change', e => { SET.apv = e.target.checked; setChanged('apv'); });
+
+// =====================================================================================
+// Part 1: one EPSP at three places
+// =====================================================================================
+(() => {
+  const pic = setupCanvas($('p1pic'), PW, PH), cv = setupCanvas($('p1V'), CHW, CHH), cn = setupCanvas($('p1N'), CHW, CHH);
+  const T = 40, GLU = 2;
+  let r = null, t = T;
+  const run = () => { r = simSpine({ T, Rn: SET.Rn, glu: [GLU], nA: SET.nA, nN: 2, mg: true, Vdep: E_L }); };
+  const peak = k => { let m = 0, at = 0; r[k].forEach((v, j) => { if (v - E_L > m) { m = v - E_L; at = r.t[j]; } }); return [m, at]; };
+  function draw() {
+    const n = Math.min(r.t.length, Math.floor(t / 0.1) + 1), i = n - 1;
+    const tt = r.t[i];   // the spike runs down the axon, a vesicle fuses, glutamate crosses the cleft
+    drawSpines(pic, { Rn: SET.Rn, VhA: r.Vh[i], VhB: r.Vb[i], Vd: r.Vd[i], Vs: r.Vs[i], caA: r.ca[i], caB: r.cb[i], caIn: i ? clamp((r.ca[i] - r.ca[i - 1]) / 0.1 / 0.15) : 0,
+      nA: SET.nA, nB: 10, headA: 1, headB: 1, spikeU: tt < GLU ? tt / GLU : null, fuse: tt < GLU + 10 ? clamp((tt - GLU) / 0.5) : 0,
+      glu: tt > GLU ? Math.exp(-(tt - GLU) / 2) : 0, gluP: clamp((tt - GLU) / 0.4), blocked: 1 - mgFree(r.Vh[i], 1), mg: true, elec: true });
+    const S = [['Vh', C.pos, 'Head A'], ['Vd', C.accent, 'Dendrite'], ['Vs', C.ink, 'Soma']];
+    drawChart(cv, { x0: 0, x1: T, fixed: [-72, -40], xlabel: 'time (ms)', ylabel: 'voltage (mV)', xs: r.t, series: S.map(([k, col, lab]) => ({ ys: r[k], n, color: col, label: lab })) });
+    const pk = S.map(([k]) => peak(k));
+    drawChart(cn, { x0: 0, x1: T, fixed: [-0.1, 1.1], xlabel: 'time (ms)', ylabel: 'fraction of its peak', xs: r.t,
+      series: S.map(([k, col, lab], j) => ({ ys: r[k].map(v => (v - E_L) / pk[j][0]), n, color: col, label: lab })) });
+    const txt = j => `${fmtSigned(pk[j][0])}, at ${(pk[j][1] - GLU).toFixed(1)} ms`;
+    $('p1pkH').textContent = txt(0); $('p1pkD').textContent = txt(1); $('p1pkS').textContent = txt(2);
+    $('p1ratio').textContent = (pk[2][0] / pk[0][0] * 100).toFixed(0) + ' %';
+  }
+  const S = player('p1Play', ['p1Fire'], d => { if (t >= T) return false; t = Math.min(T, t + SET.speed * d / 1000); return true; }, draw);
+  $('p1Fire').addEventListener('click', () => { run(); t = 0; draw(); });
+  onSet(k => { if (k === 'Rn' || k === 'nA') { run(); draw(); } });
+  run(); draw();
+  colorHooks.push(() => r && draw());
+})();
+
+// =====================================================================================
+// Part 2: Ca²⁺ in the spine: glutamate, depolarization, or both
+// =====================================================================================
+(() => {
+  const pic = setupCanvas($('p2pic'), PW, PH), cv = setupCanvas($('p2V'), CHW, CHH), cc = setupCanvas($('p2C'), CHW, CHH);
+  const P = { mode: 'both' }, T = 150, GLU = 10, DEP = [5, 85];
+  let r = null, t = T, supra = NaN;
+  const sim = mode => simSpine({ T, Rn: SET.Rn, glu: mode === 'dep' ? [] : [GLU], dep: mode === 'glu' ? [] : [DEP], Vdep: SET.Vdep, nA: SET.nA, nN: SET.apv ? 0 : 2, mg: SET.mg, sample: 0.5 });
+  const peakCa = x => Math.max(...x.ca);
+  function run() {
+    r = sim(P.mode);
+    // how much more Ca²⁺ the two together give than the two alone added up
+    const cs = { glu: 0, dep: 0, both: 0 };
+    for (const m of Object.keys(cs)) cs[m] = m === P.mode ? peakCa(r) : peakCa(sim(m));
+    supra = cs.both / (cs.glu + cs.dep);
+  }
+  function draw() {
+    const n = Math.min(r.t.length, Math.floor(t / 0.5) + 1), i = n - 1, tt = r.t[i];
+    const rel = P.mode !== 'dep';
+    drawSpines(pic, { Rn: SET.Rn, VhA: r.Vh[i], VhB: r.Vb[i], Vd: r.Vd[i], Vs: r.Vs[i], caA: r.ca[i], caB: r.cb[i], caIn: i ? clamp((r.ca[i] - r.ca[i - 1]) / 0.5 / 0.15) : 0,
+      nA: SET.nA, nB: SET.nA, headA: 1, headB: 1, spikeU: rel && tt < GLU && tt > GLU - 5 ? (tt - GLU + 5) / 5 : null, fuse: rel && tt < GLU + 60 ? clamp((tt - GLU) / 2) : 0,
+      glu: rel && tt > GLU ? Math.exp(-(tt - GLU) / 15) : 0, gluP: clamp((tt - GLU) / 1.5), blocked: SET.mg ? 1 - mgFree(r.Vh[i], 1) : 0, mg: SET.mg, held: r.dep[i] ? SET.Vdep : 0,
+      badges: [{ text: 'CaMKII level reached', color: C.accent, on: clamp((r.ca[i] - TH_CAMK + 0.5) / 0.5) }] });
+    drawChart(cv, { x0: 0, x1: T, fixed: [-75, 15], xlabel: 'time (ms)', ylabel: 'voltage (mV)', xs: r.t,
+      series: [{ ys: r.Vd, n, color: C.accent, label: 'Dendrite', dash: [5, 4], width: 1.6 }, { ys: r.Vh, n, color: C.pos, label: 'Head A' }] });
+    drawChart(cc, { x0: 0, x1: T, fixed: [0, 14], xlabel: 'time (ms)', ylabel: 'Ca²⁺ (µM)', xs: r.t, r: 104,
+      refs: [{ v: TH_CAMK, color: C.accent, label: 'CaMKII level' }, { v: KD_CN, color: C.k, label: 'calcineurin', dash: [2, 3] }],
+      series: [{ ys: r.cb, n, color: C.k, label: 'Spine B', dash: [5, 4] }, { ys: r.ca, n, color: C.ca, label: 'Spine A' }] });
+    drawMem(tt, i);
+    const done = n === r.t.length;
+    $('p2caA').textContent = done ? peakCa(r).toFixed(2) + ' µM' : '…';
+    $('p2caB').textContent = done ? Math.max(...r.cb).toFixed(2) + ' µM' : '…';
+    $('p2free').textContent = SET.apv ? 'blocked by APV' : P.mode === 'dep' ? 'no glutamate' : Math.round(r.maxFree * 100) + ' %';
+    $('p2supra').textContent = isFinite(supra) ? '×' + supra.toFixed(1) : '—';
+  }
+  // ---------- spine head A's membrane as a slice (membrane.js) ----------
+  // Glutamate opens the AMPA receptor briefly and stays bound to the NMDA receptor for tens of ms; the NMDA pore
+  // passes Ca²⁺ only once depolarization has pushed its Mg²⁺ out. Ions move at the rate of each channel's current.
+  const MW = 900, MH = 320, mc = setupCanvas($('p2mem'), MW, MH), MIONS = MemSlice.ions(MW);
+  const sOf = (norm, tr, td, s) => s > 0 ? norm * (Math.exp(-s / td) - Math.exp(-s / tr)) : 0;
+  let memO = [0, 8, 16], memT = 0;
+  function drawMem(tt, i) {
+    const rel = P.mode !== 'dep', s = tt - GLU, V = r.Vh[i];
+    const a = rel ? sOf(NORM_A, 0.2, 2, s) : 0, nm = rel && !SET.apv ? sOf(NORM_N, 3, 60, s) : 0, B = SET.mg ? mgFree(V, 1) : 1;
+    const step = tt >= memT ? tt - memT : 0; memT = tt;
+    memO = MemSlice.step(memO, [a * (0 - V) * 0.08, nm * B * (130 - V) * 0.05, -(V - E_L) * 0.3].map(v => v * step), 6);
+    MemSlice.draw(mc, MW, MH, C, { where: 'spine head A', cap: { x: 130, q: (V + 0) / 5 }, ions: MIONS, channels: [
+      { x: 330, ion: 'na', col: C.na, o: memO[0], act: Math.min(1, a * 1.5), open: Math.min(1, a * 3), ligand: rel && s > 0 ? Math.exp(-s / 15) * 2 : 0, label: 'AMPA receptor' },
+      { x: 520, ion: 'ca', col: C.ca, o: memO[1], act: Math.min(1, nm * 1.5), open: Math.min(1, nm * B * 4), ligand: nm * 2, plug: SET.mg ? 1 - B : null,
+        block: SET.apv ? 'APV' : '', label: 'NMDA receptor', sub: SET.mg ? 'Mg²⁺ block ' + Math.round(100 * (1 - B)) + ' %' : 'no Mg²⁺' },
+      { x: 710, ion: 'k', col: C.k, o: memO[2], label: 'K⁺ leak' } ] });
+  }
+  player('p2Play', ['p2Glu', 'p2Dep', 'p2Both'], d => { if (t >= T) return false; t = Math.min(T, t + SET.speed * d / 1000); return true; }, draw);
+  const fire = mode => { P.mode = mode; run(); t = 0; draw(); };
+  $('p2Glu').addEventListener('click', () => fire('glu'));
+  $('p2Dep').addEventListener('click', () => fire('dep'));
+  $('p2Both').addEventListener('click', () => fire('both'));
+  onSet(k => { if (k !== 'speed') { run(); t = T; draw(); } });
+  run(); draw();
+  colorHooks.push(() => r && draw());
+})();
+
+// =====================================================================================
+// Part 3: LTP and LTD, read out by a test pulse every 30 s
+// =====================================================================================
+(() => {
+  const lap = setupCanvas($('p3L'), PW, LH), pic = setupCanvas($('p3pic'), PW, PH), cc = setupCanvas($('p3C'), CHW, CHH), ct = setupCanvas($('p3T'), CHW, CHH), ce = setupCanvas($('p3E'), CHW, CHH);
+  const P = { proto: 'tet', apv: false }, PLAY_MS = 8000, SPLIT = 0.25;   // the run plays in 8 s: induction first, then the hour
+  let w0 = 1, w = 1, R = null, f = 1, before = null, after = null;
+  const nOf = x => Math.round(SET.nA * x);
+  const PNAME = { tet: 'Tetanus, 100 Hz', lfs: '1 Hz for 15 min', pair: 'Pairing' };
+  const pname = k => k === 'pair' ? 'Pairing, Post held at ' + fmtSigned(SET.Vdep, 0) : PNAME[k];
+  // after the protocol the receptors move in (or out) over about 12 min, and the head follows over about 25 min
+  const recFrac = m => ease(clamp(m / 12)), headFrac = m => ease(clamp((m - 3) / 22));
+  // C: snapshots of both spines at four times, filled in as the hour plays (now: minutes since the protocol)
+  const LAPSE = [-10, 1, 10, 60];
+  function miniSpine(c, x, yb, sc, n, ghost) {
+    const rx = 26 * sc, ry = 20 * sc, yh = yb - 46 - ry * 0.3, nw = 9 * Math.pow(sc, 0.5);
+    c.fillStyle = C.cyto; c.fillRect(x - 74, yb, 148, 20);
+    c.fillRect(x - nw / 2, yh, nw, yb - yh + 2); c.beginPath(); c.ellipse(x, yh, rx, ry, 0, 0, TAU); c.fill();
+    c.strokeStyle = C.memdark; c.lineWidth = 3; c.beginPath(); c.moveTo(x - 74, yb); c.lineTo(x - nw / 2, yb); c.lineTo(x - nw / 2, yh + ry * 0.9);
+    c.ellipse(x, yh, rx, ry, 0, Math.PI / 2 + Math.asin(clamp(nw / 2 / rx)), Math.PI * 2.5 - Math.asin(clamp(nw / 2 / rx))); c.lineTo(x + nw / 2, yb); c.lineTo(x + 74, yb); c.stroke();
+    if (ghost) { c.save(); c.setLineDash([3, 3]); c.strokeStyle = C.muted; c.lineWidth = 1; c.beginPath(); c.ellipse(x, yb - 46 - 6, 26, 20, 0, 0, TAU); c.stroke(); c.restore(); }
+    c.fillStyle = C.na; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + slotJ(i) * 0.15; c.fillRect(x + Math.cos(a) * rx - 2, yh + Math.sin(a) * ry - 2, 4, 4); }
+  }
+  function drawLapse(c, now) {
+    c.fillStyle = C.bath; c.fillRect(0, 0, PW, LH);
+    c.font = '12px "IBM Plex Sans", sans-serif'; c.textBaseline = 'middle';
+    LAPSE.forEach((m, i) => {
+      const x = 190 + i * 200, seen = m < 0 || now >= m;
+      c.textAlign = 'center'; c.fillStyle = C.ink; c.fillText(m < 0 ? '−10 min' : `+${m} min`, x, 14);
+      if (!seen) { c.fillStyle = C.muted; c.fillText('—', x, 90); return; }
+      const wr = m < 0 || !R ? w0 : w0 + (w - w0) * recFrac(m), wh = m < 0 || !R ? w0 : w0 + (w - w0) * headFrac(m);
+      miniSpine(c, x, 108, Math.sqrt(wh), Math.round(SET.nA * wr), Math.abs(wh - 1) > 0.03);
+      miniSpine(c, x, 200, 1, SET.nA, false);
+      c.fillStyle = C.muted; c.fillText(`head volume ×${(wh ** 1.5).toFixed(2)} · ${Math.round(SET.nA * wr)} AMPA`, x, 140);
+    });
+    c.textAlign = 'left'; c.fillStyle = C.muted; c.fillText('Spine A', 10, 70); c.fillText('Spine B', 10, 165);
+    if (R) { c.fillStyle = C.na; c.globalAlpha = 0.5; c.fillRect(288, 26, 3, LH - 34); c.globalAlpha = 1; c.fillStyle = C.ink; c.fillText(pname(P.proto), 296, 34); }
+    c.textBaseline = 'alphabetic';
+  }
+  const test = x => simSpine({ T: 40, Rn: SET.Rn, glu: [2], nA: nOf(x), nN: 2, mg: true, Vdep: E_L, sample: 0.2 });
+  // test EPSPs every 30 s from −10 to 60 min (none during the protocol); a little scatter, fixed
+  function course() {
+    const xs = [], ya = [], yb = [], dur = R ? R.dur : 0;
+    for (let k = -20; k <= 120; k++) {
+      const tm = k / 2, during = R && tm >= 0 && tm < dur, aft = R && tm >= dur;
+      const ptp = aft ? R.ptp * Math.exp(-(tm - dur) / 3) : 0;
+      xs.push(tm);
+      ya.push(during ? NaN : 100 * (aft ? w * (1 + ptp) : w0) * (1 + 0.05 * (hash(k * 7 + 3) - 0.5)));
+      yb.push(during ? NaN : 100 * (1 + 0.05 * (hash(k * 11 + 1) - 0.5)));
+    }
+    return { xs, ya, yb };
+  }
+  function draw() {
+    const g = R ? clamp(f / SPLIT) : 1, h = R ? clamp((f - SPLIT) / (1 - SPLIT)) : 0;   // g: induction shown; h: the hour shown
+    const inducing = R && f < SPLIT;
+    const wR = R ? w0 + (w - w0) * recFrac(h * 60) : w, wH = R ? w0 + (w - w0) * headFrac(h * 60) : w, wNow = wR;   // receptors move first, the head follows
+    let caNow = 0, caIn = 0, glu = 0, gluP = 1, spikeU = null, caption, badges = [];
+    if (inducing) {
+      const j = Math.min(R.cy.length - 1, Math.floor(g * R.cy.length)), Pp = PROTOS[P.proto], per = 1000 / Pp.f;
+      caNow = R.cy[j]; caIn = j ? clamp((R.cy[j] - R.cy[j - 1]) / 0.6) : 0;
+      // each pulse: a puff of glutamate (and, when pulses are far enough apart to see, the spike before it)
+      const tProt = g * R.win * 1000, k = Math.floor(tProt / per), toReal = SPLIT * PLAY_MS / (R.win * 1000);
+      const since = (tProt - k * per) * toReal, until = (per - (tProt - k * per)) * toReal;
+      if (k < Pp.n) { glu = Math.exp(-since / 150); gluP = clamp(since / 60); if (per * toReal > 80 && until < 120) spikeU = 1 - until / 120; }
+      badges = [{ text: 'CaMKII on', color: C.accent, on: clamp((caNow - TH_CAMK + 0.5) / 0.5) }, { text: 'calcineurin on', color: C.k, on: clamp(R.cn[j] / 0.3) }];
+      caption = `${pname(P.proto)}: pulse ${Math.min(k + 1, Pp.n)} of ${Pp.n}` + (P.proto === 'lfs' ? ' (the first 5 s of 15 min shown)' : '') + (SET.apv ? '; APV blocks the NMDA receptors' : '');
+    } else if (R) {
+      const up = w > w0 + 0.02, down = w < w0 - 0.02;
+      caption = h >= 1 ? `An hour later: ${nOf(w)} AMPA receptors (from ${nOf(w0)})` + (up ? ', a bigger head' : down ? ', a smaller head' : ', no change') : `${Math.round(h * 60)} min after the protocol`;
+      if (up || down) badges = [{ text: up ? 'CaMKII: adding AMPA receptors' : 'calcineurin: removing AMPA receptors', color: up ? C.accent : C.k, on: 1 - clamp((h * 60 - 20) / 6) }];
+    } else caption = 'Baseline: a test pulse every 30 s';
+    const held = inducing && P.proto === 'pair' ? SET.Vdep : 0;
+    drawSpines(pic, { Rn: SET.Rn, VhA: held || E_L, VhB: held || E_L, Vd: held || E_L, Vs: held || E_L, caA: caNow, caB: 0, caIn, nA: SET.nA * wR, nB: SET.nA,
+      headA: Math.sqrt(wH), headB: 1, neckA: Math.pow(wH, 0.25), ghost: Math.abs(wH - 1) > 0.03,
+      glu, gluP, spikeU, blocked: SET.apv || !SET.mg ? (SET.apv ? 1 : 0) : 1 - mgFree(held || E_L, 1), mg: SET.mg, held, badges, caption });
+    drawLapse(lap, R ? h * 60 : -Infinity);
+    const win = R ? R.win : 1.5;
+    drawChart(cc, { x0: 0, x1: win, fixed: [0, 12], xlabel: 'time from the start of the protocol (s)', ylabel: 'Ca²⁺ (µM)', r: 84,
+      refs: [{ v: TH_CAMK, color: C.accent, label: 'CaMKII' }, { v: KD_CN, color: C.k, label: 'calcineurin', dash: [2, 3] }],
+      series: R ? [{ xs: R.ct, ys: R.cy, n: Math.round(g * R.ct.length), color: C.ca, width: 1.4 }] : [] });
+    const cs = course(), nb = cs.xs.findIndex(x => x >= 0);
+    const nt = R ? nb + Math.round(h * (cs.xs.length - nb)) : nb;
+    drawChart(ct, { x0: -10, x1: 60, fixed: [0, 250], xlabel: 'time from the protocol (min)', ylabel: 'EPSP (% of the start)', r: 72, span: R ? [0, Math.max(R.dur, 0.15)] : null,
+      refs: [{ v: 100, color: C.muted, dash: [2, 3] }], xs: cs.xs,
+      series: [{ ys: cs.yb, n: nt, color: C.k, dots: true, label: 'Spine B' }, { ys: cs.ya, n: nt, color: C.pos, dots: true, label: 'Spine A' }] });
+    const showAfter = R && h > 0.1;
+    drawChart(ce, { x0: 0, x1: 40, fixed: [-70.2, -68.8], xlabel: 'time (ms)', ylabel: 'voltage at the soma (mV)', r: 72, xs: before.t,
+      series: [{ ys: before.Vs, color: C.muted, label: 'before', width: 1.6 }].concat(showAfter ? [{ ys: after.Vs, color: C.pos, label: 'after' }] : []) });
+    $('p3nA').textContent = R && h >= 1 ? `${nOf(w0)} → ${nOf(w)}` : nOf(wNow) + '';
+    $('p3pct').textContent = !R ? Math.round(100 * w) + ' %' : h >= 1 ? Math.round(100 * w) + ' %' : '…';
+    $('p3pctB').textContent = !R || h >= 1 ? '100 %' : '…';
+    $('p3caPk').textContent = R && g >= 1 ? R.caPk.toFixed(1) + ' µM' : '—';
+    $('p3above').textContent = R && g >= 1 ? R.above.toFixed(2) + ' s' : '—';
+    $('p3cn').textContent = R && g >= 1 ? R.cnPk.toFixed(2) : '—';
+  }
+  player('p3Play', ['p3Run'], d => { if (f >= 1) return false; f = Math.min(1, f + d / PLAY_MS); return true; }, draw);
+  $('p3Run').addEventListener('click', () => {
+    if (R) w0 = w;   // the next experiment starts where the last one left the synapse
+    R = induce(P.proto, SET.apv, SET.Vdep, SET.mg);
+    w = clamp(w0 + R.dW, 0.4, 2.2);
+    before = test(w0); after = test(w); f = 0; draw();
+  });
+  $('p3Reset').addEventListener('click', () => { w0 = w = 1; R = null; before = test(1); f = 1; draw(); });
+  document.querySelectorAll('[data-proto]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-proto]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    P.proto = b.dataset.proto;
+  }));
+  onSet(k => { if (k === 'nA') $('p3Reset').click(); else if (k === 'Rn') { before = test(w0); if (R) after = test(w); draw(); } });
+  before = test(1); draw();
+  colorHooks.push(() => before && draw());
+})();
+
+// =====================================================================================
+// The calculator: the NMDA I–V curve, and LTP or LTD for any protocol
+// =====================================================================================
+(() => {
+  const cn = setupCanvas($('kNChart'), CHW, CHH), cp = setupCanvas($('kPChart'), CHW, CHH);
+  const v = id => +$(id).value;
+  let curve = null, curveKey = '';
+  function nmda() {
+    const V = v('kV'), mg = v('kMg'), g = v('kG'), fr = mgFree(V, mg), I = g * fr * V, caRel = fr * Math.max(0, 130 - V) / 200;
+    $('kFree').textContent = (fr * 100).toFixed(fr < 0.1 ? 1 : 0) + ' %';
+    $('kI').textContent = fmtSigned(I, 1, ' pA'); $('kCa').textContent = (caRel * 100).toFixed(0) + ' %';
+    $('kNForm').textContent = `I = g · free · (V − 0) = ${g.toFixed(1)} nS × ${fr.toFixed(3)} × ${V} mV = ${I.toFixed(1)} pA`;
+    const vs = Array.from({ length: 141 }, (_, i) => -100 + i);
+    drawChart(cn, { x0: -100, x1: 40, fixed: [-120, 50], xlabel: 'V (mV)', ylabel: 'I (pA)', xs: vs, r: 110,
+      series: [{ ys: vs.map(x => g * x), color: C.muted, dash: [5, 4], width: 1.5, label: 'no Mg²⁺' },
+               { ys: vs.map(x => g * mgFree(x, mg) * x), color: C.ca, label: mg.toFixed(1) + ' mM Mg²⁺' },
+               { ys: vs.map(x => -60 * mgFree(x, mg) * Math.max(0, 130 - x) / 200), color: C.pos, width: 1.5, label: 'Ca²⁺ entry' }],
+      dots: [{ x: V, y: I, color: C.ink }] });
+  }
+  function rule() {
+    const f = 10 ** v('kF'), n = v('kN'), hv = v('kHold'), held = hv > -75 ? hv : null, apv = $('kApv').checked;
+    const r = protocol(f, n, held, apv), pct = Math.round(r.w * 100), sec = n / f;
+    $('kOut').textContent = pct + ' %';
+    $('kOutWhat').textContent = 'EPSP an hour later: ' + (pct > 105 ? 'LTP' : pct < 95 ? 'LTD' : 'no change');
+    $('kCaPk').textContent = r.caPk.toFixed(1) + ' µM'; $('kAbove').textContent = r.above.toFixed(2) + ' s'; $('kCn').textContent = r.cnPk.toFixed(2);
+    $('kDur').textContent = sec < 60 ? sec.toFixed(1) + ' s' : (sec / 60).toFixed(1) + ' min';
+    $('kPForm').textContent = `Δw = 0.25·∫(Ca − 3)₊ dt − 0.0015·∫(calcineurin − 0.1)₊ dt  →  ${pct} % of before`;
+    const key = [n, hv, apv].join();
+    if (key !== curveKey) {   // the curve only changes with the pulses, the holding voltage and APV
+      curveKey = key; const ls = Array.from({ length: 34 }, (_, i) => -1 + i * 0.1);
+      curve = { ls, ys: ls.map(l => 100 * protocol(10 ** l, n, held, apv).w) };
+    }
+    drawChart(cp, { x0: -1, x1: 2.3, fixed: [0, 250], xlabel: 'frequency (Hz), the same pulses each time', ylabel: 'EPSP an hour later (%)', xs: curve.ls, r: 84,
+      xticks: [-1, 0, 1, 2], xfmt: l => String(10 ** l),
+      refs: [{ v: 100, color: C.muted, dash: [2, 3] }], series: [{ ys: curve.ys, color: C.accent, label: n + ' pulses' }],
+      dots: [{ x: Math.log10(f), y: pct, color: pct >= 100 ? C.pos : C.k }] });
+  }
+  bindRange('kV', x => fmtSigned(x, 0), () => nmda());
+  bindRange('kMg', x => x.toFixed(1) + ' mM', () => nmda());
+  bindRange('kG', x => x.toFixed(1) + ' nS', () => nmda());
+  bindRange('kF', x => { const f = 10 ** x; return (f < 1 ? f.toFixed(2) : f < 10 ? f.toFixed(1) : f.toFixed(0)) + ' Hz'; }, () => rule());
+  bindRange('kN', x => x + '', () => rule());
+  bindRange('kHold', x => x > -75 ? fmtSigned(x, 0) : 'not held', () => rule());
+  $('kApv').addEventListener('change', rule);
+  colorHooks.push(() => { nmda(); rule(); });
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they behave exactly like clicking them.
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const check = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
+  const go = (k, btn) => { showTab($('tab-' + k)); into(k + '-card'); $(btn).click(); };
+  const proto = (p, apv) => { document.querySelector(`[data-proto="${p}"]`).click(); check('setApv', apv); go('p3', 'p3Run'); };
+  const acts = {
+    fire: () => go('p1', 'p1Fire'),
+    thin: () => { set('setRn', 1000); go('p1', 'p1Fire'); },
+    wide: () => { set('setRn', 50); go('p1', 'p1Fire'); },
+    glu: () => { check('setMg', true); check('setApv', false); go('p2', 'p2Glu'); },
+    both: () => { check('setMg', true); check('setApv', false); set('setVdep', -10); go('p2', 'p2Both'); },
+    nomg: () => { check('setMg', false); check('setApv', false); go('p2', 'p2Glu'); },
+    weakdep: () => { check('setMg', true); check('setApv', false); set('setVdep', -50); go('p2', 'p2Both'); },
+    tet: () => proto('tet', false), lfs: () => proto('lfs', false), pair: () => proto('pair', false), apv: () => proto('tet', true),
+  };
+  document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => acts[b.dataset.try]()));
+  $('setReset').addEventListener('click', () => {
+    set('setRn', 300); set('setNA', 10); set('setVdep', -10); set('setSpeed', 60); check('setMg', true); check('setApv', false);
+    document.querySelector('[data-proto="tet"]').click(); $('p3Reset').click();
+  });
+})();
+</script>
+<script>
+// The floating bar's buttons follow the simulation crossing the middle of the screen.
+(() => {
+  const fire = document.getElementById('fbFire'), play = document.getElementById('fbPlay');
+  const cards = [['p1-card', 'p1Fire', 'p1Play'], ['p2-card', 'p2Both', 'p2Play'], ['p3-card', 'p3Run', 'p3Play']];
+  const update = () => {
+    let pick = cards[0];
+    for (const cd of cards) { const r = document.getElementById(cd[0]).parentElement.getBoundingClientRect(); if (r.top < innerHeight / 2) pick = cd; }
+    if (fire.dataset.copy !== pick[1]) fire.dataset.copy = pick[1];
+    if (play.dataset.copy !== pick[2]) play.dataset.copy = pick[2];
+    // outline the Settings group for the part in view
+    const part = pick[0].slice(0, 2);
+    document.querySelectorAll('.sgrp[data-part]').forEach(g => g.classList.toggle('here', g.dataset.part === part));
+  };
+  addEventListener('scroll', update, { passive: true }); addEventListener('resize', update);
+  update();
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script>NewtBreadboard.add(document.getElementById('p1Play'), breadboardCircuit);</script>
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

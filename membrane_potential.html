@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="frames.js"></script>
+<script src="breadboard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Exploring the membrane potential</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -160,6 +161,10 @@ table.conc input{width:76px;font:inherit;font-family:var(--font-mono);font-size:
 .ghk h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
 .ghk h3{font-size:15px;font-weight:600;margin:18px 0 4px}
 .deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.primer .defs{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:4px 0 2px;font-size:14px}
+.primer .defs dt{font-weight:600}.primer .defs dd{margin:0}
 .mj-fail{display:none}
 .no-mathjax .mj-fail{display:block;color:var(--pos)}
 .deriv p{margin:6px 0}
@@ -330,9 +335,9 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     <div class="help" role="tabpanel" id="pane-simhow" aria-labelledby="tab-simhow" hidden>
       <ul>
         <li><b>Random steps:</b> every ion takes small random steps (Brownian motion, the source of diffusion). Steps are smaller inside channels than in the open solution.</li>
-        <li><b>Drift in the field:</b> on top of the random steps, each ion drifts in the electric field: cations toward negative regions, anions toward positive ones. The field is recomputed every step from the positions of all the ions, so every ion feels every other.</li>
+        <li><b>Drift in the field:</b> on top of the random steps, each ion is pushed by the charges around it (the electric field): positive ions drift toward negative regions, negative ions toward positive ones. The field is recomputed every step from the positions of all the ions, so every ion feels every other.</li>
         <li><b>The membrane:</b> its oily core weakens electric fields far less than water does, so the same charge makes a much stronger field inside it. That is why most of the voltage drops across the membrane.</li>
-        <li><b>The charge layers:</b> extra charge is pulled toward the membrane by the opposite charge on the other side and spread out again by diffusion. The balance makes the thin layers, whose width is the Debye length.</li>
+        <li><b>The charge layers:</b> extra charge is pulled toward the membrane by the opposite charge on the other side and spread out again by diffusion. The balance makes the thin layers; how thick they are is called the Debye length.</li>
         <li><b>No formulas in charge:</b> nothing in the code uses the Nernst or GHK equation to move ions. With one permeant ion the voltage still settles at its Nernst potential; with several, near the GHK value.</li>
         <li><b>The patch:</b> the simulated piece of membrane wraps top to bottom, as part of a much longer membrane. The Ion count slider sets its length; a longer patch averages over more ions, so the graphs are steadier.</li>
       </ul>
@@ -364,7 +369,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       <div class="help" role="tabpanel" id="pane-profhelp" aria-labelledby="tab-profhelp" hidden>
         <ul>
           <li><b>Bars:</b> net charge in the solution in each 16 px column, averaged over recent steps. Red is extra positive charge, blue extra negative. The hatched bar over the membrane is the charge held inside the channels (mostly K⁺ near their inner end).</li>
-          <li><b>Curves:</b> an exponential with the Debye length λ (scale bar at the bottom), scaled so its shaded area equals the charge measured out to 3λ (dashed lines). That area is each layer's charge Q.</li>
+          <li><b>Curves:</b> a smooth fit to each charge layer: highest against the membrane and falling off with distance. The scale bar at the bottom, λ (the Debye length), is how far it takes to fall to about a third. The shaded area under each curve equals the charge measured out to 3λ (dashed lines): that area is the layer's charge Q.</li>
           <li><b>Q bar:</b> the two layers' charges side by side, inside to the left and outside to the right. At rest they are equal and opposite.</li>
           <li><b>Tinted band:</b> the part of the box shown in the simulation view when you zoom in.</li>
         </ul>
@@ -480,7 +485,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     <ol class="steps">
       <li><button class="chip" data-try="preset:k">1 · K⁺ only</button> The voltage trace settles on the dashed E<sub>K</sub> line.</li>
       <li><button class="chip" data-try="preset:rest">2 · Resting neuron</button> With Na⁺ and Cl⁻ channels open too, it settles between E<sub>K</sub> and E<sub>Na</sub>.</li>
-      <li><button class="chip" data-try="zoom">3 · Zoom to membrane</button> The voltage is made by a thin layer of charge on each face, Q = C<sub>m</sub>V<sub>m</sub>.</li>
+      <li><button class="chip" data-try="zoom">3 · Zoom to membrane</button> The voltage is made by a thin layer of extra charge on each face of the membrane: the more charge, the bigger the voltage (Q = C<sub>m</sub>V<sub>m</sub>).</li>
     </ol>
   </section>
 
@@ -518,6 +523,17 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
 
   <h2 class="pagesec" id="theory-section">Theory</h2>
+  <details class="fullderiv primer">
+    <summary>New to electricity? The six ideas these lessons use</summary>
+    <dl class="defs">
+      <dt>Charge</dt><dd>Ions carry electric charge: K⁺ and Na⁺ are positive, Cl⁻ is negative. Opposite charges attract and like charges repel.</dd>
+      <dt>Voltage (V)</dt><dd>A difference in electrical push between two places, a bit like a difference in height for water. Measured in millivolts (mV). The membrane potential is the inside of the cell compared with the outside.</dd>
+      <dt>Current (I)</dt><dd>Charge on the move. In a cell, that means ions flowing through channels. Here, positive current means positive charge flowing out of the cell.</dd>
+      <dt>Conductance (g)</dt><dd>How easily current flows. More open channels, more conductance. Resistance is the opposite, 1/g. Ohm's law ties them together: current = conductance × the voltage pushing it.</dd>
+      <dt>Battery (E)</dt><dd>A steady source of voltage. Each ion's concentration difference across the membrane acts as one. Its voltage, the Nernst potential, is the membrane voltage at which that ion's flow stops overall: as many of its ions cross one way as the other.</dd>
+      <dt>Capacitor (C)</dt><dd>Two conducting layers held apart by a thin insulator: here, the salty fluid on each side of the oily membrane. It stores charge. To change the voltage across it you have to add or remove charge, and that takes time.</dd>
+    </dl>
+  </details>
   <section class="card ghk" id="ghk-equation">
     <div class="deriv" id="ghk-intro">
       <h2>What sets the membrane potential</h2>
@@ -539,6 +555,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
       <div class="tabpane" role="tabpanel" id="pane-charge" aria-labelledby="tab-charge">
         <div class="deriv">
+          <p class="gist"><b>In plain words:</b> The cell's voltage comes from a tiny imbalance of charge: a few extra negative ions hugging the inside face of the membrane, and a few extra positive ions hugging the outside face. The membrane keeps the two layers apart, which makes it a capacitor. It takes remarkably few ions, about 1 in 100,000 of those inside, so making the voltage barely changes the concentrations.</p>
           <h3>The voltage is a charge separation</h3>
           <p>A membrane potential means a little extra negative charge on the inside face of the membrane and an equal extra positive charge on the outside face. The membrane is a capacitor, and the charge \(Q\) on each side and the voltage are tied by its capacitance:</p>
           <div class="eq">\[ Q = C_m\,V_m \]</div>
@@ -547,10 +564,10 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           <h3>Where the charge sits</h3>
           <p>Not on a metal plate. The extra ions are in the solution, pulled toward the membrane by the opposite charge across it and spread back out by diffusion. The balance gives a layer whose charge density falls off exponentially with distance \(x\) from the membrane, and \(Q\) is the area under it:</p>
           <div class="eq">\[ \rho(x) = \rho_0\,e^{-x/\lambda_D}, \qquad Q = \int_0^\infty \rho\,dx = \rho_0\,\lambda_D \]</div>
-          <p>\(\lambda_D\) is the Debye length. It is shorter in saltier solutions, about 0.8 nm at 150 mM, so in a real cell each layer is only a few ions thick. Here it is 40 px so you can see it. In the charge and potential chart, the curve on each side is this exponential, scaled to the bars, and the shaded area under it is \(Q\), counted out to \(3\lambda_D\), which holds 95% of the layer's charge.</p>
+          <p>\(\lambda_D\) is the Debye length. It is shorter in saltier solutions, about 0.8 nm at 150 mM, so in a real cell each layer is only a few ions thick. Here it is 40 px so you can see it. In the Charge chart, the curve on each side is this exponential, scaled to the bars, and the shaded area under it is \(Q\), counted out to \(3\lambda_D\), which holds 95% of the layer's charge.</p>
 
           <h3>What sets the capacitance</h3>
-          <p>A capacitor stores more charge per volt when its plates are close together and the gap between them is easy to polarize: \(C = \varepsilon/d\). The membrane's oily core is about 4 nm thick with a low dielectric constant (about 2, against water's 80), which gives roughly 0.5–1 µF/cm². Each diffuse layer is also a capacitor, with a gap of \(\lambda_D\) filled with water, so its capacitance is about 100 times larger. The three sit in series, and the smallest capacitance takes most of the voltage: nearly all of \(V_m\) drops across the membrane itself, as the potential line in the chart shows.</p>
+          <p>A capacitor stores more charge per volt when its plates are close together and the gap between them is easy to polarize: \(C = \varepsilon/d\). The membrane's oily core is about 4 nm thick with a low dielectric constant (about 2, against water's 80), which gives roughly 0.5–1 µF/cm². Each diffuse layer is also a capacitor, with a gap of \(\lambda_D\) filled with water, so its capacitance is about 100 times larger. The three sit in series, and the smallest capacitance takes most of the voltage: nearly all of \(V_m\) drops across the membrane itself.</p>
 
           <details class="fullderiv">
             <summary>Show the derivation</summary>
@@ -580,7 +597,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
             <div class="eq">\[ Q = \int_0^\infty \rho\,dx = \rho_0\,\lambda_D = -\frac{\varepsilon_w}{\lambda_D}\,\phi_0 \]</div>
             <p>The layer's charge is proportional to the voltage across it, which is what a capacitor does. Each layer acts like a capacitor with its plates \(\lambda_D\) apart: \(C_D = \varepsilon_w/\lambda_D\).</p>
 
-            <p>5. The membrane itself. There are no free ions in the oily core, so the electric field there is constant and the voltage drops in a straight line; that is the steep straight section of the potential line in the chart. With charge \(Q\) on each face and thickness \(d\):</p>
+            <p>5. The membrane itself. There are no free ions in the oily core, so the electric field there is constant and the voltage drops in a straight line, steeply, from one face to the other. With charge \(Q\) on each face and thickness \(d\):</p>
             <div class="eq">\[ C_m = \frac{\varepsilon_m}{d} \]</div>
             <p>A thin core with a small \(\varepsilon_m\) makes this the smallest of the three capacitances.</p>
 
@@ -592,7 +609,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
           <h3>Charge moves, voltage follows</h3>
           <p>\(V_m\) changes only when charge crosses the membrane, through its channels. Any net current charges or discharges the capacitor:</p>
           <div class="eq">\[ I_\text{net} = C_m\,\frac{dV_m}{dt} \]</div>
-          <p>This is the link to the steady-state tab. At rest the voltage is steady, so the net current is zero; that is the condition both the chord conductance and GHK formulas solve. Away from rest, net current flows until the capacitor reaches the new voltage, with time constant \(\tau = C_m/g\) (see the RC membrane page). Capacitance sets how much charge has to move, and so how long it takes, but not where \(V_m\) ends up.</p>
+          <p>This is the link to the steady-state tab. At rest the voltage is steady, so the net current is zero; that is the condition both the chord conductance and GHK formulas solve. Away from rest, net current flows until the capacitor reaches the new voltage, with time constant \(\tau = C_m/g\) (lesson 2, Passive properties: time). Capacitance sets how much charge has to move, and so how long it takes, but not where \(V_m\) ends up.</p>
 
           <h3>Where it falls short</h3>
           <ul>
@@ -618,6 +635,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
       <div class="tabpane" role="tabpanel" id="pane-chord" aria-labelledby="tab-chord">
         <div class="deriv">
+          <p class="gist"><b>In plain words:</b> Each ion that can cross the membrane pulls the voltage toward its own target, its Nernst potential. The more open channels an ion has, the harder it pulls. The resting voltage is where the pulls balance: an average of the targets, weighted by how many channels each ion has open. That is why a resting neuron sits near K⁺'s target: K⁺ has the most open channels.</p>
           <h3>Ohm's law, one ion at a time</h3>
           <p>Ohm's law says the current through a resistor is the voltage across it divided by its resistance. Written with conductance \(g = 1/R\), which says how easily current flows, it is</p>
           <div class="eq">\[ I = \frac{V}{R} = g\,V \]</div>
@@ -645,7 +663,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
             <li>A channel is not a fixed resistor, so Ohm's law with a constant \(g_s\) is only an approximation. Even an always-open channel passes current more easily in the direction that has more ions to carry it, so its current–voltage curve bends, and \(g_s\) changes with voltage and with concentrations. Raise [K⁺]ₒ and \(g_\mathrm{K}\) should rise too; the formula cannot say by how much.</li>
             <li>The Nernst potentials are inputs. The formula takes \(E_s\) as given, so it says nothing about how a concentration gradient makes a voltage.</li>
             <li>Zero net current is not zero flux. At rest K⁺ keeps leaking out and Na⁺ keeps leaking in, each a steady current that the others cancel.</li>
-            <li>It says where \(V_m\) ends up, not how fast it gets there. That is set by the membrane capacitance; see the RC membrane page.</li>
+            <li>It says where \(V_m\) ends up, not how fast it gets there. That is set by the membrane capacitance; see lesson 2, Passive properties: time.</li>
           </ul>
         </div>
         <aside class="try">
@@ -658,6 +676,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
       <div class="tabpane" role="tabpanel" id="pane-ghk" aria-labelledby="tab-ghk" hidden>
         <div class="deriv">
+          <p class="gist"><b>In plain words:</b> GHK gives the same kind of answer as the chord formula, but works it out from the ions themselves: each kind drifts down its concentration difference and is pushed by the voltage. An ion counts for more when it crosses easily and when there is more of it. It is the formula to use when concentrations change, or for Ca²⁺.</p>
           <h3>Start from the ions, not the circuit</h3>
           <p>GHK asks what each ion does inside the membrane. It diffuses down its concentration gradient and drifts in the electric field, which is exactly what the dots in the simulation do. Two assumptions make this solvable: the electric field is constant across the membrane, so the potential falls in a straight line from one face to the other, and each ion crosses independently, without binding or interacting with the others.</p>
 
@@ -709,6 +728,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
 
       <div class="tabpane" role="tabpanel" id="pane-compare" aria-labelledby="tab-compare" hidden>
         <div class="deriv">
+          <p class="gist"><b>In plain words:</b> Both formulas say the same thing: the resting voltage is where the charge flowing in and the charge flowing out cancel. They differ only in the details of how each ion's current depends on the voltage, and for K⁺ and Na⁺ in ordinary conditions they agree closely.</p>
           <h3>The general picture</h3>
           <ul>
             <li>Each concentration gradient is a battery. An ion's Nernst potential is the voltage at which its drift in the field exactly balances its diffusion down the gradient.</li>
@@ -753,7 +773,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
         <li><b>Cole KS, Curtis HJ (1938).</b> Transverse electric impedance of the squid giant axon. <i>Journal of General Physiology</i> 21:757–765. <a href="https://doi.org/10.1085/jgp.21.6.757" target="_blank" rel="noopener">doi:10.1085/jgp.21.6.757</a><br><span class="why">The squid axon membrane as a capacitor of about 1 µF/cm² in parallel with a resistance.</span></li>
         <li><b>Goldman DE (1943).</b> Potential, impedance, and rectification in membranes. <i>Journal of General Physiology</i> 27:37–60. <a href="https://doi.org/10.1085/jgp.27.1.37" target="_blank" rel="noopener">doi:10.1085/jgp.27.1.37</a><br><span class="why">The constant-field current equation for ions crossing a membrane.</span></li>
         <li><b>Hodgkin AL, Katz B (1949).</b> The effect of sodium ions on the electrical activity of the giant axon of the squid. <i>Journal of Physiology</i> 108:37–77. <a href="https://doi.org/10.1113/jphysiol.1949.sp004310" target="_blank" rel="noopener">doi:10.1113/jphysiol.1949.sp004310</a><br><span class="why">The Goldman–Hodgkin–Katz voltage equation, and the sodium hypothesis: the spike is a brief rise in Na⁺ permeability.</span></li>
-        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 3 to 5 are theirs, including the 3× speed-up per 10 °C.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 4, 6 and 8 are theirs, including the 3× speed-up per 10 °C.</span></li>
           </ol>
         </div>
       </div>
@@ -1496,11 +1516,15 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   // ---------- charge profile ----------
   // Fixed scales, about twice what the default settings reach (bars about 11 e, a layer about 27 e), so the default
   // fills about half the chart. Larger settings can run off the edge; the scale never moves.
-  const rScale = 24, qScale = 55;
+  const R_SCALE = 24, qScale = 55; let rScale = R_SCALE;
   const PT = 34, PB = 34, PL = 50, PR = 16;
-  const psx = x => PL + x / W * (PW - PL - PR);
+  let px0 = 0, px1 = W;   // the horizontal view after the zoom arrows
+  const psx = x => PL + (x - px0) / (px1 - px0) * (PW - PL - PR);
+  ChartZoom.bind(prof, () => drawProfile());
   function drawProfile() {
     const c = pctx, h = PRH - PT - PB, y0 = PT + h / 2;
+    rScale = ChartZoom.y(prof, -R_SCALE, R_SCALE, 'mid')[1];   // the zoom arrows (chartzoom.js)
+    [px0, px1] = ChartZoom.x(prof, 0, W, 'mid');
     c.fillStyle = C.surface; c.fillRect(0, 0, PW, PRH);
     // view window
     const vx0 = view.cx - CW / (2 * dz()), vx1 = view.cx + CW / (2 * dz());
@@ -1509,6 +1533,7 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
     // frame + zero line
     c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(PL + 0.5, PT + 0.5, PW - PL - PR - 1, h - 1);
     c.beginPath(); c.moveTo(PL, y0); c.lineTo(PW - PR, y0); c.stroke();
+    c.save(); c.beginPath(); c.rect(PL, 0, PW - PL - PR, PRH); c.clip();   // keep a zoomed-in view inside the frame
     // each diffuse layer's Q: the charge in the bins out to 3λ from the membrane face
     const nb = Math.ceil(3 * lambda / BIN), bIn = Math.floor((XIN - 1) / BIN), bOut = Math.floor(XOUT / BIN);
     let qi = 0, qo = 0;
@@ -1559,12 +1584,13 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
       c.moveTo(psx(XOUT + lambda), yb - 4); c.lineTo(psx(XOUT + lambda), yb + 4); c.stroke();
       c.font = '11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'left'; c.fillText('λ', psx(XOUT + lambda) + 4, yb);
     }
+    c.restore();
     // axes
     c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
     c.textAlign = 'right';
-    c.fillStyle = C.pos; c.fillText('+' + rScale.toFixed(0) + ' e', PL - 6, PT + 6);
+    c.fillStyle = C.pos; c.fillText('+' + (rScale < 10 ? rScale.toFixed(1) : rScale.toFixed(0)) + ' e', PL - 6, PT + 6);
     c.fillStyle = C.muted; c.fillText('0 e', PL - 6, y0);
-    c.fillStyle = C.neg; c.fillText('−' + rScale.toFixed(0) + ' e', PL - 6, PT + h - 6);
+    c.fillStyle = C.neg; c.fillText('−' + (rScale < 10 ? rScale.toFixed(1) : rScale.toFixed(0)) + ' e', PL - 6, PT + h - 6);
     c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted;
     c.textAlign = 'left'; c.fillText('NET CHARGE', PL, 16);
     c.font = '500 11.5px "IBM Plex Sans", sans-serif';
@@ -1790,6 +1816,15 @@ table.cmp td:first-child{color:var(--muted);white-space:nowrap}
   // src: which sliders to take as given, 'P' or 'G' (default: the ones the current model shows).
   // sync: also move the other model's sliders to match. A concentration change in the chord model leaves
   // P alone, so switching back to GHK shows how the two models part once G is held fixed.
+  // Newt: the chord-conductance circuit on the Breadboard simulator (per cm², in F, S, V): each ion a conductance
+  // in series with its Nernst battery, and C_m, so V settles at the calculator's V_m
+  NewtBreadboard.add($('gV').parentElement, () => {
+    const T = num('gT'), rtf = 8.314462 * (T + 273.15) / 96485.33 * 1000;
+    const E = [rtf * Math.log(num('gKo') / num('gKi')), rtf * Math.log(num('gNao') / num('gNai')), -rtf * Math.log(num('gClo') / num('gCli'))];
+    const G = gGIds.map(num), names = ['K⁺', 'Na⁺', 'Cl⁻'];
+    return { title: 'the chord-conductance circuit', compartments: [{ name: 'Membrane', C: num('gC') * 1e-6,
+      channels: G.map((g, k) => ({ name: names[k], g: g * 1e-3, E: E[k] * 1e-3 })) }] };
+  });
   function calcGHK(src, sync = true) {
     if (src !== 'P' && src !== 'G') src = gMode === 'chord' ? 'G' : 'P';
     const T = num('gT'), rtf = 8.314462 * (T + 273.15) / 96485.33 * 1000;

@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <script src="frames.js"></script>
+<script src="breadboard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RC Circuit and Membrane</title>
+<title>Passive Properties: Time</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -166,6 +167,10 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--s
 .theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
 .theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
 .deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.primer .defs{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:4px 0 2px;font-size:14px}
+.primer .defs dt{font-weight:600}.primer .defs dd{margin:0}
 .deriv p{margin:6px 0}
 .deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
 .mj-fail{display:none}
@@ -202,8 +207,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 </div>
 <div class="wrap">
 <header>
-  <h1>Charging a membrane: the RC circuit and the ions</h1>
-  <p>When ion channels open, why doesn't the membrane potential jump straight to its new value? Watch a membrane charge like a capacitor, first as an electric circuit and then ion by ion, and explain it with the theory below.</p>
+  <h1>Passive properties: time. Charging a membrane, as a circuit and ion by ion</h1>
+  <p>When ion channels open, why doesn't the membrane potential jump straight to its new value? Watch a membrane charge like a capacitor, first as an electric circuit and then ion by ion, and explain it with the theory below. Lesson 3 joins these patches in a row, as in a dendrite or axon.</p>
   <div class="intro">
     <section class="introbox" aria-labelledby="goalsTitle">
       <span class="sect-title" id="goalsTitle">You'll be able to</span>
@@ -249,6 +254,8 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <span id="cLegK"><i class="dot k"></i>through the K⁺ branch</span>
           <span id="cLegCl"><i class="dot cl"></i>through the Cl⁻ branch</span>
         </div>
+        <p class="caption"><b>Membrane potential:</b> shaded, switch closed. The voltage eases toward V<sub>∞</sub>, fast at first and then more slowly; τ, the time constant, is how long it takes to get about two-thirds of the way. When closing the switch opens channels, it adds conductance, so τ gets shorter; turning on an injected current adds none, so τ stays the same.</p>
+        <p class="caption"><b>Where the current goes:</b> <span id="cIcap"></span></p>
       </div>
       <div class="ccol">
         <p class="sect-title">Membrane potential</p>
@@ -258,12 +265,10 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <canvas id="cIchart" aria-label="Branch currents over time"></canvas>
       </div>
     </div>
-    <p class="caption"><b>Membrane potential:</b> shaded, switch closed. The voltage moves exponentially toward V<sub>∞</sub> with time constant τ. Closing the switch adds a conductance, so τ gets shorter.</p>
-    <p class="caption"><b>Where the current goes:</b> <span id="cIcap"></span></p>
     </div>
     <div class="help" role="tabpanel" id="pane-circhelp" aria-labelledby="tab-circhelp" hidden>
       <ul>
-        <li><b>The drawing:</b> the bottom wire is the inside of the cell (intracellular), the top wire the outside (extracellular, ground). In current injection the two wires are the electrodes: the anode is the electrode current flows out of, into the solution around it, and the cathode the one it flows back into. With positive I<sub>inj</sub> the electrode inside the cell is the anode; make I<sub>inj</sub> negative and they swap. Each ion channel is a branch: a resistor (1/g) in series with a battery, that ion's Nernst potential E. The capacitor on the right is the lipid bilayer.</li>
+        <li><b>The drawing:</b> the bottom wire is the inside of the cell (intracellular), the top wire the outside (extracellular, ground). In current injection the two wires are electrodes. With positive I<sub>inj</sub>, current flows out of the electrode inside the cell (the anode), across the membrane, and back into the electrode outside (the cathode); make I<sub>inj</sub> negative and they swap. Each ion channel is a branch: a resistor (1/g) in series with a battery, that ion's Nernst potential E. The capacitor on the right is the lipid bilayer.</li>
         <li><b>Current injection</b> replaces the channels with a current source and one resistor, like an electrode pushing current into the cell.</li>
         <li><b>Dots:</b> moving positive charge (conventional current), coloured by the branch it went through. Each dot carries the same charge as one + or − mark on the capacitor plates, so you can watch dots arriving at a plate turn into marks. Current is positive when it flows from inside to outside, the usual sign for membrane currents.</li>
         <li><b>Membrane potential chart:</b> the black line is V; the shading marks when the switch is closed. The dotted line is V<sub>∞</sub>, where V is heading.</li>
@@ -273,7 +278,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="help" role="tabpanel" id="pane-circlook" aria-labelledby="tab-circlook" hidden>
       <ul>
       <li>Close the switch (or open the Na⁺ channels). At first almost all the Na⁺ current goes into the capacitor: the plates fill, and in the particle model Na⁺ ions pile up as positive charge just inside the membrane.</li>
-      <li>As the voltage rises, the K⁺ branch carries more and more current outward and the Na⁺ branch less inward, because both are now further from (or closer to) their batteries.</li>
+      <li>As the voltage rises, the K⁺ branch carries more and more current outward and the Na⁺ branch less inward. V is moving away from E<sub>K</sub>, so K⁺ is pushed out harder, and closer to E<sub>Na</sub>, so Na⁺ is pushed in less.</li>
       <li>Once the voltage stops changing, the capacitor current is zero. Current now goes all the way around: in through Na⁺, out through K⁺. The charge on the membrane is constant, yet ions keep crossing.</li>
       <li>Open the switch again and the capacitor discharges through the K⁺ branch alone, more slowly, because there is less conductance.</li>
     </ul>
@@ -402,13 +407,13 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Channels:</b> K⁺ leak channels are always open. Na⁺ channels have a gate at the inner mouth, opened and closed by the switch.</li>
         <li><b>Membrane potential chart:</b> each point averages 100 steps. Dashed lines are E<sub>K</sub> and E<sub>Na</sub>; the dotted line is the GHK prediction for the channels as they are now.</li>
         <li><b>Where the ions go:</b> Currents counts ions crossing per 1000 steps, outward positive. Ions moved counts them since the switch last changed; "on membrane" is the net charge that has piled up.</li>
-        <li><b>Charge across the membrane:</b> the chart from the Membrane potential page. Bars are the net charge in the solution in each 16 px column, averaged over recent steps: red extra positive, blue extra negative. The hatched bar over the membrane is the charge held inside the channels. The curves are exponentials with the Debye length λ (scale bar at the bottom), scaled so each shaded area equals that layer's charge Q, measured out to 3λ (dashed lines). The bar under the chart shows the two layers' Q side by side; at rest they are equal and opposite, the charge on the capacitor. Open the Na⁺ channels and watch Na⁺ build up as positive charge just inside the membrane.</li>
+        <li><b>Charge across the membrane:</b> lesson 1's charge chart. Bars are the net charge in the solution in each 16 px column, averaged over recent steps: red extra positive, blue extra negative. The hatched bar over the membrane is the charge held inside the channels. The curves are a smooth fit to each charge layer, highest against the membrane and falling off with distance (λ, the scale bar at the bottom, is how far it takes to fall to about a third); each shaded area equals that layer's charge Q, measured out to 3λ (dashed lines). The bar under the chart shows the two layers' Q side by side; at rest they are equal and opposite, the charge on the capacitor. Open the Na⁺ channels and watch Na⁺ build up as positive charge just inside the membrane.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-ioncav" aria-labelledby="tab-ioncav" hidden>
       <ul>
       <li>The circuit uses linear (ohmic) channels. Real channels, and the particle model, follow the GHK current equation, so the particle voltage settles at the GHK value, close to but not exactly the circuit's conductance-weighted average.</li>
-      <li>The particle model is the one on the Membrane potential page with no pump, and gated Na⁺ channels added. In the Na⁺ channels mode Cl⁻ is folded into the impermeant anions; the complete membrane mode lets Cl⁻ through its own leak channels, and its mixed channels pass Na⁺ and K⁺ alike. Both sides are held at fixed concentrations far from the membrane.</li>
+      <li>The particle model is lesson 1's, with no pump, and gated Na⁺ channels added. In the Na⁺ channels mode Cl⁻ is folded into the impermeant anions; the complete membrane mode lets Cl⁻ through its own leak channels, and its mixed channels pass Na⁺ and K⁺ alike. Both sides are held at fixed concentrations far from the membrane.</li>
       <li>Ion counts are tiny compared with a real cell, so the particle traces are noisy; the voltage is averaged over many steps. Time is in simulation steps, not milliseconds.</li>
       <li>Real Na⁺ channels open with voltage and then inactivate, which gives an action potential. Here they only open and close when you tell them to.</li>
     </ul>
@@ -492,6 +497,17 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 </section>
 
 <h2 class="pagesec" id="theory-section">Theory</h2>
+<details class="fullderiv primer">
+  <summary>New to electricity? The six ideas these lessons use</summary>
+  <dl class="defs">
+    <dt>Charge</dt><dd>Ions carry electric charge: K⁺ and Na⁺ are positive, Cl⁻ is negative. Opposite charges attract and like charges repel.</dd>
+    <dt>Voltage (V)</dt><dd>A difference in electrical push between two places, a bit like a difference in height for water. Measured in millivolts (mV). The membrane potential is the inside of the cell compared with the outside.</dd>
+    <dt>Current (I)</dt><dd>Charge on the move. In a cell, that means ions flowing through channels. Here, positive current means positive charge flowing out of the cell.</dd>
+    <dt>Conductance (g)</dt><dd>How easily current flows. More open channels, more conductance. Resistance is the opposite, 1/g. Ohm's law ties them together: current = conductance × the voltage pushing it.</dd>
+    <dt>Battery (E)</dt><dd>A steady source of voltage. Each ion's concentration difference across the membrane acts as one. Its voltage, the Nernst potential, is the membrane voltage at which that ion's flow stops overall: as many of its ions cross one way as the other.</dd>
+    <dt>Capacitor (C)</dt><dd>Two conducting layers held apart by a thin insulator: here, the salty fluid on each side of the oily membrane. It stores charge. To change the voltage across it you have to add or remove charge, and that takes time.</dd>
+  </dl>
+</details>
 <section class="card theory" id="dvdt">
   <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
   <div class="tabs" role="tablist" aria-label="Theory">
@@ -504,6 +520,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Every open channel lets current through, and how much depends on how far the voltage is from that ion's target (its Nernst potential). Charge that comes in through one set of channels and does not go straight back out through another piles up on the membrane, and that pile-up is what changes the voltage. No pile-up, no change.</p>
       <h3>Ohm's law for each channel</h3>
       <p>Ohm's law says the current through a resistor is its conductance times the voltage across it, \(I = gV\) (with \(g = 1/R\)). An ion channel is a resistor in series with a battery, the ion's Nernst potential \(E\), so the voltage that drives current through it is the driving force \(V - E\):</p>
       <div class="eq">\[ I_\mathrm{Na} = g_\mathrm{Na}\,(V - E_\mathrm{Na}), \qquad I_\mathrm{K} = g_\mathrm{K}\,(V - E_\mathrm{K}) \]</div>
@@ -512,7 +529,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <h3>The capacitor</h3>
       <p>The voltage across a capacitor is the charge on it divided by its capacitance. So the only way to change the voltage is to move charge onto or off the plates, and the current into the capacitor is how fast that charge moves:</p>
       <div class="eq">\[ Q = C\,V \quad\Rightarrow\quad I_C = \frac{dQ}{dt} = C\,\frac{dV}{dt} \]</div>
-      <p>Charge cannot pile up on the wires, so whatever the channels carry across must come off the capacitor: the currents at a junction add up to zero (Kirchhoff's current law). The voltage therefore changes at a rate set by the net channel current:</p>
+      <p>Charge cannot pile up on the wires, so whatever the channels carry across must come off the capacitor: the currents meeting at any point in the circuit add up to zero (this is called Kirchhoff's current law). The voltage therefore changes at a rate set by the net channel current:</p>
       <div class="eq">\[ I_C + I_\mathrm{Na} + I_\mathrm{K} = 0 \quad\Rightarrow\quad \frac{dV}{dt} = -\,\frac{I_\mathrm{Na} + I_\mathrm{K}}{C} \]</div>
 
       <h3>A quick number</h3>
@@ -527,6 +544,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The voltage does not jump to its new value; it eases toward it, quickly at first and then more and more slowly, the way a hot drink cools fast at first and slowly as it nears room temperature. The time constant τ is how long it takes to get about two-thirds of the way. More membrane (capacitance) makes it slower; more open channels make it faster.</p>
       <h3>Why it slows down</h3>
       <p>As V moves toward the voltage where the channel currents cancel, \(V_\infty\), those currents shrink, so the capacitor charges more and more slowly. The rate turns out to be proportional to the distance V still has to go:</p>
       <div class="eq">\[ \frac{dV}{dt} = \frac{V_\infty - V}{\tau}, \qquad \tau = \frac{C}{g_\mathrm{Na} + g_\mathrm{K}} \]</div>
@@ -553,10 +571,11 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
     <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The voltage settles where the current coming in through the Na⁺ channels exactly matches the current going out through the K⁺ channels. Ions keep crossing, but no extra charge piles up, so the voltage stays put. Where it settles is a weighted average of the two ions' targets.</p>
       <h3>Steady state</h3>
       <p>V stops changing when no current is charging the capacitor, so the channel currents cancel: Na⁺ current in is matched by K⁺ current out. That happens at</p>
       <div class="eq">\[ V_\infty = \frac{g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{K}E_\mathrm{K}}{g_\mathrm{Na} + g_\mathrm{K}} \]</div>
-      <p>This is the chord conductance formula from the Membrane potential page: an average of the Nernst potentials, each weighted by its share of the conductance. Opening Na⁺ channels pulls \(V_\infty\) toward \(E_\mathrm{Na}\); more K⁺ conductance pulls it back toward \(E_\mathrm{K}\).</p>
+      <p>This is the chord conductance formula from lesson 1: an average of the Nernst potentials, each weighted by its share of the conductance. Opening Na⁺ channels pulls \(V_\infty\) toward \(E_\mathrm{Na}\); more K⁺ conductance pulls it back toward \(E_\mathrm{K}\).</p>
 
       <details class="fullderiv">
         <summary>Show the derivation</summary>
@@ -578,6 +597,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
     <div class="deriv wide">
+      <p class="gist"><b>In plain words:</b> Each part of the circuit drawing stands for something real in the membrane: the capacitor is the lipid bilayer, each resistor is a set of channels, and each battery is an ion's concentration difference.</p>
       <table class="map">
     <thead><tr><th>Circuit</th><th>Membrane</th><th>In the particle model</th></tr></thead>
     <tbody>
@@ -586,7 +606,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <tr><td>Resistor g<sub>K</sub> with battery E<sub>K</sub></td><td>K⁺ leak channels; the K⁺ concentration gradient drives K⁺ out</td><td>Purple channels; purple ions crossing outward</td></tr>
       <tr><td>Switch, resistor g<sub>Na</sub>, battery E<sub>Na</sub></td><td>Gated Na⁺ channels opening; the Na⁺ gradient drives Na⁺ in</td><td>Orange channels with a gate on the inner mouth</td></tr>
       <tr><td>Capacitor current I<sub>C</sub> = C dV/dt</td><td>Ions that crossed but have not been matched by an opposite flow</td><td>Na⁺ in minus K⁺ out: the charge that piles up at the membrane</td></tr>
-      <tr><td>Steady state: I<sub>Na</sub> + I<sub>K</sub> = 0</td><td>Na⁺ leaking in exactly as fast as K⁺ leaks out</td><td>The "Na⁺ in" and "K⁺ out" lines rising in parallel</td></tr>
+      <tr><td>Steady state: I<sub>Na</sub> + I<sub>K</sub> = 0</td><td>Na⁺ flowing in exactly as fast as K⁺ flows out</td><td>The "Na⁺ in" and "K⁺ out" lines rising in parallel</td></tr>
     </tbody>
   </table>
       <h3>In the particle model</h3>
@@ -604,7 +624,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Cole KS, Curtis HJ (1939).</b> Electric impedance of the squid giant axon during activity. <i>Journal of General Physiology</i> 22:649–670. <a href="https://doi.org/10.1085/jgp.22.5.649" target="_blank" rel="noopener">doi:10.1085/jgp.22.5.649</a><br><span class="why">During a spike the membrane's conductance rises about forty-fold while its capacitance stays the same.</span></li>
         <li><b>Hodgkin AL, Rushton WAH (1946).</b> The electrical constants of a crustacean nerve fibre. <i>Proceedings of the Royal Society of London B</i> 133:444–479. <a href="https://doi.org/10.1098/rspb.1946.0024" target="_blank" rel="noopener">doi:10.1098/rspb.1946.0024</a><br><span class="why">Cable theory for an axon: membrane resistance and capacitance, the time constant τ and the length constant λ.</span></li>
         <li><b>Nernst W (1889).</b> Die elektromotorische Wirksamkeit der Ionen. <i>Zeitschrift für physikalische Chemie</i> 4:129–181.<br><span class="why">The Nernst equation: the voltage at which an ion's concentration difference is balanced.</span></li>
-        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 3 to 5 are theirs, including the 3× speed-up per 10 °C.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 4, 6 and 8 are theirs, including the 3× speed-up per 10 °C.</span></li>
       </ol>
     </div>
   </div>
@@ -664,7 +684,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <li><b>Black curve:</b> the voltage after the switch closes at t = 0, V(t) = V<sub>∞</sub> + (V<sub>start</sub> − V<sub>∞</sub>)e<sup>−t/τ</sup>.</li>
           <li><b>Dotted line:</b> V<sub>∞</sub>, where the voltage levels off. Dashed lines are the Nernst potentials.</li>
           <li><b>Dot:</b> one time constant in, when V has covered 63% of the way. By 3τ it is 95% of the way there.</li>
-          <li>The axes stay fixed, so a larger C stretches the curve out and more conductance makes it sharper. Neither moves V<sub>∞</sub>; the g's and E's do.</li>
+          <li>The axes stay fixed (unless you use the zoom arrows), so a larger C stretches the curve out and more conductance makes it sharper. Neither moves V<sub>∞</sub>; the g's and E's do.</li>
         </ul>
         <h4>Currents vs time</h4>
         <ul>
@@ -751,7 +771,7 @@ function drawChart(c, o) {
     for (let i = 0; i <= o.xs.length; i++) {
       const on = i < o.xs.length && o.on[i];
       if (on && a < 0) a = i;
-      if (!on && a >= 0) { const xa = sx(o.xs[a]), xb = sx(o.xs[i - 1]); c.fillRect(Math.max(L, xa), T, Math.min(L + pw, xb) - Math.max(L, xa), ph); a = -1; }
+      if (!on && a >= 0) { const xa = Math.max(L, sx(o.xs[a])), xb = Math.min(L + pw, sx(o.xs[i - 1])); if (xb > xa) c.fillRect(xa, T, xb - xa, ph); a = -1; }
     }
     c.globalAlpha = 1;
   }
@@ -849,6 +869,21 @@ function chipGroup(attr, onPick) {
     return { G, Vinf: -I0 / G, tau: p.C / G };
   }
   const restV = () => steady().Vinf;   // called with the switch open
+  // Newt: this circuit as it's set now, on the Breadboard simulator (per cm², in F, S, V and A)
+  NewtBreadboard.add($('cPlay'), () => {
+    const S = g => g * 1e-3, mv = e => e * 1e-3, C = p.C * 1e-6, ch = [];
+    if (mode === 'inj') return { title: 'the RC circuit', compartments: [{ name: 'Membrane', C,
+      channels: [{ name: 'R', g: S(p.gL) }], stim: { I: p.I * 1e-6 } }] };
+    if (mode === 'bat') ch.push({ name: 'Battery 1', g: 1e-3 / p.R1, E: mv(p.E1), switch: true, closed: sw },
+                                { name: 'Battery 2', g: 1e-3 / p.R2, E: mv(p.E2) });
+    else if (mode === 'full') {
+      const gm = p.mNa + p.mK;           // the mixed channel's two parts are one conductance and battery
+      if (gm > 0) ch.push({ name: 'Mixed channel', g: S(gm), E: mv((p.mNa * p.fENa + p.mK * p.fEK) / gm), switch: true, closed: sw });
+      ch.push({ name: 'Na⁺ leak', g: S(p.fgNa), E: mv(p.fENa) }, { name: 'K⁺ leak', g: S(p.fgK), E: mv(p.fEK) },
+              { name: 'Cl⁻ leak', g: S(p.fgCl), E: mv(p.fECl) });
+    } else ch.push({ name: 'Na⁺', g: S(p.gNa), E: mv(p.ENa), switch: true, closed: sw }, { name: 'K⁺', g: S(p.gK), E: mv(p.EK) });
+    return { title: 'the RC circuit', compartments: [{ name: 'Membrane', C, channels: ch }] };
+  });
   function switchText() {
     const g = mode === 'g';
     $('cSwitchLab').textContent = g ? 'Na⁺ channels' : mode === 'bat' ? 'Battery 1' : mode === 'full' ? 'Mixed channels' : 'Current on';   // as the particle simulation's: orange when open
@@ -1204,7 +1239,7 @@ function chipGroup(attr, onPick) {
     requestAnimationFrame(loop);
   }
   colorHooks.push(() => { draw(); drawCharts(); });
-  Frames.sim(() => running, 'cPlay');   // frames.js: starts paused, pauses itself when left alone
+  Frames.sim(() => running, 'cPlay', ['cSwitch']);   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 
@@ -1681,17 +1716,22 @@ function chipGroup(attr, onPick) {
     poreQSm += (pq - poreQSm) * alpha;
   }
   // fixed scales, the same as on the Membrane potential page (the default fills about half); beyond them bars are cut off
-  const rScale = 24, qScale = 55, PW = chartW, PRH = chartH, PT = 34, PB = 34, PL = 50, PR = 16;   // the size of the charts beside it
+  const R_SCALE = 24, qScale = 55; let rScale = R_SCALE; const PW = chartW, PRH = chartH, PT = 34, PB = 34, PL = 50, PR = 16;   // the size of the charts beside it
   const pctx = setupCanvas($('iProfile'), PW, PRH);
-  const psx = x => PL + x / W * (PW - PL - PR);
+  let px0 = 0, px1 = W;   // the horizontal view after the zoom arrows
+  const psx = x => PL + (x - px0) / (px1 - px0) * (PW - PL - PR);
   const fmtQ = q => (q < 0 ? '−' : q > 0 ? '+' : '') + Math.abs(q).toFixed(0) + ' e';
+  ChartZoom.bind($('iProfile'), () => drawProfile());
   function drawProfile() {
     const c = pctx, h = PRH - PT - PB, y0 = PT + h / 2;
+    rScale = ChartZoom.y($('iProfile'), -R_SCALE, R_SCALE, 'mid')[1];   // the zoom arrows (chartzoom.js)
+    [px0, px1] = ChartZoom.x($('iProfile'), 0, W, 'mid');
     c.fillStyle = C.surface; c.fillRect(0, 0, PW, PRH);
     c.fillStyle = C.mem; c.globalAlpha = 0.7; c.fillRect(psx(XIN), PT, Math.max(3, psx(XOUT) - psx(XIN)), h); c.globalAlpha = 1;
     // frame + zero line
     c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(PL + 0.5, PT + 0.5, PW - PL - PR - 1, h - 1);
     c.beginPath(); c.moveTo(PL, y0); c.lineTo(PW - PR, y0); c.stroke();
+    c.save(); c.beginPath(); c.rect(PL, 0, PW - PL - PR, PRH); c.clip();   // keep a zoomed-in view inside the frame
     // each diffuse layer's Q: the charge in the bins out to 3λ from the membrane face
     const nb = Math.ceil(3 * lambda / BIN), bIn = Math.floor((XIN - 1) / BIN), bOut = Math.floor(XOUT / BIN);
     let qi = 0, qo = 0;
@@ -1742,12 +1782,13 @@ function chipGroup(attr, onPick) {
       c.moveTo(psx(XOUT + lambda), yb - 4); c.lineTo(psx(XOUT + lambda), yb + 4); c.stroke();
       c.font = '11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'left'; c.fillText('λ', psx(XOUT + lambda) + 4, yb);
     }
+    c.restore();
     // axes
     c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
     c.textAlign = 'right';
-    c.fillStyle = C.pos; c.fillText('+' + rScale.toFixed(0) + ' e', PL - 6, PT + 6);
+    c.fillStyle = C.pos; c.fillText('+' + (rScale < 10 ? rScale.toFixed(1) : rScale.toFixed(0)) + ' e', PL - 6, PT + 6);
     c.fillStyle = C.muted; c.fillText('0 e', PL - 6, y0);
-    c.fillStyle = C.neg; c.fillText('−' + rScale.toFixed(0) + ' e', PL - 6, PT + h - 6);
+    c.fillStyle = C.neg; c.fillText('−' + (rScale < 10 ? rScale.toFixed(1) : rScale.toFixed(0)) + ' e', PL - 6, PT + h - 6);
     c.font = '600 11px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted;
     c.textAlign = 'left'; c.fillText('NET CHARGE', PL, 16);
     c.font = '500 11.5px "IBM Plex Sans", sans-serif';
@@ -1774,7 +1815,7 @@ function chipGroup(attr, onPick) {
     requestAnimationFrame(loop);
   }
   readouts();
-  Frames.sim(() => running, 'play');   // frames.js: starts paused, pauses itself when left alone
+  Frames.sim(() => running, 'play', ['gate']);   // frames.js: starts paused, pauses itself when left alone
   requestAnimationFrame(loop);
 })();
 </script>

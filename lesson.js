@@ -409,9 +409,12 @@ html.ls-editing body{padding-right:420px}
     document.head.appendChild(s);
   });
   // Argus: the web channel object that saves lesson files
-  if (window.qt?.webChannelTransport && window.QWebChannel) {
-    try { new window.QWebChannel(window.qt.webChannelTransport, ch => { bridge = ch.objects.argusLessons || null; }); } catch (e) { bridge = null; }
-  }
+  // (one channel per page, shared with breadboard.js: a second QWebChannel would take the first one's messages)
+  window.__newtBridge = window.__newtBridge || new Promise(res => {
+    if (!(window.qt?.webChannelTransport && window.QWebChannel)) return res(null);
+    try { new window.QWebChannel(window.qt.webChannelTransport, ch => res(ch.objects.argusLessons || null)); } catch (e) { res(null); }
+  });
+  window.__newtBridge.then(b => { bridge = b; });
 
   // ---------- editor ----------
   let panel = null, view = { kind: 'list' }, menu = null, picked = null, status = '';

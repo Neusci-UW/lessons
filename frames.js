@@ -6,7 +6,9 @@
 //    page (any input, resize or theme change wakes them; Frames.poke() from code);
 //  - every simulation starts paused, and pauses itself after IDLE_PAUSE_MS without a
 //    change (a click, key, slider or scroll; just moving the mouse doesn't count).
-// Each page registers each simulation with Frames.sim(() => running, 'playButtonId'),
+// Each page registers each simulation with Frames.sim(() => running, 'playButtonId',
+// ['stimulusButtonId', ...]); pressing one of those stimulus buttons while the simulation
+// is paused starts it, so a stimulus never lands in a frozen simulation.
 // and loads this file first, in <head>. Pausing clicks the page's own Play/Pause button,
 // so its label and the floating bar's copy stay in step.
 (() => {
@@ -36,7 +38,15 @@
   function changed() { lastChange = performance.now(); poke(); }
 
   window.requestAnimationFrame = cb => { queue.push(cb); schedule(); return 0; };
-  window.Frames = { sim: (isPlaying, button) => { sims.push({ isPlaying, button }); }, poke, pauseAll };
+  function sim(isPlaying, button, triggers = []) {
+    const s = { isPlaying, button };
+    sims.push(s);
+    for (const id of triggers)
+      document.getElementById(id)?.addEventListener('click', () => {
+        if (!playingOf(s)) document.getElementById(button)?.click();
+      });
+  }
+  window.Frames = { sim, poke, pauseAll };
 
   for (const ev of ['pointerdown', 'wheel', 'keydown', 'input', 'change', 'click', 'scroll'])
     window.addEventListener(ev, changed, { capture: true, passive: true });

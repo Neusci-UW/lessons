@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<script src="membrane.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passive Properties: Space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as membrane_potential.html: a circuit on top, the same thing done by ions below. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#2e8b57; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5fc98d; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5fc98d; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:80ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+/* page sections, intro, tabs, help and units: the same look as membrane_potential.html */
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+header p{max-width:90ch}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help h4{margin:0 0 4px;font-size:13.5px;font-weight:600}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* RC calculator, styled like the GHK calculator in membrane_potential.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.gr[hidden]{display:none}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;gap:16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500}
+.gion[hidden]{display:none}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:1100px){.top{grid-template-columns:1fr}}
+.cgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+.cgrid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* under Part 2's picture: from the dendrite's tip (x 40 of 1000) to where it meets the cell body (x 846), right to left */
+.sposrow{margin:-10px 0 0;padding:0 15.4% 0 4%}
+.sposrow input[type=range]{width:100%;direction:rtl;display:block}
+.memscroll{overflow-x:auto;width:100%;min-width:0}
+.memscroll canvas{width:auto}
+#circ-card,#pane-circ{min-width:0}
+@media (max-width:1100px){.cgrid.three{grid-template-columns:1fr}}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.qbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.qlab{white-space:nowrap}
+.qlab b{color:var(--ink);font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums;display:inline-block;min-width:5ch}
+.qlab:first-child b{text-align:right}
+.qtrack{position:relative;height:16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);overflow:hidden}
+.qtrack::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid var(--muted)}
+.qfill{position:absolute;top:0;bottom:0;width:0}
+#iqInBar{right:50%}
+#iqOutBar{left:50%}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+#sim{cursor:grab;touch-action:none}
+#sim.dragging{cursor:grabbing}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.toolbar .spacer{flex:1}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.k{background:var(--k)}.dot.na{background:var(--na)}.dot.cl{background:var(--cl)}.dot.a{background:var(--a);width:12px;height:12px}
+.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg);border-radius:2px}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.top.stacked{grid-template-columns:1fr}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.sgroup{display:flex;flex-direction:column;gap:10px}.sgroup[hidden]{display:none}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:92px minmax(0,1fr) 104px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+.row[hidden]{display:none}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+/* theory card, styled like the GHK derivation in membrane_potential.html */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.primer .defs{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:4px 0 2px;font-size:14px}
+.primer .defs dt{font-weight:600}.primer .defs dd{margin:0}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+/* on/off switch for the ion simulation's Na⁺ channels: label, track, state in words */
+button.toggle{display:inline-flex;align-items:center;gap:10px;border:0;background:none;padding:4px 2px;font-weight:600}
+button.toggle .track{width:42px;height:24px;border-radius:12px;background:var(--muted);position:relative;transition:background .15s;flex:none}
+button.toggle .thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:left .15s}
+button.toggle[aria-checked="true"] .track{background:var(--on,var(--na))}
+button.toggle[aria-checked="true"] .thumb{left:21px}
+button.toggle .tstate{font-family:var(--font-mono);font-size:13px;font-weight:400;color:var(--muted);min-width:52px;text-align:left}
+@media (prefers-reduced-motion:reduce){button.toggle .track,button.toggle .thumb{transition:none}}
+/* a button that stays down while it is on (the circuit's current, or its Na⁺ channels), filled in its colour */
+button.latch[aria-pressed=true]{background:var(--on,var(--accent));border-color:var(--on,var(--accent));color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.charthead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="floatbar" role="group" aria-label="Circuit">
+  <button type="button" data-copy="lSwitch"></button>
+  <button type="button" data-copy="lPlay"></button>
+  <label for="fSpeedFloat" class="runlab">Speed</label>
+  <input type="range" id="fSpeedFloat" data-copy="lSpeed">
+  <output for="fSpeedFloat"></output>
+</div>
+<div class="wrap">
+<header>
+  <h1>Passive properties: space</h1>
+  <p>Lesson 2 charged one small patch of membrane. A real neuron is long: its dendrites and axon are thin tubes, and current put in at one place has to travel along the inside to reach the rest. On the way some of it leaks out through the membrane. Join lesson 2's patches in a row and see how far a voltage change spreads (the length constant, λ) and how that combines with how fast each patch charges (the time constant, τ).</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>describe a dendrite or axon as lesson 2's RC patches in a row, joined by the resistance of the cytoplasm</li>
+        <li>explain why a steady voltage change shrinks with distance, by e (to 37%) every length constant, λ = √(r<sub>m</sub>/r<sub>i</sub>)</li>
+        <li>predict how diameter, membrane leak and cytoplasm change λ: wider and less leaky spread farther</li>
+        <li>explain why a signal far away arrives smaller, later and slower: space and time together</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<!-- =================== Part 1: the circuit =================== -->
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<h3 class="part">1 · The circuit: RC patches in a row</h3>
+<div class="top stacked">
+  <section class="card stage" id="circ-card">
+    <div class="tabs" role="tablist" aria-label="Circuit">
+      <button type="button" role="tab" id="tab-circ" aria-controls="pane-circ" aria-selected="true">Circuit</button>
+      <button type="button" role="tab" id="tab-circhelp" aria-controls="pane-circhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-circlook" aria-controls="pane-circlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-circ" aria-labelledby="tab-circ">
+      <div class="btns" role="group" aria-label="Input to patch 1">
+        <button class="chip" data-lmode="inj" aria-pressed="true">Current injection into patch 1</button>
+        <button class="chip" data-lmode="bat" aria-pressed="false">Two batteries</button>
+        <button class="chip" data-lmode="g" aria-pressed="false">Na⁺ channels in patch 1</button>
+        <button class="chip" data-lmode="full" aria-pressed="false">Complete membrane</button>
+      </div>
+      <canvas id="lCirc" aria-label="A row of RC patches sharing the outside and joined on the inside by the cytoplasm's resistance, with moving charges"></canvas>
+      <div class="memscroll"><canvas id="lMem" aria-label="The same row as a slice of membrane: each patch's leak channels and its charge, with ions flowing along the cytoplasm between patches"></canvas></div>
+      <div class="runbar">
+        <button id="lSwitch" class="latch" aria-pressed="false"><span id="lSwitchLab">Current on</span></button>
+        <button id="lPlay" class="primary">Pause</button>
+        <label for="lSpeed" class="runlab">Speed</label>
+        <input type="range" id="lSpeed" min="0" max="100" value="45">
+        <output id="lSpeedo" for="lSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot pos"></i>positive charge (conventional current)</span>
+        <span><i class="dot k"></i>through each patch's membrane (r<sub>m</sub>)</span>
+        <span id="lLegSw"><i class="dot na"></i>through patch 1's Na⁺ channels</span>
+      </div>
+      <div class="cgrid three">
+        <div class="ccol">
+          <p class="sect-title">Voltage in each patch over time</p>
+          <canvas id="lVt" aria-label="Voltage of each patch against time"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">Voltage along the row, now and where it settles</p>
+          <canvas id="lVx" aria-label="Voltage against distance along the row"></canvas>
+        </div>
+        <div class="ccol">
+          <div class="charthead"><p class="sect-title" id="lItTitle">Membrane currents over time, at each patch</p>
+            <div class="btns" role="group" aria-label="Over time or over space"><button class="chip" data-liview="time" aria-pressed="true">Over time</button><button class="chip" data-liview="space" aria-pressed="false">Over space</button></div></div>
+          <div class="btns" id="lIonChips" role="group" aria-label="Which current"></div>
+          <canvas id="lIt" aria-label="One membrane current over time, one line per patch"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-circhelp" aria-labelledby="tab-circhelp" hidden>
+      <ul>
+        <li><b>The drawing:</b> lesson 2's patch of membrane, several times over. The top wire is the outside, shared by every patch. The bottom wire is the inside, the cytoplasm; between neighbouring patches it has a resistance of its own, r<sub>i</sub> (teal). Each patch has its membrane's resistance, r<sub>m</sub> (purple; black where it stands for several leaks together, or for R<sub>2</sub>), and its capacitor, C.</li>
+        <li><b>Patch 1's input,</b> as in lesson 2's four circuits: a current source, like an electrode; or a branch on a switch with its own battery: R<sub>1</sub> and E<sub>1</sub> (two batteries), Na⁺ channels with E<sub>Na</sub>, or mixed channels that pass Na⁺ and K⁺ (complete membrane). Except with current injection, every patch's membrane also has a battery, so the row rests at it: E<sub>2</sub>, E<sub>K</sub>, or in the complete membrane the leaks' Na⁺, K⁺ and Cl⁻ batteries together. The circuit draws those leaks as one resistor and one battery, E<sub>leak</sub>, their conductance-weighted average (lesson 1's chord conductance formula).</li>
+        <li><b>Dots:</b> moving positive charge, as in lesson 2. Follow them from patch 1: some charges its capacitor, some leaks out through its r<sub>m</sub>, and the rest flows on through r<sub>i</sub> to patch 2, and so on.</li>
+        <li><b>Voltage in each patch:</b> one line per patch, from red (patch 1, drawn thickest) to blue (the farthest); shaded while the switch is on.</li>
+        <li><b>Voltage along the row:</b> black, the voltage now, every 5 µm along the row; dashed, where it will settle; dotted (current injection only), e<sup>−x/λ</sup> for comparison. The patches are 50 µm apart.</li>
+        <li><b>Membrane currents over time:</b> the current through each patch's membrane, outward positive, one line per patch, coloured as on the voltage chart. The buttons choose which: each ion's channels (leak and switched together), each branch in the two-battery circuit, or the capacitor's current, I<sub>C</sub>. Patch 1's switched current flows only there; further along, only the leaks and the capacitor carry current, smaller and later.</li>
+        <li><b>Over space:</b> every kind of membrane current along the row at this moment, one line each, against distance from patch 1. While the switch is on and the row settles, the capacitor's current I<sub>C</sub> spreads along the row and dies away; once settled, it is zero everywhere and the ions' currents balance the current arriving along the cytoplasm.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-circlook" aria-labelledby="tab-circlook" hidden>
+      <ul>
+        <li>Turn the current on. Patch 1 rises first and most; each patch after it rises later, more slowly, and less. The row settles with each patch close to a fixed fraction of the one before: an exponential fall with distance.</li>
+        <li>Raise the diameter: the cytoplasm's resistance falls, more current flows on, and the change spreads farther (λ grows as the square root of the diameter).</li>
+        <li>Raise the membrane's leak (g<sub>m</sub> in current injection; the leak sliders in the other circuits): more current escapes on the way, so λ shrinks; and every patch charges faster, so τ shrinks too.</li>
+        <li>Raise C: τ grows, the patches charge more slowly, but where they settle, and so λ, does not change.</li>
+        <li>Complete membrane, I<sub>Na</sub>: the big inward current is patch 1's mixed channels. In the other patches I<sub>Na</sub> barely changes, yet their voltage rises: they are charged by current arriving along the cytoplasm, and their K⁺ and Cl⁻ leaks carry it out. Compare I<sub>K</sub>.</li>
+        <li>I<sub>C</sub>: each patch's capacitor current is a brief pulse while its voltage moves, smaller and later the further the patch is from patch 1.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Along the row</span>
+      <span class="vnum" id="lLam">—</span>
+      <div class="vrow"><span>length constant λ = √(r<sub>m</sub>/r<sub>i</sub>)</span></div>
+      <div class="vrow"><span>time constant τ = C / g<sub>m</sub> (g<sub>m</sub>: all of a patch's resting leak)</span><b id="lTau">—</b></div>
+      <div class="vrow"><span>V in patch 1 / the last patch</span><b id="lV1n">—</b></div>
+      <div class="vrow"><span>the last patch's change, as a share of patch 1's</span><b id="lFrac">—</b></div>
+      <div class="vrow"><span>the cytoplasm's conductance between two patches, g<sub>c</sub>, per cm² of membrane</span><b id="lGc">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">Components</legend>
+      <div class="sgroup" data-lfor="inj">
+        <div class="row wide2"><label for="lI">I injected</label><input type="range" id="lI" min="-40" max="60" step="1" value="20"><output id="lIo" for="lI"></output></div>
+      </div>
+      <div class="sgroup" data-lfor="g" hidden>
+        <div class="row wide2"><label for="lGNa"><i class="dot na"></i>g<sub>Na</sub></label><input type="range" id="lGNa" min="0.1" max="5" step="0.1" value="0.7"><output id="lGNao" for="lGNa"></output>
+          <span class="hint">patch 1's Na⁺ channels, when the switch is on; E<sub>Na</sub> = +60 mV, E<sub>K</sub> = −86 mV</span></div>
+      </div>
+      <div class="sgroup" data-lfor="bat" hidden>
+        <div class="row wide2"><label for="lR1">R<sub>1</sub></label><input type="range" id="lR1" min="0.2" max="10" step="0.1" value="1.4"><output id="lR1o" for="lR1"></output>
+          <span class="hint">battery 1 is connected to patch 1 only while the switch is closed</span></div>
+        <div class="row wide2"><label for="lE1">E<sub>1</sub></label><input type="range" id="lE1" min="-100" max="100" step="1" value="60"><output id="lE1o" for="lE1"></output></div>
+        <div class="row wide2"><label for="lR2">R<sub>2</sub></label><input type="range" id="lR2" min="0.2" max="10" step="0.1" value="2"><output id="lR2o" for="lR2"></output>
+          <span class="hint">in every patch: its membrane's resistance, with battery 2</span></div>
+        <div class="row wide2"><label for="lE2">E<sub>2</sub></label><input type="range" id="lE2" min="-100" max="100" step="1" value="-86"><output id="lE2o" for="lE2"></output></div>
+      </div>
+      <div class="sgroup" data-lfor="full" hidden>
+        <div class="row wide2"><label for="lMix"><i class="dot" style="background:var(--accent)"></i>mixed g</label><input type="range" id="lMix" min="0" max="10" step="0.1" value="0.7"><output id="lMixo" for="lMix"></output>
+          <span class="hint">patch 1's mixed channels, open while the switch is closed: half the conductance passes Na⁺, half K⁺</span></div>
+        <div class="row wide2"><label for="lFNa"><i class="dot na"></i>leak g<sub>Na</sub></label><input type="range" id="lFNa" min="0" max="1" step="0.01" value="0.03"><output id="lFNao" for="lFNa"></output></div>
+        <div class="row wide2"><label for="lFK"><i class="dot k"></i>leak g<sub>K</sub></label><input type="range" id="lFK" min="0.05" max="3" step="0.05" value="0.5"><output id="lFKo" for="lFK"></output></div>
+        <div class="row wide2"><label for="lFCl"><i class="dot cl"></i>leak g<sub>Cl</sub></label><input type="range" id="lFCl" min="0" max="1" step="0.01" value="0.1"><output id="lFClo" for="lFCl"></output>
+          <span class="hint">in every patch, always open; E<sub>Na</sub> +60, E<sub>K</sub> −86, E<sub>Cl</sub> −70 mV</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">The cable</span>
+        <div class="row wide2"><label for="lD">Diameter</label><input type="range" id="lD" min="0.3" max="10" step="0.1" value="1.5"><output id="lDo" for="lD"></output>
+          <span class="hint">a thin dendrite is about 1 µm; a big axon 10 µm or more</span></div>
+        <div class="row wide2"><label for="lRi"><i class="dot" style="background:var(--accent)"></i>Cytoplasm</label><input type="range" id="lRi" min="35" max="400" step="5" value="150"><output id="lRio" for="lRi"></output>
+          <span class="hint">its resistivity: the resistance of a 1 cm cube of it</span></div>
+        <div class="row wide2" data-lfor="inj g"><label for="lGm"><i class="dot k"></i>Membrane leak g<sub>m</sub></label><input type="range" id="lGm" min="0.05" max="3" step="0.05" value="0.5"><output id="lGmo" for="lGm"></output></div>
+        <div class="row wide2"><label for="lC">C</label><input type="range" id="lC" min="0.3" max="3" step="0.1" value="1"><output id="lCo" for="lC"></output></div>
+        <div class="row wide2"><label for="lN">Patches</label><input type="range" id="lN" min="2" max="10" step="1" value="6"><output id="lNo" for="lN"></output></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 2: a synapse near or far =================== -->
+<h3 class="part">2 · An input near or far: what reaches the cell body</h3>
+<div class="top stacked">
+  <section class="card stage" id="syn-card">
+    <div class="tabs" role="tablist" aria-label="Synapse on a dendrite">
+      <button type="button" role="tab" id="tab-syn" aria-controls="pane-syn" aria-selected="true">Dendrite</button>
+      <button type="button" role="tab" id="tab-synhelp" aria-controls="pane-synhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-synlook" aria-controls="pane-synlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-syn" aria-labelledby="tab-syn">
+      <div class="btns" role="group" aria-label="The input">
+        <button class="chip" data-skind="pulse" aria-pressed="true">Electrode: a square pulse</button>
+        <button class="chip" data-skind="epsp" aria-pressed="false">Synapse: an EPSP</button>
+      </div>
+      <canvas id="sPic" aria-label="A dendrite with a synapse at the chosen distance, joined at the right to the cell body, which is recorded from"></canvas>
+      <!-- the synapse's slider runs under the dendrite, the same way: its right-hand end is next to the cell body -->
+      <div class="sposrow"><input type="range" id="sPos" min="0" max="590" step="10" value="300" aria-label="Synapse distance from the cell body"></div>
+      <div class="runbar">
+        <button id="sFire" class="primary">Inject pulse</button>
+        <button id="sClear">Clear</button>
+        <span class="runlab">Synapse at</span>
+        <output id="sPoso" for="sPos"></output>
+        <label class="check" for="sNorm"><input type="checkbox" id="sNorm">each scaled to its own peak</label>
+      </div>
+      <div class="cgrid even">
+        <div class="ccol">
+          <p class="sect-title">Voltage at the cell body, one trace per Fire</p>
+          <canvas id="sVs" aria-label="The cell body's voltage after each synaptic input, one trace per distance"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">The last input: where it went in (dashed) and at the cell body</p>
+          <canvas id="sVl" aria-label="Voltage at the synapse and at the cell body after the last input"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-synhelp" aria-labelledby="tab-synhelp" hidden>
+      <ul>
+        <li><b>The drawing:</b> a dendrite 600 µm long with the cell body at its right-hand end. The input, a synapse or an electrode (teal), sits at the distance set: move it with the slider under the dendrite, whose right-hand end is next to the cell body, or click on the dendrite. Another electrode records in the cell body.</li>
+        <li><b>The input,</b> at the place set: a <b>synapse</b>, whose current rises in the time set (half a millisecond to start with) and dies away (an EPSP), or an <b>electrode</b> injecting a square pulse of steady current for the length set. The dendrite is the circuit's cable, with the circuit's diameter, cytoplasm, resting leak and C; the cell body is a sphere 20 µm across, with the same membrane.</li>
+        <li><b>Left chart:</b> the change in voltage at the cell body after each Fire, one trace per distance, coloured from red (close) to blue (far). Tick <b>each scaled to its own peak</b> to stretch every trace to the same height and compare their shapes alone.</li>
+        <li><b>Right chart:</b> the last input only: the voltage where it went in (dashed) and at the cell body (solid), on the same scale.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-synlook" aria-labelledby="tab-synlook" hidden>
+      <ul>
+        <li>Fire at 50 µm, then at 300 and 550 µm. Farther out, the bump at the cell body is smaller, peaks later and lasts longer.</li>
+        <li>Tick "each scaled to its own peak": the far input is not only smaller but a different shape, slower to rise and slower to fall. The dendrite has filtered it.</li>
+        <li>On the right, for an input far out: where it goes in, the bump is tall and quick, because the thin dendrite there has little membrane, and so little capacitance, to charge. By the cell body most of the current has leaked out on the way, and what is left is spread out in time.</li>
+        <li>Electrode: a 10 ms square pulse close to the cell body gives a square-ish step there, rounded at the corners by τ. Far out it arrives as a slow, low hump that never flattens into a step: the dendrite smooths the pulse's sharp edges away.</li>
+        <li>Make the dendrite wider (the circuit's diameter): λ grows and far inputs lose less. Raise the membrane leak: λ and τ shrink, far inputs fade more but every bump is shorter.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">The last input, at the cell body</span>
+      <span class="vnum" id="sPk">—</span>
+      <div class="vrow"><span>peak change in voltage</span></div>
+      <div class="vrow"><span>time to peak</span><b id="sTp">—</b></div>
+      <div class="vrow"><span>width at half the peak</span><b id="sHw">—</b></div>
+      <div class="vrow"><span>peak where it went in</span><b id="sSyn">—</b></div>
+      <div class="vrow"><span>reaching the cell body: its peak ÷ the peak where it went in</span><b id="sRatio">—</b></div>
+      <div class="vrow"><span>λ of the dendrite / its length</span><b id="sLam">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The input</legend>
+      <div class="sgroup">
+        <div class="row wide2"><label for="sI"><i class="dot" style="background:var(--accent)"></i>Current</label><input type="range" id="sI" min="10" max="200" step="5" value="50"><output id="sIo" for="sI"></output>
+          <span class="hint">into the dendrite where the input is: the EPSP's peak, or the pulse's height</span></div>
+        <div class="row wide2" data-sfor="pulse"><label for="sDur">Pulse length</label><input type="range" id="sDur" min="0.5" max="25" step="0.5" value="10"><output id="sDuro" for="sDur"></output>
+          <span class="hint">a steady current, on from 1 ms for this long</span></div>
+        <div class="row wide2" data-sfor="epsp" hidden><label for="sTau">Its time course</label><input type="range" id="sTau" min="0.2" max="5" step="0.1" value="0.5"><output id="sTauo" for="sTau"></output>
+          <span class="hint">time to its peak: fast like AMPA receptors, slower like NMDA</span></div>
+      </div>
+      <p class="caption">The dendrite's diameter, cytoplasm, resting leak and C are the circuit's, set above, in whichever of its circuits is chosen.</p>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-sptry="inj">1 · Inject current</button> Patch 1 rises first and most; each patch after it, less and later.</li>
+    <li><button class="chip" data-sptry="wide">2 · A wider cable</button> Diameter 6 µm: the cytoplasm passes more current on, and the change spreads farther.</li>
+    <li><button class="chip" data-sptry="leaky">3 · A leakier membrane</button> More leak: the change dies away sooner along the row, and every patch charges faster.</li>
+    <li><button class="chip" data-sptry="syn">4 · Near and far inputs</button> The same input at 50, 300 and 550 µm from the cell body: the farther out it goes in, the smaller, later and slower it arrives.</li>
+  </ol>
+</section>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Real units</p>
+      <dl class="unitlist">
+        <dt>mV, ms</dt><dd>millivolts and milliseconds, as in lesson 2.</dd>
+        <dt>µA/cm², mS/cm², µF/cm²</dt><dd>current, conductance and capacitance per cm² of membrane, as in lesson 2.</dd>
+        <dt>µm</dt><dd>micrometres, for distance along the cable and for its diameter.</dd>
+        <dt>Ω·cm</dt><dd>ohm-centimetres, for the cytoplasm's resistivity: the resistance between opposite faces of a 1 cm cube of it. Here 150 Ω·cm, about that of real cytoplasm.</dd>
+        <dt>λ</dt><dd>the length constant, in µm: how far along the cable a steady voltage change falls to 37% (1/e) of its size. (Not the same λ as lesson 1's Debye length, the thickness of the charge layers.)</dd>
+        <dt>τ</dt><dd>the time constant, in ms, as in lesson 2: C / g<sub>m</sub>.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="cable">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">From one patch to a row</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">The length constant</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Space and time together</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Why it matters</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> A dendrite or axon is a long, thin tube of membrane filled with salty cytoplasm. Treat each short piece of it as lesson 2's RC patch, and join neighbouring pieces by the resistance of the cytoplasm between them. Current put in at one piece then has three places to go: onto that piece's capacitor, out through its membrane, or along the inside to the next piece.</p>
+      <h3>Lesson 2's patch, in a row</h3>
+      <p>In lesson 2 a single patch obeyed \(C\,dV/dt = -g_m (V - E) + I\): what comes in either charges the capacitor or leaks out. Now join patches in a row. Between patch \(k\) and its neighbours the cytoplasm is a resistor, and by Ohm's law the current through it is the voltage difference divided by its resistance. So each patch gets two more terms, one per neighbour:</p>
+      <div class="eq">\[ C\,\frac{dV_k}{dt} = -\,g_m\,(V_k - E) + g_c\,(V_{k-1} - V_k) + g_c\,(V_{k+1} - V_k) \]</div>
+      <p>Here \(g_c\) is the cytoplasm's conductance between two neighbours, per cm² of membrane. It is large when the tube is wide (more cytoplasm to carry the current) and the patches are close together.</p>
+      <h3>Charge flows from high to low</h3>
+      <p>The cytoplasm carries current from the patch whose inside is more positive to the less positive one. So a patch that has been charged up shares its charge with its neighbours, who share it with theirs, while every patch leaks some out through its membrane. That leak is why the change gets smaller the farther it goes.</p>
+      <details class="fullderiv"><summary>From patches to a smooth cable: the cable equation</summary>
+        <p>Make the patches shorter and shorter, \(\Delta x \to 0\). The two neighbour terms become a second derivative, \((V_{k-1} - 2V_k + V_{k+1}) / \Delta x^2 \to \partial^2 V/\partial x^2\). Written per unit length of cable, with \(r_m\) the membrane's resistance times a unit length (Ω·cm), \(r_i\) the cytoplasm's resistance per unit length (Ω/cm) and \(c_m\) the capacitance per unit length:</p>
+        <div class="eq">\[ \frac{1}{r_i}\,\frac{\partial^2 V}{\partial x^2} = \frac{V}{r_m} + c_m\,\frac{\partial V}{\partial t} \]</div>
+        <p>(V measured from rest.) This is the cable equation, first worked out for the transatlantic telegraph cable and applied to nerves by Hodgkin and Rushton. Multiplying both sides by \(r_m\): \(\lambda^2\,\partial^2 V/\partial x^2 = V + \tau\,\partial V/\partial t\), with \(\lambda^2 = r_m/r_i\) and \(\tau = r_m c_m\).</p>
+      </details>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sptry="inj">Inject current</button> Follow the dots from patch 1 along the inside wire.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Keep a steady current flowing into patch 1 and wait. Each patch along the cable ends up a fixed fraction of the one before, because at every step some of the current escapes through the membrane. The length constant λ is how far you go before the change has fallen to about a third. Current spreads farther when it flows easily along the inside (a wide tube) and escapes with difficulty through the wall (a membrane with little leak).</p>
+      <h3>An exponential fall with distance</h3>
+      <p>At steady state nothing changes with time, and in a long cable the voltage falls off exponentially with distance \(x\) from where the current goes in:</p>
+      <div class="eq">\[ V(x) = V_0\,e^{-x/\lambda}, \qquad \lambda = \sqrt{\frac{r_m}{r_i}} = \sqrt{\frac{d\,R_m}{4\,R_i}} \]</div>
+      <p>Every λ along, the voltage change is multiplied by \(1/e\), about 0.37: to 37% at λ, 14% at 2λ, 5% at 3λ. \(R_m\) is the membrane's resistance for 1 cm² (1/g<sub>m</sub>), \(R_i\) the cytoplasm's resistivity, and \(d\) the diameter.</p>
+      <h3>A quick number</h3>
+      <p>With \(d = 1.5\) µm, \(R_m = 1/(0.5\ \text{mS/cm}^2) = 2000\ \Omega\,\text{cm}^2\) and \(R_i = 150\ \Omega\,\text{cm}\): \(\lambda = \sqrt{1.5\times10^{-4} \times 2000 / 600}\ \text{cm} \approx 0.022\ \text{cm} = 224\ \mu\text{m}\). The circuit's defaults.</p>
+      <h3>What sets it</h3>
+      <ul>
+        <li><b>Diameter:</b> a wider tube has more cytoplasm to carry current (r<sub>i</sub> falls as d²) but also more membrane to leak through (r<sub>m</sub> falls as d). The first wins, so λ grows as √d: four times the diameter, twice the λ.</li>
+        <li><b>Membrane leak:</b> more open channels, more escape: λ falls as 1/√g<sub>m</sub>.</li>
+        <li><b>Cytoplasm:</b> a more resistive cytoplasm passes less on: λ falls as 1/√R<sub>i</sub>.</li>
+      </ul>
+      <details class="fullderiv"><summary>Show the derivation</summary>
+        <p>At steady state \(\partial V/\partial t = 0\), so the cable equation is \(\lambda^2 V'' = V\). Functions equal to their own second derivative (times a constant) are exponentials: \(V = A e^{-x/\lambda} + B e^{x/\lambda}\). In a long cable V cannot grow without limit, so \(B = 0\) and \(V = V_0 e^{-x/\lambda}\).</p>
+        <p>For a cylinder of diameter \(d\): one unit length has membrane area \(\pi d\), so \(r_m = R_m/(\pi d)\); its cross-section is \(\pi d^2/4\), so \(r_i = 4R_i/(\pi d^2)\). Their ratio is \(r_m/r_i = d R_m/(4 R_i)\).</p>
+        <p>The circuit is the same thing in steps of \(\Delta x\) = 50 µm: its neighbour conductance per cm² of membrane is \(g_c = d/(4 R_i \Delta x^2)\), and \(\lambda/\Delta x = \sqrt{g_c/g_m}\). A short cable sealed at its far end holds a little more voltage near the end than the exponential, as the dashed and dotted lines in the circuit's chart show.</p>
+      </details>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sptry="wide">Diameter 6 µm</button> Four times as wide: λ doubles.</p>
+      <p><button class="chip" data-sptry="leaky">g<sub>m</sub> = 2</button> Four times the leak: λ halves.</p>
+      <p><button class="chip" data-sptry="default">Back to the defaults</button></p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Each patch still has to charge its capacitor, as in lesson 2, and it can only start once charge has reached it from the patches before. So a voltage change far along the cable arrives later, rises more slowly and ends up smaller. The cable blurs signals in time as well as shrinking them in space: a quick blip fades faster with distance than a long, steady push.</p>
+      <h3>Two constants, one cable</h3>
+      <p>The cable equation has both: \(\lambda^2\,\partial^2 V/\partial x^2 = V + \tau\,\partial V/\partial t\). τ is lesson 2's time constant, \(C/g_m\), the same for every patch: it does not depend on the diameter. λ is set by the cable's shape and leak. Together they set how fast a change spreads: the point where the voltage has risen halfway to its final value moves along the cable at about two λ every τ.</p>
+      <h3>Later, slower, smaller</h3>
+      <ul>
+        <li><b>At the input,</b> the voltage rises fastest. It gets halfway to its final value in about a quarter of τ, where a lone patch would take about ⅔ of τ. It settles lower than a lone patch, because much of its current flows on along the cable instead of charging it, so it has less far to go.</li>
+        <li><b>One λ away,</b> the voltage ends at only 37% of the input's final change, and is slower to get there: halfway in about ¾ of τ.</li>
+        <li><b>Two λ away,</b> it ends at 14%, halfway there only after about 1¼ τ: the signal has to charge every stretch of membrane on the way.</li>
+      </ul>
+      <p>A short pulse never lets the far patches charge up before it ends, so it shrinks with distance even faster than a steady current. The cable is a low-pass filter: slow signals get through, fast ones are smoothed out.</p>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sptry="inj">Inject current</button> On the time chart, compare patch 1's curve with the last patch's: later, slower, smaller.</p>
+      <p><button class="chip" data-sptry="bigC">C = 2.5 µF/cm²</button> Slower everywhere, but the row settles in the same place.</p>
+      <p><button class="chip" data-sptry="syn">Near and far inputs</button> At the cell body: inputs from farther out arrive smaller, later and broader.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> λ and τ decide how far and how fast a voltage change spreads along a neuron without any help. In dendrites that decides how much of a distant input reaches the cell body. In axons it decides how quickly each stretch ahead of an action potential is charged to threshold, and so how fast the spike travels; myelin is a way to make λ much longer.</p>
+      <h3>Dendrites</h3>
+      <p>Synaptic inputs land all over a dendritic tree, often hundreds of µm from the cell body, and much of the time the voltage they cause spreads passively, as here (many dendrites also have voltage-gated channels, which this lesson leaves out): one far out arrives at the cell body smaller and later than one close in. Lesson 6 follows many such inputs adding up.</p>
+      <h3>Axons</h3>
+      <p>An action potential (lesson 4) uses this same spread: the current from an active patch flows ahead along the inside and charges the next patch to threshold. The farther the current reaches (large λ) and the faster each patch charges (small τ), the faster the spike moves. Wider axons are faster for this reason: λ grows with √d.</p>
+      <h3>Myelin</h3>
+      <p>Myelin wraps the axon in many layers of membrane. That multiplies r<sub>m</sub> (far less leak) and divides the capacitance, so λ becomes many times longer: current from one node of Ranvier reaches the next before it leaks away. Diseases that strip myelin, such as multiple sclerosis, shorten λ again, and signals slow or fail.</p>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-sptry="myelin">Like myelin</button> g<sub>m</sub> very small: the change spreads along the whole row.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first. Most are free to read through the DOI links.</p>
+      <ol class="reflist">
+        <li><b>Hodgkin AL, Rushton WAH (1946).</b> The electrical constants of a crustacean nerve fibre. <i>Proceedings of the Royal Society of London B</i> 133:444–479. <a href="https://doi.org/10.1098/rspb.1946.0024">doi:10.1098/rspb.1946.0024</a><span class="why">Cable theory for an axon: membrane resistance and capacitance, the time constant τ and the length constant λ.</span></li>
+        <li><b>Rall W (1959).</b> Branching dendritic trees and motoneuron membrane resistivity. <i>Experimental Neurology</i> 1:491–527. <a href="https://doi.org/10.1016/0014-4886(59)90046-9">doi:10.1016/0014-4886(59)90046-9</a><span class="why">Dendrites as leaky cables: how an input's voltage decays on its way to the cell body.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="cable-calc">
+  <div class="calc-head"><span class="sect-title">Cable calculator</span></div>
+  <p class="caption">Set a cable's size and membrane, and see its length and time constants, how a steady voltage change falls off along it, and how the change arrives over time at different distances. The curves redraw as you drag.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh">The cable</div>
+        <div class="gr"><label for="kD">d</label><input type="range" id="kD" min="0.2" max="20" step="0.1" value="1.5"><output id="kDo" for="kD"></output></div>
+        <div class="gr"><label for="kRi">R<sub>i</sub></label><input type="range" id="kRi" min="35" max="400" step="5" value="150"><output id="kRio" for="kRi"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">The membrane</div>
+        <div class="gr"><label for="kGm">g<sub>m</sub></label><input type="range" id="kGm" min="0.01" max="3" step="0.01" value="0.5"><output id="kGmo" for="kGm"></output></div>
+        <div class="gr"><label for="kC">C</label><input type="range" id="kC" min="0.2" max="3" step="0.1" value="1"><output id="kCo" for="kC"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kLam">—</span><span class="caption">length constant λ</span></div>
+      <div class="es"><span>τ <b id="kTau">—</b></span><span>left after 1 mm <b id="kMm">—</b></span><span>R<sub>m</sub> <b id="kRm">—</b></span></div>
+      <div class="tabs" role="tablist" aria-label="Calculator charts">
+        <button type="button" role="tab" id="tab-kx" aria-controls="pane-kx" aria-selected="true">Along the cable</button>
+        <button type="button" role="tab" id="tab-kt" aria-controls="pane-kt" aria-selected="false" tabindex="-1">Over time</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kx" aria-labelledby="tab-kx"><canvas id="kX" aria-label="Steady voltage change against distance"></canvas></div>
+      <div class="stage" role="tabpanel" id="pane-kt" aria-labelledby="tab-kt" hidden><canvas id="kT" aria-label="Voltage change against time at four distances"></canvas></div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li><b>Along the cable:</b> a steady current held on at x = 0 in a long cable; the voltage change it causes at each distance, as a percentage of its size at x = 0: V = V<sub>0</sub>e<sup>−x/λ</sup>. Dot: one λ along, 37% left. By 3λ only 5% is left.</li>
+          <li><b>Over time:</b> the same current switched on at t = 0, and the change at x = 0, ½λ, λ and 2λ, each as a percentage of the final change at x = 0. Further along, it starts later, rises more slowly and ends lower. Dotted line: τ.</li>
+          <li>The distance axis is in µm and follows λ, so a longer λ stretches it.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="caption">Builds on lesson 2 (Passive properties: time); leads into lesson 4 (the action potential), lesson 6 (summation) and lesson 8 (Hodgkin–Huxley).</footer>
+</div>
+
+<script>
+// ---------- shared: colours, number formats, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','a','pos','neg','cyto','bath','mem','memdark'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const fmtSigned = (v, d = 1, u = ' mV') => isFinite(v) ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d) + u : '—';
+function setupCanvas(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; }
+function bindRange(id, fmt, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmt(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// Canvas text with subscripts: "I_Na" draws I with a subscript Na (the letters and digits after
+// the underscore), in the current font, size and alignment.
+function fillSub(c, text, x, y) {
+  if (!text.includes('_')) { c.fillText(text, x, y); return; }
+  const parts = [], re = /_([A-Za-z0-9∞]+(?:,[A-Za-z0-9]+)?)/g;   // "I_Na,leak": a two-part subscript
+  let last = 0, m;
+  while ((m = re.exec(text))) { parts.push([text.slice(last, m.index), false], [m[1], true]); last = re.lastIndex; }
+  parts.push([text.slice(last), false]);
+  const font = c.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]);
+  const subFont = font.replace(/[\d.]+px/, (size * 0.72).toFixed(1) + 'px');
+  const w = parts.map(([t, sub]) => { c.font = sub ? subFont : font; return c.measureText(t).width; });
+  const total = w.reduce((a, b) => a + b, 0), align = c.textAlign;
+  let px = align === 'center' ? x - total / 2 : align === 'right' || align === 'end' ? x - total : x;
+  c.textAlign = 'left';
+  parts.forEach(([t, sub], i) => { c.font = sub ? subFont : font; c.fillText(t, px, y + (sub ? size * 0.28 : 0)); px += w[i]; });
+  c.font = font; c.textAlign = align;
+}
+function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+
+// A line chart: series share an x array; shade marks spans where `on` is true; refs are horizontal lines.
+// The y range is fixed (o.fixed), so the scale never moves; values beyond it run along the edge.
+const CHW = 640, CHH = 340;
+// For a dashed series: is the stretch of line starting at data value x drawn? Dashes are fixed to the data
+// (dash and gap lengths in pixels, converted to x units), so they scroll with the line instead of crawling along it.
+function dashedAt(dash, x0, x1, pw) {
+  if (!dash) return () => true;
+  const per = (dash[0] + dash[1]) * (x1 - x0) / pw, on = dash[0] / (dash[0] + dash[1]);
+  return x => ((x / per) % 1 + 1) % 1 < on;
+}
+function drawChart(c, o) {
+  const W = o.w || CHW, H = o.h || CHH;   // logical size; defaults to CHW × CHH
+  const key = o.key || 11;                // font size of the series labels at the right
+  const L = 62, R = o.r || 96, T = 14, B = 30, pw = W - L - R, ph = H - T - B;   // o.r: room for the keys
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  // every chart has a fixed y range; the zoom arrows (chartzoom.js) stretch or squeeze it, and the x range
+  const [lo, hi] = ChartZoom.y(c.canvas, o.fixed[0], o.fixed[1]);
+  const [x0, x1] = ChartZoom.x(c.canvas, o.x0, o.x1, o.pin);   // o.pin: 'right' on a chart that scrolls
+  ChartZoom.bind(c.canvas, () => drawChart(c, o));
+  const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ph;
+  // shading
+  if (o.on && o.xs.length > 1) {
+    c.fillStyle = C.na; c.globalAlpha = 0.10;
+    let a = -1;
+    for (let i = 0; i <= o.xs.length; i++) {
+      const on = i < o.xs.length && o.on[i];
+      if (on && a < 0) a = i;
+      if (!on && a >= 0) { const xa = Math.max(L, sx(o.xs[a])), xb = Math.min(L + pw, sx(o.xs[i - 1])); if (xb > xa) c.fillRect(xa, T, xb - xa, ph); a = -1; }
+    }
+    c.globalAlpha = 1;
+  }
+  // grid
+  const stp = niceStep((hi - lo) / 5);
+  c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle'; c.textAlign = 'right';
+  for (let v = Math.ceil(lo / stp) * stp; v <= hi + 1e-9; v += stp) {
+    const y = sy(v); c.strokeStyle = C.line; c.lineWidth = Math.abs(v) < stp / 1e3 ? 1.4 : 0.8;
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke();
+    c.fillStyle = C.muted; c.fillText((Math.abs(v) < stp / 1e3 ? 0 : +v.toPrecision(4)) + '', L - 6, y);
+  }
+  c.save(); c.translate(14, T + ph / 2); c.rotate(-Math.PI / 2); c.textAlign = 'center'; c.fillText(o.ylabel, 0, 0); c.restore();
+  c.textAlign = 'left'; c.fillText(o.xlabel, L, H - 9);
+  // reference lines
+  const labels = [];
+  for (const r of o.refs || []) {
+    if (!isFinite(r.v)) continue;
+    const y = sy(r.v);
+    c.strokeStyle = r.color; c.lineWidth = r.width || 1.2; c.setLineDash(r.dash || [6, 4]);
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.setLineDash([]);
+    labels.push({ y, t: r.label, c: r.color });
+  }
+  // series
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  for (const s of o.series) {
+    if (o.xs.length < 2) break;
+    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.lineJoin = 'round';
+    c.beginPath();
+    // A dashed line is dashed by its own x values, not by canvas dashes: those are measured from where the path
+    // starts, which moves as the chart scrolls, so the dashes would crawl along the line.
+    const on = dashedAt(s.dash, x0, x1, pw);
+    // with o.restart, a line starts afresh where `on` changes (counts that reset there)
+    for (let i = 0; i < o.xs.length; i++) {
+      const x = sx(o.xs[i]), y = sy(s.ys[i]);
+      i && on(o.xs[i - 1]) && !(o.restart && o.on[i] !== o.on[i - 1]) ? c.lineTo(x, y) : c.moveTo(x, y);
+    }
+    c.stroke();
+    if (s.label) labels.push({ y: sy(s.ys[s.ys.length - 1]), t: s.label, c: s.color });
+  }
+  c.restore();
+  labels.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < key + 2) labels[i].y = labels[i - 1].y + key + 2;
+  c.font = `600 ${key}px "IBM Plex Sans", sans-serif`; c.textAlign = 'left';
+  labels.forEach(l => { c.fillStyle = l.c; fillSub(c, l.t, L + pw + 6, Math.max(T + 4, Math.min(H - 6, l.y))); });
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
+  c.textBaseline = 'alphabetic';
+}
+function chipGroup(attr, onPick) {
+  const bs = document.querySelectorAll(`[data-${attr}]`);
+  bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(b.dataset[attr]); }));
+}
+
+
+// =====================================================================================
+// Part 1: the circuit. Lesson 2's RC patch, several times over, side by side. They share the outside (ground);
+// their insides are joined by the cytoplasm, a resistor between neighbours. Each patch k:
+//   C dV_k/dt = −g_m (V_k − E_m) − I_Na,k + I_inj,k + g_c (V_{k−1} − V_k) + g_c (V_{k+1} − V_k)
+// per cm² of the patch's membrane, with g_c the cytoplasm's conductance between two patches, per cm² of membrane:
+// g_c = d / (4 R_i Δx²) for a cylinder d wide with patches Δx apart. The ends are sealed.
+// Each step is implicit (a tridiagonal solve), so any size of step is stable. Units: µF/cm², mS/cm², mV, ms, µA/cm².
+// =====================================================================================
+(() => {
+  const CWd = 1000, CHd = 400, c = setupCanvas($('lCirc'), CWd, CHd);
+  const CW = 480, CH = 300, vt = setupCanvas($('lVt'), CW, CH), vx = setupCanvas($('lVx'), CW, CH), it = setupCanvas($('lIt'), CW, CH);
+  const DX = 50;                                   // µm between the centres of neighbouring patches
+  // the modes, as in lesson 2: current injection; two batteries (R₂ with E₂ in every patch, R₁ with E₁ switched into
+  // patch 1); Na⁺ channels (the K⁺ leak in every patch, Na⁺ channels switched into patch 1); the complete membrane
+  // (Na⁺, K⁺ and Cl⁻ leaks in every patch, mixed channels switched into patch 1). R in kΩ·cm², so 1/R is in mS/cm².
+  const P = { mode: 'inj', n: 6, d: 1.5, Ri: 150, gm: 0.5, C: 1, I: 20, gNa: 0.7, EK: -86, ENa: 60,
+              R1: 1.4, E1: 60, R2: 2, E2: -86, mNa: 0.35, mK: 0.35, fgNa: 0.03, fgK: 0.5, fgCl: 0.1, fENa: 60, fEK: -86, fECl: -70 };
+  // every patch's resting membrane, as one conductance and battery: the leaks' total g, and the conductance-weighted
+  // average of their batteries (lesson 1's chord conductance formula)
+  function leak() {
+    if (P.mode === 'inj') return { g: P.gm, E: 0 };
+    if (P.mode === 'g') return { g: P.gm, E: P.EK };
+    if (P.mode === 'bat') return { g: 1 / P.R2, E: P.E2 };
+    const g = P.fgNa + P.fgK + P.fgCl;
+    return { g, E: (P.fgNa * P.fENa + P.fgK * P.fEK + P.fgCl * P.fECl) / g };
+  }
+  // patch 1's switched branch, the same way (none for injection: a current source instead)
+  function switched() {
+    if (P.mode === 'g') return { g: P.gNa, E: P.ENa };
+    if (P.mode === 'bat') return { g: 1 / P.R1, E: P.E1 };
+    if (P.mode === 'full') { const g = P.mNa + P.mK; return { g, E: (P.mNa * P.fENa + P.mK * P.fEK) / g }; }
+    return { g: 0, E: 0 };
+  }
+  // Each drawn patch is SUB pieces 5 µm long in the model, so the charts along the row are smooth: Vf holds every
+  // piece's voltage, V each patch's (the average of its pieces), for the drawing and the charts over time.
+  const SUB = 10;
+  let V = [], Vf = [], curF = null, sw = false, t = 0, running = true, speed = 1, sampleAcc = 0;
+  const hist = { t: [], on: [], V: [], I: [] };   // I: each sample's membrane currents, { kind: [one per patch] }
+  const WIN = 40, SAMPLE_MS = 0.04;
+  const gc = () => P.d * 1e-4 / (4 * P.Ri * (DX * 1e-4) ** 2) * 1000;   // mS/cm²
+  const lambda = () => Math.sqrt(P.d * 1e-4 / (4 * P.Ri * leak().g * 1e-3)) * 1e4;   // µm, from the resting leak
+  const Erest = () => leak().E;   // injection: V measured from rest
+  // solve (A + D/dt) V' = rhs: the patches' conductances, the cytoplasm between them; dt = Infinity for the steady state
+  // (over the 5 µm pieces: the cytoplasm between two of them conducts SUB² times as much, per cm² of membrane, as
+  // between two whole patches; patch 1's input acts on all of patch 1's pieces)
+  function solve(dt, Vold) {
+    const n = P.n * SUB, g = gc() * SUB * SUB, a = new Float64Array(n), b = new Float64Array(n), cc = new Float64Array(n), r = new Float64Array(n);
+    for (let k = 0; k < n; k++) {
+      const in1 = k < SUB, L = leak(), S = in1 && sw ? switched() : { g: 0, E: 0 };
+      const gk = L.g + S.g, src = L.g * L.E + S.g * S.E + (P.mode === 'inj' && in1 && sw ? P.I : 0);
+      a[k] = k > 0 ? -g : 0; cc[k] = k < n - 1 ? -g : 0;
+      b[k] = gk + (k > 0 ? g : 0) + (k < n - 1 ? g : 0) + (isFinite(dt) ? P.C / dt : 0);
+      r[k] = src + (isFinite(dt) ? P.C / dt * Vold[k] : 0);
+    }
+    for (let k = 1; k < n; k++) { const m = a[k] / b[k - 1]; b[k] -= m * cc[k - 1]; r[k] -= m * r[k - 1]; }
+    const out = new Float64Array(n); out[n - 1] = r[n - 1] / b[n - 1];
+    for (let k = n - 2; k >= 0; k--) out[k] = (r[k] - cc[k] * out[k + 1]) / b[k];
+    return Array.from(out);
+  }
+  const steadyNow = () => solve(Infinity);
+  const byPatch = a => Array.from({ length: P.n }, (_, k) => { let s = 0; for (let j = 0; j < SUB; j++) s += a[k * SUB + j]; return s / SUB; });
+  const xFine = () => Array.from({ length: P.n * SUB }, (_, i) => (i + 0.5) * DX / SUB - DX / 2);   // µm from patch 1's centre
+  function reset() { const s = sw; sw = false; Vf = steadyNow(); V = byPatch(Vf); curF = null; sw = s; t = 0; hist.t = []; hist.on = []; hist.V = []; hist.I = []; segsFor(); }
+  // ---------- moving charges, as in lesson 2: dots on each wire move with its current ----------
+  const SP = 20, Q0 = 4, KPX = SP / Q0, MAXSTEP = 0.3 * SP;
+  let segs = [], cur = null, capQ0 = [];
+  const X0 = 120, OUT = 70, IN = 330, MIDY = 200;
+  const xs = k => X0 + (k + 0.5) * (CWd - X0 - 40) / P.n, half = () => (CWd - X0 - 40) / P.n / 2;
+  const xr = k => xs(k) - half() * 0.38, xcap = k => xs(k) + half() * 0.38;   // each patch's r_m and C branches
+  function seg(ax, ay, bx, by, color, f, gaps) { segs.push({ ax, ay, bx, by, L: Math.hypot(bx - ax, by - ay), o: Math.random() * SP, color, f, gaps: gaps || [], q: 0 }); }
+  // cur: { m: membrane current through r_m (and Na⁺) per patch, cap: I_C per patch, ax: along the cytoplasm k → k+1, src }
+  function segsFor() {
+    segs = [];
+    const n = P.n, m = P.mode, leakCol = m === 'bat' || m === 'full' ? 'ink' : 'k';
+    for (let k = 0; k < n; k++) {
+      seg(xr(k), IN, xr(k), OUT, leakCol, b => b.rm[k], [[MIDY - 32, MIDY + 32]]);
+      seg(xcap(k), IN, xcap(k), OUT, 'pos', b => b.cap[k], [[MIDY - 5, MIDY + 5]]);
+      seg(xr(k), IN, xcap(k), IN, 'pos', b => (k === 0 ? b.src : b.ax[k - 1]) - b.rm[k]);   // the inside node: what arrives from the left, less what r_m passes out
+      if (k < n - 1) seg(xcap(k), IN, xr(k + 1), IN, 'pos', b => b.ax[k], [[(xcap(k) + xr(k + 1)) / 2 - 22, (xcap(k) + xr(k + 1)) / 2 + 22]]);
+      // the outside rail: everything that has come out of the patches so far, back to the source on the left
+      if (k < n - 1) seg(xr(k + 1), OUT, xr(k), OUT, 'pos', b => b.back[k + 1]);
+    }
+    seg(X0 - 60, OUT, X0 - 60, IN, 'pos', b => b.src, [[MIDY - 30, MIDY + 30]]);   // injection, or patch 1's Na⁺ branch
+    seg(X0 - 60, IN, xr(0), IN, 'pos', b => b.src);
+    seg(xr(0), OUT, X0 - 60, OUT, 'pos', b => b.back[0]);
+    segs[segs.length - 3].color = m === 'g' ? 'na' : m === 'inj' ? 'pos' : 'accent';
+  }
+  function currents(Vm, dV, h, ax) {   // ax: the current along the cytoplasm from patch k to k+1, per cm² of a patch
+    const n = P.n, L = leak(), S = sw ? switched() : { g: 0, E: 0 };
+    const rm = Vm.map(v => L.g * (v - L.E)), cap = dV.map(d => P.C * d / h);
+    const src = P.mode === 'inj' ? (sw ? P.I : 0) : -S.g * (Vm[0] - S.E);   // into patch 1's inside
+    const back = new Array(n).fill(0);   // outside rail, flowing left past patch k: what patches k.. pass out
+    for (let k = n - 1; k >= 0; k--) back[k] = (k < n - 1 ? back[k + 1] : 0) + rm[k] + cap[k];
+    return { rm, cap, src, ax, back };
+  }
+  // each kind of membrane current in every patch (µA/cm², outward +): by ion where the mode has ions, by branch in
+  // the two-battery circuit, and the capacitor's; patch 1's switched branch counted with its ion
+  const KINDS = {
+    inj: [['leak', 'I_leak', 'k'], ['C', 'I_C', 'pos']],
+    bat: [['b1', 'I_1 (branch 1, patch 1)', 'accent'], ['b2', 'I_2', 'ink'], ['C', 'I_C', 'pos']],
+    g: [['Na', 'I_Na', 'na'], ['K', 'I_K', 'k'], ['C', 'I_C', 'pos']],
+    full: [['Na', 'I_Na', 'na'], ['K', 'I_K', 'k'], ['Cl', 'I_Cl', 'cl'], ['C', 'I_C', 'pos']],
+  };
+  function ionCurrents(Vm, cap, per = 1) {   // per: pieces per patch (1: whole patches; SUB: the 5 µm pieces)
+    const on = k => k < per && sw, out = { C: cap.slice() };
+    if (P.mode === 'inj') out.leak = Vm.map(v => P.gm * v);
+    if (P.mode === 'bat') { out.b1 = Vm.map((v, k) => on(k) ? (v - P.E1) / P.R1 : 0); out.b2 = Vm.map(v => (v - P.E2) / P.R2); }
+    if (P.mode === 'g') { out.Na = Vm.map((v, k) => on(k) ? P.gNa * (v - P.ENa) : 0); out.K = Vm.map(v => P.gm * (v - P.EK)); }
+    if (P.mode === 'full') {
+      out.Na = Vm.map((v, k) => (P.fgNa + (on(k) ? P.mNa : 0)) * (v - P.fENa));
+      out.K = Vm.map((v, k) => (P.fgK + (on(k) ? P.mK : 0)) * (v - P.fEK));
+      out.Cl = Vm.map(v => P.fgCl * (v - P.fECl));
+    }
+    return out;
+  }
+  let ionView = 'leak', iView = 'time';   // iView: the currents chart over time (one kind) or over space (every kind)
+  function ionChips() {
+    const kinds = KINDS[P.mode]; if (!kinds.some(k => k[0] === ionView)) ionView = kinds[0][0];
+    $('lIonChips').innerHTML = kinds.map(([k, l, col]) => `<button class="chip" data-lion="${k}" aria-pressed="${k === ionView}"><i class="dot" style="background:var(--${col})"></i>${l.replace(/_([A-Za-z0-9]+)/, '<sub>$1</sub>').replace(/ \(.*\)/, '')}</button>`).join('');
+    document.querySelectorAll('[data-lion]').forEach(b => b.addEventListener('click', () => { ionView = b.dataset.lion; ionChips(); drawCharts(); }));
+  }
+  function advance(ms) {
+    let left = ms;
+    while (left > 1e-9) {
+      const h = Math.min(left, 0.02), F0 = Vf; Vf = solve(h, F0);
+      const Vmf = Vf.map((v, i) => (v + F0[i]) / 2), dVf = Vf.map((v, i) => v - F0[i]);
+      const Vm = byPatch(Vmf), dV = byPatch(dVf), gF = gc() * SUB * SUB; V = byPatch(Vf);
+      const ax = Vm.slice(0, -1).map((_, k) => gF * (Vmf[(k + 1) * SUB - 1] - Vmf[(k + 1) * SUB]) / SUB);
+      cur = currents(Vm, dV, h, ax);
+      curF = ionCurrents(Vmf, dVf.map(d => P.C * d / h), SUB);
+      for (const s of segs) s.q += s.f(cur) * h;
+      t += h; left -= h; sampleAcc += h;
+      if (sampleAcc >= SAMPLE_MS) {
+        sampleAcc -= SAMPLE_MS; hist.t.push(t); hist.on.push(sw); hist.V.push(V.slice()); hist.I.push(ionCurrents(Vm, cur.cap));
+        while (hist.t.length && hist.t[0] < t - WIN) { hist.t.shift(); hist.on.shift(); hist.V.shift(); hist.I.shift(); }
+      }
+    }
+    const big = Math.max(0, ...segs.map(s => Math.abs(s.q * KPX))), kk = big > MAXSTEP ? MAXSTEP / big : 1;
+    for (const s of segs) { s.o = ((s.o + s.q * KPX * kk) % SP + SP) % SP; s.q = 0; }
+    if (cur) memMove(ms);
+  }
+  // ---------- drawing ----------
+  const wire = (x0, y0, x1, y1) => { c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); };
+  const lab = (t_, x, y, col, align = 'center', font = '500 13px "IBM Plex Sans", sans-serif') => { c.font = font; c.fillStyle = col || C.ink; c.textAlign = align; fillSub(c, t_, x, y); };
+  const blankV = (x, y0, y1) => { c.fillStyle = C.surface; c.fillRect(x - 4, y0, 8, y1 - y0); };
+  const blankH = (y, x0, x1) => { c.fillStyle = C.surface; c.fillRect(x0, y - 4, x1 - x0, 8); };
+  function resistorV(x, yc, col, hh = 30) { blankV(x, yc - hh, yc + hh); c.strokeStyle = col; c.lineWidth = 2.2; c.lineJoin = 'round'; c.beginPath(); c.moveTo(x, yc - hh);
+    for (let k = 0; k < 6; k++) c.lineTo(x + (k % 2 ? -9 : 9), yc - hh + 5 + k * (2 * hh - 10) / 5); c.lineTo(x, yc + hh); c.stroke(); }
+  function resistorH(xc, y, col, hw = 22) { blankH(y, xc - hw, xc + hw); c.strokeStyle = col; c.lineWidth = 2.2; c.beginPath(); c.moveTo(xc - hw, y);
+    for (let k = 0; k < 6; k++) c.lineTo(xc - hw + 4 + k * (2 * hw - 8) / 5, y + (k % 2 ? -8 : 8)); c.lineTo(xc + hw, y); c.stroke(); }
+  function battery(x, yc, col) { blankV(x, yc - 8, yc + 8); c.strokeStyle = col; c.lineWidth = 2.4; wire(x - 14, yc - 5, x + 14, yc - 5); c.lineWidth = 4.5; wire(x - 7, yc + 5, x + 7, yc + 5); }
+  function capacitor(x, yc, q) {
+    blankV(x, yc - 5, yc + 5); const w = Math.min(12, half() * 0.22);   // small: the row has many
+    c.strokeStyle = C.ink; c.lineWidth = 2; wire(x - w, yc - 3.5, x + w, yc - 3.5); wire(x - w, yc + 3.5, x + w, yc + 3.5);
+    const n = Math.min(12, Math.round(Math.abs(q) / Q0)), per = 4;   // a few marks: one per Q0 of charge, up to 12
+    c.font = '700 9px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    for (let k = 0; k < n; k++) { const row = Math.floor(k / per), col = k % per, xx = x - w + 3 + col * (2 * w - 6) / (per - 1);
+      c.fillStyle = q >= 0 ? C.neg : C.pos; c.fillText(q >= 0 ? '−' : '+', xx, yc - 10 - row * 8);
+      c.fillStyle = q >= 0 ? C.pos : C.neg; c.fillText(q >= 0 ? '+' : '−', xx, yc + 11 + row * 8); }
+    c.textBaseline = 'alphabetic';
+  }
+  function draw() {
+    c.fillStyle = C.surface; c.fillRect(0, 0, CWd, CHd);
+    const n = P.n, m = P.mode, g = m !== 'inj', L = leak(), leakCol = m === 'bat' || m === 'full' ? C.ink : C.k;
+    c.strokeStyle = C.ink; c.lineWidth = 2;
+    wire(X0 - 60, OUT, xcap(n - 1), OUT); wire(X0 - 60, IN, xcap(n - 1), IN); wire(X0 - 60, OUT, X0 - 60, IN);
+    for (let k = 0; k < n; k++) { wire(xr(k), OUT, xr(k), IN); wire(xcap(k), OUT, xcap(k), IN); }
+    // dots
+    if (cur) for (const s of segs) {
+      const ux = (s.bx - s.ax) / s.L, uy = (s.by - s.ay) / s.L;
+      c.fillStyle = C[s.color]; c.beginPath();
+      for (let d = s.o; d < s.L; d += SP) { const x = s.ax + ux * d, y = s.ay + uy * d, along = Math.abs(uy) > 0.5 ? y : x;
+        if (s.gaps.some(([a, b]) => along > Math.min(a, b) && along < Math.max(a, b))) continue; c.moveTo(x + 3.5, y); c.arc(x, y, 3.5, 0, 6.283); }
+      c.fill();
+    }
+    for (let k = 0; k < n; k++) {
+      resistorV(xr(k), MIDY, leakCol); if (g) battery(xr(k), MIDY + 52, leakCol);
+      capacitor(xcap(k), MIDY, P.C * (V[k] - L.E) * 0.5);
+      if (k < n - 1) resistorH((xcap(k) + xr(k + 1)) / 2, IN, C.accent);
+      lab('patch ' + (k + 1), xs(k), IN + 30, C.muted);
+      lab(fmtSigned(V[k], 0), xs(k), IN + 50, C.ink, 'center', '500 12px "IBM Plex Mono", monospace');
+    }
+    if (n > 1) lab('r_i', (xcap(0) + xr(1)) / 2, IN + 22, C.accent, 'center', '600 12px "IBM Plex Sans", sans-serif');
+    lab(m === 'bat' ? 'R_2' : m === 'full' ? 'leaks' : 'r_m', xr(0) - 16, MIDY - 34, leakCol, 'right', '600 12px "IBM Plex Sans", sans-serif');
+    if (g) lab(m === 'bat' ? 'E_2' : m === 'full' ? 'E_leak ' + fmtSigned(L.E, 0) : 'E_K', xr(0) - 16, MIDY + 70, leakCol, 'right', '600 12px "IBM Plex Sans", sans-serif'); lab('C', xcap(0) + 16, MIDY - 26, C.ink, 'left', '600 12px "IBM Plex Sans", sans-serif');
+    // patch 1's input: a current source, or a switched branch with its battery (Na⁺ channels, battery 1, mixed channels)
+    const sx = X0 - 60;
+    if (g) {
+      const col = m === 'g' ? C.na : C.accent, S = switched();
+      blankV(sx, MIDY - 34, MIDY + 34); c.strokeStyle = col; c.lineWidth = 2.6; c.lineCap = 'round';
+      c.fillStyle = col; c.beginPath(); c.arc(sx, MIDY - 28, 3.5, 0, 6.283); c.arc(sx, MIDY + 4, 3.5, 0, 6.283); c.fill();
+      sw ? wire(sx, MIDY + 4, sx, MIDY - 28) : wire(sx, MIDY + 4, sx - 20, MIDY - 22); c.lineCap = 'butt';
+      resistorV(sx, MIDY + 60, col, 22); battery(sx, MIDY + 104, col);
+      lab(m === 'g' ? 'Na⁺ channels' : m === 'bat' ? 'R_1, E_1' : 'mixed channels', sx, OUT - 14, col);
+      if (m === 'full') lab('E ' + fmtSigned(S.E, 0), sx + 20, MIDY + 124, col, 'left', '600 11px "IBM Plex Sans", sans-serif');
+    } else {
+      blankV(sx, MIDY - 26, MIDY + 26); c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath(); c.arc(sx, MIDY, 22, 0, 6.283); c.stroke();
+      c.beginPath(); c.moveTo(sx, MIDY - 12); c.lineTo(sx, MIDY + 12); c.moveTo(sx - 6, MIDY + 6); c.lineTo(sx, MIDY + 12); c.lineTo(sx + 6, MIDY + 6); c.stroke();
+      lab(sw ? 'I = ' + P.I + ' µA/cm²' : 'I off', sx, OUT - 14, C.ink);
+    }
+    lab('outside (extracellular)', CWd - 30, OUT - 14, C.muted, 'right'); lab('inside: the cytoplasm, joined from patch to patch', CWd - 30, IN + 80, C.muted, 'right');
+    // distance scale
+    c.font = '11px "IBM Plex Mono", monospace'; c.fillStyle = C.muted; c.textAlign = 'center';
+    lab(`patches ${DX} µm apart · λ = ${lambda().toFixed(0)} µm (${(lambda() / DX).toFixed(1)} patches)`, CWd / 2, CHd - 10, C.muted, 'center', '12px "IBM Plex Sans", sans-serif');
+  }
+  // ---------- the same row as a stretch of membrane (membrane.js) ----------
+  // A long stretch of the dendrite, each patch with the leak channels its circuit has (in the complete membrane, Na⁺, K⁺
+  // and Cl⁻; with the Na⁺ channels, K⁺; otherwise one leak) and its charge (C). Ions move through each channel at the
+  // rate of its own current, and along the cytoplasm from patch to patch at the rate of the current through r_i.
+  // Patch 1's input on the left. 210 px per patch, so wider than the page with many patches: it scrolls sideways.
+  const MH = 320, PW_ = 210, MX0 = 130;
+  let MW = 0, mc = null, MIONS = [], memCh = [], memFl = [];
+  const memLeaks = () => P.mode === 'full' ? [['na', P.fgNa, P.fENa, 'Na⁺'], ['k', P.fgK, P.fEK, 'K⁺'], ['cl', P.fgCl, P.fECl, 'Cl⁻']]
+    : P.mode === 'g' ? [['k', P.gm, P.EK, 'K⁺']] : P.mode === 'bat' ? [['ink', 1 / P.R2, P.E2, 'R₂']] : [['k', P.gm, 0, 'leak']];
+  function memFit() {
+    const w = Math.max(1000, MX0 + P.n * PW_ + 20), nc = 1 + P.n * memLeaks().length;
+    if (w !== MW) { MW = w; const cv = $('lMem'); cv.style.width = MW + 'px'; cv.style.maxWidth = 'none'; mc = setupCanvas(cv, MW, MH); MIONS = MemSlice.ions(MW); }
+    if (memCh.length !== nc || memFl.length !== P.n) { memCh = Array.from({ length: nc }, () => Math.random() * MemSlice.SP); memFl = Array.from({ length: P.n }, () => Math.random() * MemSlice.SP); }
+  }
+  const mpx = k => MX0 + k * PW_;   // where patch k's stretch begins
+  function memMove(ms) {
+    memFit();
+    const f = ms * KPX, lk = memLeaks(), mv = [-cur.src];   // patch 1's input: inward, so its ions move down
+    for (let k = 0; k < P.n; k++) for (const [ion, g, E] of lk) { const I = g * (V[k] - E); mv.push(ion === 'cl' ? I : -I); }   // outward current: cations up, Cl⁻ down
+    const fl = [cur.src, ...cur.ax];
+    const all = MemSlice.step([...memCh, ...memFl], [...mv, ...fl].map(i => i * f), MAXSTEP);
+    memCh = all.slice(0, memCh.length); memFl = all.slice(memCh.length);
+  }
+  function drawMem() {
+    memFit();
+    const n = P.n, m = P.mode, L = leak(), lk = memLeaks(), sx = 62;
+    const channels = [m === 'g' ? { x: sx, ion: 'na', col: C.na, o: memCh[0], act: sw ? 1 : 0, open: sw ? 1 : 0, label: 'Na⁺ channels' }
+                    // the mixed channels pass Na⁺ and K⁺ alike: their ions are drawn as positive charge, not as one ion
+                    : m === 'full' ? { x: sx, ion: 'pos', col: C.accent, o: memCh[0], act: sw ? 1 : 0, open: sw ? 1 : 0, label: 'mixed (Na⁺ and K⁺)' }
+                    : { x: sx, kind: 'electrode', ion: 'pos', o: memCh[0], active: sw, label: m === 'bat' ? 'battery 1' : 'electrode' }];
+    const labels = [], cap = [], flows = [];
+    for (let k = 0; k < n; k++) {
+      const x0 = mpx(k);
+      lk.forEach(([ion, , , name], j) => channels.push({ x: x0 + 30 + j * 48, ion: ion === 'ink' ? 'pos' : ion, col: C[ion], o: memCh[1 + k * lk.length + j], label: name }));
+      cap.push({ x: x0 + 30 + lk.length * 48 + 18, q: P.C * (V[k] - L.E) * 0.5 / Q0, w: 16 });
+      labels.push({ x: x0 + PW_ / 2 - 10, t: 'patch ' + (k + 1) + '  ' + fmtSigned(V[k], 0), y: 76, col: C.ink, font: '600 12.5px "IBM Plex Sans", sans-serif' });
+      flows.push({ x0: k ? mpx(k - 1) + PW_ / 2 : sx + 8, x1: x0 + PW_ / 2, y: 262, ion: 'k', o: memFl[k] });
+      if (k) labels.push({ x: x0 - 4, t: '┊', y: 100, col: C.muted });
+    }
+    MemSlice.draw(mc, MW, MH, C, { where: 'dendrite', slice: [0.12, 0.88], cap, channels, labels, flows, ions: MIONS });
+  }
+  const patchCol = k => mixc(C.neg, C.pos, P.n > 1 ? k / (P.n - 1) : 0);
+  function drawCharts() {
+    const n = P.n, g = P.mode !== 'inj', fixed = g ? [-100, 40] : [-5, 45];
+    drawChart(vt, { xs: hist.t, x0: Math.max(0, t - WIN), x1: Math.max(WIN, t), pin: 'right', on: hist.on, w: CW, h: CH, fixed, ylabel: 'mV', xlabel: `time, the last ${WIN} ms`,
+      series: Array.from({ length: n }, (_, k) => ({ ys: hist.V.map(v => v[k]), color: patchCol(n - 1 - k), width: k === 0 ? 2.4 : 1.6, label: String(k + 1) })) });
+    const ds = xFine(), ss = solve(Infinity), lam = lambda(), x0r = -DX / 2, x1r = (n - 0.5) * DX;
+    const series = [{ ys: ss, color: C.accent, dash: [6, 4], width: 1.6, label: 'settles at' }, { ys: Vf, color: C.ink, width: 2.4, label: 'now' }];
+    if (!g && sw) series.unshift({ ys: ds.map(x => Erest() + (ss[SUB / 2] - Erest()) * Math.exp(-Math.max(0, x) / lam)), color: C.muted, dash: [2, 3], width: 1.2, label: 'e^(−x/λ)' });
+    drawChart(vx, { xs: ds, x0: x0r, x1: x1r, w: CW, h: CH, fixed, ylabel: 'mV', xlabel: 'distance from patch 1 (µm)', series });
+    // the membrane currents: one kind over time, one line per patch (patch 1 thickest); or every kind along the row,
+    // now, one line per kind. Outward positive.
+    const kind = KINDS[P.mode].find(k => k[0] === ionView) || KINDS[P.mode][0], Ifix = P.mode === 'inj' ? [-25, 25] : [-120, 120];
+    if (iView === 'time') drawChart(it, { xs: hist.t, x0: Math.max(0, t - WIN), x1: Math.max(WIN, t), pin: 'right', on: hist.on, w: CW, h: CH, fixed: Ifix, ylabel: 'µA/cm², outward +', xlabel: `time, the last ${WIN} ms`,
+      series: Array.from({ length: n }, (_, k) => ({ ys: hist.I.map(I => (I[kind[0]] || [])[k] ?? 0), color: patchCol(n - 1 - k), width: k === 0 ? 2.4 : 1.6, label: String(k + 1) })) });
+    else { const now = curF || ionCurrents(Vf, Vf.map(() => 0), SUB);
+      drawChart(it, { xs: ds, x0: x0r, x1: x1r, w: CW, h: CH, fixed: Ifix, ylabel: 'µA/cm², outward +', xlabel: 'distance from patch 1 (µm)',
+        series: KINDS[P.mode].map(([k, l, col]) => ({ ys: now[k] || ds.map(() => 0), color: C[col], width: k === 'C' ? 2.4 : 1.8, label: l.replace(/ \(.*\)/, '') })) }); }
+    $('lItTitle').textContent = iView === 'time' ? 'Membrane currents over time, at each patch' : 'Membrane currents along the row, now';
+    $('lIonChips').hidden = iView === 'space';
+  }
+  function readouts() {
+    $('lLam').textContent = lambda().toFixed(0) + ' µm';
+    $('lTau').textContent = (P.C / leak().g).toFixed(1) + ' ms';
+    const base = Erest(), d1 = V[0] - base, dn = V[P.n - 1] - base;
+    $('lV1n').textContent = fmtSigned(V[0]) + ' / ' + fmtSigned(V[P.n - 1]);
+    $('lFrac').textContent = Math.abs(d1) > 0.05 ? Math.round(100 * dn / d1) + ' %' : '—';
+    $('lGc').textContent = gc().toFixed(1) + ' mS/cm²';
+  }
+  // ---------- controls ----------
+  const SWLAB = { inj: ['Current on', 'var(--accent)'], bat: ['Battery 1', 'var(--accent)'], g: ['Na⁺ channels', 'var(--na)'], full: ['Mixed channels', 'var(--accent)'] };
+  const setSw = on => { sw = on; $('lSwitch').setAttribute('aria-pressed', String(on)); $('lSwitchLab').textContent = SWLAB[P.mode][0]; $('lSwitch').style.setProperty('--on', SWLAB[P.mode][1]); };
+  const LEG = { inj: ['pos', 'from the current source into patch 1'], bat: ['accent', 'through patch 1\'s branch 1 (R<sub>1</sub>, E<sub>1</sub>)'], g: ['na', 'through patch 1\'s Na⁺ channels'], full: ['accent', 'through patch 1\'s mixed channels'] };
+  function setMode(m) {
+    P.mode = m; setSw(false); reset(); ionChips();
+    document.querySelectorAll('[data-lfor]').forEach(r => r.hidden = !r.dataset.lfor.split(' ').includes(m));
+    $('lLegSw').innerHTML = `<i class="dot ${LEG[m][0]}" style="background:var(--${LEG[m][0]})"></i>${LEG[m][1]}`;
+  }
+  chipGroup('lmode', setMode);
+  chipGroup('liview', v => { iView = v; drawCharts(); });
+  $('lSwitch').addEventListener('click', () => setSw(!sw));
+  bindRange('lN', v => v + ' patches', v => { P.n = v; if (V.length) reset(); });
+  bindRange('lD', v => v.toFixed(1) + ' µm', v => { P.d = v; });
+  bindRange('lRi', v => v + ' Ω·cm', v => { P.Ri = v; });
+  bindRange('lGm', v => v.toFixed(2) + ' mS/cm²', v => { P.gm = v; });
+  bindRange('lC', v => v.toFixed(1) + ' µF/cm²', v => { P.C = v; });
+  bindRange('lI', v => v + ' µA/cm²', v => { P.I = v; });
+  bindRange('lGNa', v => v.toFixed(1) + ' mS/cm²', v => { P.gNa = v; });
+  bindRange('lR1', v => v.toFixed(1) + ' kΩ·cm²', v => { P.R1 = v; });
+  bindRange('lE1', v => fmtSigned(v, 0), v => { P.E1 = v; });
+  bindRange('lR2', v => v.toFixed(1) + ' kΩ·cm²', v => { P.R2 = v; });
+  bindRange('lE2', v => fmtSigned(v, 0), v => { P.E2 = v; });
+  bindRange('lMix', v => v.toFixed(1) + ' mS/cm²', v => { P.mNa = P.mK = v / 2; });   // as in lesson 2: half Na⁺, half K⁺
+  bindRange('lFNa', v => v.toFixed(2) + ' mS/cm²', v => { P.fgNa = v; });
+  bindRange('lFK', v => v.toFixed(2) + ' mS/cm²', v => { P.fgK = v; });
+  bindRange('lFCl', v => v.toFixed(2) + ' mS/cm²', v => { P.fgCl = v; });
+  const speedOf = v => 0.05 * Math.pow(100, v / 100);   // ms of model time per second
+  bindRange('lSpeed', v => { const s = speedOf(v); return (s < 1 ? s.toFixed(2) : s.toFixed(1)) + ' ms/s'; }, v => speed = speedOf(v));
+  const playBtn = $('lPlay'), setRunning = r => { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; };
+  playBtn.addEventListener('click', () => setRunning(!running));
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setRunning(false);
+  setMode('inj');
+  window.SPACE_CIRC = { P, get V() { return V; }, advance, reset, setSw, setMode, lambda, gc, leak, get hist() { return hist; } };
+  let last = performance.now(), frame = 0;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (running) advance(dt * speed);
+    draw(); drawMem(); drawCharts(); if (frame++ % 6 === 0) readouts();
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { draw(); drawMem(); drawCharts(); });
+  Frames.sim(() => running, 'lPlay', ['lSwitch']);
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// Part 2: a synapse on a dendrite, recorded at the cell body. The dendrite is Part 1's cable (its diameter, cytoplasm,
+// resting leak, whichever circuit is chosen, and C), 600 µm long in 5 µm pieces, sealed at its tip, with the cell body (a sphere 20 µm across,
+// the same membrane) at its right-hand end. A synaptic current I(t) = I_max (t/τ_s) e^(1 − t/τ_s) flows in at the
+// synapse. Each Fire works out the whole 40 ms at once (implicit steps of 0.025 ms). V is measured from rest.
+// Units: cm, µF, mS, mV, ms; currents in µA (the slider is in pA).
+// =====================================================================================
+(() => {
+  const LD = 600, DXS = 5, ND = LD / DXS, SOMA_D = 20, TEND = 40, DTS = 0.025, REC = 0.1;
+  const S = { kind: 'pulse', pos: 300, I: 50, tau: 0.5, dur: 10, norm: false };   // kind: 'epsp' (a synaptic current) or 'pulse' (a square pulse)
+  let traces = [], last = null;
+  const cable = () => window.SPACE_CIRC.P;
+  function fireAt(pos) {
+    const P = cable(), um = 1e-4, d = P.d * um, dx = DXS * um, n = ND + 1;   // nodes 0..ND−1 the dendrite (0 the tip), ND the cell body
+    const A = i => i < ND ? Math.PI * d * dx : Math.PI * (SOMA_D * um) ** 2;
+    const gm = window.SPACE_CIRC.leak().g;   // the circuit's resting leak, whichever mode it is in
+    const c = Array.from({ length: n }, (_, i) => P.C * A(i)), g = Array.from({ length: n }, (_, i) => gm * A(i));
+    const Gax = Math.PI * d * d / 4 / (P.Ri * dx) * 1000;   // mS between neighbouring pieces (and from the last into the cell body)
+    const ks = Math.max(0, Math.min(ND - 1, Math.round(ND - 1 - pos / DXS)));   // the piece the synapse is on
+    let V = new Float64Array(n);
+    const out = { pos, ks, t: [], soma: [], syn: [] };
+    const a = new Float64Array(n), b = new Float64Array(n), cc = new Float64Array(n), r = new Float64Array(n);
+    for (let s = 0; s * DTS <= TEND + 1e-9; s++) {
+      const tt = s * DTS;
+      if (s % Math.round(REC / DTS) === 0) { out.t.push(tt); out.soma.push(V[ND]); out.syn.push(V[ks]); }
+      const t1 = tt + DTS, u = Math.max(0, t1 - 1) / S.tau;   // it starts at 1 ms
+      const Isyn = S.kind === 'pulse' ? (t1 > 1 && t1 <= 1 + S.dur ? S.I * 1e-6 : 0) : u > 0 ? S.I * 1e-6 * u * Math.exp(1 - u) : 0;   // pA → µA
+      for (let i = 0; i < n; i++) {
+        a[i] = i > 0 ? -Gax : 0; cc[i] = i < n - 1 ? -Gax : 0;
+        b[i] = c[i] / DTS + g[i] + (i > 0 ? Gax : 0) + (i < n - 1 ? Gax : 0);
+        r[i] = c[i] / DTS * V[i] + (i === ks ? Isyn : 0);
+      }
+      for (let i = 1; i < n; i++) { const m = a[i] / b[i - 1]; b[i] -= m * cc[i - 1]; r[i] -= m * r[i - 1]; }
+      const W = new Float64Array(n); W[n - 1] = r[n - 1] / b[n - 1];
+      for (let i = n - 2; i >= 0; i--) W[i] = (r[i] - cc[i] * W[i + 1]) / b[i];
+      V = W;
+    }
+    return out;
+  }
+  const lamD = () => window.SPACE_CIRC.lambda();
+  function stats(tr) {
+    let k = 0; tr.soma.forEach((v, i) => { if (v > tr.soma[k]) k = i; });
+    const pk = tr.soma[k], h = pk / 2;
+    let i0 = k, i1 = k; while (i0 > 0 && tr.soma[i0] > h) i0--; while (i1 < tr.soma.length - 1 && tr.soma[i1] > h) i1++;
+    return { pk, tp: tr.t[k] - 1, hw: tr.t[i1] - tr.t[i0], syn: Math.max(...tr.syn) };   // tp: from the input's start
+  }
+  // ---------- the picture: the dendrite, the synapse, the cell body on the right ----------
+  const PWd = 1000, PHd = 150, pc = setupCanvas($('sPic'), PWd, PHd), XT = 40, XS = 880, YD = 78;
+  const xOf = dist => XS - 34 - dist / LD * (XS - 34 - XT);   // canvas x of a point dist µm from the cell body
+  function drawPic() {
+    const c = pc; c.fillStyle = C.surface; c.fillRect(0, 0, PWd, PHd);
+    c.lineCap = 'round'; c.strokeStyle = C.memdark; c.lineWidth = 16; c.beginPath(); c.moveTo(XT, YD); c.lineTo(XS - 20, YD); c.stroke();
+    c.strokeStyle = C.cyto; c.lineWidth = 11; c.beginPath(); c.moveTo(XT, YD); c.lineTo(XS - 20, YD); c.stroke(); c.lineCap = 'butt';
+    c.fillStyle = C.cyto; c.strokeStyle = C.memdark; c.lineWidth = 3; c.beginPath(); c.arc(XS + 10, YD, 44, 0, 6.283); c.fill(); c.stroke();
+    c.font = '600 12.5px "IBM Plex Sans", sans-serif'; c.fillStyle = C.ink; c.textAlign = 'center'; c.fillText('cell body', XS + 10, YD + 4);
+    c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath(); c.moveTo(XS + 50, 8); c.lineTo(XS + 26, YD - 22); c.stroke();
+    c.fillStyle = C.ink; c.textAlign = 'left'; c.fillText('record', XS + 46, 16);
+    // distance marks, from the cell body
+    c.font = '11px "IBM Plex Mono", monospace'; c.fillStyle = C.muted; c.textAlign = 'center';
+    for (let dd = 0; dd <= LD; dd += 100) { const x = xOf(dd); c.fillRect(x - 0.5, YD + 14, 1, 6); c.fillText(dd + (dd ? '' : ' µm'), x, YD + 34); }
+    c.textAlign = 'left'; c.fillText('µm from the cell body', XT, YD + 54);
+    // earlier synapses, faint, and the current one
+    for (const tr of traces) { if (tr.pos === S.pos) continue; c.fillStyle = colOf(tr.pos); c.globalAlpha = 0.45; c.beginPath(); c.arc(xOf(tr.pos), YD - 14, 4, 0, 6.283); c.fill(); c.globalAlpha = 1; }
+    const x = xOf(S.pos);
+    if (S.kind === 'pulse') {   // an electrode into the dendrite
+      c.fillStyle = mixc(C.surface, C.accent, 0.8); c.strokeStyle = C.accent; c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(x - 7, YD - 52); c.lineTo(x - 1, YD - 2); c.lineTo(x + 1, YD - 2); c.lineTo(x + 7, YD - 52); c.closePath(); c.fill(); c.stroke();
+      c.font = '600 12.5px "IBM Plex Sans", sans-serif'; c.fillStyle = C.accent; c.textAlign = 'center'; c.fillText('electrode', x, YD - 58);
+    } else {
+      c.fillStyle = C.accent; c.beginPath(); c.arc(x, YD - 15, 7, 0, 6.283); c.fill();
+      c.strokeStyle = C.accent; c.lineWidth = 2; c.beginPath(); c.moveTo(x, YD - 22); c.lineTo(x, YD - 40); c.stroke();
+      c.font = '600 12.5px "IBM Plex Sans", sans-serif'; c.fillStyle = C.accent; c.textAlign = 'center'; c.fillText('synapse', x, YD - 46);
+    }
+  }
+  const colOf = pos => mixc(C.neg, C.pos, pos / LD);   // red close to the cell body, blue far out
+  // ---------- charts ----------
+  const CWs = 560, CHs = 320, cs = setupCanvas($('sVs'), CWs, CHs), cl = setupCanvas($('sVl'), CWs, CHs);
+  function drawCharts() {
+    const xs = last ? last.t : [0, TEND];
+    const top = S.norm ? 110 : Math.max(1, ...traces.map(tr => stats(tr).pk)) * 1.15;
+    drawChart(cs, { xs, x0: 0, x1: TEND, w: CWs, h: CHs, fixed: [S.norm ? -5 : -top * 0.05, top], ylabel: S.norm ? '% of its own peak' : 'ΔV at the cell body (mV)', xlabel: S.kind === 'pulse' ? 'time (ms); the pulse starts at 1 ms' : 'time (ms); the synapse fires at 1 ms',
+      series: traces.map(tr => { const pk = stats(tr).pk; return { ys: tr.soma.map(v => S.norm ? 100 * v / pk : v), color: colOf(tr.pos), width: tr === last ? 2.6 : 1.8, label: tr.pos + ' µm' }; }) });
+    const top2 = last ? Math.max(...last.syn) * 1.1 : 1;
+    drawChart(cl, { xs, x0: 0, x1: TEND, w: CWs, h: CHs, fixed: [-top2 * 0.05, top2], ylabel: 'ΔV (mV)', xlabel: 'time (ms)',
+      series: last ? [{ ys: last.syn, color: C.accent, width: 2, dash: [6, 4], label: S.kind === 'pulse' ? 'electrode' : 'synapse' }, { ys: last.soma, color: colOf(last.pos), width: 2.6, label: 'cell body' }] : [] });
+  }
+  function readouts() {
+    $('sLam').textContent = lamD().toFixed(0) + ' / ' + LD + ' µm';
+    if (!last) { ['sPk', 'sTp', 'sHw', 'sSyn', 'sRatio'].forEach(id => $(id).textContent = '—'); return; }
+    const st = stats(last);
+    $('sPk').textContent = '+' + st.pk.toFixed(2) + ' mV'; $('sTp').textContent = st.tp.toFixed(1) + ' ms'; $('sHw').textContent = st.hw.toFixed(1) + ' ms';
+    $('sSyn').textContent = '+' + st.syn.toFixed(1) + ' mV'; $('sRatio').textContent = (100 * st.pk / st.syn).toFixed(0) + ' %';
+  }
+  const redraw = () => { drawPic(); drawCharts(); readouts(); };
+  function fire() { last = fireAt(S.pos); traces = traces.filter(tr => tr.pos !== S.pos).concat([last]).slice(-8); redraw(); }
+  bindRange('sPos', v => v + ' µm from the cell body', v => { S.pos = v; drawPic(); });
+  bindRange('sI', v => v + ' pA', v => { S.I = v; });
+  bindRange('sTau', v => v.toFixed(1) + ' ms', v => { S.tau = v; });
+  bindRange('sDur', v => v.toFixed(1) + ' ms', v => { S.dur = v; });
+  chipGroup('skind', k => {
+    S.kind = k; traces = []; last = null;   // one kind of input per chart
+    document.querySelectorAll('[data-sfor]').forEach(r => r.hidden = r.dataset.sfor !== k);
+    $('sFire').textContent = k === 'pulse' ? 'Inject pulse' : 'Fire synapse';
+    redraw();
+  });
+  $('sNorm').addEventListener('change', e => { S.norm = e.target.checked; drawCharts(); });
+  $('sFire').addEventListener('click', fire);
+  $('sClear').addEventListener('click', () => { traces = []; last = null; redraw(); });
+  $('sPic').addEventListener('click', e => {   // click on the dendrite to move the synapse there
+    const r = $('sPic').getBoundingClientRect(), x = (e.clientX - r.left) / r.width * PWd;
+    if (x < XT - 10 || x > XS - 30) return;
+    const d = Math.max(0, Math.min(590, Math.round((XS - 34 - x) / (XS - 34 - XT) * LD / 10) * 10));
+    const el = $('sPos'); el.value = d; el.dispatchEvent(new Event('input'));
+  });
+  ['lD', 'lRi', 'lGm', 'lC', 'lR2', 'lFNa', 'lFK', 'lFCl'].forEach(id => $(id).addEventListener('input', readouts));   // the cable is the circuit's
+  document.querySelectorAll('[data-lmode]').forEach(b => b.addEventListener('click', () => setTimeout(readouts, 0)));
+  colorHooks.push(redraw);
+  ChartZoom.bind(cs.canvas, drawCharts); ChartZoom.bind(cl.canvas, drawCharts);
+  window.SPACE_SYN = { fireAt, stats, fire, S, get traces() { return traces; } };
+  redraw();
+})();
+
+// =====================================================================================
+// Cable calculator: a long cable with a steady current switched on at x = 0. Along it, at steady state,
+// V = V0 e^(−x/λ). Over time (Hodgkin and Rushton's solution for a step of current into an infinite cable), with
+// X = x/λ and T = t/τ, as a fraction of the final change at x = 0:
+//   V/V0 = ½ [ e^(−X) erfc(X/(2√T) − √T) − e^(X) erfc(X/(2√T) + √T) ]
+// Units: µm, Ω·cm, mS/cm², µF/cm², ms.
+// =====================================================================================
+(() => {
+  const K = { d: 1.5, Ri: 150, gm: 0.5, C: 1 };
+  const W = 600, H = 380, cx = setupCanvas($('kX'), W, H), ct = setupCanvas($('kT'), W, H);
+  // erfc: Abramowitz and Stegun 7.1.26, good to about 1e-7
+  function erfc(x) {
+    const z = Math.abs(x), t = 1 / (1 + 0.3275911 * z);
+    const y = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429)))) * Math.exp(-z * z);
+    return x >= 0 ? y : 2 - y;
+  }
+  const lam = () => Math.sqrt(K.d * 1e-4 / (4 * K.Ri * K.gm * 1e-3)) * 1e4;   // µm
+  const tau = () => K.C / K.gm;                                               // ms
+  function step(X, T) {   // the fraction of the final change at x = 0, at X λ along, T τ after switching on
+    if (T <= 0) return 0;
+    const s = Math.sqrt(T), a = X / (2 * s);
+    return 0.5 * (Math.exp(-X) * erfc(a - s) - Math.exp(X) * erfc(a + s));
+  }
+  function draw() {
+    const L = lam(), T = tau();
+    $('kLam').textContent = L >= 1000 ? (L / 1000).toFixed(2) + ' mm' : L.toFixed(0) + ' µm';
+    $('kTau').textContent = T.toFixed(T < 10 ? 1 : 0) + ' ms';
+    $('kMm').textContent = (100 * Math.exp(-1000 / L)).toPrecision(2) + ' %';
+    $('kRm').textContent = (1000 / K.gm).toFixed(0) + ' Ω·cm²';
+    const x1 = 4 * L, xs = Array.from({ length: 201 }, (_, i) => i / 200 * x1);
+    drawChart(cx, { xs, x0: 0, x1, w: W, h: H, fixed: [0, 100], ylabel: '% of the change at x = 0', xlabel: 'distance along the cable (µm)',
+      refs: [{ v: 37, color: C.accent, label: '37%' }],
+      series: [{ ys: xs.map(x => 100 * Math.exp(-x / L)), color: C.ink, width: 2.4, label: 'V' }] });
+    const t1 = 5 * T, ts = Array.from({ length: 241 }, (_, i) => i / 240 * t1), cols = [C.ink, C.k, C.accent, C.muted];
+    drawChart(ct, { xs: ts, x0: 0, x1: t1, w: W, h: H, fixed: [0, 100], ylabel: '% of the final change at x = 0', xlabel: 'time after the current is switched on (ms)',
+      refs: [], series: [0, 0.5, 1, 2].map((X, k) => ({ ys: ts.map(t => 100 * step(X, t / T)), color: cols[k], width: k ? 1.8 : 2.4, label: ['0', '½λ', 'λ', '2λ'][k] })) });
+    // τ, as a dotted line on the time chart
+    const g = { L: 62, R: 96, T: 14, B: 30 }, pw = W - g.L - g.R, [z0, z1] = ChartZoom.x(ct.canvas, 0, t1), xT = g.L + (T - z0) / (z1 - z0) * pw;
+    if (xT > g.L && xT < g.L + pw) { ct.strokeStyle = C.na; ct.setLineDash([2, 3]); ct.lineWidth = 1.4; ct.beginPath(); ct.moveTo(xT, g.T); ct.lineTo(xT, H - g.B); ct.stroke(); ct.setLineDash([]);
+      ct.fillStyle = C.na; ct.font = '600 12px "IBM Plex Sans", sans-serif'; ct.textAlign = 'left'; ct.fillText('τ', xT + 4, g.T + 12); }
+    // one λ along, on the distance chart
+    const [w0, w1] = ChartZoom.x(cx.canvas, 0, x1), xL = g.L + (L - w0) / (w1 - w0) * pw, yL = g.T + (1 - 0.37) * (H - g.T - g.B);
+    if (xL > g.L && xL < g.L + pw) { cx.fillStyle = C.accent; cx.beginPath(); cx.arc(xL, yL, 5, 0, 6.283); cx.fill(); }
+    ChartZoom.bind(cx.canvas, draw); ChartZoom.bind(ct.canvas, draw);   // after drawChart's own, so the marks redraw too
+  }
+  bindRange('kD', v => v.toFixed(1) + ' µm', v => { K.d = v; draw(); });
+  bindRange('kRi', v => v + ' Ω·cm', v => { K.Ri = v; draw(); });
+  bindRange('kGm', v => v.toFixed(2) + ' mS/cm²', v => { K.gm = v; draw(); });
+  bindRange('kC', v => v.toFixed(1) + ' µF/cm²', v => { K.C = v; draw(); });
+  colorHooks.push(draw);
+  draw();
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they behave exactly like clicking them.
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const press = sel => { const b = document.querySelector(sel); if (b.getAttribute('aria-pressed') !== 'true') b.click(); };
+  const running = id => { if ($(id).textContent.trim() === 'Play') $(id).click(); };
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const DEF = { lD: 1.5, lRi: 150, lGm: 0.5, lC: 1, lN: 6, lI: 20 };
+  const circuit = (over = {}) => {
+    press('[data-lmode="inj"]'); Object.entries({ ...DEF, ...over }).forEach(([k, v]) => set(k, v));
+    showTab($('tab-circ')); running('lPlay'); into('circ-card');
+    window.SPACE_CIRC.reset(); window.SPACE_CIRC.setSw(true);
+  };
+  document.querySelectorAll('[data-sptry]').forEach(b => b.addEventListener('click', () => {
+    const what = b.dataset.sptry;
+    if (what === 'inj' || what === 'default') circuit();
+    else if (what === 'wide') circuit({ lD: 6 });
+    else if (what === 'leaky') circuit({ lGm: 2 });
+    else if (what === 'bigC') circuit({ lC: 2.5 });
+    else if (what === 'myelin') circuit({ lGm: 0.05 });
+    else if (what === 'syn') {
+      press('[data-lmode="inj"]'); Object.entries(DEF).forEach(([k, v]) => set(k, v));
+      showTab($('tab-syn')); into('syn-card'); $('sClear').click();
+      for (const d of [50, 300, 550]) { set('sPos', d); $('sFire').click(); }
+    }
+  }));
+})();
+
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>
