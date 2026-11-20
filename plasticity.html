@@ -229,12 +229,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 <div class="wrap">
 <header>
   <h1>Spines and plasticity: where a synapse decides to get stronger or weaker</h1>
-  <p>Most excitatory synapses in the brain end on a dendritic spine: a small head on a thin neck. The spine is the place where a synapse's strength is changed. Its NMDA receptors let Ca²⁺ in only when two things happen at once, its neck keeps that Ca²⁺ in its own head, and how much Ca²⁺ arrives decides whether the synapse is strengthened (LTP) or weakened (LTD). It builds on lesson 5's receptors and lesson 6's dendrites, and introduces a new glutamate receptor, the NMDA receptor, with its Mg²⁺ block.</p>
+  <p>Most excitatory synapses in the brain end on a dendritic spine: a small head on a thin neck. The spine is the place where a synapse's strength is changed. Its NMDA receptors let Ca²⁺ in only when two things happen at once, its neck keeps that Ca²⁺ in its own head, and how much Ca²⁺ arrives decides whether the synapse is strengthened (LTP) or weakened (LTD). It builds on lesson 6's receptors and lesson 7's dendrites, and introduces a new glutamate receptor, the NMDA receptor, with its Mg²⁺ block.</p>
   <div class="intro">
     <section class="introbox" aria-labelledby="goalsTitle">
       <span class="sect-title" id="goalsTitle">You'll be able to</span>
       <ul>
-        <li>explain why NMDA receptors are coincidence detectors: Ca²⁺ flows only with glutamate bound <em>and</em> Post (the postsynaptic cell, as in lesson 5) depolarized enough to push Mg²⁺ out of the pore</li>
+        <li>explain why NMDA receptors are coincidence detectors: Ca²⁺ flows only with glutamate bound <em>and</em> Post (the postsynaptic cell, as in lesson 6) depolarized enough to push Mg²⁺ out of the pore</li>
         <li>predict LTP or LTD from the stimulation: a lot of Ca²⁺ fast (a 100 Hz tetanus, or pairing) gives LTP; a little Ca²⁺ for a long time (1 Hz for 15 min) gives LTD</li>
         <li>explain that both are expressed as more or fewer AMPA receptors, and that blocking NMDA receptors (APV) prevents both without changing the ordinary EPSP</li>
         <li>explain input specificity: only the stimulated spine changes, because its Ca²⁺ stays in its head</li>
@@ -288,7 +288,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="help" role="tabpanel" id="pane-p1help" aria-labelledby="tab-p1help" hidden>
       <ul>
         <li><b>The drawing:</b> the soma on the left, a dendrite running right, and two spines on it, each under its own presynaptic terminal (Pre). Each spine is a head on a thin neck. Inside colour shows the voltage: pale at rest, red when depolarized.</li>
-        <li><b>The model:</b> four pieces of membrane, each a resistor and capacitor as in lesson 2 (head A, head B, the dendrite, the soma), joined by resistors: each neck, and the dendrite on its way to the soma. Synapse A's AMPA receptors work as in lesson 5; it also has NMDA receptors, the subject of Part 2.</li>
+        <li><b>The model:</b> four pieces of membrane, each a resistor and capacitor as in lesson 2 (head A, head B, the dendrite, the soma), joined by resistors: each neck, and the dendrite on its way to the soma. Synapse A's AMPA receptors work as in lesson 6; it also has NMDA receptors, the subject of Part 2.</li>
         <li><b>Left chart:</b> the voltage at the three recording sites. <b>Right chart:</b> the same three, each divided by its own peak, so you can compare when they peak and how long they last whatever their size.</li>
       </ul>
     </div>
@@ -297,7 +297,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li>The head's EPSP is several times bigger than the soma's. The synaptic current has to cross the neck's resistance to get out of the head, so by Ohm's law the head sits I·R above the dendrite while the current flows.</li>
         <li>The soma's EPSP peaks later and lasts longer: each step charges a bigger capacitor through a resistor, which smooths the signal out (a low-pass filter, lesson 2's τ = RC).</li>
         <li>Make the neck thinner (more resistance): the head's EPSP gets much bigger, but the soma's hardly changes. The same charge still gets through, just more slowly.</li>
-        <li>Why distance matters was lesson 3's subject, and how many inputs add up at the soma, lesson 6's.</li>
+        <li>Why distance matters was lesson 3's subject, and how many inputs add up at the soma, lesson 7's.</li>
       </ul>
     </div>
   </section>
@@ -454,7 +454,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <h3>A low-pass filter</h3>
       <p>Each piece of membrane is lesson 2's RC circuit. The head is tiny (small C), so it charges in a fraction of a millisecond. The dendrite and soma are big capacitors, charged through resistors, so they rise and fall more slowly: each step is a low-pass filter with its own τ = RC. A fast, tall EPSP in the head becomes a slow, small one at the soma.</p>
       <h3>How much does the neck matter?</h3>
-      <p>The size of the neck's resistance is still argued about: estimates range from tens to hundreds of MΩ, and necks change shape with activity. What is not in doubt is that the neck holds Ca²⁺ in the head (Part 2). Most of the attenuation on the way to the soma happens along the dendrite, the subject of lessons 3 and 6.</p>
+      <p>The size of the neck's resistance is still argued about: estimates range from tens to hundreds of MΩ, and necks change shape with activity. What is not in doubt is that the neck holds Ca²⁺ in the head (Part 2). Most of the attenuation on the way to the soma happens along the dendrite, the subject of lessons 3 and 7.</p>
       <details class="fullderiv">
         <summary>Show the equations</summary>
         <p>Each compartment obeys lesson 2's equation with an extra current for each neighbour it is joined to. For the head:</p>
@@ -473,12 +473,12 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="deriv">
       <p class="gist"><b>In plain words:</b> An NMDA receptor is a channel that glutamate opens, but at rest a Mg²⁺ ion sits in its pore and blocks it. Depolarization pushes the Mg²⁺ out. So Ca²⁺ flows only when Pre released glutamate and Post is depolarized at the same time.</p>
       <h3>A channel with a voltage-dependent plug</h3>
-      <p>Like any synaptic current in lesson 5, the NMDA current is a conductance times a driving force, multiplied by the fraction of receptors not plugged by Mg²⁺:</p>
+      <p>Like any synaptic current in lesson 6, the NMDA current is a conductance times a driving force, multiplied by the fraction of receptors not plugged by Mg²⁺:</p>
       <div class="eq">\[ I_\mathrm{NMDA} = g_\mathrm{NMDA}\cdot f_\mathrm{free}(V)\cdot(V - E_\mathrm{NMDA}), \qquad f_\mathrm{free}(V) = \frac{1}{1 + \frac{[\mathrm{Mg^{2+}}]}{3.57\ \mathrm{mM}}\,e^{-0.062\,V}} \]</div>
       <p>With 1 mM Mg²⁺, about 4 % are free at −70 mV, 14 % at −50 mV and 65 % at −10 mV. So the same glutamate lets through many times more current, and Ca²⁺, when Post is depolarized.</p>
       <h3>Where the depolarization comes from</h3>
       <ul>
-        <li><b>Many inputs at once, or fast:</b> summation (lesson 6) depolarizes the dendrite; a tetanus does this by itself.</li>
+        <li><b>Many inputs at once, or fast:</b> summation (lesson 7) depolarizes the dendrite; a tetanus does this by itself.</li>
         <li><b>A spike that runs back</b> from the axon into the dendrites (a back-propagating action potential), arriving just after the glutamate.</li>
         <li><b>An electrode</b> holding Post depolarized: the pairing protocol of experiments.</li>
       </ul>

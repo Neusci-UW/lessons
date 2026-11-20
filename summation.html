@@ -278,7 +278,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <ul>
         <li><b>The drawing:</b> the lipid bilayer in the middle, the inside of the cell on the left and the outside on the right. The marks along its two faces are the charge Q on the capacitor, one mark per 2 nC/cm². At rest the inside face carries negative charge and the outside positive: that is the resting voltage. Q = C·V, so more capacitance means more marks for the same voltage.</li>
         <li><b>Dots:</b> positive charge flowing, coloured by the channel it goes through. A synaptic input brings positive charge in; the leak channels let it flow back out. The charge that is in but not yet out sits on the capacitor and moves the voltage.</li>
-        <li><b>Voltage chart:</b> the black line is V. Dashed grey is what you would get by adding up each input as if it came alone (a single input's curve, copied to each arrival time). Where black matches the dashed line, summation is simply addition. Dotted grey: rest. Dashed teal: threshold, about −64 mV, the voltage lesson 8's circuit needs to fire with the default leaks. This patch has no channels that open with voltage, so it never fires; the line shows how close the inputs get.</li>
+        <li><b>Voltage chart:</b> the black line is V. Dashed grey is what you would get by adding up each input as if it came alone (a single input's curve, copied to each arrival time). Where black matches the dashed line, summation is simply addition. Dotted grey: rest. Dashed teal: threshold, about −64 mV, the voltage lesson 5's circuit needs to fire with the default leaks. This patch has no channels that open with voltage, so it never fires; the line shows how close the inputs get.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-caplook" aria-labelledby="tab-caplook" hidden>
@@ -366,7 +366,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Inputs:</b> <b>Temporal</b>, one branch, whose synapses fire the number of times set, at the interval set. <b>Spatial</b>, four branches, the ticked ones firing once, all at the same moment. <b>Realistic</b>, six branches, every synapse firing on its own at random times, at the rate set, for as long as the simulation runs: inputs separate in both space and time, as a neuron in the brain receives them.</li>
         <li><b>Voltage along the cell:</b> the black line is the voltage now; the dashed line is the highest each place reached since you fired. Shaded: the AIS; the grey band is the cell body. The dotted teal line is the threshold at the AIS: the voltage at which it starts to shoot up (faster than 20 mV per ms), as experimenters often define it. Before the cell has fired, it is the value expected for this cell, found by slowly pushing current into the cell body until the AIS fires; after a spike, it is the value measured during that spike.</li>
         <li><b>Over time:</b> recordings at S (the cell body) and A (the middle of the AIS), and on the branches: D (where the synapses are) with one branch; each ticked branch, in its colour, in Spatial; in Realistic, a tick along the bottom for every input, in its branch's colour. <b>Voltage along the cell</b> draws one line per branch, in its colour, each joined to the cell body and axon.</li>
-        <li><b>The model</b> is the Hodgkin–Huxley circuit of lesson 4's axon (lesson 8 takes it apart), one copy per short piece of membrane, with the cytoplasm connecting neighbours (as in lesson 4).</li>
+        <li><b>The model</b> is the Hodgkin–Huxley circuit of lesson 4's axon (lesson 5 takes it apart), one copy per short piece of membrane, with the cytoplasm connecting neighbours (as in lesson 4).</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-aislook" aria-labelledby="tab-aislook" hidden>
@@ -526,7 +526,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p>A neuron receives its inputs on its dendrites and cell body, which have few of lesson 4's voltage-gated Na⁺ channels. Those inputs are only local voltage changes that spread along the cell as along lesson 3's cable: no spike. The sum flows to the axon's first stretch, the <b>axon hillock</b> and <b>axon initial segment</b> (AIS), the first 20 to 60 µm of axon. That is where the cell's output is decided.</p>
       <h3>Why there</h3>
       <ul>
-        <li><b>Many more Na⁺ channels.</b> The AIS has a very high density, and some are of a type that opens at lower voltage. More Na⁺ channels means the inward current beats the outward currents at a lower voltage (a tug of war between Na⁺ in and K⁺ out that lesson 8 looks at closely), so its threshold is the lowest on the cell: the same summed depolarization, a few mV at the cell body, is enough to push the AIS past it.</li>
+        <li><b>Many more Na⁺ channels.</b> The AIS has a very high density, and some are of a type that opens at lower voltage. More Na⁺ channels means the inward current beats the outward currents at a lower voltage (a tug of war between Na⁺ in and K⁺ out that lesson 5 looks at closely), so its threshold is the lowest on the cell: the same summed depolarization, a few mV at the cell body, is enough to push the AIS past it.</li>
         <li><b>Small, so it charges fast.</b> A patch of thin axon has little capacitance to charge, so a little current moves its voltage a lot. The big cell body is a large capacitor and moves slowly.</li>
         <li><b>It sees the sum.</b> The cell body is the junction where all dendrites meet, so its voltage (and the AIS's, one short step away) is the sum of everything the dendrites delivered.</li>
       </ul>
@@ -552,7 +552,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <h3>Where these ideas come from</h3>
       <p>The original papers behind this lesson, oldest first.</p>
       <ol class="reflist">
-        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The gates m, h and n and the threshold of a spike (lesson 8). The channels in the cell here are theirs.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The gates m, h and n and the threshold of a spike (lesson 5). The channels in the cell here are theirs.</span></li>
         <li><b>Rall W (1959).</b> Branching dendritic trees and motoneuron membrane resistivity. <i>Experimental Neurology</i> 1:491–527. <a href="https://doi.org/10.1016/0014-4886(59)90046-9" target="_blank" rel="noopener">doi:10.1016/0014-4886(59)90046-9</a><br><span class="why">Dendrites as leaky cables: how an input's voltage decays on its way to the cell body, and how inputs sum.</span></li>
         <li><b>Coombs JS, Curtis DR, Eccles JC (1957).</b> The generation of impulses in motoneurones. <i>Journal of Physiology</i> 139:232–249. <a href="https://doi.org/10.1113/jphysiol.1957.sp005888" target="_blank" rel="noopener">doi:10.1113/jphysiol.1957.sp005888</a><br><span class="why">Recording from motor neurons: the spike begins at the initial segment, before the cell body.</span></li>
         <li><b>Stuart G, Schiller J, Sakmann B (1997).</b> Action potential initiation and propagation in rat neocortical pyramidal neurons. <i>Journal of Physiology</i> 505:617–632. <a href="https://doi.org/10.1111/j.1469-7793.1997.617ba.x" target="_blank" rel="noopener">doi:10.1111/j.1469-7793.1997.617ba.x</a><br><span class="why">Recordings at the axon, cell body and dendrites of the same neuron: the spike starts in the axon, and runs back into the cell body.</span></li>
@@ -588,7 +588,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <div class="gh">Membrane</div>
         <div class="gr"><label for="kC">C</label><input type="range" id="kC" min="0.2" max="3" step="0.1" value="1"><output id="kCo" for="kC"></output></div>
         <div class="gr"><label for="kThrIn">Threshold</label><input type="range" id="kThrIn" min="-75" max="-40" step="1" value="-64"><output id="kThrIno" for="kThrIn"></output></div>
-        <span class="caption">the voltage the inputs must reach; lesson 8's circuit, with these leaks, needs about −64 mV</span>
+        <span class="caption">the voltage the inputs must reach; lesson 5's circuit, with these leaks, needs about −64 mV</span>
       </div>
       <div class="gion">
         <div class="gh"><i class="dot syn"></i> Input</div>
@@ -842,7 +842,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   const CWd = 780, CHd = 470, c = setupCanvas($('capcv'), CWd, CHd);
   const CW = 560, CH = 400, vc = setupCanvas($('capV'), CW, CH);
   const V_RANGE = [-100, -20], WIN = 40, SAMPLE_MS = 0.05;
-  const THR = -64;   // mV, as in the calculator: lesson 8's circuit, with these leaks, needs about −64 mV to fire
+  const THR = -64;   // mV, as in the calculator: lesson 5's circuit, with these leaks, needs about −64 mV to fire
   const p = { C: 1, gKL: 0.12, gNaL: 0.005, gCl: 0.02, gNaM: 0, gKM: 0 };
   let gIn = 0.05, nIn = 3, dtIn = 4, speed = 3, running = true, showLin = true;
   let s = mkPatch(p), evs = [], sampleAcc = 0, single = null;

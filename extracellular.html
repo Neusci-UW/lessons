@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recording from Outside: the Compound Action Potential</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --ca:#c0287a; --warm:#b4582a;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --ca:#f477b7; --warm:#e0915e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --ca:#f477b7; --warm:#e0915e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:90ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.steps .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help h4{margin:0 0 4px;font-size:13.5px;font-weight:600}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:80px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.ctl{display:inline-flex;align-items:center;gap:8px 10px;flex:1 1 300px;min-width:0}
+.ctl.btns{flex:0 0 auto}
+.ctl input[type=range]{flex:1 1 120px;min-width:100px}
+.ctl output{min-width:72px}
+.ctl[hidden]{display:none}
+.runbar .check{font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:none}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px;background:var(--surface)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.chartrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.chartrow{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:8px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:16px;height:3px;border-radius:2px;flex:none}
+.legend i.dash{background:none!important;border-top:2px dashed currentColor;height:0}
+.legend i.faint{opacity:.45}
+.legend i.dot{width:10px;height:10px;border-radius:50%}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.readouts{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13.5px;color:var(--muted)}
+.readouts b{font-family:var(--font-mono);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.readouts .rlab{color:var(--ink);font-weight:600}
+.readouts.prev{opacity:.75}
+/* the measurements chart: a square plot, with its own axis choices */
+.mlog{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:16px 28px;align-items:start;padding-top:12px;border-top:1px solid var(--line)}
+@media (max-width:900px){.mlog{grid-template-columns:minmax(0,1fr)}}
+.mlog canvas{max-width:440px}
+.mctl{display:flex;flex-direction:column;gap:10px;font-size:14px}
+.mrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.mrow label.ax{font-weight:600;min-width:18px}
+select{font:inherit;font-size:14px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
+.row{display:grid;grid-template-columns:92px minmax(0,1fr) 104px;align-items:center;gap:10px;font-size:14px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* theory card */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.deriv ul{padding-left:20px}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+/* conduction velocity calculator, styled like the other lessons' calculators */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:minmax(0,1fr)}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="draftnote"><b>DRAFT</b> · Not yet in the course. Still to check: the nerve's fibre counts, thresholds and anaesthetic doses (chosen to show the right order and timing, not measured), the advice for Newt's Record page against the lab handout, and the two new pictures and the measurement charts (new components, built from a mock-up that has not been approved yet).</p>
+<header>
+  <h1>Recording from outside: extracellular spikes and the compound action potential</h1>
+  <p>Every lesson so far put an electrode inside the cell. In the lab, in the clinic and in the brain, most recordings are made from outside: a wire beside a neuron, hooks under a nerve, pads on the skin over a muscle, discs on the scalp. Outside, you don't see the voltage across the membrane. You see the small voltage drops made by current flowing through the fluid around the cells, and that changes what a spike looks like. This is what you will record in the lab with Newt.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>explain with Ohm's law why a spike recorded from outside is tiny (microvolts) and shaped like the current crossing the membrane, not like the voltage inside</li>
+        <li>explain why it shrinks with distance, so an electrode only hears the cells close to it, and the big ones best</li>
+        <li>read a compound action potential: the sum of many fibres, with waves for the Aα, Aβ, Aδ and C groups arriving at their own speeds, and growing as a stronger shock recruits more fibres</li>
+        <li>measure a conduction velocity from two latencies, and say why one latency is not enough</li>
+        <li>predict what a local anaesthetic and loss of myelin do to the recording</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li class="gtitle">One axon</li>
+    <li><button class="chip" data-try="near">1 · An electrode beside an axon</button> The spike inside is about 100 mV. Outside, 50 µm away, it is a few hundred times smaller, and it has three phases: up, down, up.</li>
+    <li><button class="chip" data-try="far">2 · Move away</button> At 300 µm it is several times smaller and a little broader. Each finished sweep adds a point to Your measurements: plot size against distance.</li>
+    <li><button class="chip" data-try="thin">3 · A thin axon, with noise</button> An axon 1 µm wide, like a pain fibre, dips by only about 6 µV, no more than the noise of a real amplifier. You can hardly find it.</li>
+    <li class="gtitle">A whole nerve</li>
+    <li><button class="chip" data-try="weak">4 · A weak shock</button> Stimulate a mixed nerve gently. Only the biggest fibres fire, and you see one fast wave after the stimulus artefact.</li>
+    <li><button class="chip" data-try="strong">5 · Turn it up</button> Stronger shocks recruit thinner fibres: slower waves join the first. The C wave from the thinnest fibres comes last, tens of ms later, and needs the strongest shock (raise the Speed to see it arrive).</li>
+    <li><button class="chip" data-try="two">6 · Two distances</button> The same nerve recorded at 40 mm and then at 80 mm (the faint trace). Every wave arrives later at 80 mm, the slow ones much later. Take the two latencies to the calculator below.</li>
+    <li><button class="chip" data-try="lido">7 · Local anaesthetic</button> Lidocaine on the middle of the nerve. The thin myelinated Aδ fibres (sharp pain, cold) are blocked first; the big fibres for touch and movement keep working.</li>
+    <li><button class="chip" data-try="demy">8 · Damaged myelin</button> The A waves arrive later, spread out and shrink, as in Guillain–Barré syndrome.</li>
+  </ol>
+</section>
+
+<section class="card stage" id="ax-card">
+  <p class="sect-title">1 · One axon, from inside and outside</p>
+  <div class="tabs" role="tablist" aria-label="One axon">
+    <button type="button" role="tab" id="tab-ax" aria-controls="pane-ax" aria-selected="true">One axon</button>
+    <button type="button" role="tab" id="tab-axhelp" aria-controls="pane-axhelp" aria-selected="false" tabindex="-1">How to read</button>
+    <button type="button" role="tab" id="tab-axlook" aria-controls="pane-axlook" aria-selected="false" tabindex="-1">What to look for</button>
+    <button type="button" role="tab" id="tab-axcav" aria-controls="pane-axcav" aria-selected="false" tabindex="-1">Caveats</button>
+  </div>
+  <div class="stage" role="tabpanel" id="pane-ax" aria-labelledby="tab-ax">
+    <canvas id="axPic" aria-label="An axon in fluid, coloured by its membrane potential, with a spike travelling along it past an electrode outside; arrows show current crossing the membrane"></canvas>
+    <div class="runbar">
+      <span class="ctl btns"><button id="axFire" class="primary">Fire a spike</button>
+      <button id="axPlay">Pause</button></span>
+      <span class="ctl"><label for="s1Speed" class="runlab">Speed</label>
+      <input type="range" id="s1Speed" min="-1" max="1" step="0.01" value="0.3">
+      <output id="s1Speedo" for="s1Speed"></output></span>
+    </div>
+    <div class="runbar">
+      <span class="ctl"><label for="s1H" class="runlab">Electrode distance</label>
+      <input type="range" id="s1H" min="1.176" max="3.301" step="0.001" value="1.699">
+      <output id="s1Ho" for="s1H"></output></span>
+      <span class="ctl"><label for="s1D" class="runlab">Axon diameter</label>
+      <input type="range" id="s1D" min="-0.301" max="1.301" step="0.001" value="1">
+      <output id="s1Do" for="s1D"></output></span>
+      <span class="ctl btns"><span class="runlab">Outside</span>
+        <span class="seg" role="group" aria-label="Fluid outside the axon"><button type="button" data-fluid="saline" aria-pressed="false">Saline</button><button type="button" data-fluid="tissue" aria-pressed="true">Brain tissue</button></span></span>
+      <label class="check" for="s1Noise"><input type="checkbox" id="s1Noise">Amplifier noise</label>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--neg)"></i>resting (inside negative)</span>
+      <span><i class="dot" style="background:var(--pos)"></i>depolarized (inside positive)</span>
+      <span><i style="background:var(--cl)"></i>current leaving the axon</span>
+      <span><i style="background:var(--na)"></i>current entering the axon</span>
+    </div>
+    <div class="chartrow">
+      <div class="ccol">
+        <p class="sect-title">Inside: membrane potential under the electrode</p>
+        <canvas id="cvIn" aria-label="Membrane potential at the point of the axon nearest the electrode, against time"></canvas>
+      </div>
+      <div class="ccol">
+        <p class="sect-title">Outside: what the electrode records</p>
+        <canvas id="cvOut" aria-label="Extracellular potential at the electrode against time"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--accent)"></i>extracellular potential</span>
+          <span><i class="dash" style="color:var(--muted)"></i>membrane current next to the electrode, outward up (scaled to fit)</span>
+          <span><i class="faint" style="background:var(--muted)"></i>sweep before</span>
+        </div>
+      </div>
+    </div>
+    <div class="readouts" id="reads1"></div>
+    <div class="mlog">
+      <canvas id="m1cv" aria-label="Your measurements: one point per sweep, with the axes you choose"></canvas>
+      <div class="mctl">
+        <span class="sect-title">Your measurements</span>
+        <p class="caption">Every sweep that runs to the end adds a row: the settings and what the electrode recorded. Choose what goes on each axis.</p>
+        <div class="mrow"><label class="ax" for="m1y">Y</label><select id="m1y"></select><label class="check" for="m1ly"><input type="checkbox" id="m1ly">log scale</label></div>
+        <div class="mrow"><label class="ax" for="m1x">X</label><select id="m1x"></select><label class="check" for="m1lx"><input type="checkbox" id="m1lx">log scale</label></div>
+        <div class="mrow"><button type="button" id="m1clear">Clear</button><span class="caption" id="m1n"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="help" role="tabpanel" id="pane-axhelp" aria-labelledby="tab-axhelp" hidden>
+    <ul>
+      <li><b>The picture:</b> a stretch of unmyelinated axon in fluid, coloured by the voltage inside it: blue at rest, red at the top of a spike. Press Fire a spike: a spike started off to the left travels to the right, past an electrode outside the axon. The picture is not to scale: the axon is drawn much wider than it is, and the electrode's distance is drawn on a squeezed scale so that 15 µm and 2 mm both fit.</li>
+      <li><b>The arrows</b> are the current crossing the membrane at each place, at this moment: green where it leaves the axon, orange where it enters. Ahead of the spike the membrane is being charged (current out, the capacitive current from Passive Properties: Time); in the spike Na⁺ rushes in; behind it K⁺ flows out.</li>
+      <li><b>Inside chart:</b> the membrane potential at the point of the axon nearest the electrode, as an electrode inside the axon would record it there.</li>
+      <li><b>Outside chart:</b> the voltage at the electrode, relative to a far-away reference electrode, in µV (millionths of a volt). The dashed line is the membrane current next to the electrode, outward up, scaled to the same height: the recording follows it. The faint line is the sweep before, for comparison; the axis fits the latest sweep.</li>
+      <li><b>Settings:</b> how far the electrode is from the middle of the axon; the axon's diameter (wider axons also conduct faster); the fluid outside (brain tissue resists current about four times more than saline); and amplifier noise, 5 µV rms, about what a good extracellular amplifier adds.</li>
+      <li><b>Speed</b> sets how many ms of model time pass per second; each sweep is 8 ms.</li>
+      <li><b>Your measurements:</b> each finished sweep is one row. Pick a Y and an X to plot any two columns against each other; log scales turn a power law into a straight line.</li>
+    </ul>
+  </div>
+  <div class="help" role="tabpanel" id="pane-axlook" aria-labelledby="tab-axlook" hidden>
+    <ul>
+      <li>Compare the two charts during a spike. Inside: a single big bump, about 100 mV. Outside: three small phases, positive, negative, positive. Each phase comes when that kind of current is next to the electrode: out ahead of the spike, in at the spike, out behind it. The outside trace follows the dashed current line, not the voltage.</li>
+      <li>The big negative phase lines up with the steepest rise of the voltage inside, not with its peak.</li>
+      <li>Move the electrode away and fire again. Plot Peak-to-peak size against Electrode distance on log scales: a straight stretch means a power law. Close to the axon it falls slowly; beyond about a millimetre it falls far faster, because the currents going in and out cancel when seen from far away.</li>
+      <li>Try different diameters at the same distance. Wider axons carry more current and give bigger spikes outside. In the brain this is why recordings are dominated by big cells close to the electrode.</li>
+      <li>Switch between saline and brain tissue. The same current gives about four times the voltage in tissue: Ohm's law, V = IR, with a bigger R.</li>
+      <li>Turn on the noise and find the smallest axon whose spike you can still see. On Newt, Find action potentials sets its threshold as a number of noise SDs for the same reason.</li>
+    </ul>
+  </div>
+  <div class="help" role="tabpanel" id="pane-axcav" aria-labelledby="tab-axcav" hidden>
+    <ul>
+      <li>The spike is computed once, when the page opens, in a cable of membrane patches with the cortical Na⁺ and K⁺ channels of Traub and Miles (as Pospischil and colleagues used them), sped up three times to body temperature, with cytoplasm of 35 Ω·cm. A wider axon gets the same spike shape, travelling faster (speed grows with the square root of the diameter).</li>
+      <li>The outside voltage adds up the membrane current of every bit of a long, straight axon, each weighted by 1/distance, in a fluid that is the same everywhere (the line-source model of Clark and Plonsey). Real tissue is not uniform, and a real electrode is not a point: a big electrode averages over its surface and records less.</li>
+      <li>A myelinated axon passes current only at its nodes, so the signal is lumpier along the axon and bigger near a node. Cell bodies and dendrites carry much more current than an axon; most spikes recorded in the brain come from cell bodies, at 50–500 µV.</li>
+      <li>This axon has no undershoot after its spike, so the third phase outside is small and long. Axons with an undershoot have a clearer third phase.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="card stage" id="nv-card">
+  <p class="sect-title">2 · A whole nerve: the compound action potential</p>
+  <div class="tabs" role="tablist" aria-label="A whole nerve">
+    <button type="button" role="tab" id="tab-nv" aria-controls="pane-nv" aria-selected="true">Whole nerve</button>
+    <button type="button" role="tab" id="tab-nvhelp" aria-controls="pane-nvhelp" aria-selected="false" tabindex="-1">How to read</button>
+    <button type="button" role="tab" id="tab-nvlook" aria-controls="pane-nvlook" aria-selected="false" tabindex="-1">What to look for</button>
+    <button type="button" role="tab" id="tab-nvcav" aria-controls="pane-nvcav" aria-selected="false" tabindex="-1">Caveats</button>
+  </div>
+  <div class="stage" role="tabpanel" id="pane-nv" aria-labelledby="tab-nv">
+    <canvas id="nvPic" aria-label="A nerve in a chamber with stimulating electrodes at the left and recording electrodes further along; dots for the fibres that fired move along it at their own speeds"></canvas>
+    <div class="runbar">
+      <span class="ctl btns"><button id="nvFire" class="primary">Stimulate</button>
+      <button id="nvPlay">Pause</button></span>
+      <span class="ctl"><label for="s2Speed" class="runlab">Speed</label>
+      <input type="range" id="s2Speed" min="-0.7" max="1.7" step="0.01" value="0.3">
+      <output id="s2Speedo" for="s2Speed"></output></span>
+    </div>
+    <div class="runbar">
+      <span class="ctl"><label for="s2Stim" class="runlab">Shock strength</label>
+      <input type="range" id="s2Stim" min="-0.301" max="2.176" step="0.001" value="0.301">
+      <output id="s2Stimo" for="s2Stim"></output></span>
+      <span class="ctl"><label for="s2L" class="runlab">Recording distance</label>
+      <input type="range" id="s2L" min="10" max="150" step="1" value="40">
+      <output id="s2Lo" for="s2L"></output></span>
+      <span class="ctl btns"><span class="runlab">Recording</span>
+        <span class="seg" role="group" aria-label="Recording"><button type="button" data-rec="mono" aria-pressed="true">Monophasic (crushed)</button><button type="button" data-rec="bi" aria-pressed="false">Biphasic</button></span></span>
+      <span class="ctl" id="gapCtl" hidden><label for="s2Gap" class="runlab">R<sub>1</sub> to R<sub>2</sub></label>
+      <input type="range" id="s2Gap" min="1" max="20" step="0.5" value="5">
+      <output id="s2Gapo" for="s2Gap"></output></span>
+    </div>
+    <div class="runbar">
+      <span class="ctl"><label for="s2Lido" class="runlab">Local anaesthetic</label>
+      <input type="range" id="s2Lido" min="0" max="100" step="1" value="0">
+      <output id="s2Lidoo" for="s2Lido"></output></span>
+      <span class="ctl"><label for="s2Demy" class="runlab">Myelin damage</label>
+      <input type="range" id="s2Demy" min="0" max="100" step="1" value="0">
+      <output id="s2Demyo" for="s2Demy"></output></span>
+    </div>
+    <div class="legend" id="legNv"></div>
+    <div class="chartrow">
+      <div class="ccol">
+        <p class="sect-title">The fast waves: first 8 ms</p>
+        <canvas id="cvFast" aria-label="Compound action potential over the first 8 ms after the shock"></canvas>
+      </div>
+      <div class="ccol">
+        <p class="sect-title">The whole sweep: 80 ms, C wave magnified ×20</p>
+        <canvas id="cvSlow" aria-label="Compound action potential over 80 ms, with the C fibre wave magnified twenty times"></canvas>
+      </div>
+    </div>
+    <div class="readouts" id="reads2"></div>
+    <div class="readouts prev" id="reads2p"></div>
+    <div class="mlog">
+      <canvas id="m2cv" aria-label="Your measurements: one point per sweep, with the axes you choose"></canvas>
+      <div class="mctl">
+        <span class="sect-title">Your measurements</span>
+        <p class="caption">Every sweep that runs to the end adds a row. In the lab you would read these off the Record page; here they are collected for you. Choose what goes on each axis.</p>
+        <div class="mrow"><label class="ax" for="m2y">Y</label><select id="m2y"></select><label class="check" for="m2ly"><input type="checkbox" id="m2ly">log scale</label></div>
+        <div class="mrow"><label class="ax" for="m2x">X</label><select id="m2x"></select><label class="check" for="m2lx"><input type="checkbox" id="m2lx">log scale</label></div>
+        <div class="mrow"><button type="button" id="m2clear">Clear</button><span class="caption" id="m2n"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="help" role="tabpanel" id="pane-nvhelp" aria-labelledby="tab-nvhelp" hidden>
+    <ul>
+      <li><b>The picture:</b> a mixed nerve, like the sciatic, laid across electrodes. S is the stimulating pair at the left (the shock leaves from the − electrode); R<sub>1</sub> records, at the distance set, and R<sub>2</sub> is the reference electrode beyond it. Each dot is one fibre that the shock fired, in rows by group: Aα at the top, then Aβ, Aδ, and the many small C fibres at the bottom. The dots move at their own conduction speeds, so they spread out as they go. Shown at the size of a real nerve chamber, 0 to 165 mm.</li>
+      <li><b>Monophasic:</b> the nerve is crushed under R<sub>2</sub>, so spikes never reach it, and the recording is R<sub>1</sub> alone: one hump per wave. <b>Biphasic:</b> the nerve is intact, each spike passes R<sub>1</sub> and then R<sub>2</sub>, and the recording is their difference: up, then down. Set how far apart they are.</li>
+      <li><b>Charts:</b> the recording at R<sub>1</sub>, against time after the shock. Up is R<sub>1</sub> negative compared with R<sub>2</sub>, the usual way a CAP is shown. Thin coloured lines are each group's share; the black line is what an amplifier would record, their sum. The sharp blip at time 0 is the stimulus artefact: the shock itself, picked up directly through the fluid. Sizes are percentages of the full A wave at 40 mm. The faint grey line is the sweep before.</li>
+      <li><b>Shock strength</b> is in multiples of the threshold of the biggest fibres. <b>Local anaesthetic</b> is applied to the middle of the nerve (the purple pool), as a percentage of the dose that blocks every fibre. <b>Myelin damage</b> slows every myelinated fibre by its own random amount; the worst-hit stop conducting.</li>
+      <li><b>Readouts:</b> how many fibres fired, and when each group's wave peaks. In a real recording you would find each bump's top on the trace.</li>
+    </ul>
+  </div>
+  <div class="help" role="tabpanel" id="pane-nvlook" aria-labelledby="tab-nvlook" hidden>
+    <ul>
+      <li>Raise the shock from below threshold in small steps and stimulate each time. Plot A wave size against Shock strength (log X): the CAP grows smoothly from nothing to a maximum as more fibres join, unlike the all-or-none spike of one fibre. In the lab this recruitment curve is one of the first things you measure.</li>
+      <li>Watch the dots. The fibres start together but arrive apart: a fast group as a tight bunch, a slow group spread out. That is why the slow waves are low and broad.</li>
+      <li>Record at several distances with a strong shock and plot each group's latency against Recording distance. Each group lies on a straight line whose slope is 1/speed. The lines don't go through zero: the wave takes time to rise to its peak.</li>
+      <li>The C fibres are the most numerous, yet their wave is tiny. Each thin fibre carries little current (it scales with the fibre's cross-section), and their slow, spread-out arrival smears the wave further.</li>
+      <li>Switch to biphasic and move R<sub>2</sub> closer. When the electrodes are closer together than the length of axon a spike occupies, R<sub>2</sub> sees the spike before R<sub>1</sub> has finished, and the two halves cancel.</li>
+      <li>Add local anaesthetic slowly. The Aδ wave goes first, then the thinner Aβ fibres. The C wave holds out longer than you might guess for the thinnest fibres; the Theory explains why.</li>
+      <li>Damage the myelin: the A waves come later (slowing), spread out (each fibre is slowed by a different amount, called temporal dispersion) and shrink (conduction block in the worst fibres). The C wave doesn't change: C fibres have no myelin to lose.</li>
+    </ul>
+  </div>
+  <div class="help" role="tabpanel" id="pane-nvcav" aria-labelledby="tab-nvcav" hidden>
+    <ul>
+      <li>The nerve has 740 fibres: 40 Aα, 80 Aβ, 120 Aδ and 500 C. A real nerve has thousands, with more C fibres than this. Their diameters are spread across each group's range.</li>
+      <li>Speeds follow Hursh's rule for myelinated fibres (about 6 m/s per µm of diameter) and 1.7 m/s × √(diameter in µm) for C fibres. Each fibre's contribution is one fixed hump, with a size that grows with its cross-section (smaller for C fibres) and a width set by its type.</li>
+      <li>Threshold is inversely proportional to diameter: big fibres are easiest to fire from outside. Real thresholds also depend on where each fibre lies in the nerve.</li>
+      <li>Every spike starts the instant the shock lands. Real fibres take a fraction of a millisecond to reach threshold (the utilization time), one more reason to measure speed from two distances.</li>
+      <li>The anaesthetic doses are illustrative. They follow the order found in recordings from single fibres: thin myelinated fibres first, C fibres among the last.</li>
+      <li>The temperature is fixed. Cold nerves, like a frog's at room temperature, conduct several times more slowly than a warm mammal's.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Same as before</p>
+      <dl class="unitlist">
+        <dt>mV</dt><dd>millivolts, for the voltage inside relative to outside (the membrane potential).</dd>
+        <dt>ms</dt><dd>milliseconds, for time. Speed sets how many ms of model time pass per real second, so the fast events can be slowed down to watch.</dd>
+        <dt>µm, mm</dt><dd>micrometres and millimetres, for diameters and distances.</dd>
+        <dt>m/s</dt><dd>conduction velocity. 1 m/s is the same as 1 mm per ms, which makes latencies easy: 40 mm at 80 m/s takes 0.5 ms.</dd>
+        <dt>Ω·cm</dt><dd>resistivity: the resistance of a 1 cm cube of a material. Cytoplasm here is 35 Ω·cm, as in The Action Potential Travels.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">New here</p>
+      <dl class="unitlist">
+        <dt>µV</dt><dd>microvolts, a thousandth of a millivolt: the size of a spike recorded from outside.</dd>
+        <dt>nA</dt><dd>nanoamps, for current crossing the membrane.</dd>
+        <dt>ρ</dt><dd>(rho) the resistivity of the fluid outside: about 70 Ω·cm for saline and 300 Ω·cm for brain tissue, where cells crowd the fluid into narrow gaps.</dd>
+        <dt>× threshold</dt><dd>shock strength, in multiples of the smallest shock that fires the biggest fibres.</dd>
+        <dt>%</dt><dd>the CAP's size, as a percentage of the full A wave recorded monophasically at 40 mm. In a lab chamber the full CAP is typically a few mV when the nerve is lifted out of the fluid.</dd>
+        <dt>µV rms</dt><dd>root-mean-square: the typical size of the noise.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="extheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Outside, you see current</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">Small, and smaller with distance</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">The compound action potential</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Measuring conduction velocity</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Drugs and disease</button>
+    <button type="button" role="tab" id="tab-th6" aria-controls="pane-th6" aria-selected="false" tabindex="-1">In the lab with Newt</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The salty fluid around a cell is a resistor. Current that leaves the cell through its membrane has to flow through that fluid, and Ohm's law says a current through a resistor makes a voltage drop. An electrode outside measures that drop: big where current is crossing the membrane close by, tiny everywhere else.</p>
+      <h3>Ohm's law in a bath</h3>
+      <p>Suppose a current I leaves a tiny patch of membrane and spreads out evenly in all directions through fluid of resistivity ρ. Think of the fluid as a set of nested shells around the patch. The current has to cross every shell, and the thin shells close in are small, so they resist most; far out the shells are huge and hardly resist at all. Adding up the shells from a distance r out to far away gives a resistance R = ρ/(4πr), and Ohm's law gives the voltage at distance r, compared with far away:</p>
+      <div class="eq">\[ \phi = I\,R = \frac{\rho\, I}{4\pi r} \]</div>
+      <p>φ (phi) is the extracellular potential: what an electrode at distance r records against a far-away reference electrode. Current coming out of the cell makes the nearby fluid positive; current going in makes it negative.</p>
+      <h3>A worked number</h3>
+      <p>In this page's model, a spike on a 10 µm axon draws in about <b id="nI10">—</b> nA of Na⁺ current, along the short stretch where it is rising. If all of it went in at one point 50 µm from an electrode in brain tissue (ρ = 300 Ω·cm = 3 Ω·m):</p>
+      <div class="eq">\[ R = \frac{3\ \Omega\,\mathrm{m}}{4\pi \times 50\times 10^{-6}\ \mathrm{m}} \approx 4.8\ \mathrm{k\Omega} \]</div>
+      <p>and Ohm's law gives φ = I R ≈ <b id="nPhiPt">—</b> µV.</p>
+      <p>The model gives <b id="nPhi10">—</b> µV for the dip, smaller than this, for two reasons: the inward current is spread along about a millimetre of axon, much of it farther away than 50 µm, and the outward currents on either side make the fluid positive and cancel part of it. Either way: tens of nanoamps through a few kilohms makes a hundred or so microvolts, a few hundred times smaller than the 100 mV spike inside.</p>
+      <h3>Why three phases</h3>
+      <p>As a spike travels along an axon, three things happen at once along its length (The Action Potential Travels shows them on its currents chart):</p>
+      <ul>
+        <li><b>Ahead of the spike</b> current flows out through the membrane: it has come along the inside of the axon from the spike and is charging the next patch's capacitor, the charging of Passive Properties: Time.</li>
+        <li><b>At the spike</b> Na⁺ flows in.</li>
+        <li><b>Behind the spike</b> K⁺ flows out as the membrane repolarizes.</li>
+      </ul>
+      <p>An electrode beside the axon feels each of these in turn as the spike goes by: outward current (positive), then inward (negative, the biggest), then outward again (positive). That is the triphasic extracellular spike. Its shape follows the membrane current next to the electrode, the dashed line on the Outside chart, not the voltage inside.</p>
+      <details class="fullderiv"><summary>Show the derivation</summary>
+        <p>The cable equation of Passive Properties: Space says that the current leaving the membrane per unit length of axon, i<sub>m</sub>, is set by how sharply the voltage inside bends along the axon:</p>
+        <div class="eq">\[ i_\mathrm{m} = \frac{1}{r_\mathrm{i}}\,\frac{\partial^2 V}{\partial x^2}, \qquad r_\mathrm{i} = \frac{4\rho_\mathrm{i}}{\pi d^2} \]</div>
+        <p>where r<sub>i</sub> is the resistance of the cytoplasm per unit length, for an axon of diameter d and cytoplasm resistivity ρ<sub>i</sub>. (Current only leaves where the inside current changes, and by Ohm's law along the inside, the inside current is set by the slope of V.) For a spike travelling at speed θ without changing shape, V(x, t) = S(t − x/θ), where S(t) is the spike recorded at one place; so \( \partial^2 V/\partial x^2 = S''/\theta^2 \). Each bit of axon dx is a point source of current i<sub>m</sub> dx, and the potentials of point sources add up:</p>
+        <div class="eq">\[ \phi(t) = \frac{\rho}{4\pi}\int \frac{i_\mathrm{m}(x,t)}{\sqrt{x^2 + h^2}}\,dx = \frac{\rho\, d^2}{16\,\rho_\mathrm{i}\,\theta^2}\int \frac{S''(t - x/\theta)}{\sqrt{x^2 + h^2}}\,dx \]</div>
+        <p>with h the electrode's distance from the axon. This is the sum the simulation does (the line-source model of Clark and Plonsey, 1968). Close to the axon, the 1/distance weighting is sharp and φ looks like S'', the second derivative of the spike in time: up as the voltage starts to curve upward, down at the steepest part of the rise, up again as the rise and fall slow. Farther away it blurs over a longer stretch of axon, and φ gets smaller and smoother.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <p><b>Try it</b></p>
+      <p><button class="chip" data-try="near">Fire a spike</button> Watch the arrows pass under the electrode, and the outside trace follow the dashed current line.</p>
+      <p><button class="chip" data-try="saline">Same axon in saline</button> Same current, a quarter of the resistivity: a quarter of the voltage.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The spike's current goes round a loop: in through the membrane, along the inside, out through the membrane, and back through the fluid outside. The membrane resists far more than the fluid, so nearly all the voltage drop is across the membrane, and only a sliver is left in the fluid where an outside electrode can measure it. Move away and the sliver shrinks fast.</p>
+      <h3>A voltage divider</h3>
+      <p>Follow the current of one spike round its loop. The membrane is a big resistor (Passive Properties: Time); the cytoplasm inside is a smaller one; the fluid outside, with its huge cross-section, is the smallest of all. The same current flows through each part of a loop, so by Ohm's law each part takes a share of the voltage in proportion to its resistance. The fluid's share is tiny. That is why 100 mV inside becomes tens to hundreds of microvolts outside, and why outside recordings need amplifiers.</p>
+      <p>It also says how to get a bigger signal: make the outside path resist more. Brain tissue, with cells crowding the fluid into narrow gaps, has about four times the resistivity of saline, and gives four times the signal. In a nerve chamber, lifting the nerve out of the fluid into air or oil leaves only a thin film of fluid around it, and the CAP grows from microvolts to millivolts.</p>
+      <h3>Falling off with distance</h3>
+      <p>Measured in this model on a 10 µm axon in brain tissue, the size of the extracellular spike (peak to peak) is <b id="nD50">—</b> µV at 50 µm, <b id="nD300">—</b> µV at 300 µm and <b id="nD1000">—</b> µV at 1 mm. It falls in three stages:</p>
+      <ul>
+        <li><b>Close to the axon</b> (much closer than the length of axon the spike occupies, a millimetre or two here), the axon looks like a long line of current, and the voltage falls slowly, more slowly than 1/r.</li>
+        <li><b>Farther out</b> the axon starts to look short, and the fall steepens toward 1/r, like a point source.</li>
+        <li><b>Far away</b>, the inward and outward currents look as if they come from the same place. Every bit of current that goes in comes out again nearby, so their effects cancel, and what is left falls like 1/r² or faster.</li>
+      </ul>
+      <p>This is why an electrode in the brain records the spikes of only the neurons within about 100 µm, and why it picks out big cells: they carry more current. The thinnest axons, like the C fibres of pain, make spikes of a few microvolts even close by, lost in the noise.</p>
+      <details class="fullderiv"><summary>Show why the far field cancels</summary>
+        <p>Seen from a distance R much larger than the stretch of axon carrying current, every 1/distance is nearly 1/R, so</p>
+        <div class="eq">\[ \phi \approx \frac{\rho}{4\pi R}\int i_\mathrm{m}\,dx + \cdots \]</div>
+        <p>But \( \int i_\mathrm{m}\,dx = 0 \): the axon doesn't store charge for long, so the current going in equals the current coming out. The 1/R term vanishes, leaving terms that fall as 1/R² (from the in and out currents being in slightly different places, a dipole) and 1/R³ (a quadrupole: out, in, out). For a spike that returns fully to rest the dipole term is zero too. Plot your own measurements on log scales: the slope of the line is the power of r.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <p><b>Try it</b></p>
+      <p><button class="chip" data-try="far">Move to 300 µm</button> Then try 1 and 2 mm, and plot Peak-to-peak size against Electrode distance, both on log scales.</p>
+      <p><button class="chip" data-try="thin">A 1 µm axon with noise</button> Find the smallest diameter whose spike stands out of the noise at 50 µm.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> A nerve is a cable of thousands of axons. A shock fires some of them, and an electrode further along picks up the sum of all their small signals. Each axon's signal arrives after a delay set by its speed, so the sum comes in waves, fast fibres first. A stronger shock fires more fibres, so the sum grows: it is graded, not all or none.</p>
+      <h3>Many fibres, added up</h3>
+      <p>Record from the outside of a whole nerve and each fibre that fires adds its own small extracellular signal. The fibre's signal arrives after a latency L/θ, its distance divided by its speed. The sum is the <b>compound action potential</b> (CAP). Erlanger and Gasser recorded it with the new cathode-ray oscilloscope in the 1920s and saw that it comes in separate waves, one for each group of fibre sizes:</p>
+      <table class="map">
+        <tr><th>Group</th><th>Diameter</th><th>Myelin</th><th>Speed</th><th>Carries</th></tr>
+        <tr><td>Aα</td><td>12–20 µm</td><td>yes</td><td>70–120 m/s</td><td>motor axons to muscle, muscle spindle afferents</td></tr>
+        <tr><td>Aβ</td><td>6–12 µm</td><td>yes</td><td>35–75 m/s</td><td>touch, vibration</td></tr>
+        <tr><td>Aδ</td><td>1–5 µm</td><td>thin</td><td>5–35 m/s</td><td>sharp pain, cold</td></tr>
+        <tr><td>C</td><td>0.2–1.5 µm</td><td>no</td><td>0.5–2 m/s</td><td>dull, burning pain, warmth, itch</td></tr>
+      </table>
+      <h3>Graded by the shock</h3>
+      <p>A single fibre is all or none, but the CAP grows step by step with the shock, because a stronger shock reaches the threshold of more fibres. Big fibres have the lowest threshold to a shock from outside: the shock's current flows along the nerve, and a wide fibre, with its low internal resistance, takes in more of it. So the Aα wave appears first, then Aβ and Aδ, and the C wave needs a shock tens of times stronger. Once every fibre fires, a stronger shock adds nothing: the CAP is maximal.</p>
+      <h3>Why the slow waves are small</h3>
+      <p>A thin fibre carries little current, and the size of its signal outside grows with its cross-section (d²). And the further the waves travel, the more the fibres in a group, each with a slightly different speed, drift apart: a slow wave is smeared over a long time, so it is low and broad. This temporal dispersion grows with distance.</p>
+      <h3>Monophasic and biphasic</h3>
+      <p>With two recording electrodes on an intact nerve, each spike passes under R<sub>1</sub> and then R<sub>2</sub>, and the amplifier records their difference: a hump one way and then the other, biphasic. Crushing or numbing the nerve under R<sub>2</sub> stops the spikes there and leaves only the first hump: monophasic, easier to read. If the electrodes are closer than the length of nerve a spike occupies (its speed × its duration, several centimetres for a warm Aα fibre), the two humps overlap and partly cancel.</p>
+    </div>
+    <aside class="try">
+      <p><b>Try it</b></p>
+      <p><button class="chip" data-try="weak">Weak shock</button> Then raise the Shock strength step by step and stimulate each time. Plot A wave size against Shock strength.</p>
+      <p><button class="chip" data-try="strong">Strong shock</button> All four groups. Raise the Speed to watch the C fibres crawl.</p>
+      <p><button class="chip" data-try="bi">Biphasic</button> Then move R<sub>2</sub> closer to R<sub>1</sub>.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Record the same wave at two distances. The extra distance divided by the extra time is the speed. One distance and one latency won't do, because the latency includes delays that have nothing to do with travelling: the time for the shock to start the spike, and for the wave to rise to the point you measure.</p>
+      <h3>Two latencies</h3>
+      <div class="eq">\[ \theta = \frac{L_2 - L_1}{t_2 - t_1} \]</div>
+      <p>In this model, with a strong shock, the Aα wave peaks at <b id="nT40">—</b> ms when recorded 40 mm from the stimulating electrode and at <b id="nT80">—</b> ms at 80 mm. The speed is 40 mm ÷ <b id="nDT">—</b> ms = <b id="nCV">—</b> m/s (1 mm/ms is 1 m/s). Dividing 40 mm by the first latency alone would give <b id="nNaive">—</b> m/s, far too slow: about <b id="nT0">—</b> ms of that latency is the time the wave takes to rise to its peak, which is the same at both distances and cancels when you subtract.</p>
+      <p>Any fixed point of the wave works, as long as it is the same at both distances: the start (onset) of the wave gives the speed of the fastest fibres in the group; the peak gives the speed of the most common ones. Clinical labs use the onset.</p>
+      <h3>From speed to size</h3>
+      <p>For myelinated fibres the speed is about 6 m/s for each µm of diameter (Hursh, 1939), so an Aα wave at 96 m/s comes from fibres about 16 µm wide. For bare fibres speed grows only with the square root of diameter (The Action Potential Travels explains why).</p>
+      <details class="fullderiv"><summary>Show it as a straight line</summary>
+        <p>If the wave travels at θ after a fixed delay t<sub>0</sub>, its latency at distance L is</p>
+        <div class="eq">\[ t = t_0 + \frac{L}{\theta} \]</div>
+        <p>a straight line against L with slope 1/θ and intercept t<sub>0</sub>. Two points fix the line; subtracting them removes t<sub>0</sub>. With more distances you can check that the points really lie on a line, which is what Your measurements will show if you plot a group's latency against Recording distance. The calculator below draws the line through your two points.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <p><b>Try it</b></p>
+      <p><button class="chip" data-try="two">40 mm, then 80 mm</button> Then, in the calculator, press Aα under Fill from the last two sweeps.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Local anaesthetics block Na⁺ channels, so spikes stop where the drug is. Thin myelinated fibres stop first, so sharp pain and cold go before touch and movement. Diseases that strip myelin slow the big fibres unevenly: their waves come late, spread out and small.</p>
+      <h3>Local anaesthetics</h3>
+      <p>Lidocaine and its relatives get into the axon and plug its Na⁺ channels from the inside. Without the inward Na⁺ current there is nothing to regenerate the spike, which fades out by passive spread, as with TTX in The Action Potential Travels.</p>
+      <p>Which fibres go first? The textbook rule is that thin fibres are blocked first. Recordings from single fibres agree for myelinated fibres: Aδ before Aβ before Aα. A spike can jump over one or two blocked nodes of Ranvier, so it only stops where about three nodes in a row are blocked. Thin fibres have shorter internodes, so more of their nodes lie in the drug's path (Franz and Perry, 1974). But bare C fibres, the thinnest of all, turn out to be among the hardest to block (Gokin and colleagues, 2001). In the clinic cold and pinprick still go first, touch next and movement last, and that is the order the simulation shows.</p>
+      <h3>Demyelination and axon loss</h3>
+      <p>In demyelinating neuropathies, such as the commonest form of Guillain–Barré syndrome and chronic inflammatory demyelinating polyneuropathy (CIDP), the immune system strips myelin in patches. A damaged internode leaks current and charges slowly, so the spike slows, and where too much myelin is lost it stops (conduction block). Each fibre is hit differently, so a group's spikes arrive spread out (temporal dispersion). The CAP is late, wide and small.</p>
+      <p>In axonal neuropathies the axons themselves die. The fibres that are left conduct at normal speed, so the waves come on time but are smaller. Nerve conduction studies tell the two apart by measuring both latency and size.</p>
+    </div>
+    <aside class="try">
+      <p><b>Try it</b></p>
+      <p><button class="chip" data-try="lido">Local anaesthetic</button> Then raise the dose step by step and plot each wave's size against Local anaesthetic.</p>
+      <p><button class="chip" data-try="demy">Damaged myelin</button> Compare the Aα latency with the faint sweep before.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th6" aria-labelledby="tab-th6" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> On Newt's Record page you will see the same things as on this page: a stimulus artefact at time zero, then the CAP's waves, or the small up-down shapes of spikes recorded from outside. Measure latencies from the artefact, find threshold and the maximal CAP, and use two distances to get a speed.</p>
+      <h3>Recording a CAP</h3>
+      <ul>
+        <li><b>Each stimulus is a trial.</b> With the stimulator docked under Trials on the Record page, each shock starts a sweep. Make each trial long enough for the waves you want: a few ms for the A waves of a warm nerve, longer for a cold one or for C fibres.</li>
+        <li><b>Time zero is the artefact.</b> The sharp blip at the start is the shock itself, picked up through the fluid. Measure each wave's latency from it. A bigger shock makes a bigger artefact; moving the recording electrodes farther from the stimulating ones makes it smaller.</li>
+        <li><b>Sample fast enough.</b> An A wave can be over in half a millisecond. To see its shape you need a sample every 20–50 µs, a sampling rate of 20–50 kHz.</li>
+        <li><b>Find threshold, then the maximum.</b> Start with the shock too weak to give anything, and raise it in small steps. Note where a wave first appears and where it stops growing. Plotting the CAP's size against shock strength gives the recruitment curve, as in Your measurements above.</li>
+        <li><b>Get a speed from two distances.</b> Move the recording electrodes (or the stimulating ones) a measured distance along the nerve, record again, and use the calculator below. Measure the distances along the nerve, from the stimulating − electrode to the first recording electrode.</li>
+        <li><b>Check it is the nerve.</b> A real CAP moves later when the recording electrodes move away from the stimulating ones; the artefact doesn't. Crushing the nerve between them abolishes the CAP but not the artefact.</li>
+      </ul>
+      <h3>Recording spikes from outside</h3>
+      <ul>
+        <li>Spikes recorded from outside are small (tens to hundreds of µV) and brief, so set the input range and amplifier gain to suit, and watch the noise.</li>
+        <li><b>Find action potentials</b> detects spikes when the trace crosses a threshold set as a number of noise SDs, and can require each spike to swing both ways, as real extracellular spikes do (artifacts often don't).</li>
+        <li><b>Waveforms</b> shows the shape of the spikes found. With an extracellular recording this is the shape of the current crossing the membrane next to the electrode, not the membrane voltage, as this lesson's first part shows. Spikes of different shapes and sizes usually come from different cells, at different distances from the electrode.</li>
+      </ul>
+    </div>
+    <aside class="try">
+      <p><b>Try it</b></p>
+      <p><button class="chip" data-try="weak">Weak shock</button> The artefact at time 0 comes first, the A wave after it. Raise the shock and the artefact grows too.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The papers behind this lesson. Most are free to read through the DOI links.</p>
+      <ol class="reflist">
+        <li><b>Erlanger J, Gasser HS (1924).</b> The compound nature of the action current of nerve as disclosed by the cathode ray oscillograph. <i>American Journal of Physiology</i> 70:624–666. <a href="https://doi.org/10.1152/ajplegacy.1924.70.3.624" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1924.70.3.624</a><br><span class="why">The first recordings of the compound action potential with a cathode-ray oscilloscope: it comes in separate waves.</span></li>
+        <li><b>Gasser HS, Erlanger J (1927).</b> The rôle played by the sizes of the constituent fibers of a nerve trunk in determining the form of its action potential wave. <i>American Journal of Physiology</i> 80:522–547. <a href="https://doi.org/10.1152/ajplegacy.1927.80.3.522" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1927.80.3.522</a><br><span class="why">The waves come from groups of fibres of different sizes, conducting at different speeds.</span></li>
+        <li><b>Gasser HS, Erlanger J (1929).</b> The rôle of fiber size in the establishment of a nerve block by pressure or cocaine. <i>American Journal of Physiology</i> 88:581–591. <a href="https://doi.org/10.1152/ajplegacy.1929.88.4.581" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1929.88.4.581</a><br><span class="why">The origin of the rule that a local anaesthetic blocks small fibres first.</span></li>
+        <li><b>Erlanger J, Gasser HS (1937).</b> <i>Electrical Signs of Nervous Activity.</i> University of Pennsylvania Press.<br><span class="why">Their lectures on the A, B and C fibres of peripheral nerve.</span></li>
+        <li><b>Hursh JB (1939).</b> Conduction velocity and diameter of nerve fibers. <i>American Journal of Physiology</i> 127:131–139. <a href="https://doi.org/10.1152/ajplegacy.1939.127.1.131" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1939.127.1.131</a><br><span class="why">About 6 m/s per µm of diameter in myelinated fibres, used for the nerve's A fibres here.</span></li>
+        <li><b>Clark J, Plonsey R (1968).</b> The extracellular potential field of the single active nerve fiber in a volume conductor. <i>Biophysical Journal</i> 8:842–864. <a href="https://doi.org/10.1016/S0006-3495(68)86524-5" target="_blank" rel="noopener">doi:10.1016/S0006-3495(68)86524-5</a><br><span class="why">The potential outside an active axon computed from its membrane current: the line-source sum this page uses.</span></li>
+        <li><b>Henze DA, Borhegyi Z, Csicsvari J, Mamiya A, Harris KD, Buzsáki G (2000).</b> Intracellular features predicted by extracellular recordings in the hippocampus in vivo. <i>Journal of Neurophysiology</i> 84:390–400. <a href="https://doi.org/10.1152/jn.2000.84.1.390" target="_blank" rel="noopener">doi:10.1152/jn.2000.84.1.390</a><br><span class="why">Recording the same neuron from inside and outside at once: the outside spike follows the current, and shrinks quickly with distance.</span></li>
+        <li><b>Gold C, Henze DA, Koch C, Buzsáki G (2006).</b> On the origin of the extracellular action potential waveform: a modeling study. <i>Journal of Neurophysiology</i> 95:3113–3128. <a href="https://doi.org/10.1152/jn.00979.2005" target="_blank" rel="noopener">doi:10.1152/jn.00979.2005</a><br><span class="why">The extracellular spike as the sum of membrane currents, and how its size and shape change with distance.</span></li>
+        <li><b>Buzsáki G, Anastassiou CA, Koch C (2012).</b> The origin of extracellular fields and currents: EEG, ECoG, LFP and spikes. <i>Nature Reviews Neuroscience</i> 13:407–420. <a href="https://doi.org/10.1038/nrn3241" target="_blank" rel="noopener">doi:10.1038/nrn3241</a><br><span class="why">From single spikes to field potentials and the EEG: the same Ohm's law, many cells at once.</span></li>
+        <li><b>Franz DN, Perry RS (1974).</b> Mechanisms for differential block among single myelinated and non-myelinated axons by procaine. <i>Journal of Physiology</i> 236:193–210. <a href="https://doi.org/10.1113/jphysiol.1974.sp010430" target="_blank" rel="noopener">doi:10.1113/jphysiol.1974.sp010430</a><br><span class="why">Small myelinated axons are blocked before large ones, because of how much of each axon's length the drug must cover; C fibres are no quicker to block than small myelinated ones.</span></li>
+        <li><b>Gokin AP, Philip B, Strichartz GR (2001).</b> Preferential block of small myelinated sensory and motor fibers by lidocaine: in vivo electrophysiology in the rat sciatic nerve. <i>Anesthesiology</i> 95:1441–1454. <a href="https://doi.org/10.1097/00000542-200112000-00025" target="_blank" rel="noopener">doi:10.1097/00000542-200112000-00025</a><br><span class="why">With lidocaine injected as in the clinic, Aγ and Aδ fibres are blocked first and C fibres last.</span></li>
+        <li><b>Hadden RDM, Cornblath DR, Hughes RAC, Zielasek J, Hartung HP, Toyka KV, Swan AV, and the Plasma Exchange/Sandoglobulin Guillain–Barré Syndrome Trial Group (1998).</b> Electrophysiological classification of Guillain–Barré syndrome: clinical associations and outcome. <i>Annals of Neurology</i> 44:780–788. <a href="https://doi.org/10.1002/ana.410440512" target="_blank" rel="noopener">doi:10.1002/ana.410440512</a><br><span class="why">Slowing, dispersion and conduction block in the demyelinating form; small responses in the axonal form.</span></li>
+        <li><b>Mallik A, Weir AI (2005).</b> Nerve conduction studies: essentials and pitfalls in practice. <i>Journal of Neurology, Neurosurgery and Psychiatry</i> 76 (Suppl 2):ii23–ii31. <a href="https://doi.org/10.1136/jnnp.2005.069138" target="_blank" rel="noopener">doi:10.1136/jnnp.2005.069138</a><br><span class="why">How conduction velocity is measured in the clinic, from two stimulation sites, and what goes wrong.</span></li>
+        <li><b>Traub RD, Miles R (1991).</b> <i>Neuronal Networks of the Hippocampus.</i> Cambridge University Press.<br><span class="why">The Na⁺ and K⁺ channel kinetics in the axon of the first simulation.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="cv-calc">
+  <div class="calc-head">
+    <span class="sect-title">Conduction velocity from two latencies</span>
+  </div>
+  <p class="caption">Enter where you recorded the same wave and when it arrived, at two distances from the stimulating electrode. Click a value to type it.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh">First recording</div>
+        <div class="gr"><label for="kL1">L<sub>1</sub></label><input type="range" id="kL1" min="5" max="200" step="1" value="40"><output id="kL1o" for="kL1"></output></div>
+        <div class="gr"><label for="kT1">t<sub>1</sub></label><input type="range" id="kT1" min="-1.3" max="2" step="0.001" value="0"><output id="kT1o" for="kT1"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">Second recording</div>
+        <div class="gr"><label for="kL2">L<sub>2</sub></label><input type="range" id="kL2" min="5" max="200" step="1" value="80"><output id="kL2o" for="kL2"></output></div>
+        <div class="gr"><label for="kT2">t<sub>2</sub></label><input type="range" id="kT2" min="-1.3" max="2" step="0.001" value="0.1"><output id="kT2o" for="kT2"></output></div>
+        <span class="caption">distance along the nerve from the stimulating − electrode to the recording electrode, and the latency of the same point of the same wave (its onset or its peak)</span>
+      </div>
+      <div class="gion">
+        <div class="gh">Fill from the last two sweeps</div>
+        <div class="btns" role="group" aria-label="Fill from the simulation"><button type="button" class="chip" data-kfill="0">Aα</button><button type="button" class="chip" data-kfill="1">Aβ</button><button type="button" class="chip" data-kfill="2">Aδ</button><button type="button" class="chip" data-kfill="3">C</button></div>
+        <span class="caption" id="kFillNote">the two latest sweeps of the whole-nerve simulation, at two different distances</span>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kV">—</span><span class="caption">conduction velocity</span></div>
+      <div class="es"><span>L<sub>1</sub> ÷ t<sub>1</sub> alone: <b id="kNaive">—</b></span><span>delay at L = 0: <b id="kT0">—</b></span><span>group: <b id="kGroup">—</b></span><span>diameter about <b id="kD">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator chart">
+        <button type="button" role="tab" id="tab-kc" aria-controls="pane-kc" aria-selected="true">Latency against distance</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kc" aria-labelledby="tab-kc">
+        <canvas id="kChart" style="max-width:460px" aria-label="Latency against distance: your two points and the straight line through them"></canvas>
+      </div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li>Your two recordings are the dots. The line through them has slope 1/speed: a steep line is a slow fibre.</li>
+          <li>Where the line meets distance 0 is the delay that is in every latency but has nothing to do with travel: the wave's rise to the point you measured, and in a real nerve the time the shock takes to start the spike. L<sub>1</sub> ÷ t<sub>1</sub> includes it, which is why one latency gives too low a speed.</li>
+          <li>The group is the one in the table under The compound action potential whose speed range holds your answer. The diameter uses about 6 m/s per µm for myelinated fibres, and 1.7 m/s × √d for bare ones.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+// ---------- shared: colours, numbers, canvas text and charts ----------
+const $ = id => document.getElementById(id);
+const root = document.documentElement;
+const C = {}, colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(root);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','ca','warm','pos','neg','cyto','bath','mem','memdark'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const col = c => (c && c.startsWith('--')) ? (C[c.slice(2)] || getComputedStyle(root).getPropertyValue(c).trim()) : (c || C.ink);
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = (v, d = 1) => {
+  if (!isFinite(v)) return '—';
+  const s = Math.abs(v) >= 1e4 ? Math.round(v).toLocaleString('en-US') : (+v.toFixed(d)).toString();
+  return s.replace('-', '−');
+};
+// a sensible number of digits: 3 significant, never more than needed
+const fmt3 = v => !isFinite(v) ? '—' : (Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toPrecision(2)).replace('-', '−');
+const fmtUm = um => um >= 1000 ? fmt3(um / 1000) + ' mm' : fmt3(um) + ' µm';
+const fmtMs = ms => (ms >= 100 ? ms.toFixed(0) : ms >= 10 ? ms.toFixed(1) : ms.toFixed(2)) + ' ms';
+function nice(a, b, n = 5) {
+  const span = Math.abs(b - a) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(Math.min(a, b) / step) * step; v <= Math.max(a, b) + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+// ticks on a log axis: decades, with 2 and 5 between them when there are few decades
+function logTicks(a, b) {
+  const out = [], few = Math.log10(b / a) < 2.5;
+  for (let e = Math.floor(Math.log10(a)); e <= Math.ceil(Math.log10(b)); e++)
+    for (const m of few ? [1, 2, 5] : [1]) { const v = m * Math.pow(10, e); if (v >= a * 0.999 && v <= b * 1.001) out.push(v); }
+  return out;
+}
+// Canvas text with real subscripts: "R_1" and "g_{Na}" draw 1 and Na lowered and smaller.
+function fillSub(g, text, x, y, align = 'left') {
+  const parts = String(text).split(/_(\{[^}]*\}|[^\s_,;:)]+)/);
+  const size = parseFloat(g.font) || 12, family = g.font.replace(/^.*?[\d.]+px\s*/, '');
+  const base = g.font, small = `${Math.round(size * 0.75)}px ${family}`;
+  const w = parts.reduce((a, p, i) => { g.font = i % 2 ? small : base; return a + g.measureText(p.replace(/[{}]/g, '')).width; }, 0);
+  let cx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  const saveAlign = g.textAlign; g.textAlign = 'left';
+  parts.forEach((p, i) => {
+    const t = p.replace(/[{}]/g, ''); if (!t) return;
+    g.font = i % 2 ? small : base;
+    g.fillText(t, cx, y + (i % 2 ? size * 0.28 : 0));
+    cx += g.measureText(t).width;
+  });
+  g.font = base; g.textAlign = saveAlign;
+}
+const DPR = () => Math.min(window.devicePixelRatio || 1, 2);
+function sizeCanvas(cv, H) {
+  const dpr = DPR(), W = cv.clientWidth;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + 'px'; }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  return { g, W, H };
+}
+/* One chart. s: { h, square, x:[a,b], y:[lo,hi], xlog, ylog, xlab, ylab, lines:[{x,y,color,w,dash,alpha}], upto (draw lines
+   only up to this x), cursor (x of a moving line), dots:[{x,y,color,r,ring}], hlines:[{y,color,label}], labels:[{x,y,text,color,align}], msg } */
+function plot(cv, s) {
+  const W = cv.clientWidth; if (!W) return null;
+  const L = s.left ?? 56, R = s.right ?? 14, T = 18, B = s.xlab === '' ? 22 : 38;
+  const H = s.square ? Math.round(W - L - R + T + B) : (s.h || 220);
+  const { g } = sizeCanvas(cv, H);
+  const [x0, x1] = s.x, [y0, y1] = s.y;
+  const X = s.xlog ? v => L + Math.log(v / x0) / Math.log(x1 / x0) * (W - L - R) : v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = s.ylog ? v => T + Math.log(y1 / v) / Math.log(y1 / y0) * (H - T - B) : v => T + (y1 - v) / (y1 - y0) * (H - T - B);
+  g.font = '11px ' + (getComputedStyle(root).getPropertyValue('--font-mono').trim() || 'monospace'); g.lineWidth = 1;
+  const xt = s.xticks || (s.xlog ? logTicks(x0, x1) : nice(x0, x1, Math.max(3, Math.round((W - L - R) / 90))));
+  const yt = s.yticks || (s.ylog ? logTicks(y0, y1) : nice(y0, y1, Math.max(3, Math.round((H - T - B) / 45))));
+  g.strokeStyle = C.line; g.fillStyle = C.muted; g.textAlign = 'center'; g.textBaseline = 'top';
+  for (const v of xt) { const x = Math.round(X(v)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.fillText(fmt(v, 3), x, H - B + 5); }
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (const v of yt) { const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke(); g.fillText(fmt(v, 3), L - 6, y); }
+  g.strokeStyle = C.muted; g.beginPath(); g.moveTo(L, H - B + .5); g.lineTo(W - R, H - B + .5); g.moveTo(L - .5, T); g.lineTo(L - .5, H - B); g.stroke();
+  g.font = '12px ' + (getComputedStyle(root).getPropertyValue('--font-body').trim() || 'sans-serif');
+  if (s.xlab) { g.textBaseline = 'bottom'; g.fillStyle = C.muted; fillSub(g, s.xlab, W - R, H - 1, 'right'); }
+  if (s.ylab) { g.textBaseline = 'top'; g.fillStyle = C.muted; fillSub(g, s.ylab, 4, 0, 'left'); }
+  g.save(); g.beginPath(); g.rect(L, T - 2, W - L - R, H - T - B + 4); g.clip();
+  for (const h of s.hlines || []) {
+    g.strokeStyle = col(h.color || '--muted'); g.setLineDash([5, 4]);
+    const y = Math.round(Y(h.y)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke();
+    if (h.label) { g.setLineDash([]); g.fillStyle = col(h.color || '--muted'); g.textBaseline = 'bottom'; fillSub(g, h.label, W - R - 4, y - 3, 'right'); }
+  }
+  g.setLineDash([]);
+  for (const l of s.lines || []) {
+    const n = l.y.length; if (!n) continue;
+    g.strokeStyle = col(l.color); g.lineWidth = l.w || 2; g.lineJoin = 'round'; g.setLineDash(l.dash ? [6, 4] : []);
+    g.globalAlpha = l.alpha ?? 1; g.beginPath();
+    const step = Math.max(1, Math.floor(n / (W * 2))), upto = l.full ? Infinity : (s.upto ?? Infinity);
+    let started = false;
+    for (let i = 0; i < n; i += step) {
+      const xv = l.x[i]; if (xv > upto) break;
+      const yv = clamp(l.y[i], y0 - (y1 - y0), y1 + (y1 - y0));
+      if (s.ylog && !(yv > 0)) { started = false; continue; }
+      started ? g.lineTo(X(xv), Y(yv)) : g.moveTo(X(xv), Y(yv)); started = true;
+    }
+    g.stroke(); g.globalAlpha = 1;
+  }
+  g.setLineDash([]);
+  if (s.cursor != null && s.cursor < x1) { g.strokeStyle = C.accent; g.globalAlpha = .5; const x = Math.round(X(s.cursor)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.globalAlpha = 1; }
+  for (const d of s.dots || []) {
+    g.fillStyle = col(d.color || '--accent'); g.beginPath(); g.arc(X(d.x), Y(d.y), d.r || 4, 0, 2 * Math.PI); g.fill();
+    if (d.ring) { g.strokeStyle = col(d.color || '--accent'); g.lineWidth = 1.5; g.beginPath(); g.arc(X(d.x), Y(d.y), (d.r || 4) + 4, 0, 2 * Math.PI); g.stroke(); g.lineWidth = 1; }
+  }
+  for (const t of s.labels || []) { g.fillStyle = col(t.color || '--muted'); g.textBaseline = 'bottom'; fillSub(g, t.text, X(t.x), Y(t.y) - 3, t.align || 'left'); }
+  g.restore();
+  if (s.msg) { g.fillStyle = C.muted; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '13px ' + (getComputedStyle(root).getPropertyValue('--font-body').trim() || 'sans-serif'); g.fillText(s.msg, (L + W - R) / 2, (T + H - B) / 2); g.textAlign = 'left'; }
+  return { X, Y, W, H };
+}
+// a seeded random number generator, so a page shows the same nerve every time
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+// fit an axis to the data: a little room on each side; on a log axis, only positive values
+function fitRange(vals, log) {
+  const v = vals.filter(x => isFinite(x) && (!log || x > 0));
+  if (!v.length) return null;
+  let lo = Math.min(...v), hi = Math.max(...v);
+  if (log) { if (hi / lo < 1.5) { lo /= 1.5; hi *= 1.5; } return [lo / 1.25, hi * 1.25]; }
+  const span = hi - lo || Math.abs(hi) * 0.4 || 1;
+  return [lo - 0.08 * span, hi + 0.08 * span];
+}
+
+// ---------- Your measurements: one row per finished sweep, plotted against the axes the student picks ----------
+function makeLog(pref, vars) {
+  const rows = [], cv = $(pref + 'cv'), xs = $(pref + 'x'), ys = $(pref + 'y'), lx = $(pref + 'lx'), ly = $(pref + 'ly');
+  const opts = '<option value="">Choose…</option>' + vars.map(v => `<option value="${v.key}">${v.label}</option>`).join('');
+  xs.innerHTML = opts; ys.innerHTML = opts;
+  let dirty = true;
+  const mark = () => { dirty = true; };
+  [xs, ys, lx, ly].forEach(el => el.addEventListener('change', mark));
+  $(pref + 'clear').addEventListener('click', () => { rows.length = 0; mark(); });
+  colorHooks.push(mark); window.addEventListener('resize', mark);
+  const lab = k => vars.find(v => v.key === k)?.label || '';
+  function draw() {
+    if (!cv.clientWidth) return;
+    dirty = false;
+    $(pref + 'n').textContent = rows.length ? `${rows.length} sweep${rows.length === 1 ? '' : 's'} recorded` : 'No sweeps yet';
+    const kx = xs.value, ky = ys.value;
+    const frame = msg => plot(cv, { square: true, x: [0, 1], y: [0, 1], xticks: [], yticks: [], xlab: kx ? lab(kx) : '', ylab: ky ? lab(ky) : '', msg });
+    if (!kx || !ky) return frame('Choose what goes on each axis');
+    const pts = rows.map(r => [r[kx], r[ky]]).filter(([x, y]) => isFinite(x) && isFinite(y) && (!lx.checked || x > 0) && (!ly.checked || y > 0));
+    if (!pts.length) return frame(rows.length ? 'Nothing to show on these scales' : 'Each finished sweep adds a point');
+    const xr = fitRange(pts.map(p => p[0]), lx.checked), yr = fitRange(pts.map(p => p[1]), ly.checked);
+    plot(cv, { square: true, x: xr, y: yr, xlog: lx.checked, ylog: ly.checked, xlab: lab(kx), ylab: lab(ky),
+      dots: pts.map((p, i) => ({ x: p[0], y: p[1], r: 4, ring: i === pts.length - 1 })) });
+  }
+  return { add(r) { rows.push(r); mark(); }, rows, draw: () => { if (dirty) draw(); }, mark };
+}
+
+// ---------- the travelling spike ----------
+/* Computed once: a spike travelling along a cable of membrane patches, 1 µm wide, with the cortical Na⁺ and K⁺ channels of
+   Traub and Miles (rates × 3, for body temperature), cytoplasm 35 Ω·cm, membrane 1 µF/cm². Units: mV, ms, mS/cm², µA/cm².
+   Returns the voltage S(t) at one place as the spike passes, its second derivative S″ (mV/ms²), and the speed for 1 µm.
+   In a uniform axon the spike has the same shape at any diameter, and its speed grows as √d. */
+const SPIKE = (() => {
+  const N = 120, dx = 30e-4, d = 1e-4, Ri = 35, dt = 0.002, T = 7, Q = 3;
+  const gNa = 100, gK = 30, gL = 0.15, EL = -70, VT = -55, ENa = 50, EK = -90;
+  const gax = d / (4 * Ri * dx * dx) * 1000;          // between neighbouring patches, mS/cm²
+  const vtrap = (x, k) => Math.abs(x / k) < 1e-6 ? k * (1 - x / k / 2) : x / (Math.exp(x / k) - 1);
+  const v = new Float64Array(N).fill(EL), m = new Float64Array(N), h = new Float64Array(N), n = new Float64Array(N), dv = new Float64Array(N);
+  { const u = EL - VT, am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5), ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5)),
+      an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+    m.fill(am / (am + bm)); h.fill(ah / (ah + bh)); n.fill(an / (an + bn)); }
+  const iA = 50, iB = 90, iR = 70, rec = new Float64Array(Math.round(T / dt) + 1);
+  let tA = -1, tB = -1;
+  for (let s = 0; s < rec.length; s++) {
+    const t = s * dt; rec[s] = v[iR];
+    for (let i = 0; i < N; i++) {
+      const x = v[i], u = x - VT;
+      const am = Q * 0.32 * vtrap(13 - u, 4), bm = Q * 0.28 * vtrap(u - 40, 5);
+      const ah = Q * 0.128 * Math.exp(-(u - 17) / 18), bh = Q * 4 / (1 + Math.exp(-(u - 40) / 5));
+      const an = Q * 0.032 * vtrap(15 - u, 5), bn = Q * 0.5 * Math.exp(-(u - 10) / 40);
+      m[i] += (1 - Math.exp(-dt * (am + bm))) * (am / (am + bm) - m[i]);
+      h[i] += (1 - Math.exp(-dt * (ah + bh))) * (ah / (ah + bh) - h[i]);
+      n[i] += (1 - Math.exp(-dt * (an + bn))) * (an / (an + bn) - n[i]);
+      const iion = gNa * m[i] ** 3 * h[i] * (x - ENa) + gK * n[i] ** 4 * (x - EK) + gL * (x - EL);
+      const lap = (i > 0 ? v[i - 1] : x) + (i < N - 1 ? v[i + 1] : x) - 2 * x;
+      dv[i] = dt * (((i < 3 && t < 0.2) ? 2000 : 0) - iion + gax * lap);
+    }
+    for (let i = 0; i < N; i++) v[i] += dv[i];
+    if (tA < 0 && v[iA] > 0) tA = t;
+    if (tB < 0 && v[iB] > 0) tB = t;
+  }
+  let ipk = 0; rec.forEach((x, i) => { if (x > rec[ipk]) ipk = i; });
+  const i0 = Math.max(0, ipk - Math.round(1.5 / dt)), S = rec.slice(i0);
+  const S2 = new Float64Array(S.length);
+  for (let i = 1; i < S.length - 1; i++) S2[i] = (S[i + 1] - 2 * S[i] + S[i - 1]) / (dt * dt);
+  let s2max = 0; S2.forEach(x => { s2max = Math.max(s2max, Math.abs(x)); });
+  return { S, S2, dt, tpk: (ipk - i0) * dt, theta1: tB > tA && tA > 0 ? (iB - iA) * dx * 10 / (tB - tA) : 1, s2max };
+})();
+const Sat = u => { const k = u / SPIKE.dt, S = SPIKE.S; if (k <= 0) return S[0]; const i = Math.floor(k); if (i >= S.length - 1) return S[S.length - 1]; return S[i] + (k - i) * (S[i + 1] - S[i]); };
+const S2at = u => { const k = Math.round(u / SPIKE.dt), S2 = SPIKE.S2; return k <= 0 || k >= S2.length ? 0 : S2[k]; };
+
+// ---------- part 1: one axon ----------
+const RHO_I = 0.35;                                   // cytoplasm, Ω·m (35 Ω·cm)
+const FLUID = { saline: { rho: 0.7, name: 'saline, 70 Ω·cm' }, tissue: { rho: 3, name: 'brain tissue, 300 Ω·cm' } };
+const T1 = 8, TC = 3, DT1 = 0.02, N1 = Math.round(T1 / DT1) + 1, TT1 = Float64Array.from({ length: N1 }, (_, i) => i * DT1);
+const NOISE = 5;                                      // µV rms
+const P1 = { d: 10, h: 50, fluid: 'tissue', noise: false };
+const theta = d => SPIKE.theta1 * Math.sqrt(d);       // m/s = mm/ms
+/* The potential at the electrode, in µV, h µm from the middle of an axon d µm wide, in fluid of resistivity rho (Ω·m),
+   with the spike's peak passing the electrode at t = TC:
+   φ(t) = ρ d² / (16 ρᵢ θ) · Σ S″(u) / √((θ (t − u))² + h²) Δu  (see the derivation in the Theory) */
+function extracellular(d, h, rho) {
+  const th = theta(d), dm = d * 1e-6, hm = h * 1e-6, S2 = SPIKE.S2, dt = SPIKE.dt, out = new Float64Array(N1);
+  const k = rho * dm * dm / (16 * RHO_I * th) * 1e6;  // → µV
+  const step = 2, du = step * dt * 1e-3;
+  for (let j = 0; j < N1; j++) {
+    const t = TT1[j]; let s = 0;
+    for (let i = 1; i < S2.length - 1; i += step) {
+      const x = th * (t - TC - (i * dt - SPIKE.tpk)) * 1e-3;   // m along the axon
+      s += S2[i] * 1e3 / Math.sqrt(x * x + hm * hm);
+    }
+    out[j] = k * s * du;
+  }
+  return out;
+}
+function summary1(phi) {
+  let neg = 0, jn = 0; phi.forEach((v, j) => { if (v < neg) { neg = v; jn = j; } });
+  let pos1 = 0, pos2 = 0; phi.forEach((v, j) => { if (j < jn) pos1 = Math.max(pos1, v); else pos2 = Math.max(pos2, v); });
+  return { neg, pos1, pos2, pp: Math.max(pos1, pos2) - neg };
+}
+const A1 = { running: true, t: T1, speed: 2, trace: null, last: null, prev: null, dirty: true, seed: 1 };
+const VIN = Float64Array.from(TT1, t => Sat(t - TC + SPIKE.tpk));
+const IM = Float64Array.from(TT1, t => S2at(t - TC + SPIKE.tpk));
+const VPK = Math.max(...VIN) - Math.min(...VIN);
+function noiseFor(seed) {
+  const r = rng(seed), raw = new Float64Array(N1 + 2);
+  for (let i = 0; i < raw.length; i++) { const u = r() || 1e-9, w = r(); raw[i] = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * w); }
+  const out = new Float64Array(N1); let ss = 0;
+  for (let j = 0; j < N1; j++) { out[j] = (raw[j] + 2 * raw[j + 1] + raw[j + 2]) / 4; ss += out[j] * out[j]; }   // a little smoothing, like an amplifier's filter
+  const k = NOISE / Math.sqrt(ss / N1); for (let j = 0; j < N1; j++) out[j] *= k;
+  return out;
+}
+let noise1 = noiseFor(1);
+function compute1() {
+  const phi = extracellular(P1.d, P1.h, FLUID[P1.fluid].rho);
+  const shown = P1.noise ? Float64Array.from(phi, (v, j) => v + noise1[j]) : phi;
+  A1.trace = { phi, shown, ...summary1(phi), d: P1.d, h: P1.h, fluid: P1.fluid, theta: theta(P1.d) };
+  A1.dirty = true;
+}
+const log1 = makeLog('m1', [
+  { key: 'h', label: 'Electrode distance (µm)' }, { key: 'd', label: 'Axon diameter (µm)' }, { key: 'rho', label: 'Fluid resistivity (Ω·cm)' },
+  { key: 'pp', label: 'Peak-to-peak size (µV)' }, { key: 'dip', label: 'Size of the dip (µV)' }, { key: 'theta', label: 'Conduction speed (m/s)' } ]);
+function finish1() {
+  const tr = A1.trace;
+  A1.last = { shown: tr.shown };
+  log1.add({ h: tr.h, d: tr.d, rho: FLUID[tr.fluid].rho * 100, pp: tr.pp, dip: -tr.neg, theta: tr.theta });
+}
+function fire1() { if (A1.last) A1.prev = A1.last; A1.seed++; noise1 = noiseFor(A1.seed); compute1(); A1.t = 0; A1.dirty = true; }
+
+// controls
+const logv = id => Math.pow(10, parseFloat($(id).value));
+const OUT1 = { s1Speed: () => fmt3(A1.speed) + ' ms/s', s1H: () => fmtUm(P1.h), s1D: () => fmt3(P1.d) + ' µm' };
+function read1() { A1.speed = logv('s1Speed'); P1.h = logv('s1H'); P1.d = logv('s1D'); P1.noise = $('s1Noise').checked; Object.keys(OUT1).forEach(id => $(id + 'o').textContent = OUT1[id]()); }
+const later = fn => { let q = false; return () => { if (!q) { q = true; requestAnimationFrame(() => { q = false; fn(); }); } }; };
+const recompute1 = later(compute1);
+['s1H', 's1D'].forEach(id => $(id).addEventListener('input', () => { read1(); recompute1(); }));
+$('s1Speed').addEventListener('input', read1);
+$('s1Noise').addEventListener('change', () => { read1(); compute1(); });
+function setFluid(f) { P1.fluid = f; document.querySelectorAll('[data-fluid]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fluid === f))); }
+document.querySelectorAll('[data-fluid]').forEach(b => b.addEventListener('click', () => { setFluid(b.dataset.fluid); compute1(); }));
+$('axFire').addEventListener('click', fire1);
+$('axPlay').addEventListener('click', () => { A1.running = !A1.running; $('axPlay').textContent = A1.running ? 'Pause' : 'Play'; });
+
+// the picture: the axon, coloured by its voltage, the currents crossing its membrane, and the electrode
+function drawAxon() {
+  const cv = $('axPic'); if (!cv.clientWidth) return;
+  const { g, W, H } = sizeCanvas(cv, 210);
+  const th = theta(P1.d), half = 2 * th, x0 = 40, x1 = W - 40, X = mm => x0 + (mm + half) / (2 * half) * (x1 - x0);
+  const yA = 140, ht = clamp(8 + 4 * Math.log2(P1.d / 0.5), 8, 30), top = yA - ht / 2, bot = yA + ht / 2;
+  g.fillStyle = C.bath; g.fillRect(0, 0, W, H);
+  g.font = '12px ' + getComputedStyle(root).getPropertyValue('--font-body'); g.fillStyle = C.muted; g.textBaseline = 'top';
+  g.fillText('Outside: ' + FLUID[P1.fluid].name, 10, 8);
+  // the axon, coloured column by column by its voltage at this moment
+  const t = A1.t, u0 = t - TC + SPIKE.tpk;
+  for (let px = x0; px < x1; px += 2) {
+    const mm = (px - x0) / (x1 - x0) * 2 * half - half, V = Sat(u0 - mm / th);
+    g.fillStyle = mixc(C.pos, C.neg, clamp((V + 70) / 100, 0, 1)); g.fillRect(px, top, 2, ht);
+  }
+  g.strokeStyle = C.memdark; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, top); g.lineTo(x1, top); g.moveTo(x0, bot); g.lineTo(x1, bot); g.stroke();
+  // membrane current: arrows out (green) and in (orange), length by size
+  const NA = 64;
+  for (let k = 0; k < NA; k++) {
+    const px = x0 + (k + 0.5) / NA * (x1 - x0), mm = (px - x0) / (x1 - x0) * 2 * half - half;
+    const i = S2at(u0 - mm / th) / SPIKE.s2max; if (Math.abs(i) < 0.02) continue;
+    const len = 4 + 26 * Math.pow(Math.abs(i), 0.6), out = i > 0;
+    g.strokeStyle = g.fillStyle = out ? C.cl : C.na; g.lineWidth = 1.6;
+    for (const side of [-1, 1]) {
+      const yM = side < 0 ? top - 2 : bot + 2, yF = yM + side * len;
+      const [ya, yb] = out ? [yM, yF] : [yF, yM];             // arrow from ya to yb
+      g.beginPath(); g.moveTo(px, ya); g.lineTo(px, yb); g.stroke();
+      const dir = Math.sign(yb - ya); g.beginPath(); g.moveTo(px, yb + dir); g.lineTo(px - 3.5, yb - dir * 5); g.lineTo(px + 3.5, yb - dir * 5); g.closePath(); g.fill();
+    }
+  }
+  // the electrode, above the middle: the distance on a squeezed (log) scale
+  const ex = X(0), f = Math.log(P1.h / 15) / Math.log(2000 / 15), tipY = top - 6 - f * (top - 6 - 34);
+  g.fillStyle = C.ink; g.globalAlpha = .75; g.beginPath(); g.moveTo(ex - 5, 0); g.lineTo(ex + 5, 0); g.lineTo(ex + 1, tipY - 6); g.lineTo(ex, tipY); g.lineTo(ex - 1, tipY - 6); g.closePath(); g.fill(); g.globalAlpha = 1;
+  g.fillStyle = C.ink; g.textBaseline = 'middle'; g.fillText('electrode, ' + fmtUm(P1.h) + ' from the axon', ex + 10, Math.max(26, tipY - 4));
+  // where the spike came from, which way it goes, and a scale bar
+  g.fillStyle = C.muted; g.textBaseline = 'top';
+  g.fillText('spike travels this way →', x0, bot + 34);
+  const bar = nice(0, half * 0.5, 2)[1] || half * 0.25, bpx = bar / (2 * half) * (x1 - x0);
+  g.strokeStyle = C.muted; g.lineWidth = 2; g.beginPath(); g.moveTo(x1 - bpx, bot + 41); g.lineTo(x1, bot + 41); g.moveTo(x1 - bpx, bot + 36); g.lineTo(x1 - bpx, bot + 46); g.moveTo(x1, bot + 36); g.lineTo(x1, bot + 46); g.stroke();
+  g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillText(fmtUm(bar * 1000) + ' along the axon', x1 - bpx - 8, bot + 41);
+  g.textBaseline = 'top'; g.fillText('not to scale across the axon', W - 10, 8); g.textAlign = 'left';
+}
+function draw1() {
+  if ($('pane-ax').hidden) return;
+  A1.dirty = false;
+  drawAxon();
+  const tr = A1.trace, big = Math.max(5, tr.pp, P1.noise ? 3 * NOISE : 0), lo = Math.min(tr.neg, P1.noise ? -3 * NOISE : 0), hi = Math.max(tr.pos1, tr.pos2, P1.noise ? 3 * NOISE : 0);
+  const pad = 0.12 * big, ylo = Math.min(lo - pad, -2.5), yhi = Math.max(hi + pad, 2.5);
+  plot($('cvIn'), { h: 220, x: [0, T1], y: [-90, 50], ylab: 'mV', xlab: 'time (ms)', upto: A1.t, cursor: A1.t,
+    lines: [{ x: TT1, y: VIN, color: '--ink', w: 1.8 }] });
+  const imScale = Math.abs(tr.neg) / Math.max(1e-9, -Math.min(...IM));
+  const lines = [];
+  if (A1.prev) lines.push({ x: TT1, y: A1.prev.shown, color: '--muted', w: 1.2, alpha: .45, full: true });
+  lines.push({ x: TT1, y: Float64Array.from(IM, v => v * imScale), color: '--muted', w: 1.2, dash: true }, { x: TT1, y: tr.shown, color: '--accent', w: 1.8 });
+  plot($('cvOut'), { h: 220, x: [0, T1], y: [ylo, yhi], ylab: 'µV', xlab: 'time (ms)', upto: A1.t, cursor: A1.t, lines, hlines: [{ y: 0, color: '--line' }] });
+  $('reads1').innerHTML = `<span>Spike inside <b>${fmt(VPK, 0)} mV</b></span>` +
+    `<span>Outside: up <b>+${fmt3(tr.pos1)}</b>, down <b>${fmt3(tr.neg)}</b>, up <b>+${fmt3(tr.pos2)} µV</b></span>` +
+    `<span>Peak to peak <b>${fmt3(tr.pp)} µV</b></span><span>About <b>1 : ${fmt(VPK * 1000 / Math.max(1e-9, tr.pp), 0)}</b> of the spike inside</span>` +
+    `<span>Conduction speed <b>${fmt3(tr.theta)} m/s</b></span>` + (P1.noise ? `<span>Noise <b>${NOISE} µV rms</b></span>` : '');
+}
+
+// ---------- part 2: a mixed nerve ----------
+const GROUPS = [
+  { name: 'Aα', n: 40, d: [12, 20], my: true, color: '--accent' },
+  { name: 'Aβ', n: 80, d: [6, 12], my: true, color: '--k' },
+  { name: 'Aδ', n: 120, d: [1, 5], my: true, color: '--na' },
+  { name: 'C', n: 500, d: [0.3, 1.3], my: false, color: '--ca' },
+];
+/* Every fibre: diameter (bunched toward the middle of its group's range), speed, threshold (× the biggest fibre's), signal size
+   (grows with its cross-section), and fixed random numbers: how badly demyelination hits it, where it would stop, the
+   anaesthetic dose (%) that blocks it, and its row in the picture. Anaesthetic: thin myelinated fibres first (more nodes in
+   the drug's path), C fibres late, as single-fibre recordings show (Franz and Perry 1974; Gokin and colleagues 2001). */
+const FIBRES = [];
+{ let seed = 11; const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  const r2 = rng(7);
+  for (const g of GROUPS) for (let k = 0; k < g.n; k++) {
+    const u = (k + 0.5) / g.n, mid = (g.d[0] + g.d[1]) / 2, half = (g.d[1] - g.d[0]) / 2, d = mid + half * Math.pow(2 * u - 1, 3);
+    FIBRES.push({ g, gi: GROUPS.indexOf(g), d, v: g.my ? 6 * d : 1.7 * Math.sqrt(d), thr: 20 / d, amp: (g.my ? 1 : 0.3) * d * d, w: g.my ? 0.35 : 2.5,
+      hit: 0.3 + 0.7 * rnd(), stopAt: 0.25 + 0.5 * r2(), lid: g.my ? 20 + 3 * d : 55 + 40 * r2(), lane: r2() });
+  } }
+const T2 = 80, DTF = 0.005, DTS = 0.05, NF = Math.round(8 / DTF) + 1, NS = Math.round(T2 / DTS) + 1;
+const TF = Float64Array.from({ length: NF }, (_, i) => i * DTF), TS = Float64Array.from({ length: NS }, (_, i) => i * DTS);
+const P2 = { stim: 2, L: 40, mode: 'mono', gap: 5, lido: 0, demy: 0 };
+const S0 = 5;                                           // the stimulating (−) electrode, mm from the nerve's end
+const pool = p => { const w = Math.min(10, 0.4 * p.L), c = S0 + p.L / 2; return [c - w / 2, c + w / 2]; };
+// what each fibre does with these settings: null if it doesn't fire; else its speed, where it stops, and whether it reaches R₁
+function fate(f, p) {
+  if (p.stim < f.thr) return null;
+  let v = f.v, stop = Infinity, blocked = false;
+  if (f.g.my && p.demy > 0) { const loss = p.demy / 100 * f.hit; if (loss > 0.75) { blocked = true; stop = S0 + f.stopAt * p.L; } v *= 1 - Math.min(loss, 0.75); }
+  if (p.lido >= f.lid) { blocked = true; stop = Math.min(stop, pool(p)[0]); }
+  if (p.mode === 'mono') stop = Math.min(stop, S0 + p.L + p.gap);   // crushed under R₂
+  return { v, stop, blocked };
+}
+const shape = (t, w) => t <= 0 ? 0 : (t / w) * Math.exp(1 - t / w);   // one fibre's signal at an electrode, peak 1 at t = w
+let NORM = 1;
+function cap(p, n, dt) {
+  const y = new Float64Array(n), by = GROUPS.map(() => new Float64Array(n));
+  let count = 0;
+  FIBRES.forEach(f => {
+    const st = fate(f, p); if (!st) return;
+    count++; if (st.blocked) return;
+    const t1 = p.L / st.v, t2 = (p.L + p.gap) / st.v, a = f.amp * 100 / NORM;
+    const i0 = Math.max(0, Math.floor(t1 / dt) - 1), i1 = Math.min(n - 1, Math.ceil(((p.mode === 'bi' ? t2 : t1) + 10 * f.w) / dt));
+    for (let i = i0; i <= i1; i++) {
+      const t = i * dt, s = a * (shape(t - t1, f.w) - (p.mode === 'bi' ? shape(t - t2, f.w) : 0));
+      y[i] += s; by[f.gi][i] += s;
+    }
+  });
+  return { y, by, count };
+}
+NORM = Math.max(...cap({ stim: 150, L: 40, mode: 'mono', gap: 5, lido: 0, demy: 0 }, NF, DTF).y) / 100;
+// the stimulus artefact: the shock itself, picked up through the fluid; bigger for a stronger shock, smaller farther away
+const artefact = p => Float64Array.from(TF, t => 3 * Math.sqrt(p.stim) * Math.sqrt(40 / p.L) * Math.exp(-t / 0.03) * Math.sin(2 * Math.PI * t / 0.08));
+function summary2(p) {
+  const fast = cap(p, NF, DTF), slow = cap(p, NS, DTS);
+  const lat = GROUPS.map((g, gi) => { const a = gi < 3 ? fast.by[gi] : slow.by[3], dt = gi < 3 ? DTF : DTS; let m = 0, k = -1; a.forEach((v, i) => { if (v > m) { m = v; k = i; } }); return m > 1e-3 ? k * dt : NaN; });
+  let Apk = 0; fast.y.forEach((v, i) => { if (i * DTF > 0.12) Apk = Math.max(Apk, v); });
+  const Cpk = Math.max(0, ...slow.by[3]);
+  return { fast, slow, lat, Apk, Cpk, art: artefact(p), p: { ...p } };
+}
+const A2 = { running: true, t: T2, speed: 2, trace: null, last: null, prev: null, dirty: true };
+const log2 = makeLog('m2', [
+  { key: 'stim', label: 'Shock strength (× threshold)' }, { key: 'L', label: 'Recording distance (mm)' },
+  { key: 'lido', label: 'Local anaesthetic (%)' }, { key: 'demy', label: 'Myelin damage (%)' },
+  { key: 'Apk', label: 'A wave size (%)' }, { key: 'Cpk', label: 'C wave size (%)' },
+  { key: 'lat0', label: 'Aα wave peak (ms)' }, { key: 'lat1', label: 'Aβ wave peak (ms)' }, { key: 'lat2', label: 'Aδ wave peak (ms)' }, { key: 'lat3', label: 'C wave peak (ms)' },
+  { key: 'n', label: 'Fibres firing' } ]);
+function compute2() { A2.trace = summary2(P2); A2.dirty = true; }
+function finish2() {
+  const tr = A2.trace;
+  A2.last = { fy: tr.fast.y, sy: Float64Array.from(tr.slow.y, (v, i) => v + 19 * tr.slow.by[3][i]), lat: tr.lat, L: tr.p.L };
+  log2.add({ stim: tr.p.stim, L: tr.p.L, lido: tr.p.lido, demy: tr.p.demy, Apk: tr.Apk, Cpk: tr.Cpk, lat0: tr.lat[0], lat1: tr.lat[1], lat2: tr.lat[2], lat3: tr.lat[3], n: tr.fast.count });
+}
+function fire2() { if (A2.last) A2.prev = A2.last; compute2(); A2.t = 0; A2.dirty = true; }
+
+const OUT2 = { s2Speed: () => fmt3(A2.speed) + ' ms/s', s2Stim: () => '× ' + fmt3(P2.stim), s2L: () => P2.L + ' mm', s2Gap: () => fmt3(P2.gap) + ' mm', s2Lido: () => P2.lido + ' %', s2Demy: () => P2.demy + ' %' };
+function read2() {
+  A2.speed = logv('s2Speed'); P2.stim = logv('s2Stim'); P2.L = +$('s2L').value; P2.gap = +$('s2Gap').value; P2.lido = +$('s2Lido').value; P2.demy = +$('s2Demy').value;
+  Object.keys(OUT2).forEach(id => $(id + 'o').textContent = OUT2[id]());
+}
+const recompute2 = later(compute2);
+['s2Stim', 's2L', 's2Gap', 's2Lido', 's2Demy'].forEach(id => $(id).addEventListener('input', () => { read2(); recompute2(); }));
+$('s2Speed').addEventListener('input', read2);
+function setMode(m) { P2.mode = m; document.querySelectorAll('[data-rec]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rec === m))); $('gapCtl').hidden = m !== 'bi'; }
+document.querySelectorAll('[data-rec]').forEach(b => b.addEventListener('click', () => { setMode(b.dataset.rec); compute2(); }));
+$('nvFire').addEventListener('click', fire2);
+$('nvPlay').addEventListener('click', () => { A2.running = !A2.running; $('nvPlay').textContent = A2.running ? 'Pause' : 'Play'; });
+$('legNv').innerHTML = `<span><i style="background:var(--ink)"></i>recording (the sum)</span>` + GROUPS.map(g => `<span><i style="background:var(${g.color})"></i>${g.name} fibres</span>`).join('') +
+  `<span><i class="faint" style="background:var(--muted)"></i>sweep before</span>`;
+
+// the picture: the nerve in its chamber, the electrodes, and a dot for every fibre that fired
+const DAMAGE = (() => { const r = rng(3); return Array.from({ length: 40 }, () => ({ x: r(), y: r(), s: r() })); })();
+function drawNerve() {
+  const cv = $('nvPic'); if (!cv.clientWidth) return;
+  const { g, W, H } = sizeCanvas(cv, 200), p = P2, LEN = 165;
+  const x0 = 24, x1 = W - 24, X = mm => x0 + mm / LEN * (x1 - x0), yT = 62, yB = 142, band = (yB - yT - 8) / 4;
+  const font = getComputedStyle(root).getPropertyValue('--font-body');
+  g.font = '12px ' + font;
+  // the nerve
+  g.fillStyle = C.cyto; g.strokeStyle = C.memdark; g.lineWidth = 1.5;
+  const crushX = p.mode === 'mono' ? X(S0 + p.L + p.gap) : null;
+  g.beginPath(); g.roundRect ? g.roundRect(X(0), yT, X(LEN) - X(0), yB - yT, (yB - yT) / 2) : g.rect(X(0), yT, X(LEN) - X(0), yB - yT); g.fill(); g.stroke();
+  // damaged myelin: pale patches along the nerve, more for more damage
+  if (p.demy > 0) { g.fillStyle = C.warm; DAMAGE.slice(0, Math.round(p.demy / 100 * DAMAGE.length)).forEach(d => {
+    const mm = S0 + d.x * (LEN - S0 - 10); g.globalAlpha = .25; g.beginPath(); g.ellipse(X(mm), yT + 6 + d.y * (yB - yT - 12), 4 + 6 * d.s, 3, 0, 0, 2 * Math.PI); g.fill(); }); g.globalAlpha = 1; }
+  // the drug pool, over the middle of the nerve
+  if (p.lido > 0) { const [a, b] = pool(p); g.fillStyle = C.k; g.globalAlpha = .15 + .25 * p.lido / 100; g.fillRect(X(a), yT - 10, X(b) - X(a), yB - yT + 20); g.globalAlpha = 1;
+    g.fillStyle = C.k; g.textBaseline = 'top'; g.textAlign = 'center'; g.fillText('lidocaine', (X(a) + X(b)) / 2, yB + 14); g.textAlign = 'left'; }
+  // the crush under R₂: a pinch, and the dead nerve beyond shaded
+  if (crushX != null) {
+    g.fillStyle = C.bg; g.globalAlpha = .7; g.fillRect(crushX, yT + 1, X(LEN) - crushX - 2, yB - yT - 2); g.globalAlpha = 1;
+    g.strokeStyle = C.memdark; g.lineWidth = 2; g.beginPath(); g.moveTo(crushX - 4, yT - 4); g.lineTo(crushX + 4, yT + 12); g.moveTo(crushX - 4, yB + 4); g.lineTo(crushX + 4, yB - 12); g.stroke();
+    g.fillStyle = C.muted; g.textBaseline = 'top'; g.fillText('crushed', crushX + 8, yB + 14);
+  }
+  // fibre dots
+  const t = A2.t;
+  FIBRES.forEach(f => {
+    const st = fate(f, p); if (!st) return;
+    let mm = S0 + st.v * t, faded = false;
+    if (mm >= st.stop) { mm = st.stop; faded = true; }
+    if (mm > LEN - 2) return;
+    g.fillStyle = col(f.g.color); g.globalAlpha = faded ? .3 : .9;
+    const r = f.gi === 3 ? 1.6 : 2.2;
+    g.fillRect(X(mm) - r, yT + 4 + band * (f.gi + 0.1 + 0.8 * f.lane) - r, 2 * r, 2 * r);
+  });
+  g.globalAlpha = 1;
+  // group names in the margin of the nerve
+  g.textBaseline = 'middle'; g.font = '11px ' + font;
+  GROUPS.forEach((gr, i) => { g.fillStyle = col(gr.color); g.fillText(gr.name, X(LEN) + 4 > W - 20 ? X(0) + 4 : X(LEN) + 4, yT + 4 + band * (i + 0.5)); });
+  g.font = '12px ' + font;
+  // electrodes: hooks from above
+  const hook = (mm, color, label) => { const x = X(mm); g.strokeStyle = color; g.lineWidth = 2; g.beginPath(); g.moveTo(x, 16); g.lineTo(x, yT - 2); g.stroke();
+    g.fillStyle = color; g.textBaseline = 'bottom'; g.textAlign = 'center'; fillSub(g, label, x, 14, 'center'); g.textAlign = 'left'; };
+  const flash = t < 0.15;                               // the shock
+  hook(0, C.na, '+'); hook(S0, C.na, 'S −');
+  hook(S0 + p.L, C.ink, 'R_1'); hook(S0 + p.L + p.gap, C.muted, 'R_2');
+  if (flash) { g.fillStyle = C.na; g.globalAlpha = .35; g.beginPath(); g.arc(X(S0), (yT + yB) / 2, 14, 0, 2 * Math.PI); g.fill(); g.globalAlpha = 1; }
+  // the distance L
+  const yd = yB + 34; g.strokeStyle = C.muted; g.lineWidth = 1; g.beginPath(); g.moveTo(X(S0), yd); g.lineTo(X(S0 + p.L), yd); g.moveTo(X(S0), yd - 4); g.lineTo(X(S0), yd + 4); g.moveTo(X(S0 + p.L), yd - 4); g.lineTo(X(S0 + p.L), yd + 4); g.stroke();
+  g.fillStyle = C.muted; g.textBaseline = 'top'; g.textAlign = 'center'; g.fillText('L = ' + p.L + ' mm', (X(S0) + X(S0 + p.L)) / 2, yd + 4); g.textAlign = 'left';
+  g.textAlign = 'right'; g.fillText('t = ' + fmtMs(t), W - 8, 4); g.textAlign = 'left';
+}
+function draw2() {
+  if ($('pane-nv').hidden) return;
+  A2.dirty = false;
+  drawNerve();
+  const tr = A2.trace, bi = tr.p.mode === 'bi';
+  const yf = Float64Array.from(tr.fast.y, (v, i) => v + tr.art[i]);
+  const top = Math.max(10, ...tr.fast.y.map(Math.abs)) * 1.15;
+  const linesF = [];
+  if (A2.prev) linesF.push({ x: TF, y: A2.prev.fy, color: '--muted', w: 1.2, alpha: .45, full: true });
+  GROUPS.slice(0, 3).forEach((g, i) => linesF.push({ x: TF, y: tr.fast.by[i], color: g.color, w: 1, alpha: .6 }));
+  linesF.push({ x: TF, y: yf, color: '--ink', w: 1.8 });
+  plot($('cvFast'), { h: 230, x: [0, 8], y: [bi ? -top : -top * 0.25, top], ylab: '% of full A wave', xlab: 'time after the shock (ms)', upto: A2.t, cursor: A2.t, lines: linesF, hlines: [{ y: 0, color: '--line' }] });
+  const ys = Float64Array.from(tr.slow.y, (v, i) => v + 19 * tr.slow.by[3][i]);
+  const ctop = Math.max(10, ...ys.map(Math.abs)) * 1.12;
+  const linesS = [];
+  if (A2.prev) linesS.push({ x: TS, y: A2.prev.sy, color: '--muted', w: 1.2, alpha: .45, full: true });
+  linesS.push({ x: TS, y: Float64Array.from(tr.slow.by[3], v => 20 * v), color: '--ca', w: 1, alpha: .6 }, { x: TS, y: ys, color: '--ink', w: 1.5 });
+  plot($('cvSlow'), { h: 230, x: [0, T2], y: [bi ? -ctop : -ctop * 0.12, ctop], ylab: '% (C wave × 20)', xlab: 'time after the shock (ms)', upto: A2.t, cursor: A2.t, lines: linesS, hlines: [{ y: 0, color: '--line' }] });
+  const latTxt = lat => GROUPS.map((g, i) => `<span>${g.name} peak <b>${isFinite(lat[i]) ? fmtMs(lat[i]) : '—'}</b></span>`).join('');
+  $('reads2').innerHTML = `<span class="rlab">This sweep, ${tr.p.L} mm</span><span>Fibres firing <b>${tr.fast.count} of ${FIBRES.length}</b></span>` + latTxt(tr.lat);
+  $('reads2p').innerHTML = A2.prev ? `<span class="rlab">Sweep before, ${A2.prev.L} mm</span>` + latTxt(A2.prev.lat) : '';
+}
+
+// ---------- the loop: both simulations; frames.js slows it and lets it sleep ----------
+let last = performance.now();
+function step(A, dtr, finish) {
+  if (A.running && A.t < A.T) { A.t = Math.min(A.T, A.t + A.speed * dtr); A.dirty = true; if (A.t >= A.T) finish(); }
+}
+A1.T = T1; A2.T = T2;
+function loop(now) {
+  const dtr = Math.min(0.1, (now - last) / 1000); last = now;
+  step(A1, dtr, finish1); step(A2, dtr, finish2);
+  if (A1.dirty) draw1();
+  if (A2.dirty) draw2();
+  log1.draw(); log2.draw();
+  requestAnimationFrame(loop);
+}
+const markAll = () => { A1.dirty = A2.dirty = true; log1.mark(); log2.mark(); drawCalc(); };
+colorHooks.push(markAll);
+window.addEventListener('resize', markAll);
+if (document.fonts) document.fonts.ready.then(markAll);
+read1(); read2(); compute1(); compute2();
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { A1.running = A2.running = false; $('axPlay').textContent = $('nvPlay').textContent = 'Play'; }
+Frames.sim(() => A1.running, 'axPlay', ['axFire']);   // frames.js: starts paused, pauses itself when left alone
+Frames.sim(() => A2.running, 'nvPlay', ['nvFire']);
+requestAnimationFrame(loop);
+
+// ---------- conduction velocity calculator ----------
+const K = { L1: 40, t1: 1, L2: 80, t2: 1.4 };
+const kOut = { kL1: () => K.L1 + ' mm', kT1: () => fmtMs(K.t1), kL2: () => K.L2 + ' mm', kT2: () => fmtMs(K.t2) };
+function readK() { K.L1 = +$('kL1').value; K.L2 = +$('kL2').value; K.t1 = logv('kT1'); K.t2 = logv('kT2'); Object.keys(kOut).forEach(id => $(id + 'o').textContent = kOut[id]()); }
+function writeK() { $('kL1').value = K.L1; $('kL2').value = K.L2; $('kT1').value = Math.log10(K.t1); $('kT2').value = Math.log10(K.t2); readK(); }
+['kL1', 'kT1', 'kL2', 'kT2'].forEach(id => $(id).addEventListener('input', () => { readK(); drawCalc(); }));
+function groupOf(v) {
+  if (!isFinite(v) || v <= 0) return { name: '—', d: NaN };
+  if (v >= 70) return { name: 'Aα', d: v / 6, my: true };
+  if (v >= 35) return { name: 'Aβ', d: v / 6, my: true };
+  if (v >= 5) return { name: 'Aδ', d: v / 6, my: true };
+  if (v >= 0.5 && v <= 2.5) return { name: 'C', d: (v / 1.7) ** 2, my: false };
+  return { name: 'between groups', d: NaN };
+}
+function drawCalc() {
+  const dL = K.L2 - K.L1, dt = K.t2 - K.t1, v = dL / dt, ok = dL !== 0 && dt !== 0 && v > 0;
+  const t0 = ok ? K.t1 - K.L1 / v : NaN, gp = groupOf(ok ? v : NaN);
+  $('kV').textContent = ok ? fmt3(v) + ' m/s' : '—';
+  $('kNaive').textContent = fmt3(K.L1 / K.t1) + ' m/s';
+  $('kT0').textContent = ok ? fmt3(t0) + ' ms' : '—';
+  $('kGroup').textContent = ok ? gp.name : '—';
+  $('kD').textContent = ok && isFinite(gp.d) ? fmt3(gp.d) + ' µm' + (gp.my ? ' (myelinated)' : ' (bare)') : '—';
+  $('kFormula').innerHTML = ok
+    ? `θ = (L<sub>2</sub> − L<sub>1</sub>) / (t<sub>2</sub> − t<sub>1</sub>) = (${K.L2} − ${K.L1}) mm / (${fmt3(K.t2)} − ${fmt3(K.t1)}) ms = <span class="res">${fmt3(v)} m/s</span>`
+    : (dL === 0 ? 'Record at two different distances.' : 'The farther recording must come later: check the latencies.');
+  const xmax = Math.max(K.L1, K.L2) * 1.15, ymax = Math.max(K.t1, K.t2) * 1.15, ymin = Math.min(0, ok ? t0 : 0);
+  const lines = ok ? [{ x: [0, xmax], y: [t0, t0 + xmax / v], color: '--accent', w: 1.5, full: true }] : [];
+  plot($('kChart'), { square: true, x: [0, xmax], y: [ymin - 0.05 * (ymax - ymin), ymax], xlab: 'distance from the stimulus (mm)', ylab: 'latency (ms)', lines,
+    dots: [{ x: K.L1, y: K.t1 }, { x: K.L2, y: K.t2 }].concat(ok ? [{ x: 0, y: t0, color: '--muted', r: 3 }] : []),
+    labels: ok ? [{ x: xmax * 0.03, y: t0, text: 'delay ' + fmt3(t0) + ' ms', color: '--muted' }] : [] });
+}
+document.querySelectorAll('[data-kfill]').forEach(b => b.addEventListener('click', () => {
+  const gi = +b.dataset.kfill, rows = log2.rows;
+  let a = null, c = rows[rows.length - 1];
+  for (let i = rows.length - 2; i >= 0; i--) if (rows[i].L !== c.L) { a = rows[i]; break; }
+  if (!c || !a) { $('kFillNote').textContent = 'Record the whole nerve at two different distances first (6 · Two distances does it for you).'; return; }
+  if (!isFinite(a['lat' + gi]) || !isFinite(c['lat' + gi])) { $('kFillNote').textContent = `No ${GROUPS[gi].name} wave in one of those sweeps: try a stronger shock.`; return; }
+  [a, c] = a.L < c.L ? [a, c] : [c, a];
+  Object.assign(K, { L1: a.L, t1: a['lat' + gi], L2: c.L, t2: c['lat' + gi] }); writeK(); drawCalc();
+  $('kFillNote').textContent = `${GROUPS[gi].name} wave peaks from the sweeps at ${a.L} and ${c.L} mm.`;
+}));
+
+// ---------- numbers in the theory, from the model itself ----------
+{
+  const set = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+  const d = 10, th = theta(d), ri = 4 * RHO_I / (Math.PI * (d * 1e-6) ** 2);   // Ω/m
+  let Iin = 0; SPIKE.S2.forEach(s => { const im = s * 1e3 / (ri * th * th); if (im < 0) Iin -= im * th * SPIKE.dt * 1e-3; });   // A
+  set('nI10', fmt(Iin * 1e9, 0)); set('nPhiPt', fmt(3 * Iin / (4 * Math.PI * 50e-6) * 1e6, 0));
+  const pp = h => summary1(extracellular(d, h, 3));
+  const s50 = pp(50); set('nPhi10', fmt(s50.neg, 0)); set('nD50', fmt3(s50.pp)); set('nD300', fmt3(pp(300).pp)); set('nD1000', fmt3(pp(1000).pp));
+  const base = { stim: 120, mode: 'mono', gap: 5, lido: 0, demy: 0 }, a = summary2({ ...base, L: 40 }).lat[0], b = summary2({ ...base, L: 80 }).lat[0];
+  set('nT40', a.toFixed(2)); set('nT80', b.toFixed(2)); set('nDT', (b - a).toFixed(2)); set('nCV', fmt(40 / (b - a), 0)); set('nNaive', fmt(40 / a, 0)); set('nT0', (a - (b - a)).toFixed(2));
+  Object.assign(K, { L1: 40, t1: +a.toFixed(3), L2: 80, t2: +b.toFixed(3) }); writeK(); drawCalc();
+}
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    A1.dirty = A2.dirty = true; log1.mark(); log2.mark(); drawCalc();
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they behave exactly like using them.
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const one = o => {
+    if (o.d != null) set('s1D', Math.log10(o.d));
+    if (o.h != null) set('s1H', Math.log10(o.h));
+    if (o.fluid) setFluid(o.fluid);
+    if (o.noise != null) $('s1Noise').checked = o.noise;
+    read1(); compute1();
+    showTab($('tab-ax')); $('axFire').click(); $('ax-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const nerve = (o, fire = true) => {
+    const q = { stim: 120, L: 40, lido: 0, demy: 0, ...o };
+    set('s2Stim', Math.log10(q.stim)); set('s2L', q.L); set('s2Lido', q.lido); set('s2Demy', q.demy);
+    setMode(q.mode || 'mono'); if (q.gap) set('s2Gap', q.gap);
+    read2(); compute2();
+    if (fire) { showTab($('tab-nv')); $('nvFire').click(); $('nv-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  };
+  const TRY = {
+    near: () => one({ d: 10, h: 50, fluid: 'tissue', noise: false }),
+    far: () => one({ h: 300 }),
+    thin: () => one({ d: 1, h: 50, fluid: 'tissue', noise: true }),
+    saline: () => one({ d: 10, h: 50, fluid: 'saline', noise: false }),
+    weak: () => nerve({ stim: 1.6 }),
+    strong: () => nerve({}),
+    bi: () => nerve({ mode: 'bi', gap: 5 }),
+    // a finished sweep at 40 mm first (it becomes the faint one), then a new one at 80 mm
+    two: () => { nerve({ L: 40 }, false); A2.t = A2.T; finish2(); nerve({ L: 80 }); },
+    lido: () => nerve({ lido: 45 }),
+    demy: () => nerve({ demy: 60 }),
+  };
+  document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => TRY[b.dataset.try]()));
+})();
+</script>
+<!-- Fill-in boxes for every slider -->
+<script src="sliders.js"></script>
+</body>
+</html>

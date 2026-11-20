@@ -135,9 +135,7 @@ canvas{display:block;width:100%;height:auto;border-radius:6px}
 .runbar .swline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:var(--muted)}
 .runbar .swline[hidden]{display:none}
 .runbar input[type=number]{width:68px;font:13px var(--font-mono);padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
-.cellbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
-.cellbar select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
-.cellbar .caption{flex:1 1 320px}
+.cellsel{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
@@ -206,6 +204,10 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 .chartcol{display:flex;flex-direction:column;gap:6px;min-width:0}
 .segrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 @media (max-width:900px){.cgrid.even{grid-template-columns:1fr}}
+/* the clamp's square charts: each no wider than it is drawn, centred in its cell; titles of one height, so the
+   charts in a row line up */
+.qgrid > .chartcol{width:100%;max-width:600px;justify-self:center}
+.qgrid .charthead{min-height:31px}
 .row.wide2{grid-template-columns:128px minmax(0,1fr) 104px}
 .sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
 #neu,#capcv,#hhcirc{touch-action:none}
@@ -255,11 +257,6 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <button type="button" role="tab" id="tab-circlook" aria-controls="pane-circlook" aria-selected="false" tabindex="-1">What to look for</button>
     </div>
     <div class="stage" role="tabpanel" id="pane-circ" aria-labelledby="tab-circ">
-      <div class="cellbar">
-        <label for="hhCell" class="runlab">Cell</label>
-        <select id="hhCell"></select>
-        <p class="caption" id="hhCellNote"></p>
-      </div>
       <div class="btns" role="group" aria-label="Na⁺ channels">
         <button class="chip" data-mode="sw" aria-pressed="false">Na⁺ channels on a switch (lesson 2)</button>
         <button class="chip" data-mode="nav" aria-pressed="false">Voltage-gated Na⁺</button>
@@ -338,7 +335,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
           <span class="hint">conductance when the switch is closed</span></div>
         <div class="row" data-for="nav hh"><label for="hGNaM"><i class="dot na"></i>ḡ<sub>Na</sub></label><input type="range" id="hGNaM" min="0" max="150" step="1" value="120"><output id="hGNaMo" for="hGNaM"></output>
           <span class="hint">conductance if every gate were open</span></div>
-        <div class="row"><label for="hGNaL"><i class="dot na"></i>g<sub>Na,leak</sub></label><input type="range" id="hGNaL" min="0" max="0.2" step="0.005" value="0.03"><output id="hGNaLo" for="hGNaL"></output>
+        <div class="row"><label for="hGNaL"><i class="dot na"></i>g<sub>Na,leak</sub></label><input type="range" id="hGNaL" min="0" max="0.2" step="0.005" value="0.06"><output id="hGNaLo" for="hGNaL"></output>
           <span class="hint">a few always open, as in lesson 2</span></div>
         <div class="row"><label for="hENa"><i class="dot na"></i>E<sub>Na</sub></label><input type="range" id="hENa" min="0" max="90" step="1" value="60"><output id="hENao" for="hENa"></output></div>
       </div>
@@ -355,6 +352,11 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <label class="check" for="hTTX"><input type="checkbox" id="hTTX">TTX (tetrodotoxin): blocks the voltage-gated Na⁺ channels</label>
         <label class="check" for="hTEA" data-for="hh"><input type="checkbox" id="hTEA">TEA (tetraethylammonium): blocks the voltage-gated K⁺ channels</label>
         <span class="hint">the leak channels are not affected</span>
+      </div>
+      <div class="sgroup">
+        <label class="gtitle" for="hhCell">Cell</label>
+        <select id="hhCell" class="cellsel"></select>
+        <p class="caption" id="hhCellNote"></p>
       </div>
       <div class="sgroup">
         <span class="gtitle">Cl⁻ channels</span>
@@ -378,7 +380,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <button type="button" role="tab" id="tab-clamplook" aria-controls="pane-clamplook" aria-selected="false" tabindex="-1">What to look for</button>
     </div>
     <div class="stage" role="tabpanel" id="pane-clamp" aria-labelledby="tab-clamp">
-      <div class="cgrid even">
+      <div class="cgrid even qgrid">
         <div class="ccol">
           <div class="segrow">
             <span class="sect-title">Recording</span>
@@ -399,16 +401,20 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
             <span class="swline" data-qfor="cc" hidden>Sweep I<sub>inj</sub> from <input type="number" id="qSIa" min="-50" max="300" step="5" value="0" aria-label="Lowest injected current, µA/cm²"> to <input type="number" id="qSIb" min="-50" max="300" step="5" value="70" aria-label="Highest injected current, µA/cm²"> µA/cm² in <input type="number" id="qSIs" min="2" max="25" step="1" value="8" aria-label="Number of steps"> steps</span>
           </div>
           <p class="caption" id="qCap"></p>
-          <div class="chartcol">
-            <div class="charthead"><p class="sect-title" id="qIVTitle">Peak current vs step voltage</p>
-              <div class="btns" role="group" aria-label="Axes"><button class="chip" data-qiv="iv" aria-pressed="true">I–V</button><button class="chip" data-qiv="vi" aria-pressed="false">V–I</button></div></div>
-            <canvas id="qIV" style="max-width:440px;margin:0 auto" aria-label="One point per trace: the peak current against the step voltage in voltage clamp, or the peak voltage against the injected current in current clamp"></canvas>
-          </div>
         </div>
-        <div class="ccol">
-          <div class="chartcol"><p class="sect-title">Membrane voltage</p><canvas id="qVC" aria-label="Membrane voltage over time"></canvas></div>
-          <div class="chartcol"><p class="sect-title" id="qITitle">Membrane current I<sub>ion</sub> = g<sub>ion</sub>(V − E<sub>ion</sub>)</p><canvas id="qIC" aria-label="Membrane current over time"></canvas></div>
-          <div class="chartcol"><p class="sect-title" id="qGTitle">Conductances g<sub>Na</sub> and g<sub>K</sub></p><canvas id="qGC" aria-label="Na⁺ and K⁺ conductance over time"></canvas></div>
+        <!-- square charts, in rows that go together: the clamp and its voltage; the current over time and its I–V;
+             the conductances over time and their G–V -->
+        <div class="chartcol"><div class="charthead"><p class="sect-title">Membrane voltage</p></div><canvas id="qVC" aria-label="Membrane voltage over time"></canvas></div>
+        <div class="chartcol"><div class="charthead"><p class="sect-title" id="qITitle">Membrane current I<sub>ion</sub> = g<sub>ion</sub>(V − E<sub>ion</sub>)</p></div><canvas id="qIC" aria-label="Membrane current over time"></canvas></div>
+        <div class="chartcol">
+          <div class="charthead"><p class="sect-title" id="qIVTitle">Peak current vs step voltage</p>
+            <div class="btns" role="group" aria-label="Axes"><button class="chip" data-qiv="iv" aria-pressed="true">I–V</button><button class="chip" data-qiv="vi" aria-pressed="false">V–I</button></div></div>
+          <canvas id="qIV" aria-label="One point per trace: the peak current against the step voltage in voltage clamp, or the peak voltage against the injected current in current clamp"></canvas>
+        </div>
+        <div class="chartcol"><div class="charthead"><p class="sect-title" id="qGTitle">Conductances g<sub>Na</sub> and g<sub>K</sub></p></div><canvas id="qGC" aria-label="Na⁺ and K⁺ conductance over time"></canvas></div>
+        <div class="chartcol" data-qfor="vc">
+          <div class="charthead"><p class="sect-title">Peak conductance vs step voltage</p></div>
+          <canvas id="qGV" aria-label="One point per voltage-clamp trace: the highest Na⁺ conductance and the K⁺ conductance at the end of the trace, against the step voltage"></canvas>
         </div>
       </div>
     </div>
@@ -421,6 +427,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
         <li><b>Charts:</b> each Fire adds a trace, labelled with its command (V<sub>C</sub> or I<sub>inj</sub>), until you press Clear. <b>Sweep</b> does this for you: voltage clamp steps V<sub>C</sub>, current clamp steps I<sub>inj</sub>, from the <b>lowest</b> to the <b>highest</b> value in the <b>number of steps</b> you set, evenly spaced (2 to 25 traces). Each mode's settings show only while that mode is on; the injected-current axis follows them. One trace runs, then the next. With more than one trace, the current chart shows the total membrane current and the conductance chart shows g<sub>Na</sub> solid and g<sub>K</sub> dashed.</li>
         <li><b>Time:</b> each trace is 2 ms; the step comes at 0.2 ms.</li>
         <li><b>I–V chart</b> (under the circuit): one point per trace, built up as you fire; Sweep fills in the curve, and the ring marks the trace running now. In voltage clamp each point is the total current the amplifier records, read at two times and marked on the current chart: orange, early, when the Na⁺ current peaks (mostly Na⁺); purple squares, late, at the end of the trace (mostly K⁺). The early current is most inward in the middle, shrinks near E<sub>Na</sub> (dashed) and turns outward beyond it. In current clamp the highest voltage is marked on the voltage chart. Each current-clamp point is the highest voltage the trace reached: below threshold it creeps up with the current, at threshold it jumps to a full spike, and more current hardly changes it (all-or-none). <b>I–V / V–I</b> swaps the axes.</li>
+        <li><b>G–V chart</b> (voltage clamp only): the same traces, read off the conductance chart instead, where the points are marked: orange, the highest g<sub>Na</sub>; purple squares, g<sub>K</sub> at the end of the trace. Conductance is current without the driving force (g = I / (V − E)), so it shows how many channels each voltage opens: both curves rise in an S from near zero and never turn negative, even past E<sub>Na</sub>, where the current flips. Its height fits the points you have.</li>
       </ul>
     </div>
     <div class="help" role="tabpanel" id="pane-clamplook" aria-labelledby="tab-clamplook" hidden>
@@ -574,7 +581,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
     <div class="deriv">
       <p class="gist"><b>In plain words:</b> Rest; a push past threshold; Na⁺ rushes in and the voltage shoots up; the Na⁺ channels plug themselves and K⁺ channels open, which brings the voltage back down, briefly below rest; then a short recovery, the refractory period, when firing again is harder or impossible.</p>
       <h3>1. Rest</h3>
-      <p>Nearly all m gates are shut and most h gates are open, ready. The leaks hold V near −76 mV: mostly the K⁺ leak, pulling toward E<sub>K</sub>, with a little Na⁺ leak pulling it some 10 mV above.</p>
+      <p>Nearly all m gates are shut and most h gates are open, ready. The leaks hold V near −70 mV: mostly the K⁺ leak, pulling toward E<sub>K</sub>, with a little Na⁺ leak pulling it some 15 mV above.</p>
       <h3>2. The stimulus</h3>
       <p>The electrode's current charges the capacitor, as in lesson 2: V rises at I/C.</p>
       <h3>3. The rising phase</h3>
@@ -677,7 +684,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       </div>
       <div class="gion">
         <div class="gh"><i class="dot na"></i> Na⁺: leak and battery</div>
-        <div class="gr"><label for="kGNa">g<sub>Na,leak</sub></label><input type="range" id="kGNa" min="0" max="0.2" step="0.005" value="0.03"><output id="kGNao" for="kGNa"></output></div>
+        <div class="gr"><label for="kGNa">g<sub>Na,leak</sub></label><input type="range" id="kGNa" min="0" max="0.2" step="0.005" value="0.06"><output id="kGNao" for="kGNa"></output></div>
         <div class="gr"><label for="kENa">E<sub>Na</sub></label><input type="range" id="kENa" min="0" max="90" step="1" value="60"><output id="kENao" for="kENa"></output></div>
         <span class="caption">more Na⁺ leak moves rest up toward threshold</span>
       </div>
@@ -1158,7 +1165,7 @@ const fmtG = (v, d = 2) => v.toFixed(d) + ' mS/cm²';
   };
   const NAME = { stim: 'electrode', na: 'Na⁺', k: 'K⁺ gated', kl: 'K⁺ leak', nal: 'Na⁺ leak', cl: 'Cl⁻ leak' };
   const COL = { stim: 'ink', na: 'na', k: 'k', kl: 'k', nal: 'na', cl: 'cl' };
-  const p = { C: 1, gKL: 0.5, gNaL: 0.03, gCl: 0.1, gNaSw: 0.7, gNaM: 120, gKM: 36, ttx: false, tea: false, I: 100, dur: 0.5, E: { K: -86, Na: 60, Cl: -70, syn: 0 } };
+  const p = { C: 1, gKL: 0.5, gNaL: 0.06, gCl: 0.1, gNaSw: 0.7, gNaM: 120, gKM: 36, ttx: false, tea: false, I: 100, dur: 0.5, E: { K: -86, Na: 60, Cl: -70, syn: 0 } };
   let mode = 'hh', sw = false, pulses = [], speed = 1.3, running = true, view = 'g', sampleAcc = 0, peak = -Infinity;
   let s = null, last = null, rest = null, thr = NaN;
   const hist = { t: [], V: [], gNa: [], gK: [], gL: [], iStim: [], iNa: [], iK: [], iKL: [], iCl: [], iIon: [], iC: [], m: [], h: [], n: [], on: [] };
@@ -1826,17 +1833,17 @@ function kTags(c, list) {
   const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
   const view = v => { const b = document.querySelector(`[data-hview="${v}"]`); if (!b.hidden) b.click(); };
   const toCircuit = () => { showTab($('tab-circ')); if ($('hhPlay').textContent.trim() === 'Play') $('hhPlay').click(); $('circ-card').scrollIntoView({ behavior: 'smooth', block: 'center' }); };
-  const DEF = { hI: 100, hDur: 0.5, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.03, hGCl: 0.1, hECl: -70, hENa: 60, hEK: -86, hC: 1 };
+  const DEF = { hI: 100, hDur: 0.5, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.06, hGCl: 0.1, hECl: -70, hENa: 60, hEK: -86, hC: 1 };
   // ---------- the cell menu, as on the Action potential page ----------
   // Batteries from each cell's own concentrations (mM, inside / outside) at its own temperature. T: the temperature the
   // gates run at (°C); kShift: the K⁺ gate's shift (mV), 10 in the mammalian neuron and 0 in Hodgkin and Huxley's
   // squid fits. ḡ, leak and C in mS/cm² and µF/cm².
   const CELLS = [
-    { id: 'mammal', name: 'Typical mammalian neuron', T: 25, kShift: 10, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.03, hGCl: 0.1, hECl: -70, hENa: 60, hEK: -86, hC: 1,
+    { id: 'mammal', name: 'Typical mammalian neuron', T: 25, kShift: 10, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.06, hGCl: 0.1, hECl: -70, hENa: 60, hEK: -86, hC: 1,
       note: 'K⁺ 140 inside, 5 outside; Na⁺ 14 inside, 145 outside. The values the rest of this page uses. Gates at 25 °C, with the K⁺ gate moved 10 mV more positive, as in mammalian neurons.' },
-    { id: 'squid', name: 'Squid giant axon', T: 6.3, kShift: 0, hGNaM: 120, hGKM: 36, hGKL: 0.3, hGNaL: 0.01, hGCl: 0.1, hECl: -70, hENa: 50, hEK: -77, hC: 1,
+    { id: 'squid', name: 'Squid giant axon', T: 6.3, kShift: 0, hGNaM: 120, hGKM: 36, hGKL: 0.3, hGNaL: 0.06, hGCl: 0.1, hECl: -70, hENa: 50, hEK: -77, hC: 1,
       note: 'Where Hodgkin and Huxley measured these channels. Seawater outside is saltier than blood, but the K⁺ inside is higher still (400 vs 20 mM), so E_K is a little less negative and the cell rests higher. Gates at 6.3 °C, the temperature of the experiments, exactly as Hodgkin and Huxley fitted them: everything takes about 8× longer.' },
-    { id: 'frog', name: 'Frog nerve fibre', T: 20, kShift: 0, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.03, hGCl: 0.1, hECl: -70, hENa: 61, hEK: -98, hC: 1,
+    { id: 'frog', name: 'Frog nerve fibre', T: 20, kShift: 0, hGNaM: 120, hGKM: 36, hGKL: 0.5, hGNaL: 0.085, hGCl: 0.1, hECl: -70, hENa: 61, hEK: -98, hC: 1,
       note: 'In frog Ringer’s solution at room temperature: very little K⁺ outside (2.5 mM), so E_K is far more negative and the cell rests further from threshold. Gates at 20 °C, with Hodgkin and Huxley’s squid kinetics: about 1.7× slower than the mammalian neuron here.' },
   ];
   const CELL_IDS = ['hGNaM', 'hGKM', 'hGKL', 'hGNaL', 'hGCl', 'hECl', 'hENa', 'hEK', 'hC'];
@@ -1845,9 +1852,12 @@ function kTags(c, list) {
   let applying = false;
   const quietly = f => { applying = true; try { f(); } finally { applying = false; } };
   const showCell = c => { cellSel.value = c.id; cellNote.innerHTML = c.note.replace(/E_(K|Na)/g, 'E<sub>$1</sub>'); };
+  // a new cell starts at its own rest: the kinetics reset the circuit before the cell's leaks and E's are set, and
+  // a membrane left where the old cell rested can be kicked over threshold (squid, from the mammal's gates)
+  const restart = () => HH_CIRC.setMode(HH_CIRC.mode);
   function applyCell(id) {
     const c = CELLS.find(c => c.id === id); if (!c) return;
-    setKinetics(c.T, c.kShift); quietly(() => CELL_IDS.forEach(k => set(k, c[k]))); showCell(c);
+    setKinetics(c.T, c.kShift); quietly(() => CELL_IDS.forEach(k => set(k, c[k]))); showCell(c); restart();
   }
   CELL_IDS.forEach(k => $(k).addEventListener('input', () => {
     if (applying || cellSel.value === 'custom') return;
@@ -1857,7 +1867,8 @@ function kTags(c, list) {
   showCell(CELLS[0]);
   // the try-it buttons start from the typical neuron, as their text describes
   const defaults = (except = {}) => { setKinetics(CELLS[0].T, CELLS[0].kShift); quietly(() => Object.entries({ ...DEF, ...except }).forEach(([k, v]) => set(k, v))); drug('hTTX', false); drug('hTEA', false); showCell(CELLS[0]);
-    if (Object.keys(except).some(k => CELL_IDS.includes(k))) { cellSel.value = 'custom'; cellNote.textContent = 'The typical neuron, with the change the button made.'; } };
+    if (Object.keys(except).some(k => CELL_IDS.includes(k))) { cellSel.value = 'custom'; cellNote.textContent = 'The typical neuron, with the change the button made.'; }
+    restart(); };
   const drug = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
   const stim = (mode, over, v = 'g') => { HH_CIRC.setMode(mode); defaults(over); view(v); toCircuit(); HH_CIRC.fire(); };
   document.querySelectorAll('[data-hhtry]').forEach(b => b.addEventListener('click', () => {
@@ -1866,7 +1877,7 @@ function kTags(c, list) {
     else if (what === 'nav') stim('nav');
     else if (what === 'hh') stim('hh');
     else if (what === 'hhgates') stim('hh', {}, 'n');
-    else if (what === 'weak') stim('hh', { hI: 30 });
+    else if (what === 'weak') stim('hh', { hI: 20 });   // threshold for 0.5 ms is about 24 µA/cm²
     else if (what === 'ttx') { HH_CIRC.setMode('hh'); defaults({ hI: 150 }); drug('hTTX', true); view('g'); toCircuit(); HH_CIRC.fire(); }
     else if (what === 'refr') { HH_CIRC.setMode('hh'); defaults(); view('g'); toCircuit(); HH_CIRC.fire([0, 0.8]); }
     else if (what === 'refriv') { set('kT', 0.5); showTab($('tab-kiv')); $('thr-calc').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -1890,7 +1901,7 @@ function kTags(c, list) {
 // =====================================================================================
 (() => {
   const P = { mode: 'vc', Vh: -80, Vc: 0, Ic: 20, gNaM: GNA, gKM: GK, ttx: false, tea: false, speed: 0.5 };
-  const LEAK = { C: 1, gKL: 0.5, gNaL: 0.03, gCl: 0.1 };   // the circuit's defaults
+  const LEAK = { C: 1, gKL: 0.5, gNaL: 0.06, gCl: 0.1 };   // the circuit's defaults
   const patch = () => ({ ...LEAK, gNaM: P.ttx ? 0 : P.gNaM, gKM: P.tea ? 0 : P.gKM });   // TTX and TEA block the gated channels only
   let restKey = '', restMemo = null;   // the resting state, worked out again only when ḡ or the kinetics change
   const restState = () => { const k = P.gNaM + ',' + P.gKM + ',' + P.ttx + ',' + P.tea + ',' + KIN.T; if (k !== restKey) { restKey = k; restMemo = mkPatch(patch()); } return restMemo; };
@@ -1978,7 +1989,10 @@ function kTags(c, list) {
       amp: { x: 530, mode: P.mode, Vc: s.V, I: Ia } });
   }
   // ---------- charts ----------
-  const chs = { V: setupCanvas($('qVC'), CHW, 220), I: setupCanvas($('qIC'), CHW, 220), g: setupCanvas($('qGC'), CHW, 220) };
+  // All five charts are the same size, with square plots: the canvas less drawChart's margins (L, R, T, B), which
+  // the I–V and G–V charts use too, so the plots in a row line up.
+  const QW = 600, SQ = { L: 62, R: 84, T: 14, B: 42 }, QH = QW - SQ.L - SQ.R + SQ.T + SQ.B;
+  const chs = { V: setupCanvas($('qVC'), QW, QH), I: setupCanvas($('qIC'), QW, QH), g: setupCanvas($('qGC'), QW, QH) };
   const cmdColor = (mode, v) => { const { a, b } = SW[mode], lo = Math.min(a, b), hi = Math.max(a, b); return mixc(C.pos, C.neg, hi > lo ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 1); };
   const cmdLabel = o => (o.mode === 'vc' ? 'V_C ' + fmtSigned(o.cmd, 0) : 'I_inj ' + fmtI(o.cmd)).replace(/ mV| µA\/cm²/, '');
   // the injected current's axis follows the commands you set (the sweep's span and I_C), not the traces
@@ -1990,7 +2004,7 @@ function kTags(c, list) {
     const xs = all.length ? Array.from(all[0].t) : [0, W];
     const n = o => o === tr ? Math.min(o.N, Math.floor(tc / o.dt)) + 1 : o.N + 1;
     const col = o => many ? cmdColor(o.mode, o.cmd) : null, wid = o => o === tr ? 2.4 : 1.6;
-    const base = { xs, x0: 0, x1: W, xlabel: 'time (ms)', h: 220, r: 80 };
+    const base = { xs, x0: 0, x1: W, xlabel: 'time (ms)', w: QW, h: QH, r: SQ.R };
     const vc = P.mode === 'vc', rest = restState().V;
     // voltage
     drawChart(chs.V, { ...base, fixed: [-110, 60], ylabel: 'mV',
@@ -2010,6 +2024,11 @@ function kTags(c, list) {
     const Gs = all.flatMap(o => [{ ys: o.gNa, n: n(o), color: col(o) || C.na, width: wid(o), label: many ? '' : 'g_Na' },
       { ys: o.gK, n: n(o), color: col(o) || C.k, width: wid(o), dash: many ? [5, 4] : undefined, label: many ? cmdLabel(o) : 'g_K' }]);
     drawChart(chs.g, { ...base, fixed: [0, 60], ylabel: 'mS/cm²', series: Gs });
+    if (vc) {   // the G–V chart's points, marked on the conductances
+      const gG = chartGeom({ ...base, fixed: [0, 60] }, chs.g.canvas);
+      all.forEach(o => { const q = pointOf(o); if (!q) return;
+        markPoint(chs.g, gG, q.tG, q.gna, C.na); if (q.gk != null) markPoint(chs.g, gG, q.tK, q.gk, C.k, true); });
+    }
     $('qITitle').innerHTML = vc ? 'Membrane current I<sub>ion</sub> = g<sub>ion</sub>(V − E<sub>ion</sub>)' : 'Injected current I<sub>inj</sub> (into the cell +)';
     $('qGTitle').innerHTML = many ? 'Conductances: g<sub>Na</sub> solid, g<sub>K</sub> dashed' : 'Conductances g<sub>Na</sub> and g<sub>K</sub>';
   }
@@ -2026,48 +2045,71 @@ function kTags(c, list) {
     // voltage clamp: the total current, as the amplifier records it, early (when the Na⁺ current peaks: mostly Na⁺) and
     // late (at the end of the trace: mostly K⁺), as Hodgkin and Huxley read their records; tNa, tK: when, to mark them
     if (o.mode === 'vc') {
-      let ip = i0; for (let i = i0; i <= n; i++) if (Math.abs(o.INa[i]) > Math.abs(o.INa[ip])) ip = i;
-      return { cmd: o.cmd, na: o.Itot[ip], tNa: o.t[ip], k: n === o.N ? o.Itot[o.N] : null, tK: o.t[o.N] };
+      // and for the G–V chart, the highest g_Na (gna, at tG) and g_K at the end (gk)
+      let ip = i0, jg = i0;
+      for (let i = i0; i <= n; i++) { if (Math.abs(o.INa[i]) > Math.abs(o.INa[ip])) ip = i; if (o.gNa[i] > o.gNa[jg]) jg = i; }
+      const end = n === o.N;
+      return { cmd: o.cmd, na: o.Itot[ip], tNa: o.t[ip], k: end ? o.Itot[o.N] : null, tK: o.t[o.N],
+        gna: o.gNa[jg], tG: o.t[jg], gk: end ? o.gK[o.N] : null };
     }
     let ip = i0; for (let i = i0; i <= n; i++) if (o.V[i] > o.V[ip]) ip = i;
     return { cmd: o.cmd, v: o.V[ip], tV: o.t[ip] };
   }
-  const IVW = 440, IVH = IVW - 62 - 84 + 12 + 40,   // a square plot: the canvas less the margins drawIV leaves (L, R, T, B)
-        ivc = setupCanvas($('qIV'), IVW, IVH);
-  function drawIV() {
-    const vc = P.mode === 'vc', swap = ivAxes === 'vi', c = ivc;
-    const L = 62, R = 84, T = 12, B = 40, pw = IVW - L - R, ph = IVH - T - B;
-    const vR = [-110, 60], iR = vc ? [-3000, 6000] : ccRange(), xr = swap ? iR : vR, yr = swap ? vR : iR;
-    const [x0, x1] = ChartZoom.x(c.canvas, xr[0], xr[1]), [y0, y1] = ChartZoom.y(c.canvas, yr[0], yr[1]);
-    ChartZoom.bind(c.canvas, drawIV);
+  const IVW = QW, IVH = QH,   // the same size as the charts over time
+        ivc = setupCanvas($('qIV'), IVW, IVH), gvc = setupCanvas($('qGV'), IVW, IVH);
+  const fySigned = v => fmtSigned(+v.toPrecision(4), 0).replace(' mV', ''), fyPlain = v => String(+v.toPrecision(4));
+  // a square chart's frame (I–V, G–V): background, grid, values and axis labels; returns where a value goes.
+  // fy: how the y values read
+  function sqFrame(c, x0, x1, y0, y1, xLab, yLab, fy) {
+    const { L, R, T, B } = SQ, pw = IVW - L - R, ph = IVH - T - B;
     const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = y => T + (y1 - y) / (y1 - y0) * ph;
-    const at = (V, I) => swap ? [sx(I), sy(V)] : [sx(V), sy(I)];   // a point given as (voltage, current)
     c.fillStyle = C.surface; c.fillRect(0, 0, IVW, IVH);
     c.font = '11px "IBM Plex Mono", monospace'; c.textBaseline = 'middle';
     const ys = niceStep((y1 - y0) / 5), xs = niceStep((x1 - x0) / 6);
     for (let v = Math.ceil(y0 / ys) * ys; v <= y1 + 1e-9; v += ys) {
       const zero = Math.abs(v) < ys / 1e3; c.strokeStyle = zero ? C.muted : C.line; c.lineWidth = zero ? 1.2 : 0.8;
       c.beginPath(); c.moveTo(L, sy(v)); c.lineTo(L + pw, sy(v)); c.stroke();
-      c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(zero ? '0' : fmtSigned(+v.toPrecision(4), 0).replace(' mV', ''), L - 6, sy(v));
+      c.fillStyle = C.muted; c.textAlign = 'right'; c.fillText(zero ? '0' : fy(v), L - 6, sy(v));
     }
     for (let x = Math.ceil(x0 / xs) * xs; x <= x1 + 1e-9; x += xs) {
       const zero = Math.abs(x) < xs / 1e3; c.strokeStyle = zero ? C.muted : C.line; c.lineWidth = zero ? 1.2 : 0.8;
       c.beginPath(); c.moveTo(sx(x), T); c.lineTo(sx(x), T + ph); c.stroke();
       c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(zero ? '0' : (x < 0 ? '−' : '') + Math.abs(+x.toPrecision(4)), sx(x), T + ph + 12);
     }
+    c.textAlign = 'left'; fillSub(c, xLab, L, IVH - 9);
+    c.save(); c.translate(14, T + ph); c.rotate(-Math.PI / 2); fillSub(c, yLab, 0, 0); c.restore();
+    return { L, T, pw, ph, sx, sy };
+  }
+  // the points: joined in order (a gap where f gives null), dots or squares
+  function sqLine(c, at, pts, f, col) {
+    c.strokeStyle = col; c.globalAlpha = 0.5; c.lineWidth = 1.6; c.beginPath(); let go = false;
+    pts.forEach(q => { const v = q && f(q); if (v == null) { go = false; return; } const [x, y] = at(...v); go ? c.lineTo(x, y) : c.moveTo(x, y); go = true; });
+    c.stroke(); c.globalAlpha = 1;
+  }
+  const sqDot = (c, at, a, b, col, sq) => { const [x, y] = at(a, b); c.fillStyle = col; sq ? c.fillRect(x - 3.5, y - 3.5, 7, 7) : (c.beginPath(), c.arc(x, y, 4, 0, 7), c.fill()); };
+  const sqRing = (c, [x, y]) => { c.strokeStyle = C.ink; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 8, 0, 7); c.stroke(); };
+  // the plot's border, and the keys at its right
+  function sqKeys(c, f, tags) {
+    c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(f.L + 0.5, f.T + 0.5, f.pw - 1, f.ph - 1);
+    c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
+    tags.forEach(([t, col], k) => { c.fillStyle = col; fillSub(c, t, IVW - SQ.R + 6, SQ.T + 10 + k * 14); });
+  }
+  const shown = () => overlays.filter(o => o.mode === P.mode && (!tr || o.cmd !== tr.cmd)).concat(tr && tr.mode === P.mode ? [tr] : []);
+  function drawIV() {
+    const vc = P.mode === 'vc', swap = ivAxes === 'vi', c = ivc;
+    const vR = [-110, 60], iR = vc ? [-3000, 6000] : ccRange(), xr = swap ? iR : vR, yr = swap ? vR : iR;
+    const [x0, x1] = ChartZoom.x(c.canvas, xr[0], xr[1]), [y0, y1] = ChartZoom.y(c.canvas, yr[0], yr[1]);
+    ChartZoom.bind(c.canvas, drawIV);
     const vLab = vc ? 'step voltage V_C (mV)' : 'peak voltage (mV)', iLab = vc ? 'current (µA/cm², outward +)' : 'injected current I_inj (µA/cm²)';
-    c.textAlign = 'left'; fillSub(c, swap ? iLab : vLab, L, IVH - 9);
-    c.save(); c.translate(14, T + ph); c.rotate(-Math.PI / 2); fillSub(c, swap ? vLab : iLab, 0, 0); c.restore();
+    const fr = sqFrame(c, x0, x1, y0, y1, swap ? iLab : vLab, swap ? vLab : iLab, fySigned), { L, T, pw, ph, sx, sy } = fr;
+    const at = (V, I) => swap ? [sx(I), sy(V)] : [sx(V), sy(I)];   // a point given as (voltage, current)
     c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
     // E_Na: where the Na⁺ current reverses
     const [ex, ey] = at(EREV.Na, 0); c.strokeStyle = C.na; c.lineWidth = 1.2; c.setLineDash([6, 4]); c.beginPath();
     swap ? (c.moveTo(L, ey), c.lineTo(L + pw, ey)) : (c.moveTo(ex, T), c.lineTo(ex, T + ph)); c.stroke(); c.setLineDash([]);
-    const line = (pts, f, col) => { c.strokeStyle = col; c.globalAlpha = 0.5; c.lineWidth = 1.6; c.beginPath(); let go = false;
-      pts.forEach(q => { const v = q && f(q); if (v == null) { go = false; return; } const [x, y] = at(...v); go ? c.lineTo(x, y) : c.moveTo(x, y); go = true; });
-      c.stroke(); c.globalAlpha = 1; };
-    const traces = overlays.filter(o => o.mode === P.mode && (!tr || o.cmd !== tr.cmd)).concat(tr && tr.mode === P.mode ? [tr] : []);
+    const line = (pts, f, col) => sqLine(c, at, pts, f, col), dot = (V, I, col, sq) => sqDot(c, at, V, I, col, sq);
+    const traces = shown();
     const ref = traces.map(pointOf).filter(Boolean).sort((p, q) => p.cmd - q.cmd);   // the fired traces, joined in order
-    const dot = (V, I, col, sq) => { const [x, y] = at(V, I); c.fillStyle = col; sq ? c.fillRect(x - 3.5, y - 3.5, 7, 7) : (c.beginPath(), c.arc(x, y, 4, 0, 7), c.fill()); };
     if (vc) {
       line(ref, q => [q.cmd, q.na], C.na); line(ref, q => q.k == null ? null : [q.cmd, q.k], C.k);
       traces.forEach(o => { const q = pointOf(o); if (!q) return; dot(q.cmd, q.na, C.na); if (q.k != null) dot(q.cmd, q.k, C.k, true); });
@@ -2076,13 +2118,31 @@ function kTags(c, list) {
       traces.forEach(o => { const q = pointOf(o); if (q) dot(q.v, q.cmd, C.ink); });
     }
     const q = tr && tr.mode === P.mode && pointOf(tr);   // ring: the trace running now
-    if (q) { const [x, y] = vc ? at(q.cmd, q.na) : at(q.v, q.cmd); c.strokeStyle = C.ink; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 8, 0, 7); c.stroke(); }
+    if (q) sqRing(c, vc ? at(q.cmd, q.na) : at(q.v, q.cmd));
     c.restore();
-    c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
-    c.font = '600 11px "IBM Plex Sans", sans-serif'; c.textAlign = 'left';
-    const tags = vc ? [['early (Na⁺)', C.na], ['late (K⁺)', C.k]] : [['peak V', C.ink]];
-    tags.forEach(([t, col], k) => { c.fillStyle = col; c.fillText(t, IVW - R + 6, T + 10 + k * 14); });
+    sqKeys(c, fr, vc ? [['early (Na⁺)', C.na], ['late (K⁺)', C.k]] : [['peak V', C.ink]]);
     $('qIVTitle').textContent = vc ? (swap ? 'Step voltage vs peak current' : 'Peak current vs step voltage') : (swap ? 'Peak voltage vs injected current' : 'Injected current vs peak voltage');
+  }
+  // ---------- G–V: voltage clamp only ----------
+  // The same traces as the I–V chart, read off the conductances: the highest g_Na and g_K at the end of the trace,
+  // against the step voltage. Its height fits the whole traces fired (worked out once per trace), so it holds still
+  // while a trace runs and only grows when a new one starts.
+  const gTop = o => { if (o.gTop == null) { let m = o.gK[o.N]; for (let i = 0; i <= o.N; i++) if (o.gNa[i] > m) m = o.gNa[i]; o.gTop = m; } return o.gTop; };
+  function drawGV() {
+    if (P.mode !== 'vc') return;   // hidden in current clamp
+    const c = gvc, traces = shown();
+    const m = traces.length ? Math.max(1, ...traces.map(gTop)) : 60, s = niceStep(m / 4), top = Math.ceil(m * 1.05 / s) * s;
+    const [x0, x1] = ChartZoom.x(c.canvas, -110, 60), [y0, y1] = ChartZoom.y(c.canvas, 0, top);
+    ChartZoom.bind(c.canvas, drawGV);
+    const fr = sqFrame(c, x0, x1, y0, y1, 'step voltage V_C (mV)', 'peak conductance (mS/cm²)', fyPlain), at = (V, g) => [fr.sx(V), fr.sy(g)];
+    c.save(); c.beginPath(); c.rect(fr.L, fr.T, fr.pw, fr.ph); c.clip();
+    const pts = traces.map(pointOf).filter(Boolean).sort((p, q) => p.cmd - q.cmd);   // the fired traces, joined in order
+    sqLine(c, at, pts, q => [q.cmd, q.gna], C.na); sqLine(c, at, pts, q => q.gk == null ? null : [q.cmd, q.gk], C.k);
+    pts.forEach(q => { sqDot(c, at, q.cmd, q.gna, C.na); if (q.gk != null) sqDot(c, at, q.cmd, q.gk, C.k, true); });
+    const q = tr && tr.mode === 'vc' && pointOf(tr);   // ring: the trace running now
+    if (q) sqRing(c, at(q.cmd, q.gna));
+    c.restore();
+    sqKeys(c, fr, [['peak g_Na', C.na], ['late g_K', C.k]]);
   }
   function readouts() {
     const s = now(), vc = P.mode === 'vc';
@@ -2142,7 +2202,7 @@ function kTags(c, list) {
       tc = Math.min(tr.W, tc + rate * real);
       if (tc >= tr.W && queue.length && (wait += real) > 0.4) nextCmd();   // a short pause on each finished trace
     }
-    drawCircuit(); drawCharts(); drawIV(); readouts();
+    drawCircuit(); drawCharts(); drawIV(); drawGV(); readouts();
     requestAnimationFrame(loop);
   }
   Frames.sim(() => playing, 'qPlay');   // frames.js: starts paused, pauses itself when left alone

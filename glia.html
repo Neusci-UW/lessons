@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glia: the Other Cells</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as the other lessons: the K⁺ that firing leaves outside, and the glutamate a synapse leaves in its cleft, with the astrocytes that clear both. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --ea:#c0287a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --glu:#c0287a; --nmda:#9c7a12; --astro:#2f8a5c; --astrofill:#d3ecdc; --vessel:#b8464e; --warm:#b4582a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    --glu:#f477b7; --nmda:#e0bb5c; --astro:#5bc98b; --astrofill:#1d3a2b; --vessel:#e0737a; --warm:#e0915e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  --glu:#f477b7; --nmda:#e0bb5c; --astro:#5bc98b; --astrofill:#1d3a2b; --vessel:#e0737a; --warm:#e0915e;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:110ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* calculator, styled like the GHK calculator in membrane_potential.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:64px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:1100px){.top{grid-template-columns:1fr}}
+.top.stacked{grid-template-columns:1fr}
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.cgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1000px){.cgrid.three{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media (max-width:760px){.cgrid,.cgrid.three{grid-template-columns:1fr}}
+.chartcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.runnote{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i.ln{display:inline-block;width:18px;height:3px;border-radius:2px;flex:none}
+.legend i.ln.dash{background:none!important;border-top:2px dashed currentColor;height:0}
+.legend i.ln.faint{opacity:.38}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.k{background:var(--k)}.dot.glu{background:var(--glu)}.dot.na{background:var(--na)}.dot.nmda{background:var(--nmda)}
+.dot.astro{background:var(--astro)}.dot.vessel{background:var(--vessel)}.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg)}
+.dot.sq{border-radius:2px}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.sgroup{display:flex;flex-direction:column;gap:10px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:140px minmax(0,1fr) 96px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:1 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* theory card, styled like the GHK derivation in membrane_potential.html */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.deriv ul{padding-left:20px}
+.deriv li{margin-bottom:6px}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+#cVK{max-width:460px;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbFire" data-copy="kFire" data-copy-also="gFire" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="kPlay" data-copy-also="gPlay"></button>
+  <span id="fbSpK" style="display:contents"><label for="fbSpeedK" class="runlab">Speed</label><input type="range" id="fbSpeedK" data-copy="kSpeed"><output for="fbSpeedK"></output></span>
+  <span id="fbSpG" style="display:contents" hidden><label for="fbSpeedG" class="runlab">Speed</label><input type="range" id="fbSpeedG" data-copy="gSpeed"><output for="fbSpeedG"></output></span>
+</div>
+<div class="wrap">
+<p class="draftnote"><b>DRAFT</b> · Not yet in the course (switch it on in the course list). Still to check: the K⁺ added per spike (0.05 mM) and the clearing time constants (10 s by diffusion, 1.5 s by astrocytes) are round teaching numbers, not fitted to one experiment; the astrocyte network is taken to have as much K⁺-channel membrane near the neurons as far away; the slow tail of glutamate in the cleft (5 µM for 2 ms with transporters, 50 µM for 30 ms without) is assumed, not computed from diffusion; and AMPA receptors’ need for two glutamates is a simplification of Destexhe, Mainen and Sejnowski’s one-step binding.</p>
+<header>
+  <h1>Glia: the other cells</h1>
+  <p>About half the cells in the brain aren’t neurons. These glial cells don’t fire action potentials, but neurons couldn’t keep signalling without them. Astrocytes clean up after every spike and every synapse: they soak up the K⁺ that firing leaves outside the cells, and they pull glutamate out of the synaptic cleft. Oligodendrocytes and Schwann cells wrap axons in myelin, which speeds the spike along them (The Action Potential Travels). Microglia are the brain’s immune cells. This lesson simulates the astrocytes’ two clean-up jobs, with the Nernst and GHK equations from Membrane Potential and the receptors from The Chemical Synapse.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>explain why firing raises [K⁺] outside the cells far more than it lowers [K⁺] inside, and estimate how high it climbs with steady firing</li>
+        <li>predict with the Nernst and GHK equations how a rise in [K⁺] outside moves E<sub>K</sub> and the neurons’ resting voltage toward threshold</li>
+        <li>explain spatial buffering with Ohm’s law: K⁺ flows into the astrocyte network where it has piled up and out where it is normal</li>
+        <li>explain why glutamate must be cleared within milliseconds, and why blocking its transporters prolongs NMDA currents much more than AMPA currents</li>
+        <li>name the main kinds of glia, what each does, and a disease in which each goes wrong</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-gtry="normal">1 · Ten seconds of firing</button> The neurons fire at 20 Hz for 10 s. [K⁺] outside rises by about a millimolar and levels off, the neurons depolarize a little, and K⁺ streams through the astrocytes to the blood vessel.</li>
+    <li><button class="chip" data-gtry="noglia">2 · Without the astrocytes</button> The same firing with the astrocytes’ K⁺ uptake switched off. Only slow diffusion removes the K⁺: it keeps piling up, to about 9 mM, and the neurons move much closer to threshold. The first run stays on the charts, faded, to compare.</li>
+    <li><button class="chip" data-gtry="seizure">3 · Fire harder</button> 50 Hz with no astrocyte uptake: [K⁺] outside climbs past 12 mM, about where neurons start firing by themselves and seizures begin.</li>
+    <li><button class="chip" data-gtry="glu">4 · One release of glutamate</button> In Part 2: one vesicle empties into the cleft. Glutamate spreads out of the cleft within a millisecond and the transporters on the astrocyte wrapped around the synapse catch it.</li>
+    <li><button class="chip" data-gtry="tboa">5 · Block the transporters</button> With the blocker TBOA, glutamate lingers and escapes toward the next synapse. AMPA receptors, which need a lot of glutamate, hardly notice; NMDA receptors, which respond to very little, stay open much longer.</li>
+  </ol>
+</section>
+
+<!-- =================== Part 1: K⁺ outside =================== -->
+<h3 class="part">1 · Firing leaves K⁺ outside, and astrocytes carry it away</h3>
+<div class="top stacked">
+  <section class="card stage" id="k-card">
+    <div class="tabs" role="tablist" aria-label="K⁺ outside">
+      <button type="button" role="tab" id="tab-k" aria-controls="pane-k" aria-selected="true">Simulation</button>
+      <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-klook" aria-controls="pane-klook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-k" aria-labelledby="tab-k">
+      <canvas id="kPic" aria-label="Firing neurons packed close together with K⁺ ions in the narrow space between them, astrocyte processes reaching in between, and a network of astrocytes joined by gap junctions ending on a blood vessel"></canvas>
+      <div class="runbar">
+        <button id="kFire" class="primary" title="Start again from rest: the neurons fire from 5 s for the time set">New run</button>
+        <button id="kPlay" class="primary">Play</button>
+        <button id="kClear" title="Remove the faded earlier run from the charts">Clear</button>
+        <label for="kSpeed" class="runlab">Speed</label>
+        <input type="range" id="kSpeed" min="0" max="100" value="56">
+        <output id="kSpeedo" for="kSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot k"></i>K⁺ ions</span>
+        <span><i class="dot neg"></i>neuron at rest</span><span><i class="dot pos"></i>neuron depolarized</span>
+        <span><i class="dot astro"></i>astrocytes</span>
+        <span><i class="dot vessel"></i>blood vessel</span>
+      </div>
+      <div class="cgrid">
+        <div class="chartcol"><p class="sect-title">[K⁺] outside, near the firing neurons</p><canvas id="kKC" aria-label="Potassium concentration outside the cells over time"></canvas>
+          <div class="legend"><span><i class="ln" style="background:var(--k)"></i>this run</span><span><i class="ln faint" style="background:var(--k)"></i><span id="kPrevLab">earlier run</span></span></div></div>
+        <div class="chartcol"><p class="sect-title">Resting voltage of a neuron and an astrocyte</p><canvas id="kVC" aria-label="Resting voltage of a neuron and of the astrocyte network over time, with the astrocyte's E_K near the neurons"></canvas>
+          <div class="legend"><span><i class="ln" style="background:var(--accent)"></i>neuron (GHK)</span><span><i class="ln" style="background:var(--astro)"></i>astrocyte</span><span><i class="ln dash" style="color:var(--astro)"></i>astrocyte’s E<sub>K</sub> near the neurons</span><span><i class="ln faint" style="background:var(--accent)"></i>neuron, earlier run</span></div></div>
+      </div>
+      <p class="caption" id="kCap"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+      <ul>
+        <li><b>The picture:</b> on the left, the cell bodies of neurons packed close together, as they are in the brain, with the narrow space between them (tinted). Each neuron is tinted by its resting voltage: blue at rest, redder as it depolarizes. While they fire, a red ring flickers round them. On the right, astrocytes (green), joined to each other by gap junctions (the small bars across their processes); the last one ends in an endfoot on a blood vessel.</li>
+        <li><b>K⁺ dots:</b> each purple dot is K⁺ outside the cells. Their number in the tinted area is in proportion to [K⁺]<sub>o</sub> there (6 dots per mM; really there are billions of ions). The dots on the right are the K⁺ far away, which stays at 3 mM. When K⁺ is removed, a dot either enters an astrocyte process and travels through the network to the blood vessel (uptake by astrocytes), or drifts out of the tinted area (diffusion).</li>
+        <li><b>Charts:</b> time since <b>New run</b>. The neurons fire during the shaded stretch, from 5 s. The faded lines are the run before, kept for comparison until <b>Clear</b>.</li>
+        <li><b>Resting voltage:</b> the voltage between spikes, not the spikes themselves. The neuron’s is from the GHK equation (Membrane Potential), with P<sub>Na</sub>/P<sub>K</sub> = 0.05. The astrocyte’s is the voltage of the whole network, which sits between the E<sub>K</sub> near the firing neurons (dashed) and the E<sub>K</sub> far away; the gap between it and the dashed line is the push that drives K⁺ in.</li>
+        <li><b>Timing:</b> the speed is in seconds of brain time per second of yours. Move the sliders while it runs: they act at once.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-klook" aria-labelledby="tab-klook" hidden>
+      <ul>
+        <li>With the astrocytes working, [K⁺]<sub>o</sub> rises for a second or two and then levels off, about 1.3 mM above rest at 20 Hz: K⁺ is now removed as fast as the spikes add it. When the firing stops it is back to 3 mM within a few seconds.</li>
+        <li>With astrocyte uptake at 0 %, the same firing never levels off in 10 s, peaks near 9 mM, and takes half a minute to clear. The neuron’s resting voltage rises by about 13 mV, to −57 mV, most of the way to threshold.</li>
+        <li>Watch the gap between the astrocyte’s voltage and the dashed line grow as [K⁺] rises: that is the driving force for K⁺ into the astrocyte. The astrocyte also depolarizes, by half as much as E<sub>K</sub> near the neurons, because its other end sits in normal 3 mM K⁺.</li>
+        <li>Switch the uptake from 0 % back to 100 % in the middle of the firing: [K⁺] falls within a second or two.</li>
+        <li>At 50 Hz with no uptake the neuron’s resting voltage reaches about −45 mV, above threshold. Real neurons would start firing by themselves there, releasing still more K⁺; the model leaves out that runaway, which is what makes a seizure.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">[K⁺] outside, now</span>
+      <span class="vnum" id="kKnum">—</span>
+      <div class="vrow"><span>neuron’s E<sub>K</sub></span><b id="kEK">—</b></div>
+      <div class="vrow"><span>neuron’s resting voltage</span><b id="kVn">—</b></div>
+      <div class="vrow"><span>astrocyte’s voltage</span><b id="kVa">—</b></div>
+      <div class="vrow"><span>its push on K⁺ near the neurons, V − E<sub>K</sub></span><b id="kDrive">—</b></div>
+      <div class="vrow"><span>highest [K⁺]<sub>o</sub> this run</span><b id="kPeak">—</b></div>
+      <div class="vrow"><span>K⁺ removed by astrocytes / diffusion</span><b id="kRem">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The tissue</legend>
+      <div class="sgroup">
+        <span class="gtitle">Neurons</span>
+        <div class="row"><label for="kRate"><i class="dot pos"></i>Firing rate</label><input type="range" id="kRate" min="0" max="60" step="1" value="20"><output id="kRateo" for="kRate"></output>
+          <span class="hint">each spike adds 0.05 mM of K⁺ outside</span></div>
+        <div class="row"><label for="kDur">Firing lasts</label><input type="range" id="kDur" min="1" max="40" step="1" value="10"><output id="kDuro" for="kDur"></output></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Clean-up</span>
+        <div class="row"><label for="kUp"><i class="dot astro"></i>Astrocyte uptake</label><input type="range" id="kUp" min="0" max="100" step="1" value="100"><output id="kUpo" for="kUp"></output>
+          <span class="hint">their Kir4.1 K⁺ channels; 0 % is no buffering. Diffusion alone clears K⁺ with τ = 10 s</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 2: glutamate =================== -->
+<h3 class="part">2 · Astrocytes clear glutamate from the synapse</h3>
+<div class="top stacked">
+  <section class="card stage" id="g-card">
+    <div class="tabs" role="tablist" aria-label="Glutamate">
+      <button type="button" role="tab" id="tab-g" aria-controls="pane-g" aria-selected="true">Simulation</button>
+      <button type="button" role="tab" id="tab-ghelp" aria-controls="pane-ghelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-glook" aria-controls="pane-glook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-g" aria-labelledby="tab-g">
+      <canvas id="gPic" aria-label="A synapse wrapped by an astrocyte process: the axon terminal above, the spine below with AMPA and NMDA receptors, glutamate in the cleft, transporters on the astrocyte, and a neighbouring synapse outside a gap in the wrap"></canvas>
+      <div class="runbar">
+        <button id="gFire" class="primary">Release</button>
+        <button id="gPlay" class="primary">Play</button>
+        <button id="gClear" title="Remove the faded earlier release from the charts">Clear</button>
+        <label for="gSpeed" class="runlab">Speed</label>
+        <input type="range" id="gSpeed" min="0" max="100" value="50">
+        <output id="gSpeedo" for="gSpeed"></output>
+        <span class="runnote" id="gNow"></span>
+      </div>
+      <div class="legend">
+        <span><i class="dot glu"></i>glutamate</span>
+        <span><i class="dot na sq"></i>AMPA receptor</span>
+        <span><i class="dot nmda sq"></i>NMDA receptor</span>
+        <span><i class="dot astro sq"></i>transporter (working)</span>
+        <span><i class="dot sq" style="background:var(--a)"></i>transporter blocked by TBOA</span>
+      </div>
+      <div class="cgrid three">
+        <div class="chartcol"><p class="sect-title">Glutamate in the cleft (log scale)</p><canvas id="gGC" aria-label="Glutamate concentration in the cleft over the first 50 ms, on a log scale"></canvas></div>
+        <div class="chartcol"><p class="sect-title">AMPA receptors open</p><canvas id="gAC" aria-label="Percentage of AMPA receptors open over the first 50 ms"></canvas></div>
+        <div class="chartcol"><p class="sect-title">NMDA receptors open (note: 500 ms)</p><canvas id="gNC" aria-label="Percentage of NMDA receptors open over 500 ms"></canvas></div>
+      </div>
+      <div class="legend"><span><i class="ln" style="background:var(--ink)"></i>this release</span><span><i class="ln faint" style="background:var(--ink)"></i><span id="gPrevLab">earlier release</span></span></div>
+      <p class="caption" id="gCap"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-ghelp" aria-labelledby="tab-ghelp" hidden>
+      <ul>
+        <li><b>The picture:</b> the axon’s terminal (Pre) at the top with its vesicles, the spine of the next cell (Post) below, and the synaptic cleft between them. Around them, in green, a process of an astrocyte wraps the synapse; the small marks on its inside are glutamate transporters (grey with a dark plug when TBOA blocks them). A gap in the wrap on the right leads to the tissue outside and a neighbouring synapse. Not to scale: the real cleft is about 20 nm wide and the synapse about 0.3 µm across.</li>
+        <li><b>Glutamate dots:</b> a sample of the molecules (one vesicle holds a few thousand). A transporter that takes one in flashes. The dots show where glutamate goes; the charts show the model’s concentration in the cleft.</li>
+        <li><b>Receptors:</b> orange AMPA and gold NMDA receptors on the spine. Each kind glows brighter the more of its receptors are open; full glow is the peak with the transporters working. NMDA receptors also need Mg²⁺ out of the way to pass current (The Chemical Synapse, Spines and Plasticity); here we count only whether glutamate holds them open.</li>
+        <li><b>Charts:</b> glutamate on a log scale (each gridline ten times the one below), and the percentage of each kind of receptor open. The NMDA chart covers ten times as long, 500 ms. The faded lines are the release before, kept until <b>Clear</b>.</li>
+        <li><b>Timing:</b> the events range from under a millisecond (glutamate leaving the cleft) to hundreds (NMDA receptors letting go), so the run starts in deep slow motion and speeds up as it goes. The run bar shows how many milliseconds of synapse time pass per second of yours right now; the Speed slider scales it.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-glook" aria-labelledby="tab-glook" hidden>
+      <ul>
+        <li>With the transporters working, glutamate falls a thousandfold, from 1 mM to about 1 µM, within about 7 ms. AMPA receptors open for a few milliseconds; NMDA receptors stay open for a few hundred, because they let go of glutamate slowly, long after it has gone.</li>
+        <li>Block the transporters (0 %): a little glutamate, about 50 µM, lingers for tens of milliseconds. The AMPA current hardly changes (about 15 % more charge); the NMDA current more than doubles.</li>
+        <li>Why the difference: AMPA receptors need two glutamates and millimolar concentrations to open, so 50 µM does almost nothing; NMDA receptors bind micromolar glutamate. The worked number is in the theory, Clearing glutamate.</li>
+        <li>In the picture, most dots are caught at the astrocyte when the transporters work. Blocked, they bounce round the synapse and leak out of the gap toward the neighbouring synapse, whose receptors light up: spillover, which makes neighbouring synapses talk to each other.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Glutamate in the cleft, now</span>
+      <span class="vnum" id="gGnum">—</span>
+      <div class="vrow"><span>time since release</span><b id="gT">—</b></div>
+      <div class="vrow"><span>AMPA receptors open</span><b id="gAo">—</b></div>
+      <div class="vrow"><span>NMDA receptors open</span><b id="gNo">—</b></div>
+      <div class="vrow"><span>AMPA charge, vs transporters working</span><b id="gAq">—</b></div>
+      <div class="vrow"><span>NMDA charge, vs transporters working</span><b id="gNq">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The synapse</legend>
+      <div class="sgroup">
+        <span class="gtitle">Astrocyte</span>
+        <div class="row"><label for="gX"><i class="dot astro"></i>Transporters</label><input type="range" id="gX" min="0" max="100" step="1" value="100"><output id="gXo" for="gX"></output>
+          <span class="hint">the share still working; TBOA blocks them. Takes effect at the next Release</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Concentrations</p>
+      <dl class="unitlist">
+        <dt>mM</dt><dd>millimolar. K⁺ is about 140 mM inside a neuron and 3 mM outside; glutamate in the cleft peaks at about 1 mM.</dd>
+        <dt>µM</dt><dd>micromolar, a thousandth of a mM. The glutamate left after the cleft empties: a few µM with transporters, tens without. NMDA receptors respond to a few µM.</dd>
+        <dt>mol/cm²</dt><dd>moles per square centimetre of membrane: the K⁺ that crosses each patch of membrane in one spike, about 10<sup>−12</sup>.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">Voltage and time</p>
+      <dl class="unitlist">
+        <dt>mV</dt><dd>millivolts. V is the inside measured relative to the outside. E<sub>K</sub> moves 18.5 mV each time [K⁺] outside doubles (at body temperature).</dd>
+        <dt>s, ms</dt><dd>seconds for K⁺ (it builds up and clears over seconds); milliseconds for glutamate (gone from the cleft in about 1 ms) and its receptors (AMPA a few ms, NMDA hundreds).</dd>
+        <dt>Hz</dt><dd>spikes per second, for the firing rate.</dd>
+        <dt>τ</dt><dd>a time constant: the time to get about two-thirds (63 %) of the way to where something is heading, as in Passive Properties: Time.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="gliatheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">K⁺ outside</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">Spatial buffering</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Clearing glutamate</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">The other glia</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Every spike lets a little K⁺ out of the neuron. Inside the cell that is a drop in the ocean. Outside, in the thin film of fluid between brain cells, it adds up fast. More K⁺ outside makes E<sub>K</sub> less negative, so the neurons sit closer to threshold.</p>
+      <h3>A drop inside, a flood outside</h3>
+      <p>To bring the voltage back down after a spike, K⁺ has to leave the cell: at least enough charge to swing the membrane’s capacitor back by about 100 mV. That is about 10<sup>−12</sup> mol of K⁺ for each cm² of membrane. For a thin axon 1 µm across, this lowers [K⁺] inside by about 0.04 mM, out of 140 mM: nothing.</p>
+      <p>The same K⁺ goes into a much smaller space. Brain cells are packed so closely that the fluid between them is only about a fifth of the tissue (Nicholson and Syková), so the space around that axon is a quarter of its own volume. The K⁺ raises [K⁺]<sub>o</sub> by about 0.17 mM, four times as much as it lowered [K⁺] inside, and on top of only 3 mM: a 6 % rise from a single spike if every fibre nearby fires. The simulation uses 0.05 mM per spike, as if about a third of them fire each time.</p>
+      <details class="fullderiv">
+        <summary>Show the numbers</summary>
+        <p>The charge to swing a membrane of capacitance 1 µF/cm² by 0.1 V, turned into moles of K⁺ with Faraday’s constant:</p>
+        <div class="eq">\[ Q = C\,\Delta V = 1\ \mu\mathrm{F/cm^2} \times 0.1\ \mathrm{V} = 10^{-7}\ \mathrm{C/cm^2}, \qquad \frac{Q}{F} = \frac{10^{-7}}{96\,485} \approx 1.0\times10^{-12}\ \mathrm{mol/cm^2} \]</div>
+        <p>A 1 µm length of an axon 1 µm across has 3.1 µm² of membrane (3.1 × 10<sup>−8</sup> cm²), so it loses 3.3 × 10<sup>−20</sup> mol of K⁺. Its volume is 0.79 µm³ = 7.9 × 10<sup>−16</sup> L, and the space around it (a fifth of the tissue, so a quarter of the axon’s volume) is 2.0 × 10<sup>−16</sup> L:</p>
+        <div class="eq">\[ \Delta[\mathrm{K^+}]_i = \frac{3.3\times10^{-20}\ \mathrm{mol}}{7.9\times10^{-16}\ \mathrm{L}} \approx 0.04\ \mathrm{mM}, \qquad \Delta[\mathrm{K^+}]_o = \frac{3.3\times10^{-20}\ \mathrm{mol}}{2.0\times10^{-16}\ \mathrm{L}} \approx 0.17\ \mathrm{mM} \]</div>
+        <p>This is the least K⁺ a spike can move. Real spikes move somewhat more, because Na⁺ is still coming in while K⁺ starts going out. Thinner fibres have more membrane for their volume and move [K⁺]<sub>o</sub> even more.</p>
+      </details>
+      <h3>Why more K⁺ outside depolarizes neurons</h3>
+      <p>This is the Nernst equation from Membrane Potential, working against you. At body temperature RT/F = 26.7 mV, so</p>
+      <div class="eq">\[ E_\mathrm{K} = 26.7\ \mathrm{mV} \times \ln\frac{[\mathrm{K^+}]_o}{[\mathrm{K^+}]_i} \]</div>
+      <p>With 3 mM outside and 140 mM inside, E<sub>K</sub> = 26.7 × ln(3/140) = −103 mV. Double [K⁺]<sub>o</sub> to 6 mM and E<sub>K</sub> rises by 26.7 × ln 2 = 18.5 mV, to −84 mV. A neuron at rest is mostly a K⁺ electrode, so its resting voltage follows, by less: the GHK equation, with Na⁺ letting in a little current too (P<sub>Na</sub>/P<sub>K</sub> = 0.05),</p>
+      <div class="eq">\[ V_\text{rest} = 26.7\ \mathrm{mV} \times \ln\frac{[\mathrm{K^+}]_o + 0.05\,[\mathrm{Na^+}]_o}{[\mathrm{K^+}]_i + 0.05\,[\mathrm{Na^+}]_i} \]</div>
+      <p>goes from −70 mV at 3 mM to −63 mV at 6 mM, and to −53 mV, past threshold, at 12 mM.</p>
+      <h3>The ceiling, and what happens above it</h3>
+      <p>Normal activity raises [K⁺]<sub>o</sub> by a millimolar or less. Even very strong stimulation rarely takes it above 10–12 mM (Heinemann and Lux called this the ceiling). Above it, neurons are depolarized enough to fire by themselves, every spike adds more K⁺, and the rise feeds itself: one of the things that turns brain activity into a seizure. In spreading depression, the slow wave behind the migraine aura, [K⁺]<sub>o</sub> reaches tens of millimolar and the cells stop firing altogether.</p>
+      <details class="fullderiv">
+        <summary>Show the model of [K⁺] outside</summary>
+        <p>Firing adds K⁺ at a rate f ΔK (f spikes per second, ΔK = 0.05 mM each). Diffusion away into the rest of the brain removes it with a slow time constant τ<sub>d</sub> = 10 s; astrocytes remove it with a faster one, τ<sub>a</sub> = 1.5 s (at 100 % uptake):</p>
+        <div class="eq">\[ \frac{d[\mathrm{K^+}]_o}{dt} = f\,\Delta K \;-\; \frac{[\mathrm{K^+}]_o - 3\ \mathrm{mM}}{\tau_d} \;-\; \frac{[\mathrm{K^+}]_o - 3\ \mathrm{mM}}{\tau_a} \]</div>
+        <p>It is a leaky bucket, the same as charging the membrane’s capacitor in Passive Properties: Time. With steady firing [K⁺]<sub>o</sub> settles where removal equals input, and gets there with the combined time constant τ:</p>
+        <div class="eq">\[ \Delta[\mathrm{K^+}]_o = f\,\Delta K\,\tau, \qquad \frac{1}{\tau} = \frac{1}{\tau_d} + \frac{1}{\tau_a} \]</div>
+        <p>That is Ohm’s law, V = I R, in another form: a steady input times a time constant. At 20 Hz: f ΔK = 1 mM/s, τ = 1/(1/10 + 1/1.5) = 1.30 s, so the rise is 1.3 mM, to 4.3 mM, reached within a few seconds. Without the astrocytes τ = 10 s: the rise would level off 10 mM above rest, at 13 mM, but 10 s of firing gets only 63 % of the way there, to 9.3 mM.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-gtry="set:kRate:5">Fire at 5 Hz</button> A gentle rate: [K⁺] rises only about 0.3 mM.</p>
+      <p><button class="chip" data-gtry="set:kDur:40">Fire for 40 s</button> With the astrocytes working, [K⁺] levels off and stays level for as long as the firing lasts.</p>
+      <p><button class="chip" data-gtry="seizure">50 Hz, no uptake</button> Past the ceiling: the neuron’s resting voltage goes above threshold.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Astrocytes are leaky to K⁺ and almost nothing else, and they are joined into one big network. Where K⁺ piles up outside, it flows into the network; it flows back out wherever K⁺ is normal, or into the blood. The network works like a wire that carries the extra K⁺ away.</p>
+      <h3>A cell that is almost all K⁺ channels</h3>
+      <p>An astrocyte’s membrane is packed with one kind of channel open at rest, the inward-rectifier K⁺ channel Kir4.1, and has almost no others. So its voltage sits close to E<sub>K</sub>, about −90 mV, and follows E<sub>K</sub> when [K⁺] around it changes. Orkand, Nicholls and Kuffler found exactly this: when nerve impulses raised the K⁺ around glial cells, the glia depolarized by the amount the Nernst equation predicts.</p>
+      <h3>Ohm’s law at both ends</h3>
+      <p>Astrocytes are connected to their neighbours by gap junctions, channels that join one cell’s inside to the next (as in electrical synapses), so a whole network of them shares one voltage V. Its membrane near the firing neurons faces high [K⁺]<sub>o</sub>; its membrane far away faces normal 3 mM. Each patch passes a K⁺ current by Ohm’s law, conductance times driving force:</p>
+      <div class="eq">\[ I_\text{near} = g_\text{near}\,\bigl(V - E_\mathrm{K,near}\bigr), \qquad I_\text{far} = g_\text{far}\,\bigl(V - E_\mathrm{K,far}\bigr) \]</div>
+      <p>Near the neurons E<sub>K</sub> has risen above V, so the current is negative: K⁺ flows <em>in</em>. Far away E<sub>K</sub> is still low, below V, so K⁺ flows <em>out</em>. The network settles where the two currents cancel, at the conductance-weighted average of the two batteries, the same chord-conductance formula as the resting voltage in Membrane Potential:</p>
+      <div class="eq">\[ V = \frac{g_\text{near}E_\mathrm{K,near} + g_\text{far}E_\mathrm{K,far}}{g_\text{near} + g_\text{far}} \]</div>
+      <p><b>A worked number.</b> Take 100 mM K⁺ inside the astrocyte, [K⁺]<sub>o</sub> = 6 mM near the neurons and 3 mM far away, and equal conductances. E<sub>K,near</sub> = 26.7 × ln(6/100) = −75 mV and E<sub>K,far</sub> = 26.7 × ln(3/100) = −94 mV, so V = −84 mV. Near the neurons the driving force is −84 − (−75) = −9 mV, so K⁺ flows in; far away it is +9 mV, so the same K⁺ current flows out. In the simulation the astrocyte’s voltage is this V, and the dashed line is E<sub>K,near</sub>.</p>
+      <h3>Where the K⁺ goes</h3>
+      <p>The far end may be quiet tissue, or an astrocyte endfoot on a blood vessel. In the retina, Müller glial cells siphon K⁺ from the active layers to the fluid inside the eye (Newman and colleagues). Astrocytes also take up K⁺ with their Na⁺/K⁺ pumps and cotransporters, and in the end the neurons’ own Na⁺/K⁺ pumps take it all back.</p>
+      <h3>When it fails</h3>
+      <p>People with mutations in the gene for Kir4.1 (KCNJ10) have EAST syndrome: epilepsy, ataxia (poor coordination), sensorineural deafness and a kidney salt-wasting tubulopathy, wherever Kir4.1 does its job. In mice whose glia lack Kir4.1, K⁺ released by activity is cleared more slowly. The simulation’s 0 % switches off all astrocyte uptake, which is more drastic than losing Kir4.1 alone.</p>
+      <details class="fullderiv">
+        <summary>Show where the astrocytes’ time constant comes from</summary>
+        <p>With equal conductances g near and far, V is halfway between the two E<sub>K</sub>’s, and the K⁺ current into the astrocyte near the neurons is</p>
+        <div class="eq">\[ -I_\text{near} = g\,\bigl(E_\mathrm{K,near} - V\bigr) = \frac{g}{2}\,\bigl(E_\mathrm{K,near} - E_\mathrm{K,far}\bigr) = \frac{g}{2}\times 26.7\ \mathrm{mV}\times\ln\frac{[\mathrm{K^+}]_o}{3\ \mathrm{mM}} \]</div>
+        <p>For small rises, ln(1 + x) ≈ x, so ln([K⁺]<sub>o</sub>/3 mM) ≈ ([K⁺]<sub>o</sub> − 3 mM)/3 mM: the uptake is close to proportional to the rise in [K⁺]<sub>o</sub>. Uptake proportional to the excess is what a time constant means:</p>
+        <div class="eq">\[ \text{uptake} = \frac{[\mathrm{K^+}]_o - 3\ \mathrm{mM}}{\tau_a} \]</div>
+        <p>More Kir4.1 channels (bigger g), or a bigger network to share the K⁺ with, make τ<sub>a</sub> shorter. The simulation uses this straight-line form, with τ<sub>a</sub> = 1.5 s at 100 % uptake.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-gtry="set:kUp:50">Astrocytes at half strength</button> τ<sub>a</sub> doubles to 3 s, and [K⁺] rises higher.</p>
+      <p><button class="chip" data-gtry="noglia">No astrocyte uptake</button> Only diffusion is left.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Glutamate isn’t broken down in the cleft. It spreads out of the cleft within a millisecond, and transporters packed on the astrocyte wrapped around the synapse grab it before it can reach other synapses. That keeps each synapse’s message short and private. Block the transporters and a little glutamate lingers: too little for AMPA receptors, plenty for NMDA receptors.</p>
+      <h3>Transporters, not enzymes</h3>
+      <p>Acetylcholine is split by an enzyme in the cleft (The Chemical Synapse). Glutamate is instead carried into cells by transporters, mostly two on astrocytes: EAAT1 (GLAST) and EAAT2 (GLT-1), which does most of the brain’s glutamate uptake. Each glutamate is carried in together with 3 Na⁺ and 1 H⁺ while 1 K⁺ goes out, so the Na⁺ gradient that the Na⁺/K⁺ pump maintains powers the uptake. Bergles and Jahr recorded these transporters’ currents in astrocytes every time a nearby synapse released glutamate. Inside the astrocyte glutamate becomes glutamine, which goes back to the neurons to be made into glutamate again.</p>
+      <h3>First diffusion, then capture</h3>
+      <p>One vesicle raises glutamate in the cleft to about 1 mM, and diffusion out of the narrow cleft brings it down again with a time constant of about 1 ms (Clements and colleagues). What happens to it next is up to the transporters. There are so many of them around the synapse that they bind glutamate within a few milliseconds, before much of it can drift to the next synapse. In the simulation, the cleft’s glutamate falls with τ = 1 ms in every case; what the transporters change is the small tail that is left: about 5 µM for 2 ms with them, 50 µM for 30 ms without.</p>
+      <h3>Why NMDA receptors notice and AMPA receptors don’t</h3>
+      <p>A receptor binds glutamate at a rate proportional to the concentration, and lets go at a fixed rate. The fraction r of receptors open follows</p>
+      <div class="eq">\[ \frac{dr}{dt} = \alpha\,[\mathrm{Glu}]\,(1 - r) - \beta\,r \]</div>
+      <p>NMDA receptors bind slowly but hold on: α = 0.072 per mM per ms, β = 0.0066 per ms, so once bound they stay for about 1/β = 150 ms. AMPA receptors bind and let go quickly (α = 1.1 per mM per ms, β = 0.19 per ms), and need two glutamates bound to open, so in the simulation their binding goes as [Glu]².</p>
+      <p><b>A worked number.</b> Hold glutamate at 10 µM (0.01 mM), as it might be with the transporters blocked. With r steady, binding equals unbinding, α[Glu](1 − r) = βr, so r = α[Glu] / (α[Glu] + β). For NMDA: 0.072 × 0.01 = 0.00072, and r = 0.00072 / (0.00072 + 0.0066) = 10 %. For AMPA: 1.1 × 0.01² = 0.00011, and r = 0.00011 / (0.00011 + 0.19) = 0.06 %. The same lingering glutamate opens over a hundred times more NMDA receptors than AMPA receptors. That is why blocking uptake with TBOA prolongs NMDA currents and lets glutamate from one synapse reach NMDA receptors at its neighbours, while AMPA currents barely change (Arnth-Jensen, Jabaudon and Scanziani).</p>
+      <h3>When clearing fails</h3>
+      <p>NMDA receptors let in Ca²⁺. Kept open too long, as when glutamate is not cleared, they let in so much that the cell dies: excitotoxicity. It is part of the damage in stroke, where cells run out of energy, the Na⁺ gradient runs down and the transporters stop working. In amyotrophic lateral sclerosis (ALS) the astrocytes’ EAAT2 is often lost in the motor cortex and spinal cord.</p>
+      <details class="fullderiv">
+        <summary>Show the glutamate model</summary>
+        <p>Glutamate in the cleft, in mM, t in ms, with x the share of transporters working (1 = all, 0 = TBOA):</p>
+        <div class="eq">\[ [\mathrm{Glu}](t) = (1 - a)\,e^{-t/1\ \mathrm{ms}} + a\,e^{-t/\tau_s}, \qquad a = 0.005 + 0.045\,(1 - x), \quad \tau_s = 2\ \mathrm{ms} + 28\ \mathrm{ms}\,(1 - x) \]</div>
+        <p>Receptors (rates from Destexhe, Mainen and Sejnowski’s fits to synaptic currents):</p>
+        <div class="eq">\[ \frac{dr_\mathrm{AMPA}}{dt} = 1.1\,[\mathrm{Glu}]^2\,(1 - r_\mathrm{AMPA}) - 0.19\,r_\mathrm{AMPA}, \qquad \frac{dr_\mathrm{NMDA}}{dt} = 0.072\,[\mathrm{Glu}]\,(1 - r_\mathrm{NMDA}) - 0.0066\,r_\mathrm{NMDA} \]</div>
+        <p>The charge each kind of receptor lets through is in proportion to the area under its curve; the readouts compare that area over 500 ms with the area when every transporter works.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-gtry="set:gX:50">Half the transporters</button> A smaller, shorter tail of glutamate.</p>
+      <p><button class="chip" data-gtry="tboa">All blocked (TBOA)</button> NMDA receptors stay open much longer.</p>
+      <p><button class="chip" data-gtry="glu">All working</button> The normal synapse, for comparison.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Glia are as numerous as neurons. Astrocytes keep the space around neurons clean and link them to the blood; oligodendrocytes and Schwann cells insulate axons with myelin; microglia defend the brain and tidy up its connections.</p>
+      <h3>How many?</h3>
+      <p>Textbooks used to say glia outnumber neurons ten to one. Counting the cells of whole human brains gave about 86 billion neurons and about as many other cells (Azevedo and colleagues), so glia are about half the cells, not nine-tenths.</p>
+      <table class="map">
+        <tr><th>Cell</th><th>Where</th><th>What it does</th><th>When it goes wrong</th></tr>
+        <tr><td>Astrocyte</td><td>brain and spinal cord</td><td>clears K⁺ and glutamate (this lesson); wraps synapses; endfeet on blood vessels help form the blood–brain barrier and match blood flow to activity</td><td>EAST syndrome (Kir4.1); EAAT2 loss in ALS; seizures</td></tr>
+        <tr><td>Oligodendrocyte</td><td>brain and spinal cord</td><td>myelin: one cell wraps pieces of many axons</td><td>multiple sclerosis</td></tr>
+        <tr><td>Schwann cell</td><td>peripheral nerves</td><td>myelin: one cell wraps one piece of one axon; guides regrowth after injury</td><td>Guillain–Barré syndrome; some forms of Charcot–Marie–Tooth disease</td></tr>
+        <tr><td>Microglia</td><td>brain and spinal cord</td><td>immune cells: survey the tissue, clear debris and dying cells, prune synapses during development</td><td>inflammation in many brain diseases</td></tr>
+      </table>
+      <h3>Myelin</h3>
+      <p>Oligodendrocytes in the brain and spinal cord, and Schwann cells in the nerves, wrap axons in many layers of membrane. That cuts the axon’s capacitance and leak, so a spike jumps from one gap in the myelin to the next and travels many times faster: The Action Potential Travels shows it. In multiple sclerosis the immune system attacks central myelin; in Guillain–Barré syndrome, usually after an infection, it attacks peripheral nerves.</p>
+      <h3>Microglia</h3>
+      <p>Microglia are not made from nervous tissue at all: they come from blood-forming cells of the embryo’s yolk sac and settle in the brain before birth (Ginhoux and colleagues). They constantly feel around with their processes, clear dead cells and debris, and during development they engulf weak synapses that are not used, sharpening the brain’s wiring (Schafer and colleagues).</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-gtry="normal">K⁺ with astrocytes</button> Part 1 from the start.</p>
+      <p><button class="chip" data-gtry="glu">One release</button> Part 2 from the start.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Orkand RK, Nicholls JG, Kuffler SW (1966).</b> Effect of nerve impulses on the membrane potential of glial cells in the central nervous system of amphibia. <i>Journal of Neurophysiology</i> 29:788–806. <a href="https://doi.org/10.1152/jn.1966.29.4.788" target="_blank" rel="noopener">doi:10.1152/jn.1966.29.4.788</a><br><span class="why">Glia depolarize as K⁺ builds up around them, following the Nernst equation for K⁺: their membrane is essentially a K⁺ electrode.</span></li>
+        <li><b>Heinemann U, Lux HD (1977).</b> Ceiling of stimulus induced rises in extracellular potassium concentration in the cerebral cortex of cat. <i>Brain Research</i> 120:231–249. <a href="https://doi.org/10.1016/0006-8993(77)90903-9" target="_blank" rel="noopener">doi:10.1016/0006-8993(77)90903-9</a><br><span class="why">However hard the cortex is stimulated, [K⁺] outside rarely goes above about 10–12 mM, except in seizures and spreading depression.</span></li>
+        <li><b>Newman EA, Frambach DA, Odette LL (1984).</b> Control of extracellular potassium levels by retinal glial cell K⁺ siphoning. <i>Science</i> 225:1174–1175. <a href="https://doi.org/10.1126/science.6474173" target="_blank" rel="noopener">doi:10.1126/science.6474173</a><br><span class="why">Glial cells carry K⁺ from where it piles up to where it can be got rid of: K⁺ siphoning, a form of spatial buffering.</span></li>
+        <li><b>Clements JD, Lester RAJ, Tong G, Jahr CE, Westbrook GL (1992).</b> The time course of glutamate in the synaptic cleft. <i>Science</i> 258:1498–1501. <a href="https://doi.org/10.1126/science.1359647" target="_blank" rel="noopener">doi:10.1126/science.1359647</a><br><span class="why">Glutamate in the cleft peaks at about 1 mM and falls with a time constant of about 1 ms: the fast part of the glutamate in the simulation.</span></li>
+        <li><b>Destexhe A, Mainen ZF, Sejnowski TJ (1994).</b> Synthesis of models for excitable membranes, synaptic transmission and neuromodulation using a common kinetic formalism. <i>Journal of Computational Neuroscience</i> 1:195–230. <a href="https://doi.org/10.1007/BF00961734" target="_blank" rel="noopener">doi:10.1007/BF00961734</a><br><span class="why">The simple binding schemes for AMPA and NMDA receptors, fitted to synaptic currents; the binding and unbinding rates used here are from their Table 1.</span></li>
+        <li><b>Rothstein JD, Van Kammen M, Levey AI, Martin LJ, Kuncl RW (1995).</b> Selective loss of glial glutamate transporter GLT-1 in amyotrophic lateral sclerosis. <i>Annals of Neurology</i> 38:73–84. <a href="https://doi.org/10.1002/ana.410380114" target="_blank" rel="noopener">doi:10.1002/ana.410380114</a><br><span class="why">In ALS the astrocytes’ main glutamate transporter is lost from the motor cortex and spinal cord.</span></li>
+        <li><b>Zerangue N, Kavanaugh MP (1996).</b> Flux coupling in a neuronal glutamate transporter. <i>Nature</i> 383:634–637. <a href="https://doi.org/10.1038/383634a0" target="_blank" rel="noopener">doi:10.1038/383634a0</a><br><span class="why">Each glutamate is carried in with 3 Na⁺ and 1 H⁺ while 1 K⁺ goes out: what powers uptake.</span></li>
+        <li><b>Bergles DE, Jahr CE (1997).</b> Synaptic activation of glutamate transporters in hippocampal astrocytes. <i>Neuron</i> 19:1297–1308. <a href="https://doi.org/10.1016/S0896-6273(00)80420-1" target="_blank" rel="noopener">doi:10.1016/S0896-6273(00)80420-1</a><br><span class="why">Astrocytes’ transporters take up glutamate released by nearby synapses, within milliseconds of each release.</span></li>
+        <li><b>Shimamoto K, Lebrun B, Yasuda-Kamatani Y, Sakaitani M, Shigeri Y, Yumoto N, Nakajima T (1998).</b> DL-threo-β-benzyloxyaspartate, a potent blocker of excitatory amino acid transporters. <i>Molecular Pharmacology</i> 53:195–201. <a href="https://doi.org/10.1124/mol.53.2.195" target="_blank" rel="noopener">doi:10.1124/mol.53.2.195</a><br><span class="why">TBOA, the transporter blocker in the simulation.</span></li>
+        <li><b>Nicholson C, Syková E (1998).</b> Extracellular space structure revealed by diffusion analysis. <i>Trends in Neurosciences</i> 21:207–215. <a href="https://doi.org/10.1016/S0166-2236(98)01261-2" target="_blank" rel="noopener">doi:10.1016/S0166-2236(98)01261-2</a><br><span class="why">The space between brain cells is about a fifth of the tissue, which is why K⁺ released by spikes builds up so fast.</span></li>
+        <li><b>Danbolt NC (2001).</b> Glutamate uptake. <i>Progress in Neurobiology</i> 65:1–105. <a href="https://doi.org/10.1016/S0301-0082(00)00067-8" target="_blank" rel="noopener">doi:10.1016/S0301-0082(00)00067-8</a><br><span class="why">Review: the glutamate transporters, where they are and how much each does.</span></li>
+        <li><b>Arnth-Jensen N, Jabaudon D, Scanziani M (2002).</b> Cooperation between independent hippocampal synapses is controlled by glutamate uptake. <i>Nature Neuroscience</i> 5:325–331. <a href="https://doi.org/10.1038/nn825" target="_blank" rel="noopener">doi:10.1038/nn825</a><br><span class="why">Blocking uptake prolongs NMDA currents and lets glutamate from one synapse reach NMDA receptors at its neighbours, while AMPA currents barely change.</span></li>
+        <li><b>Kofuji P, Newman EA (2004).</b> Potassium buffering in the central nervous system. <i>Neuroscience</i> 129:1043–1054. <a href="https://doi.org/10.1016/j.neuroscience.2004.06.008" target="_blank" rel="noopener">doi:10.1016/j.neuroscience.2004.06.008</a><br><span class="why">Review: spatial buffering, Kir4.1 and the other ways glia take up K⁺.</span></li>
+        <li><b>Azevedo FAC, Carvalho LRB, Grinberg LT, Farfel JM, Ferretti REL, Leite REP, Jacob Filho W, Lent R, Herculano-Houzel S (2009).</b> Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain. <i>Journal of Comparative Neurology</i> 513:532–541. <a href="https://doi.org/10.1002/cne.21974" target="_blank" rel="noopener">doi:10.1002/cne.21974</a><br><span class="why">About 86 billion neurons and about as many other cells: glia are about half the brain’s cells.</span></li>
+        <li><b>Bockenhauer D, Feather S, Stanescu HC, et al. (2009).</b> Epilepsy, ataxia, sensorineural deafness, tubulopathy, and KCNJ10 mutations. <i>New England Journal of Medicine</i> 360:1960–1970. <a href="https://doi.org/10.1056/NEJMoa0810276" target="_blank" rel="noopener">doi:10.1056/NEJMoa0810276</a><br><span class="why">EAST syndrome: what happens in people whose Kir4.1 channels don’t work.</span></li>
+        <li><b>Chever O, Djukic B, McCarthy KD, Amzica F (2010).</b> Implication of Kir4.1 channel in excess potassium clearance: an in vivo study on anesthetized glial-conditional Kir4.1 knock-out mice. <i>Journal of Neuroscience</i> 30:15769–15777. <a href="https://doi.org/10.1523/JNEUROSCI.2078-10.2010" target="_blank" rel="noopener">doi:10.1523/JNEUROSCI.2078-10.2010</a><br><span class="why">Without Kir4.1 in glia, the K⁺ that activity leaves outside is cleared more slowly.</span></li>
+        <li><b>Ginhoux F, Greter M, Leboeuf M, et al. (2010).</b> Fate mapping analysis reveals that adult microglia derive from primitive macrophages. <i>Science</i> 330:841–845. <a href="https://doi.org/10.1126/science.1194637" target="_blank" rel="noopener">doi:10.1126/science.1194637</a><br><span class="why">Microglia come from the embryo’s yolk sac, not from nervous tissue.</span></li>
+        <li><b>Schafer DP, Lehrman EK, Kautzman AG, et al. (2012).</b> Microglia sculpt postnatal neural circuits in an activity and complement-dependent manner. <i>Neuron</i> 74:691–705. <a href="https://doi.org/10.1016/j.neuron.2012.03.026" target="_blank" rel="noopener">doi:10.1016/j.neuron.2012.03.026</a><br><span class="why">Microglia engulf the less active synapses during development.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="k-calc">
+  <div class="calc-head">
+    <span class="sect-title">[K⁺] outside calculator</span>
+  </div>
+  <p class="caption">How high does steady firing push [K⁺] outside the cells, and what does that do to E<sub>K</sub> and a neuron’s resting voltage? Set the firing, the clean-up and the neuron.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh"><i class="dot pos"></i> Firing adds K⁺</div>
+        <div class="gr"><label for="cF">rate f</label><input type="range" id="cF" min="0" max="100" step="1" value="20"><output id="cFo" for="cF"></output></div>
+        <div class="gr"><label for="cDK">ΔK</label><input type="range" id="cDK" min="0.01" max="0.2" step="0.01" value="0.05"><output id="cDKo" for="cDK"></output></div>
+        <span class="caption">K⁺ added outside per spike</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot astro"></i> Clean-up takes it away</div>
+        <div class="gr"><label for="cTD">τ<sub>d</sub></label><input type="range" id="cTD" min="2" max="30" step="0.5" value="10"><output id="cTDo" for="cTD"></output></div>
+        <span class="caption">diffusion into the rest of the brain</span>
+        <div class="gr"><label for="cU">astrocytes</label><input type="range" id="cU" min="0" max="100" step="1" value="100"><output id="cUo" for="cU"></output></div>
+        <span class="caption">uptake; τ<sub>a</sub> = 1.5 s at 100 %, longer below</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot neg"></i> The neuron</div>
+        <div class="gr"><label for="cP">P<sub>Na</sub>/P<sub>K</sub></label><input type="range" id="cP" min="0.01" max="0.2" step="0.01" value="0.05"><output id="cPo" for="cP"></output></div>
+        <span class="caption">[K⁺]<sub>i</sub> 140, [Na⁺]<sub>o</sub> 145, [Na⁺]<sub>i</sub> 12 mM; 37 °C</span>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="cK">—</span><span class="caption">[K⁺]<sub>o</sub> once it has levelled off</span></div>
+      <div class="es"><span>rise <b id="cRise">—</b></span><span>time constant τ <b id="cTau">—</b></span></div>
+      <div class="es"><span>E<sub>K</sub> <b id="cEK">—</b></span><span>neuron at rest <b id="cV">—</b></span><span><b id="cVerdict">—</b></span></div>
+      <div class="gformula" id="cFormula" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator chart">
+        <button type="button" role="tab" id="tab-cvk" aria-controls="pane-cvk" aria-selected="true">Voltage vs [K⁺] outside</button>
+        <button type="button" role="tab" id="tab-chelp" aria-controls="pane-chelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-cvk" aria-labelledby="tab-cvk">
+        <canvas id="cVK" aria-label="E_K and the neuron's resting voltage against the K+ concentration outside, on a log scale, with the threshold and the present value marked"></canvas>
+        <div class="legend"><span><i class="ln" style="background:var(--k)"></i>E<sub>K</sub></span><span><i class="ln" style="background:var(--accent)"></i>neuron’s resting voltage (GHK)</span><span><i class="ln dash" style="color:var(--pos)"></i>about threshold</span></div>
+      </div>
+      <div class="help" role="tabpanel" id="pane-chelp" aria-labelledby="tab-chelp" hidden>
+        <ul>
+          <li><b>The lines:</b> E<sub>K</sub> and the neuron’s resting voltage at every [K⁺] outside. The horizontal axis is logarithmic (each step along it multiplies [K⁺]<sub>o</sub>), so E<sub>K</sub> is a straight line, rising 18.5 mV each time [K⁺]<sub>o</sub> doubles. The resting voltage bends: at low [K⁺]<sub>o</sub> the Na⁺ term matters more and holds it up.</li>
+          <li><b>The dots</b> mark the [K⁺]<sub>o</sub> set above; the grey tick on the axis is rest, 3 mM. The dashed line is about where a neuron starts firing by itself.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<script>
+// =====================================================================================
+// Shared: colours, number formats, charts with real subscripts, tabs
+// =====================================================================================
+const $ = id => document.getElementById(id);
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','a','pos','neg','bath','cyto','mem','memdark','glu','nmda','astro','astrofill','vessel','font-body','font-mono']
+    .forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+const alpha = (hex, a) => `rgba(${rgb(hex).join(',')},${a})`;
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+const fmt = (v, d = 1) => isFinite(v) ? (+v.toFixed(d)).toFixed(d).replace('-', '−') : '—';
+const fmtS = (v, d = 1, u = ' mV') => isFinite(v) ? (+v.toFixed(d) > 0 ? '+' : +v.toFixed(d) < 0 ? '−' : '') + Math.abs(v).toFixed(d) + u : '—';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;   // mean 0, variance 1, near enough
+function bindRange(id, show, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = show(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+
+// Canvas text with real subscripts: "E_K" and "[K⁺]_o" draw K and o lowered and smaller; "g_{Na}" for longer ones.
+function fillSub(g, text, x, y, align = 'left') {
+  const parts = String(text).split(/_(\{[^}]*\}|[^\s_,;:)]+)/);
+  const size = parseFloat(/([\d.]+)px/.exec(g.font)[1]), base = g.font;
+  const small = base.replace(/[\d.]+px/, (size * 0.75).toFixed(1) + 'px');
+  const w = parts.reduce((a, p, i) => { g.font = i % 2 ? small : base; return a + g.measureText(p.replace(/[{}]/g, '')).width; }, 0);
+  let cx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  const saveAlign = g.textAlign; g.textAlign = 'left';
+  parts.forEach((p, i) => {
+    const t = p.replace(/[{}]/g, ''); if (!t) return;
+    g.font = i % 2 ? small : base;
+    g.fillText(t, cx, y + (i % 2 ? size * 0.28 : 0));
+    cx += g.measureText(t).width;
+  });
+  g.font = base; g.textAlign = saveAlign;
+}
+function sizeCanvas(cv, W, H) {
+  if (cv._w !== W || cv._h !== H) { cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.height = H + 'px'; cv._w = W; cv._h = H; }
+  const g = cv.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0); return g;
+}
+function niceTicks(a, b, n) {
+  const span = Math.abs(b - a) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag, out = [];
+  for (let v = Math.ceil(Math.min(a, b) / step) * step; v <= Math.max(a, b) + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+const tickText = v => { const a = Math.abs(v); return (a >= 1e4 ? Math.round(v).toLocaleString('en-US') : (+v.toPrecision(4)).toString()).replace('-', '−'); };
+// One chart. s: { h, square, x:[a,b], y:[lo,hi], xlog, ylog, xlab, ylab, xticks, yticks, zoom, redraw,
+//   lines:[{y, x | x0+dx, n, color, w, dash, alpha}], hlines:[{y,color,label}], bands:[{x0,x1,color}], dots:[{x,y,color,r}], xmarks:[{x,color}] }
+function plot(cv, s) {
+  const W = cv.clientWidth || cv.parentElement.clientWidth || 400;
+  const L = s.left ?? 50, R = s.right ?? 12, T = 14, B = s.xlab ? 34 : 22;
+  const H = s.square ? Math.round(W - L - R + T + B) : (s.h || 190);
+  const g = sizeCanvas(cv, W, H);
+  g.clearRect(0, 0, W, H);
+  let [x0, x1] = s.x, [y0, y1] = s.y;
+  if (s.zoom) { [x0, x1] = ChartZoom.x(cv, x0, x1); [y0, y1] = ChartZoom.y(cv, y0, y1); ChartZoom.bind(cv, s.redraw); }
+  const X = s.xlog ? v => L + Math.log(v / x0) / Math.log(x1 / x0) * (W - L - R) : v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = s.ylog ? v => T + Math.log(y1 / v) / Math.log(y1 / y0) * (H - T - B) : v => T + (y1 - v) / (y1 - y0) * (H - T - B);
+  g.font = '11px ' + C['font-mono']; g.lineWidth = 1;
+  const decades = (a, b) => { const o = []; for (let e = Math.floor(Math.log10(a)); e <= Math.ceil(Math.log10(b)); e++) { const v = Math.pow(10, e); if (v >= a * 0.999 && v <= b * 1.001) o.push(v); } return o; };
+  const xt = s.xticks || (s.xlog ? decades(x0, x1) : niceTicks(x0, x1, Math.max(3, Math.round((W - L - R) / 80))));
+  const yt = s.yticks || (s.ylog ? decades(y0, y1) : niceTicks(y0, y1, Math.max(3, Math.round((H - T - B) / 42))));
+  for (const b of s.bands || []) { g.fillStyle = alpha(b.color, 0.1); const a = clamp(X(b.x0), L, W - R), e = clamp(X(b.x1), L, W - R); if (e > a) g.fillRect(a, T, e - a, H - T - B); }
+  g.strokeStyle = C.line; g.fillStyle = C.muted;
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  for (const v of xt) { const x = Math.round(X(v)) + .5; if (x < L - 1 || x > W - R + 1) continue; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.fillText(tickText(v), x, H - B + 5); }
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (const v of yt) { const y = Math.round(Y(v)) + .5; if (y < T - 1 || y > H - B + 1) continue; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke(); g.fillText(tickText(v), L - 6, y); }
+  g.strokeStyle = C.muted; g.beginPath(); g.moveTo(L, H - B + .5); g.lineTo(W - R, H - B + .5); g.moveTo(L - .5, T); g.lineTo(L - .5, H - B); g.stroke();
+  for (const m of s.xmarks || []) { g.strokeStyle = m.color || C.muted; g.lineWidth = 2; const x = X(m.x); g.beginPath(); g.moveTo(x, H - B - 6); g.lineTo(x, H - B + 4); g.stroke(); g.lineWidth = 1; }
+  g.font = '12px ' + C['font-body']; g.fillStyle = C.muted;
+  if (s.xlab) { g.textBaseline = 'bottom'; fillSub(g, s.xlab, W - R, H - 1, 'right'); }
+  if (s.ylab) { g.textBaseline = 'top'; fillSub(g, s.ylab, 2, 0, 'left'); }
+  g.save(); g.beginPath(); g.rect(L, T - 2, W - L - R, H - T - B + 4); g.clip();
+  for (const h of s.hlines || []) {
+    g.strokeStyle = h.color || C.muted; g.setLineDash([5, 4]); g.lineWidth = 1;
+    const y = Math.round(Y(h.y)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke();
+    if (h.label) { g.setLineDash([]); g.fillStyle = h.color || C.muted; g.textBaseline = 'bottom'; fillSub(g, h.label, W - R - 4, y - 3, 'right'); }
+  }
+  g.setLineDash([]);
+  for (const l of s.lines || []) {
+    const n = l.n ?? l.y.length; if (n < 2) continue;
+    g.strokeStyle = l.color; g.lineWidth = l.w || 2; g.lineJoin = 'round'; g.setLineDash(l.dash ? [6, 4] : []);
+    g.globalAlpha = l.alpha ?? 1; g.beginPath();
+    const step = Math.max(1, Math.floor(n / (W * 2)));   // at most two points per pixel
+    const yv = i => s.ylog ? Math.max(l.y[i], y0 * 0.5) : clamp(l.y[i], y0 - (y1 - y0), y1 + (y1 - y0));
+    const xv = i => l.x ? l.x[i] : l.x0 + l.dx * i;
+    let started = false;
+    for (let i = 0; i < n; i += step) { const px = X(xv(i)), py = Y(yv(i)); started ? g.lineTo(px, py) : g.moveTo(px, py); started = true; }
+    if ((n - 1) % step) g.lineTo(X(xv(n - 1)), Y(yv(n - 1)));
+    g.stroke(); g.globalAlpha = 1;
+  }
+  g.setLineDash([]);
+  for (const d of s.dots || []) { g.fillStyle = d.color; g.beginPath(); g.arc(X(d.x), Y(d.y), d.r || 4, 0, 2 * Math.PI); g.fill(); g.strokeStyle = C.surface; g.lineWidth = 1.5; g.stroke(); }
+  g.restore();
+}
+// a picture drawn in its own 1000-wide coordinates, scaled to the canvas; text keeps a readable size
+function picture(cv, LW, LH) {
+  const W = cv.clientWidth || cv.parentElement.clientWidth || 800, k = W / LW, H = Math.round(LH * k);
+  const g = sizeCanvas(cv, W, H);
+  g.setTransform(DPR * k, 0, 0, DPR * k, 0, 0);
+  g.clearRect(0, 0, LW, LH);
+  return { g, k, font: px => (clamp(px * Math.max(k, 0.85), 11, 14) / k).toFixed(2) + 'px ' + C['font-body'] };
+}
+readColors();
+
+// =====================================================================================
+// Part 1: K⁺ outside. One pool of fluid near the firing neurons:
+//   d[K]/dt = f·ΔK − ([K] − 3)/τd − u·([K] − 3)/τa      (mM, s)
+// Neuron's resting voltage from GHK; the astrocyte network's voltage halfway between its E_K near the neurons
+// and its E_K far away (equal K⁺-channel membrane at each end), as in the theory.
+// =====================================================================================
+(() => {
+  const P = { KR: 3, KI: 140, NAI: 12, NAO: 145, PNA: 0.05, KA: 100, RTF: 26.7, DK: 0.05, TD: 10, TA: 1.5, T: 60, ON: 5, REC: 0.05, DT: 0.01 };
+  const NS = Math.round(P.T / P.REC) + 1;
+  const ghk = k => P.RTF * Math.log((k + P.PNA * P.NAO) / (P.KI + P.PNA * P.NAI));
+  const eK = k => P.RTF * Math.log(k / P.KI);
+  const eKa = k => P.RTF * Math.log(k / P.KA);
+  const vAstro = k => (eKa(k) + eKa(P.KR)) / 2;
+  const ctl = { f: 20, dur: 10, u: 1, speed: 4 };
+  let playing = false, prev = null, dirty = true, run = newRun(), predicted = P.KR;
+
+  function newRun() {
+    const r = { t: 0, K: P.KR, n: 0, Ks: new Float32Array(NS), Vn: new Float32Array(NS), Va: new Float32Array(NS), Ea: new Float32Array(NS),
+      peak: P.KR, jA: 0, jD: 0, f: 0, done: false, label: '' };
+    record(r); return r;
+  }
+  function record(r) { if (r.n < NS) { r.Ks[r.n] = r.K; r.Vn[r.n] = ghk(r.K); r.Va[r.n] = vAstro(r.K); r.Ea[r.n] = eKa(r.K); r.n++; } }
+  const firingAt = t => t >= P.ON && t < P.ON + ctl.dur;
+  function step(r, dt) {
+    const f = firingAt(r.t) ? ctl.f : 0, ex = r.K - P.KR;
+    r.jD = ex / P.TD; r.jA = ctl.u * ex / P.TA; r.f = f;
+    r.K += dt * (f * P.DK - r.jD - r.jA); r.t += dt;
+    if (r.K > r.peak) r.peak = r.K;
+    while (r.n < NS && r.t >= r.n * P.REC - 1e-9) record(r);
+  }
+  // the highest [K⁺] this run will reach with the settings as they are now (so the chart's scale doesn't jump)
+  function predict() {
+    const r = { t: run.t, K: run.K, n: NS, peak: run.peak };
+    while (r.t < P.T) step(r, 0.02);
+    predicted = r.peak;
+  }
+  const label = () => `${ctl.f} Hz for ${ctl.dur} s, uptake ${Math.round(ctl.u * 100)} %`;
+  function fire() {
+    if (run.t > 0.5) prev = run;
+    run = newRun(); run.label = label(); predict(); resetDots(); dirty = true;
+  }
+  function setPlaying(on) { playing = on; $('kPlay').textContent = on ? 'Pause' : 'Play'; }
+
+  // ---------- the picture: logical 1000 × 340 ----------
+  const LW = 1000, LH = 340;
+  const PATCH = { x0: 16, y0: 30, x1: 470, y1: 312 };
+  const NEUR = [[100, 92, 64, 44], [250, 80, 56, 40], [400, 96, 50, 44], [110, 228, 62, 46], [300, 236, 60, 44], [424, 252, 36, 34]];
+  const TIPS = [   // each astrocyte process, from its tip in among the neurons to the first astrocyte's cell body
+    [[60, 160], [150, 158], [206, 160], [328, 158], [420, 163], [515, 170]],
+    [[328, 48], [330, 100], [328, 158], [420, 163], [515, 170]],
+    [[206, 270], [204, 215], [206, 160], [328, 158], [420, 163], [515, 170]],
+  ];
+  const NET = [[515, 170], [540, 162], [580, 150], [612, 146], [660, 142], [712, 140], [735, 150], [770, 170], [782, 176], [828, 186], [850, 190], [875, 193], [905, 196], [922, 197], [950, 197]];
+  const SOMA = [[515, 170, 25], [712, 140, 23], [850, 190, 23]];
+  const STUBS = [[[520, 146], [534, 104], [548, 66]], [[522, 194], [540, 236], [566, 274]], [[708, 117], [702, 82], [694, 46]], [[700, 162], [680, 210], [652, 254]],
+                 [[856, 167], [868, 128], [886, 88]], [[842, 212], [830, 252], [812, 292]]];
+  const GJ = [[612, 146, 0.1], [782, 176, 0.5]];
+  const VESSEL = { x0: 930, y0: 22, x1: 992, y1: 322 };
+  const DPM = 6;   // dots per mM
+  let dots = [], movers = [], farDots = [];
+  const inNeuron = (x, y, grow = 1.08) => NEUR.some(([cx, cy, rx, ry]) => ((x - cx) / (rx * grow)) ** 2 + ((y - cy) / (ry * grow)) ** 2 < 1);
+  const inPatch = (x, y) => x > PATCH.x0 + 6 && x < PATCH.x1 - 6 && y > PATCH.y0 + 6 && y < PATCH.y1 - 6;
+  function ecsPoint() {
+    for (let i = 0; i < 40; i++) { const x = PATCH.x0 + 8 + Math.random() * (PATCH.x1 - PATCH.x0 - 16), y = PATCH.y0 + 8 + Math.random() * (PATCH.y1 - PATCH.y0 - 16); if (!inNeuron(x, y)) return { x, y }; }
+    return { x: 60, y: 160 };
+  }
+  function membranePoint() {
+    const [cx, cy, rx, ry] = NEUR[(Math.random() * NEUR.length) | 0], a = Math.random() * 2 * Math.PI;
+    return { x: cx + Math.cos(a) * (rx + 5), y: cy + Math.sin(a) * (ry + 5) };
+  }
+  function resetDots() {
+    dots = []; movers = [];
+    for (let i = 0; i < Math.round(run.K * DPM); i++) dots.push(ecsPoint());
+  }
+  (function makeFar() {
+    for (let i = 0; i < 26; i++) {
+      for (let j = 0; j < 40; j++) {
+        const x = 486 + Math.random() * 430, y = 36 + Math.random() * 274;
+        if (SOMA.some(([sx, sy, r]) => Math.hypot(x - sx, y - sy) < r + 8)) continue;
+        farDots.push({ x, y }); break;
+      }
+    }
+  })();
+  // a dot taken up by an astrocyte: to the nearest point on a process, then through the network to the vessel
+  const pathLen = pts => { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); return L; };
+  function uptake(d) {
+    let best = null, bd = 1e9;
+    TIPS.forEach(p => p.forEach((q, i) => { const dd = Math.hypot(q[0] - d.x, q[1] - d.y); if (dd < bd && i < p.length - 1) { bd = dd; best = [p, i]; } }));
+    const pts = [[d.x, d.y], ...best[0].slice(best[1]), ...NET.slice(1)];
+    movers.push({ kind: 'astro', pts, L: pathLen(pts), s: 0, a: 1 });
+    if (movers.length > 70) movers.splice(0, movers.length - 70);
+  }
+  function diffuseAway(d) {
+    const cx = (PATCH.x0 + PATCH.x1) / 2 - 60, cy = (PATCH.y0 + PATCH.y1) / 2, ang = Math.atan2(d.y - cy, d.x - cx);
+    movers.push({ kind: 'diff', x: d.x, y: d.y, vx: Math.cos(ang) * 70, vy: Math.sin(ang) * 70, a: 1 });
+  }
+  function syncDots(simDt, realDt) {
+    const target = Math.round(run.K * DPM);
+    while (dots.length < target) dots.push(run.f > 0 ? membranePoint() : ecsPoint());
+    while (dots.length > target) {
+      const d = dots.splice((Math.random() * dots.length) | 0, 1)[0], share = run.jA + run.jD > 0 ? run.jA / (run.jA + run.jD) : 0;
+      Math.random() < share ? uptake(d) : diffuseAway(d);
+    }
+    for (const d of dots) {   // a little thermal jiggle, staying in the space between cells
+      const nx = d.x + gauss() * 1.4, ny = d.y + gauss() * 1.4;
+      if (inPatch(nx, ny) && !inNeuron(nx, ny, 1.0)) { d.x = nx; d.y = ny; }
+    }
+    for (const d of farDots) { const nx = d.x + gauss() * 1.1, ny = d.y + gauss() * 1.1; if (nx > 482 && nx < 920 && ny > 32 && ny < 316) { d.x = nx; d.y = ny; } }
+    for (const m of movers) {
+      if (m.kind === 'astro') { m.s += 340 * realDt; if (m.s > m.L) m.a -= realDt * 3; }
+      else { m.x += m.vx * realDt; m.y += m.vy * realDt; m.a -= realDt * 0.9; }
+    }
+    movers = movers.filter(m => m.a > 0);
+  }
+  function along(m) {
+    let s = Math.min(m.s, m.L);
+    for (let i = 1; i < m.pts.length; i++) {
+      const [ax, ay] = m.pts[i - 1], [bx, by] = m.pts[i], l = Math.hypot(bx - ax, by - ay);
+      if (s <= l) return [ax + (bx - ax) * s / l, ay + (by - ay) * s / l];
+      s -= l;
+    }
+    return m.pts[m.pts.length - 1];
+  }
+  const polyline = (g, pts) => { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length - 1; i++) { const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2; g.quadraticCurveTo(pts[i][0], pts[i][1], mx, my); } const e = pts[pts.length - 1]; g.lineTo(e[0], e[1]); };
+  let flashPhase = 0;
+  function drawPic(simDt) {
+    const { g, font } = picture($('kPic'), LW, LH);
+    // the tissue near the firing neurons, and the vessel
+    g.fillStyle = C.bath; g.strokeStyle = C.line; g.lineWidth = 1.2; g.setLineDash([6, 5]);
+    g.beginPath(); g.roundRect(PATCH.x0, PATCH.y0, PATCH.x1 - PATCH.x0, PATCH.y1 - PATCH.y0, 18); g.fill(); g.stroke(); g.setLineDash([]);
+    g.fillStyle = alpha(C.vessel, 0.18); g.strokeStyle = C.vessel; g.lineWidth = 2;
+    g.beginPath(); g.roundRect(VESSEL.x0, VESSEL.y0, VESSEL.x1 - VESSEL.x0, VESSEL.y1 - VESSEL.y0, 28); g.fill(); g.stroke();
+    g.fillStyle = alpha(C.vessel, 0.55);
+    [[961, 70], [956, 150], [966, 232], [958, 292]].forEach(([x, y]) => { g.beginPath(); g.ellipse(x, y, 16, 9, 0.3, 0, 2 * Math.PI); g.fill(); });
+    // neurons, tinted by resting voltage; a flickering ring while they fire
+    const vn = ghk(run.K), tv = clamp((vn - ghk(P.KR)) / (-50 - ghk(P.KR)), 0, 1), col = mixc(C.pos, C.neg, tv);
+    flashPhase += simDt * Math.max(run.f, 0);
+    NEUR.forEach(([cx, cy, rx, ry], i) => {
+      g.strokeStyle = col; g.lineWidth = 3; g.globalAlpha = 0.6;
+      g.beginPath(); g.moveTo(cx + rx * 0.7, cy - ry * 0.7); g.lineTo(cx + rx * 1.05, cy - ry * 1.15); g.stroke();
+      g.globalAlpha = 1;
+      g.fillStyle = alpha(rgbHex(col), 0.22); g.lineWidth = 1.6;
+      g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI); g.fill(); g.stroke();
+      if (run.f > 0 && (simDt > 0.04 || Math.sin(flashPhase * 2 * Math.PI + i * 1.7) > 0.3)) {
+        g.strokeStyle = alpha(C.pos, 0.75); g.lineWidth = 2.5; g.beginPath(); g.ellipse(cx, cy, rx + 4, ry + 4, 0, 0, 2 * Math.PI); g.stroke();
+      }
+    });
+    // astrocytes: processes, cell bodies, gap junctions, endfoot
+    const tube = (pts, w) => { g.lineCap = 'round'; g.lineJoin = 'round'; polyline(g, pts); g.strokeStyle = C.astro; g.lineWidth = w + 3; g.stroke(); polyline(g, pts); g.strokeStyle = C.astrofill; g.lineWidth = w; g.stroke(); };
+    STUBS.forEach(p => tube(p, 6)); TIPS.forEach(p => tube(p, 7)); tube(NET.slice(0, -2), 8);
+    g.fillStyle = C.astrofill; g.strokeStyle = C.astro; g.lineWidth = 2;
+    g.beginPath(); g.roundRect(914, 168, 14, 58, 6); g.fill(); g.stroke();
+    SOMA.forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fill(); g.stroke(); });
+    g.strokeStyle = C.ink; g.lineWidth = 2;
+    GJ.forEach(([x, y, a]) => { const c = Math.cos(a + Math.PI / 2), s = Math.sin(a + Math.PI / 2), ux = Math.cos(a) * 3, uy = Math.sin(a) * 3;
+      for (const sg of [-1, 1]) { g.beginPath(); g.moveTo(x + sg * ux - c * 9, y + sg * uy - s * 9); g.lineTo(x + sg * ux + c * 9, y + sg * uy + s * 9); g.stroke(); } });
+    // K⁺
+    g.fillStyle = C.k;
+    const dotAt = (x, y) => { g.beginPath(); g.arc(x, y, 3.2, 0, 2 * Math.PI); g.fill(); };
+    dots.forEach(d => dotAt(d.x, d.y)); farDots.forEach(d => dotAt(d.x, d.y));
+    movers.forEach(m => { g.globalAlpha = clamp(m.a, 0, 1); const [x, y] = m.kind === 'astro' ? along(m) : [m.x, m.y]; dotAt(x, y); });
+    g.globalAlpha = 1;
+    // labels
+    g.fillStyle = C.muted; g.font = font(12.5); g.textBaseline = 'alphabetic';
+    fillSub(g, 'Near the firing neurons: the narrow space between cells', PATCH.x0 + 4, 22);
+    fillSub(g, 'Astrocytes, joined by gap junctions', 540, 22);
+    fillSub(g, 'Blood vessel', 990, 16, 'right');
+    fillSub(g, 'gap junction', 612, 126, 'center');
+    fillSub(g, 'Far away: [K⁺]_o stays at 3 mM', 700, 334, 'center');
+    g.fillStyle = C.ink; g.font = '600 ' + font(14);
+    fillSub(g, `[K⁺]_o ${run.K.toFixed(1)} mM`, PATCH.x0 + 10, PATCH.y1 - 10);
+  }
+  function rgbHex(rgbStr) { const m = rgbStr.match(/\d+/g).map(Number); return '#' + m.map(v => v.toString(16).padStart(2, '0')).join(''); }
+
+  // ---------- charts and readouts ----------
+  function drawCharts() {
+    const kmax = Math.max(8, Math.ceil(Math.max(run.peak, predicted, prev ? prev.peak : 0) * 1.12 / 2) * 2);
+    const line = (r, arr, color, o = {}) => ({ y: arr, n: r.n, x0: 0, dx: P.REC, color, ...o });
+    const kl = [], vl = [];
+    if (prev) { kl.push(line(prev, prev.Ks, C.k, { alpha: 0.35 })); vl.push(line(prev, prev.Vn, C.accent, { alpha: 0.35 })); }
+    kl.push(line(run, run.Ks, C.k));
+    vl.push(line(run, run.Ea, C.astro, { w: 1.4, dash: true }), line(run, run.Va, C.astro), line(run, run.Vn, C.accent));
+    const band = [{ x0: P.ON, x1: P.ON + ctl.dur, color: C.pos }];
+    plot($('kKC'), { h: 200, x: [0, P.T], y: [0, kmax], ylab: 'mM', xlab: 'time (s)', bands: band, zoom: true, redraw: drawCharts,
+      hlines: [{ y: 12, color: C.pos, label: 'about where seizures start' }], lines: kl });
+    plot($('kVC'), { h: 200, x: [0, P.T], y: [-100, -40], ylab: 'mV', xlab: 'time (s)', bands: band, zoom: true, redraw: drawCharts,
+      hlines: [{ y: -55, color: C.pos, label: 'about threshold' }], lines: vl });
+  }
+  function readouts() {
+    const K = run.K, vn = ghk(K), va = vAstro(K), ea = eKa(K);
+    $('kKnum').textContent = K.toFixed(2) + ' mM';
+    $('kEK').textContent = fmtS(eK(K));
+    $('kVn').textContent = fmtS(vn);
+    $('kVa').textContent = fmtS(va);
+    $('kDrive').textContent = fmtS(va - ea) + (va - ea < -0.05 && ctl.u > 0 ? ', K⁺ flows in' : '');
+    $('kPeak').textContent = run.peak.toFixed(2) + ' mM';
+    $('kRem').textContent = run.jA.toFixed(2) + ' / ' + run.jD.toFixed(2) + ' mM/s';
+    $('kPrevLab').textContent = prev ? 'earlier run: ' + prev.label : 'earlier run (none yet)';
+    const t = run.t;
+    $('kCap').innerHTML = t < P.ON ? `Before the firing starts at 5 s: [K⁺]<sub>o</sub> is at its resting 3 mM.${playing ? '' : ' Press Play or New run.'}`
+      : firingAt(t) ? `The neurons fire at ${ctl.f} Hz. Each spike adds K⁺ outside; ${ctl.u > 0 ? `the astrocytes remove ${run.jA.toFixed(2)} mM/s and diffusion ${run.jD.toFixed(2)} mM/s.` : 'with no astrocyte uptake only diffusion removes it, ' + run.jD.toFixed(2) + ' mM/s.'} The neuron’s resting voltage is ${fmtS(vn)}, ${fmtS(vn - ghk(P.KR))} from rest.`
+      : run.done ? `Run over. [K⁺]<sub>o</sub> peaked at ${run.peak.toFixed(1)} mM, where the neuron’s resting voltage was ${fmtS(ghk(run.peak))}. Press New run to fire again; this run will stay, faded.`
+      : `The firing has stopped; [K⁺]<sub>o</sub> is falling back to 3 mM${ctl.u > 0 ? '' : ', slowly, by diffusion alone'}.`;
+  }
+
+  // ---------- controls ----------
+  const speedOf = v => 0.5 * Math.pow(40, v / 100);
+  bindRange('kRate', v => v + ' Hz', v => { ctl.f = v; if (run) { predict(); dirty = true; } });
+  bindRange('kDur', v => v + ' s', v => { ctl.dur = v; if (run) { predict(); dirty = true; } });
+  bindRange('kUp', v => v + ' %', v => { ctl.u = v / 100; if (run) { predict(); dirty = true; } });
+  bindRange('kSpeed', v => { const s = speedOf(v); return (s < 1 ? s.toFixed(1) : s.toFixed(0)) + ' s per s'; }, v => ctl.speed = speedOf(v));
+  $('kFire').addEventListener('click', fire);
+  $('kPlay').addEventListener('click', () => { if (!playing && run.done) fire(); setPlaying(!playing); });
+  $('kClear').addEventListener('click', () => { prev = null; dirty = true; });
+  window.GliaK = { fire, set: (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); } };
+
+  let last = performance.now();
+  resetDots(); predict();
+  function loop(now) {
+    const real = Math.min(0.05, (now - last) / 1000); last = now;
+    let sim = 0;
+    if (playing && !run.done) {
+      sim = ctl.speed * real;
+      const n = Math.ceil(sim / P.DT);
+      for (let i = 0; i < n; i++) step(run, sim / n);
+      if (run.t >= P.T) { run.done = true; setPlaying(false); }
+      syncDots(sim, real);
+      dirty = true;
+    }
+    if (dirty) { drawPic(sim); drawCharts(); readouts(); dirty = false; }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; });
+  addEventListener('resize', () => { dirty = true; });
+  Frames.onRestore(() => { dirty = true; });
+  Frames.sim(() => playing, 'kPlay', ['kFire']);   // frames.js: starts paused, pauses itself when left alone
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// Part 2: glutamate. Glutamate in the cleft (mM, t in ms) falls with τ = 1 ms by diffusion, plus a small slow tail
+// that the transporters set; AMPA and NMDA receptors bind it with Destexhe, Mainen and Sejnowski's rates
+// (AMPA binding ∝ [Glu]², for its need of two glutamates). The whole release is worked out when you press Release,
+// then revealed in slow motion that speeds up as it goes. The dots in the picture are a sample of the molecules.
+// =====================================================================================
+(() => {
+  const Q = { T: 500, DT: 0.01, EVERY: 5 };
+  const REC = Q.DT * Q.EVERY, NQ = Math.round(Q.T / REC) + 1;
+  function compute(x) {
+    const ts = 2 + 28 * (1 - x), tail = 0.005 + 0.045 * (1 - x), n = Math.round(Q.T / Q.DT);
+    const G = new Float32Array(NQ), A = new Float32Array(NQ), N = new Float32Array(NQ);
+    let a = 0, nm = 0, qa = 0, qn = 0;
+    for (let i = 0; i <= n; i++) {
+      const t = i * Q.DT, glu = (1 - tail) * Math.exp(-t) + tail * Math.exp(-t / ts);
+      if (i % Q.EVERY === 0) { const k = i / Q.EVERY; G[k] = glu; A[k] = a; N[k] = nm; }
+      a += Q.DT * (1.1 * glu * glu * (1 - a) - 0.19 * a);
+      nm += Q.DT * (0.072 * glu * (1 - nm) - 0.0066 * nm);
+      qa += a * Q.DT; qn += nm * Q.DT;
+    }
+    const Gu = G.map(v => v * 1000), Ap = A.map(v => v * 100), Np = N.map(v => v * 100);   // µM and % for the charts
+    return { x, G, A, N, Gu, Ap, Np, qa, qn, peakA: Math.max(...A), peakN: Math.max(...N) };
+  }
+  const REF = compute(1);
+  const ctl = { x: 1, mult: 1 };
+  let playing = false, run = null, prev = null, dirty = true;
+  const speedNow = t => 2 * ctl.mult * (1 + t / 4);   // ms of synapse time per second
+  const idx = t => Math.min(NQ - 1, Math.floor(t / REC));
+
+  // ---------- the picture: logical 1000 × 340 ----------
+  const LW = 1000, LH = 340;
+  const BOX = { x0: 280, y0: 24, x1: 720, y1: 316 }, GAP = { y0: 236, y1: 290 }, WALL = 40;
+  const PRE = [[420, 0, 580, 40], [330, 30, 670, 150]], POST = [[350, 178, 650, 292], [450, 280, 550, 340]];
+  const NB = [[836, 120, 946, 188], [852, 204, 930, 290]];   // the neighbouring synapse
+  const inRects = (x, y, rs) => rs.some(([a, b, c, d]) => x > a && x < c && y > b && y < d);
+  const RECS = [];   // receptors on the spine head
+  [388, 412, 436, 460, 484, 508, 532, 556, 580, 604].forEach((x, i) => RECS.push({ x, kind: [1, 4, 7].includes(i) ? 'N' : 'A' }));
+  const TRANS = [];   // transporters along the astrocyte's inner face
+  for (let y = 40; y <= 300; y += 26) { TRANS.push({ x: BOX.x0, y, side: 'L', r: Math.random() }); if (y < GAP.y0 - 6 || y > GAP.y1 + 6) TRANS.push({ x: BOX.x1, y, side: 'R', r: Math.random() }); }
+  for (let x = 300; x <= 700; x += 28) { if (x < 410 || x > 590) TRANS.push({ x, y: BOX.y0, side: 'T', r: Math.random() }); if (x < 440 || x > 560) TRANS.push({ x, y: BOX.y1, side: 'B', r: Math.random() }); }
+  TRANS.forEach((t, i) => { t.r = ((i * 0.618034) % 1); });   // spread evenly, so any share blocked is spread round the synapse
+  let glu = [], flashes = [];
+  const curX = () => run ? run.x : ctl.x;
+  const D_IN = 20000, D_OUT = 500, P_CAP = 0.35;   // px²/ms inside the wrap and outside it; chance a hit on a working transporter catches it
+  function moveDots(simDt) {
+    const steps = Math.min(60, Math.ceil(simDt / 0.005)), dt = simDt / Math.max(1, steps), x = curX();
+    if (!steps) return;
+    for (let s = 0; s < steps; s++) {
+      for (const d of glu) {
+        if (d.gone) continue;
+        const out = d.x > BOX.x1 + WALL, sd = Math.sqrt(2 * (out ? D_OUT : D_IN) * Math.min(dt, out ? 0.4 : 0.005));
+        const nx = d.x + gauss() * sd, ny = d.y + gauss() * sd;
+        if (nx > LW || ny < 0 || ny > LH) { d.gone = true; continue; }
+        if (inRects(nx, ny, PRE) || inRects(nx, ny, POST) || inRects(nx, ny, NB)) continue;
+        const inBox = nx >= BOX.x0 && nx <= BOX.x1 && ny >= BOX.y0 && ny <= BOX.y1;
+        const inGap = nx > BOX.x1 && nx <= BOX.x1 + WALL && ny > GAP.y0 && ny < GAP.y1;
+        const outside = nx > BOX.x1 + WALL;
+        if (inBox || inGap || outside) {
+          d.x = nx; d.y = ny;
+          if (outside && x > 0 && Math.random() < 0.25 * x * dt) { d.gone = true; flashes.push({ x: nx, y: ny, a: 1 }); }   // caught by other astrocytes out there
+          continue;
+        }
+        // hit the astrocyte: a working transporter may take it in
+        if (Math.random() < P_CAP * x) { d.gone = true; flashes.push({ x: clamp(nx, BOX.x0, BOX.x1 + WALL), y: clamp(ny, BOX.y0, BOX.y1), a: 1 }); }
+      }
+    }
+    glu = glu.filter(d => !d.gone);
+  }
+  function release() {
+    glu = [];
+    for (let i = 0; i < 60; i++) glu.push({ x: 500 + gauss() * 6, y: 164 + gauss() * 3 });
+  }
+  function drawPic(realDt) {
+    const { g, font } = picture($('gPic'), LW, LH);
+    const x = curX(), i = run ? idx(run.t) : 0;
+    // astrocyte wrap
+    g.fillStyle = C.astrofill; g.strokeStyle = C.astro; g.lineWidth = 2;
+    const wrap = [[BOX.x0 - WALL, BOX.y0 - 24, WALL, BOX.y1 - BOX.y0 + 48], [BOX.x1, BOX.y0 - 24, WALL, GAP.y0 - BOX.y0 + 24], [BOX.x1, GAP.y1, WALL, BOX.y1 - GAP.y1 + 24],
+                  [BOX.x0 - WALL, BOX.y0 - 24, 420 - BOX.x0 + WALL, 24], [580, BOX.y0 - 24, BOX.x1 + WALL - 580, 24],
+                  [BOX.x0 - WALL, BOX.y1, 450 - BOX.x0 + WALL, 24], [550, BOX.y1, BOX.x1 + WALL - 550, 24]];
+    wrap.forEach(([a, b, w, h]) => { g.beginPath(); g.rect(a, b, w, h); g.fill(); });
+    g.beginPath(); g.moveTo(420, BOX.y0); g.lineTo(BOX.x0, BOX.y0); g.lineTo(BOX.x0, BOX.y1); g.lineTo(450, BOX.y1);
+    g.moveTo(550, BOX.y1); g.lineTo(BOX.x1, BOX.y1); g.lineTo(BOX.x1, GAP.y1); g.moveTo(BOX.x1, GAP.y0); g.lineTo(BOX.x1, BOX.y0); g.lineTo(580, BOX.y0); g.stroke();
+    g.beginPath(); g.moveTo(BOX.x1 + WALL, BOX.y0 - 24); g.lineTo(BOX.x1 + WALL, GAP.y0); g.lineTo(BOX.x1, GAP.y0); g.moveTo(BOX.x1, GAP.y1); g.lineTo(BOX.x1 + WALL, GAP.y1); g.lineTo(BOX.x1 + WALL, LH); g.moveTo(BOX.x0 - WALL, 0); g.lineTo(BOX.x0 - WALL, LH); g.stroke();
+    // transporters
+    TRANS.forEach(t => {
+      const on = t.r < x, w = t.side === 'L' || t.side === 'R' ? 7 : 12, h = t.side === 'L' || t.side === 'R' ? 12 : 7;
+      const cx = t.side === 'L' ? t.x - 2 : t.side === 'R' ? t.x + 2 : t.x, cy = t.side === 'T' ? t.y - 2 : t.side === 'B' ? t.y + 2 : t.y;
+      g.fillStyle = on ? C.astro : C.a; g.beginPath(); g.roundRect(cx - w / 2, cy - h / 2, w, h, 2); g.fill();
+      if (!on) { g.fillStyle = C.ink; g.beginPath(); g.arc(cx, cy, 2.4, 0, 2 * Math.PI); g.fill(); }
+    });
+    // terminal, spine and the neighbouring synapse
+    const cell = (rs, r) => { g.fillStyle = C.cyto; g.strokeStyle = C.memdark; g.lineWidth = 2; rs.forEach(([a, b, c, d]) => { g.beginPath(); g.roundRect(a, b, c - a, d - b, r); g.fill(); g.stroke(); }); g.beginPath(); rs.forEach(([a, b, c, d]) => g.rect(a + 2, b + 2, c - a - 4, d - b - 4)); g.fill(); };
+    cell([PRE[1], PRE[0]], 30); cell([POST[0], POST[1]], 30);
+    cell([[NB[0][0], NB[0][1], NB[0][2], NB[0][3]]], 22); cell([[NB[1][0], NB[1][1], NB[1][2], NB[1][3]]], 22);
+    // vesicles
+    const released = run && run.t > 0;
+    g.strokeStyle = C.glu; g.lineWidth = 1.5;
+    [[400, 70], [450, 92], [560, 76], [612, 104], [508, 60], [384, 118]].forEach(([vx, vy]) => {
+      g.fillStyle = C.surface; g.beginPath(); g.arc(vx, vy, 13, 0, 2 * Math.PI); g.fill(); g.stroke();
+      g.fillStyle = C.glu; for (let k = 0; k < 4; k++) { g.beginPath(); g.arc(vx + Math.cos(k * 1.6) * 5, vy + Math.sin(k * 1.6) * 5, 1.8, 0, 2 * Math.PI); g.fill(); }
+    });
+    g.fillStyle = C.surface;
+    if (!released) { g.beginPath(); g.arc(500, 134, 13, 0, 2 * Math.PI); g.fill(); g.stroke(); g.fillStyle = C.glu; for (let k = 0; k < 4; k++) { g.beginPath(); g.arc(500 + Math.cos(k * 1.6) * 5, 134 + Math.sin(k * 1.6) * 5, 1.8, 0, 2 * Math.PI); g.fill(); } }
+    else { g.beginPath(); g.arc(500, 140, 13, Math.PI * 0.15, Math.PI * 0.85, true); g.stroke(); }
+    // receptors: brighter the more of that kind are open (full = the peak with transporters working)
+    const fa = run ? clamp(run.tr.A[i] / REF.peakA, 0, 1) : 0, fn = run ? clamp(run.tr.N[i] / REF.peakN, 0, 1) : 0;
+    RECS.forEach(r => {
+      const f = r.kind === 'A' ? fa : fn, col = r.kind === 'A' ? C.na : C.nmda;
+      g.fillStyle = alpha(col, 0.3 + 0.7 * f); g.strokeStyle = col; g.lineWidth = 1.2;
+      g.beginPath(); g.roundRect(r.x - 6, 172, 12, 16, 3); g.fill(); g.stroke();
+      if (f > 0.15) { g.strokeStyle = alpha(col, f); g.lineWidth = 3; g.beginPath(); g.moveTo(r.x, 168); g.lineTo(r.x, 192); g.stroke(); }
+    });
+    // the neighbouring synapse's NMDA receptors light up when glutamate reaches them
+    const near = glu.filter(d => d.x > NB[1][0] - 20 && d.x < NB[1][2] + 20 && d.y > NB[0][3] - 6 && d.y < NB[1][1] + 30).length;
+    [868, 891, 914].forEach(rx => { g.fillStyle = alpha(C.nmda, 0.3 + 0.7 * clamp(near / 3, 0, 1)); g.strokeStyle = C.nmda; g.lineWidth = 1.2; g.beginPath(); g.roundRect(rx - 5, 199, 10, 13, 3); g.fill(); g.stroke(); });
+    // glutamate and the transporters' catches
+    g.fillStyle = C.glu;
+    glu.forEach(d => { g.beginPath(); g.arc(d.x, d.y, 3, 0, 2 * Math.PI); g.fill(); });
+    flashes.forEach(f => { g.strokeStyle = alpha(C.astro, f.a); g.lineWidth = 2; g.beginPath(); g.arc(f.x, f.y, 6 + (1 - f.a) * 8, 0, 2 * Math.PI); g.stroke(); f.a -= realDt * 2.5; });
+    flashes = flashes.filter(f => f.a > 0);
+    // labels
+    g.fillStyle = C.muted; g.font = font(12.5); g.textBaseline = 'alphabetic';
+    fillSub(g, 'Pre: axon terminal', 342, 20 + 30, 'left');
+    fillSub(g, 'Post: spine', 362, 232);
+    fillSub(g, 'cleft', 662, 170);
+    fillSub(g, 'Astrocyte process,', 20, 130); fillSub(g, 'wrapped round the', 20, 148); fillSub(g, 'synapse, with its', 20, 166); fillSub(g, 'glutamate transporters', 20, 184);
+    fillSub(g, 'Neighbouring', 891, 96, 'center'); fillSub(g, 'synapse', 891, 112, 'center');
+    fillSub(g, 'gap in the wrap', 770, 314, 'left');
+  }
+
+  // ---------- charts and readouts ----------
+  function drawCharts() {
+    const n = run ? idx(run.t) + 1 : 0, gl = [], al = [], nl = [];
+    const k50 = Math.round(50 / REC) + 2;
+    const L = (arr, k, color, o = {}) => ({ y: arr, n: k, x0: 0, dx: REC, color, ...o });
+    if (prev) { gl.push(L(prev.tr.Gu, k50, C.glu, { alpha: 0.35 })); al.push(L(prev.tr.Ap, k50, C.na, { alpha: 0.35 })); nl.push(L(prev.tr.Np, NQ, C.nmda, { alpha: 0.35 })); }
+    if (run) { const m = Math.min(n, k50); gl.push(L(run.tr.Gu, m, C.glu)); al.push(L(run.tr.Ap, m, C.na)); nl.push(L(run.tr.Np, n, C.nmda)); }
+    plot($('gGC'), { h: 190, x: [0, 50], y: [0.1, 2000], ylog: true, ylab: 'µM', xlab: 'time (ms)', lines: gl });
+    plot($('gAC'), { h: 190, x: [0, 50], y: [0, 50], ylab: '% open', xlab: 'time (ms)', lines: al, zoom: true, redraw: drawCharts });
+    plot($('gNC'), { h: 190, x: [0, 500], y: [0, 15], ylab: '% open', xlab: 'time (ms)', lines: nl, zoom: true, redraw: drawCharts });
+  }
+  const conc = mM => mM >= 0.1 ? mM.toFixed(2) + ' mM' : mM * 1000 >= 1 ? (mM * 1000).toFixed(1) + ' µM' : mM * 1000 >= 0.01 ? (mM * 1000).toFixed(2) + ' µM' : 'under 0.01 µM';
+  function readouts() {
+    $('gPrevLab').textContent = prev ? `earlier release: transporters ${Math.round(prev.x * 100)} %` : 'earlier release (none yet)';
+    $('gNow').textContent = run && !run.done ? `now ${speedNow(run.t).toFixed(speedNow(run.t) < 10 ? 1 : 0)} ms of synapse time per second` : '';
+    if (!run) {
+      ['gGnum', 'gT', 'gAo', 'gNo', 'gAq', 'gNq'].forEach(id => $(id).textContent = '—');
+      $('gCap').textContent = 'Press Release to empty one vesicle into the cleft.'; return;
+    }
+    const i = idx(run.t), tr = run.tr;
+    $('gGnum').textContent = conc(tr.G[i]);
+    $('gT').textContent = run.t.toFixed(run.t < 10 ? 2 : 0) + ' ms';
+    $('gAo').textContent = tr.Ap[i].toFixed(1) + ' %';
+    $('gNo').textContent = tr.Np[i].toFixed(1) + ' %';
+    $('gAq').textContent = Math.round(100 * tr.qa / REF.qa) + ' %';
+    $('gNq').textContent = Math.round(100 * tr.qn / REF.qn) + ' %';
+    const t = run.t;
+    $('gCap').innerHTML = t < 2 ? `Glutamate floods the cleft at about 1 mM and spreads out of it; AMPA receptors open first.`
+      : t < 50 ? (run.x > 0.5 ? `Glutamate has spread out of the cleft and the transporters are catching it: ${conc(tr.G[i])} is left. AMPA receptors are closing; NMDA receptors, which hold on to glutamate, are ${tr.N[i] >= tr.N[Math.max(0, i - 1)] ? 'still opening' : 'only slowly closing'}.`
+                 : `With ${Math.round(run.x * 100)} % of the transporters working, ${conc(tr.G[i])} of glutamate lingers. AMPA receptors ignore it; NMDA receptors keep binding it.`)
+      : run.done ? `Done. Over the 0.5 s, AMPA receptors let through ${Math.round(100 * tr.qa / REF.qa)} % and NMDA receptors ${Math.round(100 * tr.qn / REF.qn)} % of the charge they pass with every transporter working.`
+      : `NMDA receptors let go of glutamate slowly (about 150 ms), so they stay open long after it has gone.`;
+  }
+
+  // ---------- controls ----------
+  function fire() {
+    if (run && run.t > 0) prev = run;
+    run = { x: ctl.x, t: 0, tr: compute(ctl.x), done: false };
+    release(); flashes = []; dirty = true;
+  }
+  function setPlaying(on) { playing = on; $('gPlay').textContent = on ? 'Pause' : 'Play'; }
+  bindRange('gX', v => v + ' %', v => { ctl.x = v / 100; dirty = true; });
+  bindRange('gSpeed', v => { const m = 0.25 * Math.pow(16, v / 100); return '×' + (m < 1 ? m.toFixed(2) : m.toFixed(1)); }, v => ctl.mult = 0.25 * Math.pow(16, v / 100));
+  $('gFire').addEventListener('click', fire);
+  $('gPlay').addEventListener('click', () => { if (!playing && (!run || run.done)) fire(); setPlaying(!playing); });
+  $('gClear').addEventListener('click', () => { prev = null; dirty = true; });
+  window.GliaG = { fire };
+
+  let last = performance.now();
+  function loop(now) {
+    const real = Math.min(0.05, (now - last) / 1000); last = now;
+    if (playing && run && !run.done) {
+      const sim = speedNow(run.t) * real;
+      moveDots(Math.min(sim, 0.6));
+      run.t += sim;
+      if (run.t >= Q.T) { run.t = Q.T; run.done = true; setPlaying(false); }
+      dirty = true;
+    }
+    if (dirty || flashes.length) drawPic(real);
+    if (dirty) { drawCharts(); readouts(); dirty = false; }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; });
+  addEventListener('resize', () => { dirty = true; });
+  Frames.onRestore(() => { dirty = true; });
+  Frames.sim(() => playing, 'gPlay', ['gFire']);
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// Calculator: steady [K⁺] outside with firing, then E_K and the neuron's resting voltage
+// =====================================================================================
+(() => {
+  const c = { f: 20, dk: 0.05, td: 10, u: 1, p: 0.05 };
+  const KI = 140, NAO = 145, NAI = 12, RTF = 26.7, TA = 1.5;
+  const eK = k => RTF * Math.log(k / KI), vr = (k, p) => RTF * Math.log((k + p * NAO) / (KI + p * NAI));
+  function update() {
+    const tau = 1 / (1 / c.td + c.u / TA), rise = c.f * c.dk * tau, K = 3 + rise, ek = eK(K), v = vr(K, c.p);
+    $('cK').textContent = K.toFixed(2) + ' mM';
+    $('cRise').textContent = '+' + rise.toFixed(2) + ' mM';
+    $('cTau').textContent = tau.toFixed(2) + ' s';
+    $('cEK').textContent = fmtS(ek);
+    $('cV').textContent = fmtS(v) + ' (' + fmtS(v - vr(3, c.p)) + ')';
+    $('cVerdict').textContent = v > -55 ? 'above threshold: fires by itself' : v > -60 ? 'close to threshold' : 'well below threshold';
+    const ta = c.u > 0 ? `1/${(TA / c.u).toFixed(2)} s` : '0';
+    $('cFormula').innerHTML =
+      `τ = 1 / (1/τ<sub>d</sub> + 1/τ<sub>a</sub>) = 1 / (1/${c.td} s + ${ta}) = ${tau.toFixed(2)} s<br>` +
+      `rise = f × ΔK × τ = ${c.f} Hz × ${c.dk.toFixed(2)} mM × ${tau.toFixed(2)} s = ${rise.toFixed(2)} mM<br>` +
+      `<span class="res">[K⁺]<sub>o</sub> = 3 + ${rise.toFixed(2)} = ${K.toFixed(2)} mM</span><br>` +
+      `E<sub>K</sub> = 26.7 mV × ln(${K.toFixed(2)} / 140) = ${fmtS(ek)}<br>` +
+      `V<sub>rest</sub> = 26.7 mV × ln((${K.toFixed(2)} + ${c.p.toFixed(2)} × 145) / (140 + ${c.p.toFixed(2)} × 12)) = ${fmtS(v)}`;
+    draw();
+  }
+  function draw() {
+    const xs = [], ek = [], vv = [];
+    for (let i = 0; i <= 200; i++) { const k = Math.pow(10, Math.log10(1) + i / 200 * Math.log10(50)); xs.push(k); ek.push(eK(k)); vv.push(vr(k, c.p)); }
+    const K = 3 + c.f * c.dk / (1 / c.td + c.u / TA);
+    plot($('cVK'), { square: true, x: [1, 50], xlog: true, xticks: [1, 2, 5, 10, 20, 50], y: [-120, -20], ylab: 'mV', xlab: '[K⁺]_o (mM)',
+      hlines: [{ y: -55, color: C.pos, label: 'about threshold' }], xmarks: [{ x: 3, color: C.muted }],
+      lines: [{ x: xs, y: ek, color: C.k }, { x: xs, y: vv, color: C.accent }],
+      dots: K <= 50 ? [{ x: K, y: eK(K), color: C.k }, { x: K, y: vr(K, c.p), color: C.accent }] : [] });
+  }
+  bindRange('cF', v => v + ' Hz', v => { c.f = v; update(); });
+  bindRange('cDK', v => v.toFixed(2) + ' mM', v => { c.dk = v; update(); });
+  bindRange('cTD', v => v.toFixed(1) + ' s', v => { c.td = v; update(); });
+  bindRange('cU', v => v + ' %', v => { c.u = v / 100; update(); });
+  bindRange('cP', v => v.toFixed(2), v => { c.p = v; update(); });
+  colorHooks.push(draw); addEventListener('resize', draw); Frames.onRestore(draw);
+  document.fonts && document.fonts.ready.then(draw);
+})();
+
+// =====================================================================================
+// Tabs, and the Start-here and Try-it buttons (they work the page's own controls)
+// =====================================================================================
+(() => {
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    dispatchEvent(new Event('resize'));   // a chart in a tab that was hidden has no size yet
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const k = (o = {}) => { set('kRate', o.f ?? 20); set('kDur', o.dur ?? 10); set('kUp', o.u ?? 100); showTab($('tab-k')); into('k-card'); $('kFire').click(); };
+  const gl = x => { set('gX', x); showTab($('tab-g')); into('g-card'); $('gFire').click(); };
+  document.querySelectorAll('[data-gtry]').forEach(b => b.addEventListener('click', () => {
+    const [what, id, v] = b.dataset.gtry.split(':');
+    if (what === 'normal') k();
+    else if (what === 'noglia') k({ u: 0 });
+    else if (what === 'seizure') k({ f: 50, u: 0 });
+    else if (what === 'glu') gl(100);
+    else if (what === 'tboa') gl(0);
+    else if (what === 'set') {
+      set(id, v);
+      if (id.startsWith('k')) { showTab($('tab-k')); into('k-card'); $('kFire').click(); }
+      else if (id.startsWith('g')) { showTab($('tab-g')); into('g-card'); $('gFire').click(); }
+    }
+  }));
+})();
+</script>
+<script>
+// The floating bar's buttons and speed slider follow the simulation crossing the middle of the screen.
+(() => {
+  const fire = document.getElementById('fbFire'), play = document.getElementById('fbPlay');
+  const cards = [['k-card', 'kFire', 'kPlay'], ['g-card', 'gFire', 'gPlay']];
+  const update = () => {
+    let pick = cards[0];
+    for (const cd of cards) { const r = document.getElementById(cd[0]).parentElement.getBoundingClientRect(); if (r.top < innerHeight / 2) pick = cd; }
+    if (fire.dataset.copy !== pick[1]) fire.dataset.copy = pick[1];
+    if (play.dataset.copy !== pick[2]) play.dataset.copy = pick[2];
+    document.getElementById('fbSpK').hidden = pick !== cards[0]; document.getElementById('fbSpG').hidden = pick !== cards[1];
+  };
+  addEventListener('scroll', update, { passive: true }); addEventListener('resize', update);
+  update();
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

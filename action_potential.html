@@ -436,11 +436,11 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
     <div class="deriv">
-      <p class="gist"><b>In plain words:</b> Nothing here is new. Each piece of membrane still has lesson 1's batteries (the ions' concentration differences) and resistors (the channels), lesson 2's capacitor (the membrane itself), and lesson 3's spread of current along the inside. What changes is that the Na⁺ and K⁺ channels open and close with the voltage; lesson 8 shows how.</p>
+      <p class="gist"><b>In plain words:</b> Nothing here is new. Each piece of membrane still has lesson 1's batteries (the ions' concentration differences) and resistors (the channels), lesson 2's capacitor (the membrane itself), and lesson 3's spread of current along the inside. What changes is that the Na⁺ and K⁺ channels open and close with the voltage; lesson 5 shows how.</p>
       <h3>What you already have</h3>
       <p>From lesson 1: each ion's channels act like a resistor in series with a battery, the Nernst potential E. The current is Ohm's law with the driving force V − E:</p>
       <div class="eq">\[ I_\mathrm{Na} = g_\mathrm{Na}\,(V - E_\mathrm{Na}), \qquad I_\mathrm{K} = g_\mathrm{K}\,(V - E_\mathrm{K}) \]</div>
-      <p>With lesson 1's mammalian concentrations at body temperature, E<sub>K</sub> ≈ −89 mV, E<sub>Na</sub> ≈ +62 mV and E<sub>Cl</sub> ≈ −71 mV (a little larger than lesson 1's numbers at 25 °C, because RT/F grows with temperature). At rest the K⁺ and Cl⁻ channels are open far more than the Na⁺ channels, so a bare axon sits near −73 mV; a node of Ranvier, with many K⁺ leak channels, sits closer to E<sub>K</sub>, near −84 mV. This is the chord-conductance equation of lesson 1:</p>
+      <p>With lesson 1's mammalian concentrations at body temperature, E<sub>K</sub> ≈ −89 mV, E<sub>Na</sub> ≈ +62 mV and E<sub>Cl</sub> ≈ −71 mV (a little larger than lesson 1's numbers at 25 °C, because RT/F grows with temperature). At rest the K⁺ and Cl⁻ channels are open far more than the Na⁺ channels, so the cell sits near −72 mV, closer to E<sub>K</sub> and E<sub>Cl</sub> than to E<sub>Na</sub>. A node of Ranvier has many K⁺ leak channels and some Na⁺ leak channels too; with the K⁺ ones alone it would sit right by E<sub>K</sub>. This is the chord-conductance equation of lesson 1:</p>
       <div class="eq">\[ V_\mathrm{rest} = \frac{g_\mathrm{K}E_\mathrm{K} + g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{Cl}E_\mathrm{Cl}}{g_\mathrm{K} + g_\mathrm{Na} + g_\mathrm{Cl}} \]</div>
       <p>From lesson 2: the lipid bilayer is a capacitor, and the current that doesn't leave through the channels charges it:</p>
       <div class="eq">\[ C\,\frac{dV}{dt} = -\,(I_\mathrm{Na} + I_\mathrm{K} + I_\mathrm{Cl}) + I_\mathrm{stim} \]</div>
@@ -452,7 +452,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
 
   <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
     <div class="deriv">
-      <p class="gist"><b>In plain words:</b> One patch of membrane fires a spike. Past threshold, Na⁺ rushes in and the voltage shoots up; then the Na⁺ channels plug themselves and K⁺ channels open, which brings it back down. A push too weak to reach threshold just fades away. Lesson 8 takes this step by step.</p>
+      <p class="gist"><b>In plain words:</b> One patch of membrane fires a spike. Past threshold, Na⁺ rushes in and the voltage shoots up; then the Na⁺ channels plug themselves and K⁺ channels open, which brings it back down. A push too weak to reach threshold just fades away. Lesson 5 takes this step by step.</p>
       <h3>Three kinds of gate</h3>
       <ul>
         <li><b>Na⁺ activation gate (m):</b> opens quickly when the inside becomes less negative.</li>
@@ -466,7 +466,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <p><b>3. Downstroke.</b> Two slower things now happen: h falls, shutting the Na⁺ channels, and n rises, opening K⁺ channels. Na⁺ current stops and K⁺ current carries V back down.</p>
       <p><b>4. Undershoot.</b> The K⁺ channels are slow to close, so for a few ms V dips closer to E<sub>K</sub> than at rest, until n falls back.</p>
       <details class="fullderiv"><summary>Why does the voltage run away at threshold?</summary>
-        <p>Picture the total current through the membrane at each voltage, just after a quick push, before the slow gates have moved. Near rest, nudging V up makes more current flow out, mostly K⁺ and leak: the membrane pushes back and V returns. That is stable. Na⁺ channels do the opposite: nudge V up and more of them open, so more current flows in. Once that extra inward current outgrows the extra outward current, a nudge up gives a net inward current that pushes V further up. The voltage where this happens is the threshold. Lesson 8's threshold calculator draws this curve.</p>
+        <p>Picture the total current through the membrane at each voltage, just after a quick push, before the slow gates have moved. Near rest, nudging V up makes more current flow out, mostly K⁺ and leak: the membrane pushes back and V returns. That is stable. Na⁺ channels do the opposite: nudge V up and more of them open, so more current flows in. Once that extra inward current outgrows the extra outward current, a nudge up gives a net inward current that pushes V further up. The voltage where this happens is the threshold. Lesson 5's threshold calculator draws this curve.</p>
         <p>In the language of slopes: the circuit is stable where the instantaneous current rises with voltage (\(dI/dV > 0\)). The Na⁺ channels add a falling stretch, and threshold is where the total curve crosses zero on that stretch.</p>
       </details>
     </div>
@@ -561,7 +561,7 @@ table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
       <ol class="reflist">
         <li><b>Hodgkin AL, Huxley AF (1939).</b> Action potentials recorded from inside a nerve fibre. <i>Nature</i> 144:710–711. <a href="https://doi.org/10.1038/144710a0" target="_blank" rel="noopener">doi:10.1038/144710a0</a><br><span class="why">The first recording from inside an axon: the spike overshoots zero, so the inside briefly becomes positive.</span></li>
         <li><b>Hodgkin AL, Katz B (1949).</b> The effect of sodium ions on the electrical activity of the giant axon of the squid. <i>Journal of Physiology</i> 108:37–77. <a href="https://doi.org/10.1113/jphysiol.1949.sp004310" target="_blank" rel="noopener">doi:10.1113/jphysiol.1949.sp004310</a><br><span class="why">The Goldman–Hodgkin–Katz voltage equation, and the sodium hypothesis: the spike is a brief rise in Na⁺ permeability.</span></li>
-        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 4, 6 and 8 are theirs, including the 3× speed-up per 10 °C.</span></li>
+        <li><b>Hodgkin AL, Huxley AF (1952).</b> A quantitative description of membrane current and its application to conduction and excitation in nerve. <i>Journal of Physiology</i> 117:500–544. <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004764</a><br><span class="why">The membrane as Na⁺ and K⁺ conductances with Nernst batteries and a capacitor, the gates m, h and n, and a computed travelling spike. The channels in lessons 4, 5 and 7 are theirs, including the 3× speed-up per 10 °C.</span></li>
         <li><b>Hodgkin AL, Rushton WAH (1946).</b> The electrical constants of a crustacean nerve fibre. <i>Proceedings of the Royal Society of London B</i> 133:444–479. <a href="https://doi.org/10.1098/rspb.1946.0024" target="_blank" rel="noopener">doi:10.1098/rspb.1946.0024</a><br><span class="why">Cable theory for an axon: membrane resistance and capacitance, the time constant τ and the length constant λ.</span></li>
         <li><b>Hursh JB (1939).</b> Conduction velocity and diameter of nerve fibers. <i>American Journal of Physiology</i> 127:131–139. <a href="https://doi.org/10.1152/ajplegacy.1939.127.1.131" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1939.127.1.131</a><br><span class="why">In myelinated fibres, conduction velocity rises in proportion to fibre diameter (about 6 m/s per µm).</span></li>
         <li><b>Tasaki I (1939).</b> The electro-saltatory transmission of the nerve impulse and the effect of narcosis upon the nerve fiber. <i>American Journal of Physiology</i> 127:211–227. <a href="https://doi.org/10.1152/ajplegacy.1939.127.2.211" target="_blank" rel="noopener">doi:10.1152/ajplegacy.1939.127.2.211</a><br><span class="why">Saltatory conduction: the impulse jumps from node to node and can skip a blocked node.</span></li>
@@ -714,6 +714,9 @@ const DEFAULT_CELL = 'motor';
 // with lesson 1's Nernst batteries. Units: cm, µF, mS, µA, mV, ms (densities per cm² of membrane).
 // The step is semi-implicit (a tridiagonal solve), so tiny nodes and thin myelin stay stable.
 const RI = 35.4, CM = 1, GNA = 120, GK = 36, GCL = 0.3;   // Ω·cm, µF/cm², mS/cm²: Hodgkin and Huxley's values
+// Nodes (and the initial segment) also leak a little Na⁺, as real ones do: NODE_NAL × their K⁺ leak. With K⁺ leak
+// alone a node sits near E_K (−88 mV in a mammal); this brings it to about −72 mV, with the bare axon and cell body.
+const NODE_NAL = 0.14;
 const SOMA_DENS = 0.25, IS_LEN = 30, NODE_LEN = 1, WRAPS = 100;   // IS, node: µm; WRAPS: a myelinated cell's sheath
 // Each wrap of myelin adds two membranes in series, so the sheath's capacitance and leak are those of bare membrane
 // divided by 2 × wraps (100 wraps: 0.5%). No wraps is no myelin.
@@ -733,15 +736,15 @@ function rates(V, f) {   // the gates' opening and closing rates (1/ms), for V m
 function restState(na = 1, k = 1, kl = 0) {
   // the resting voltage is where the channels' currents add up to zero (lesson 1's chord-conductance balance).
   // With many Na⁺ channels there can be a second, depolarized balance too; a resting cell sits at the lowest one.
-  const e = E(), gNa = na * GNA * P.gNaPct / 100, gK = k * GK * P.gKPct / 100, gKL = kl * GCL * P.gKPct / 100, gCl = GCL;
+  const e = E(), gNa = na * GNA * P.gNaPct / 100, gK = k * GK * P.gKPct / 100, gKL = kl * GCL * P.gKPct / 100, gCl = GCL, gNaL = kl * GCL * NODE_NAL;
   const gates = V => { const r = rates(V, 1); return { m: r.am / (r.am + r.bm), h: r.ah / (r.ah + r.bh), n: r.an / (r.an + r.bn) }; };
-  const I = V => { const q = gates(V); return gNa * q.m ** 3 * q.h * (V - e.Na) + (gK * q.n ** 4 + gKL) * (V - e.K) + gCl * (V - e.Cl); };
+  const I = V => { const q = gates(V); return (gNa * q.m ** 3 * q.h + gNaL) * (V - e.Na) + (gK * q.n ** 4 + gKL) * (V - e.K) + gCl * (V - e.Cl); };
   let lo = -150, hi = lo;
   while (hi < 100 && I(hi + 0.5) < 0) hi += 0.5;
   lo = hi; hi += 0.5;
   for (let it = 0; it < 40; it++) { const mid = (lo + hi) / 2; (I(mid) < 0 ? (lo = mid) : (hi = mid)); }
   const V = (lo + hi) / 2, q = gates(V);
-  return { V, m: q.m, h: q.h, n: q.n, g: gNa * q.m ** 3 * q.h + gK * q.n ** 4 + gKL + gCl };
+  return { V, m: q.m, h: q.h, n: q.n, g: gNa * q.m ** 3 * q.h + gNaL + gK * q.n ** 4 + gKL + gCl };
 }
 const lambdaCm = g => Math.sqrt((P.d * 1e-4 / 2) / (2 * RI * g * 1e-3));   // λ² = a / (2 R_i g_m)
 let M = null;   // the built axon
@@ -775,7 +778,7 @@ function build() {
     }
   }
   const n = parts.length, f = n => new Float64Array(n);
-  const m = { n, type: parts.map(p => p.type), x: f(n), xc: f(n), l: f(n), A: f(n), cm: f(n), gNa: f(n), gK: f(n), gKL: f(n), gCl: f(n), G: f(n),
+  const m = { n, type: parts.map(p => p.type), x: f(n), xc: f(n), l: f(n), A: f(n), cm: f(n), gNa: f(n), gK: f(n), gKL: f(n), gNaL: f(n), gCl: f(n), G: f(n),
     V: f(n), mm: f(n), h: f(n), nn: f(n), INa: f(n), IK: f(n), ICl: f(n), IC: f(n), lo: f(n), b: f(n), rr: f(n), cp: f(n), dp: f(n), Vn: f(n), t: 0 };
   let x = 0;
   parts.forEach((p, i) => {
@@ -785,6 +788,7 @@ function build() {
     m.cm[i] = CM * dens[2] * m.A[i];
     m.gNa[i] = GNA * P.gNaPct / 100 * dens[0] * m.A[i]; m.gK[i] = GK * P.gKPct / 100 * dens[1] * m.A[i]; m.gCl[i] = GCL * dens[3] * m.A[i];
     m.gKL[i] = p.type === 'node' ? GCL * P.nodeKL * P.gKPct / 100 * m.A[i] : 0;
+    m.gNaL[i] = p.type === 'node' ? GCL * P.nodeKL * NODE_NAL * m.A[i] : 0;
   });
   for (let i = 0; i < n - 1; i++) m.G[i] = Math.PI * r * r / (RI * (m.l[i] + m.l[i + 1]) / 2) * 1000;   // mS through the cytoplasm
   // blocks for the current charts (perMm): on a bare axon each piece; on a myelinated one a node (or the initial
@@ -818,7 +822,7 @@ function step(dt, Istim) {   // Istim in µA, into each stimulating electrode's 
   for (let i = 0; i < n; i++) {
     const r = rates(V[i], f), g = (al, be, x) => { const tau = 1 / (al + be), xi = al * tau; return xi + (x - xi) * Math.exp(-dt / tau); };
     m.mm[i] = g(r.am, r.bm, m.mm[i]); m.h[i] = g(r.ah, r.bh, m.h[i]); m.nn[i] = g(r.an, r.bn, m.nn[i]);
-    const gNa = m.gNa[i] * m.mm[i] ** 3 * m.h[i], gK = m.gK[i] * m.nn[i] ** 4 + m.gKL[i], gCl = m.gCl[i];
+    const gNa = m.gNa[i] * m.mm[i] ** 3 * m.h[i] + m.gNaL[i], gK = m.gK[i] * m.nn[i] ** 4 + m.gKL[i], gCl = m.gCl[i];
     const gl = i > 0 ? m.G[i - 1] : 0, gr = i < n - 1 ? m.G[i] : 0;
     m.lo[i] = gl; m.b[i] = m.cm[i] / dt + gNa + gK + gCl + gl + gr;
     m.rr[i] = m.cm[i] / dt * V[i] + gNa * e.Na + gK * e.K + gCl * e.Cl + (stimSet.has(i) ? Istim : 0);
@@ -880,7 +884,7 @@ function breadboardCircuit() {
   const comps = groups.map((ix, g) => {
     const I = sum(ix, i => stimSet.has(i) ? P.stim * 1e-3 : 0);
     return { name: g ? `Axon ${g}` : 'Cell body', C: sum(ix, i => m.cm[i]) * 1e-6,
-      channels: [{ name: 'Na⁺', g: sum(ix, i => m.gNa[i] * m.mm[i] ** 3 * m.h[i]) * 1e-3, E: e.Na * 1e-3, vary: true },
+      channels: [{ name: 'Na⁺', g: sum(ix, i => m.gNa[i] * m.mm[i] ** 3 * m.h[i] + m.gNaL[i]) * 1e-3, E: e.Na * 1e-3, vary: true },
                  { name: 'K⁺', g: sum(ix, i => m.gK[i] * m.nn[i] ** 4 + m.gKL[i]) * 1e-3, E: e.K * 1e-3, vary: true },
                  { name: 'Cl⁻ leak', g: sum(ix, i => m.gCl[i]) * 1e-3, E: e.Cl * 1e-3 }],
       stim: I ? { I: I * 1e-6, width: PULSE * 1e-3 } : undefined };

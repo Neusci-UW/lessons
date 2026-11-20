@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Neuromuscular Junction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<script src="chartzoom.js"></script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* The same look as the other lessons: the junction ion by ion on top, its charts beside it. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --ea:#c0287a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{margin-bottom:4px;text-align:left}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:95ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:64px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:999px;overflow:hidden;align-self:flex-start}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px;min-width:0}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+@media (max-width:1100px){.top{grid-template-columns:1fr}}
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:112px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i.ln{display:inline-block;width:18px;height:3px;border-radius:2px;flex:none}
+.legend i.ln.dash{background:none!important;border-top:2px dashed currentColor;height:0}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.cl{background:var(--cl)}.dot.syn{background:var(--syn);border-radius:2px}.dot.k{background:var(--k)}.dot.na{background:var(--na);border-radius:2px}.dot.a{background:var(--a);width:12px;height:12px}
+.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg);border-radius:2px}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:95ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.sgroup{display:flex;flex-direction:column;gap:10px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:38px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:138px minmax(0,1fr) 100px;align-items:center;gap:10px;font-size:13.5px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:1 / 4;font-size:12px;color:var(--muted);margin-top:-7px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.deriv ol,.deriv ul{padding-left:22px}
+.deriv li{margin-bottom:4px}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+/* this page */
+:root{--ca:#9c7a12;--nt:#c0287a;--ache:#23845a;--warm:#b4582a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ca:#e0bb5c;--nt:#f477b7;--ache:#5bc98b;--warm:#e0915e}}
+:root[data-theme="dark"]{--ca:#e0bb5c;--nt:#f477b7;--ache:#5bc98b;--warm:#e0915e}
+.dot.ca{background:var(--ca)}.dot.nt{background:var(--nt)}.dot.ache{background:var(--ache);border-radius:50% 50% 50% 0}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:95ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.nsteps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;font-size:12px;line-height:1.3}
+.nsteps li{padding:6px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted);transition:background .15s,color .15s,border-color .15s}
+.nsteps b{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.nsteps li.on{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.nsteps li.fail{background:var(--pos);border-color:var(--pos);color:var(--surface)}
+@media (max-width:760px){.nsteps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.nsteps li{transition:none}}
+.chartcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.kchart{max-width:470px}
+/* Your measurements: a row per train, and a plot of two columns the student picks */
+.meas{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,440px);gap:14px 28px;align-items:start}
+@media (max-width:950px){.meas{grid-template-columns:1fr}}
+.meas .mhead{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.mtable{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.mtable table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.mtable th,.mtable td{padding:4px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.mtable th{position:sticky;top:0;background:var(--surface);font-weight:500;color:var(--muted);font-size:12px;line-height:1.3;vertical-align:bottom}
+.mtable th .u{font-weight:400;font-size:11px}
+.mtable td{font-family:var(--font-mono);font-size:12.5px}
+.mtable td.empty{color:var(--muted);text-align:left;font-family:var(--font-body);white-space:normal}
+.mplot{display:flex;flex-direction:column;gap:6px;min-width:0}
+.axpick{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--muted)}
+.axpick select{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:3px 6px;margin-left:6px;max-width:220px}
+</style>
+</head>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbStim" data-copy="nStim" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="nPlay"></button>
+  <label for="fbSpeed" class="runlab">Speed</label><input type="range" id="fbSpeed" data-copy="nSpeed"><output for="fbSpeed"></output>
+</div>
+<div class="wrap">
+<p class="draftnote"><b>DRAFT</b> · Not yet in the course. Still to check: the model's numbers come from rat soleus (Wood and Slater 1997: about 60 quanta released, about 20 needed, a safety factor of 3) and textbook values, not human recordings, and its 1.2 mV miniature EPP is on the large side; the run-down and refilling times, the Ca²⁺ build-up and the 30% spread between fibres behind the whole-muscle response are reasonable guesses, not fitted to data; two numbers from 1960s papers that are only scans online (myasthenic mEPPs about a fifth of normal, Elmqvist and colleagues; the end-plate battery a little below 0 mV, Takeuchi and Takeuchi) are quoted from reviews, not read in the papers; and the junction picture and the measurements table are new and not yet reviewed.</p>
+<header>
+  <h1>The neuromuscular junction: the synapse built not to fail</h1>
+  <p>Where a motor nerve meets a skeletal muscle fibre is a chemical synapse like the ones in the Chemical Synapse lesson, but built for certainty. A synapse in the brain makes an EPSP of well under a millivolt, and a neuron needs many at once. Here one nerve impulse releases dozens of packets of acetylcholine (ACh), about three times as many as it takes to fire the muscle fibre, and makes an <b>end-plate potential</b> (EPP) of some 40 mV where 20 would do. That margin is the <b>safety factor</b>, and it is what myasthenia gravis, Lambert–Eaton syndrome and the muscle relaxants used in surgery all eat into.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>follow one nerve impulse to one muscle impulse: Ca²⁺ entry, ACh released in quanta, nicotinic receptors, the end-plate potential, the muscle's Na⁺ channels, the muscle action potential</li>
+        <li>define a quantum, a miniature EPP, the quantal content (m = n·p) and the safety factor, and work a safety factor out from numbers</li>
+        <li>calculate the end-plate current with Ohm's law, I<sub>EPC</sub> = g<sub>ACh</sub>(V − E<sub>ACh</sub>), and explain why a big EPP is smaller than the sum of its quanta</li>
+        <li>predict what fewer receptors, a lower release probability, fewer working release sites or a blocked acetylcholinesterase do to the EPP, and use the miniature EPPs to tell a problem before the cleft from one after it</li>
+        <li>explain the clinical tests: why the response shrinks during a 3 Hz train in myasthenia gravis (a decrement) and grows at 50 Hz in Lambert–Eaton syndrome (an increment)</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-try="normal">1 · A healthy junction, 3 Hz</button> Five impulses at 3 Hz, as in the clinic's repetitive-stimulation test. Each releases fewer quanta than the one before, as the docked vesicles run down, but every EPP stays far above threshold and every fibre in the muscle keeps firing.</li>
+    <li><button class="chip" data-try="mg">2 · Myasthenia gravis</button> Antibodies have removed more than half the ACh receptors, so each quantum does less than half its usual work. The first EPPs still make it; by the fourth the run-down of release leaves the EPP short and the fibre fails. Across the whole muscle, fibres drop out one by one: the decrement.</li>
+    <li><button class="chip" data-try="neo">3 · Add neostigmine</button> Block most of the acetylcholinesterase in that myasthenic junction. ACh lingers in the cleft, each quantum acts longer, and the EPPs clear threshold again: this is how pyridostigmine treats myasthenia.</li>
+    <li><button class="chip" data-try="lems3">4 · Lambert–Eaton, 3 Hz</button><button class="chip" data-try="lems50">… then 50 Hz</button> Antibodies against the terminal's Ca²⁺ channels drop the release probability from 0.2 to 0.05, and the EPP falls short. At 50 Hz the Ca²⁺ left over from each impulse builds up, release grows, and the fibre starts firing: the increment.</li>
+    <li><button class="chip" data-try="botox">5 · Botulinum toxin</button> The toxin stops most release sites working. Vesicles stay docked but cannot fuse: few quanta per impulse, and far fewer miniature EPPs, each of its normal size.</li>
+    <li><button class="chip" data-try="curare">6 · Curare</button> Curare sits on most of the receptors. One impulse now leaves a small EPP that never reaches threshold: this is how Fatt and Katz first studied the EPP on its own.</li>
+  </ol>
+</section>
+
+<h3 class="part">One junction, and the whole muscle</h3>
+<div class="top">
+  <section class="card stage" id="nmj-card">
+    <div class="tabs" role="tablist" aria-label="Junction">
+      <button type="button" role="tab" id="tab-nmj" aria-controls="pane-nmj" aria-selected="true">Junction</button>
+      <button type="button" role="tab" id="tab-nhelp" aria-controls="pane-nhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-nlook" aria-controls="pane-nlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-nmj" aria-labelledby="tab-nmj">
+      <canvas id="nmj" aria-label="A motor nerve terminal above, the synaptic cleft with its acetylcholinesterase, and the muscle fibre's end-plate below with its junctional folds, ACh receptors and Na-plus channels"></canvas>
+      <ol class="nsteps" id="nSteps" aria-label="The step happening now">
+        <li><b>1 · Impulse arrives</b>The nerve impulse reaches the terminal</li>
+        <li><b>2 · Ca²⁺ in</b>Ca²⁺ channels open at the active zones</li>
+        <li><b>3 · ACh released</b>Docked vesicles fuse and empty into the cleft</li>
+        <li><b>4 · Receptors open</b>ACh opens receptor channels: the EPP</li>
+        <li><b>5 · ACh split</b>Acetylcholinesterase clears the cleft</li>
+        <li><b>6 · Muscle impulse</b>The EPP passes threshold and the fibre fires</li>
+      </ol>
+      <div class="runbar">
+        <button id="nStim" class="primary">Stimulate</button>
+        <button id="nPlay" class="primary">Play</button>
+        <button id="nReset">Reset</button>
+        <label for="nSpeed" class="runlab">Speed</label>
+        <input type="range" id="nSpeed" min="0" max="100" value="62">
+        <output id="nSpeedo" for="nSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot ca"></i>Ca²⁺</span>
+        <span><i class="dot nt"></i>ACh</span>
+        <span><i class="dot na"></i>Na⁺</span>
+        <span><i class="dot k"></i>K⁺</span>
+        <span><i class="dot cl"></i>Cl⁻</span>
+        <span><i class="dot a"></i>A⁻ (proteins, inside)</span>
+        <span><i class="dot ache"></i>acetylcholinesterase</span>
+        <span><i class="dot syn"></i>ACh receptor</span>
+        <span><i class="dot neg"></i>at rest</span><span><i class="dot pos"></i>depolarized</span>
+      </div>
+      <p class="caption" id="nCap" aria-live="polite"></p>
+      <div class="cgrid">
+        <div class="chartcol">
+          <p class="sect-title">End-plate voltage after each impulse</p>
+          <canvas id="cSweep" aria-label="End-plate voltage for 14 milliseconds after each nerve impulse, one sweep per impulse drawn on top of the others"></canvas>
+          <div class="legend"><span><i class="ln" style="background:var(--accent)"></i>fired the fibre</span><span><i class="ln" style="background:var(--pos)"></i>fell short</span><span><i class="ln dash" style="color:var(--muted)"></i>the EPP alone, with the Na⁺ channels blocked</span></div>
+        </div>
+        <div class="chartcol">
+          <p class="sect-title">EPP size, impulse by impulse</p>
+          <canvas id="cSize" aria-label="How far each end-plate potential alone lifts the end-plate above rest, impulse by impulse, against the rise needed to reach threshold"></canvas>
+          <div class="legend"><span><i class="dot" style="background:var(--accent)"></i>fired the fibre</span><span><i class="dot pos"></i>fell short</span><span><i class="ln dash" style="color:var(--pos)"></i>rise needed to reach threshold</span></div>
+        </div>
+        <div class="chartcol">
+          <p class="sect-title">The whole muscle: its response to each impulse</p>
+          <canvas id="cCmap" aria-label="The compound muscle action potential after each impulse, one wave per impulse"></canvas>
+          <p class="caption" id="nCmapCap"></p>
+        </div>
+        <div class="chartcol">
+          <p class="sect-title">Miniature EPPs: single quanta, 3 s at rest</p>
+          <canvas id="cMini" aria-label="Three seconds of end-plate voltage at rest, with a small blip for each vesicle released on its own"></canvas>
+          <p class="caption" id="nMiniCap"></p>
+        </div>
+      </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-nhelp" aria-labelledby="tab-nhelp" hidden>
+      <ul>
+        <li><b>The picture:</b> the end of the motor axon (the nerve terminal) above, the synaptic cleft in the middle, and the muscle fibre's end-plate below, with its deep junctional folds. A real junction has many such swellings; this is one stretch of it, and its 50 docking sites stand for the junction's 300. The counts in the panel beside the picture (quanta released, vesicles ready) are for the whole junction, six times what you can count in the picture. Each cell is tinted by its voltage: blue at rest, red when depolarized.</li>
+        <li><b>In the terminal:</b> the circles along the lower membrane are vesicles docked at the active zones, each full of ACh, with the yellow Ca²⁺ channels between them; the channels split open as the impulse passes. The vesicles higher up are the reserve, which refills empty docking sites. A grey, faded vesicle is at a site that botulinum toxin has stopped. A grey Ca²⁺ channel with a Y beside it has been taken out by a Lambert–Eaton antibody.</li>
+        <li><b>In the cleft:</b> the dashed line is the basal lamina, a mesh that holds acetylcholinesterase (green, drawn with an open mouth); each enzyme splits ACh into acetate and choline. Grey ones are blocked by neostigmine. The small pink dots are free ACh.</li>
+        <li><b>On the end-plate:</b> the ACh receptors (teal) sit on the crests of the folds, right under the active zones. Closed they are solid; open they split, with ACh bound on top. A grey receptor with a dark cap is blocked by curare, and a Y on a receptor is a myasthenia gravis antibody; gaps along the crests are receptors the antibodies have already removed. Deep in the folds are the muscle's own Na⁺ channels (orange), which fire the muscle action potential once the end-plate reaches threshold.</li>
+        <li><b>Ions:</b> as in the Membrane Potential lesson, each small dot is one ion in its key colour: K⁺ and A⁻ inside both cells, Na⁺, Cl⁻ and Ca²⁺ outside. Ions cross a membrane only through a channel, so watch Na⁺ pour in through each open receptor while a little K⁺ leaks out.</li>
+        <li><b>Time:</b> a real junction does all of this in about two milliseconds, so release and the rise of the EPP run in slow motion; the speed is in milliseconds of junction time per second of yours. The tail of each EPP and the wait between impulses are run faster, and the note in the corner of the picture says which part you are watching.</li>
+        <li><b>End-plate voltage:</b> one sweep per impulse, each starting when the impulse reaches the terminal, drawn on top of the others as on an oscilloscope; the newest is darkest. A sweep that shoots up past 0 mV is a muscle action potential. The dashed line is what the newest EPP would have done on its own, if the muscle's Na⁺ channels were blocked (in the lab, with µ-conotoxin).</li>
+        <li><b>EPP size:</b> the peak of each EPP alone — how far it lifts the end-plate above rest — against the rise needed to reach threshold (dashed). A point above the line fires the fibre.</li>
+        <li><b>The whole muscle:</b> a muscle has hundreds of fibres, each with its own junction and its own margin. An electrode on the skin records all their action potentials together, the <b>compound muscle action potential</b> (CMAP), so its size counts how many fibres fired. The chart shows one wave per impulse, as on a clinic's machine. The fibre in the picture is a typical one, from the middle of the range.</li>
+        <li><b>Miniature EPPs:</b> three seconds of the end-plate at rest. Each blip is one vesicle released on its own. How big they are tells you about the receptors; how often they come tells you about the release machinery.</li>
+        <li><b>Your measurements:</b> under the junction, each train that runs to the end adds a row: its settings, and what came out (quanta, the size of one quantum, the safety factor, how many impulses fired the fibre, the whole muscle's response). Choose any two columns to plot one against the other.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-nlook" aria-labelledby="tab-nlook" hidden>
+      <ul>
+        <li>In the healthy junction, read the quanta released by the first impulse, then by the fifth: fewer each time, because docking sites refill slowly. The EPP shrinks too, yet every one stays well above the dashed line. That gap is the safety factor.</li>
+        <li>Compare the miniature EPPs in myasthenia gravis (small, but as frequent as normal) with botulinum toxin (normal size, but rare). The mEPPs say whether the problem is after the cleft (the receptors) or before it (release).</li>
+        <li>In myasthenia gravis one fibre is all-or-none, but the whole muscle's response shrinks step by step: the fibres with the least margin drop out first.</li>
+        <li>In Lambert–Eaton, release goes as about the fourth power of Ca²⁺ entry (the Chemical Synapse lesson), so losing 30% of the Ca²⁺ entry cuts release to about a quarter (0.7⁴ ≈ 0.24). At 50 Hz, watch the quanta per impulse climb.</li>
+        <li>With neostigmine, the ACh dots linger in the cleft, the receptors stay open longer and the EPP lasts longer. Try it on a healthy junction too: the EPP grows, though a healthy junction never needed the help.</li>
+        <li>Set the release probability to 0.5 and stimulate at 50 Hz: the docked vesicles run out within a few impulses. Set it to 0.05 and release grows instead. Which way it goes depends on where p starts.</li>
+        <li>How many receptors can a junction lose and still fire on every impulse of a 3 Hz train? Run trains with several receptor levels, then plot two columns of your measurements that answer it. Does the safety factor have to stay above 1, or above something bigger?</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel">
+    <div class="vbox">
+      <span class="sect-title">End-plate voltage</span>
+      <span class="vnum" id="nVnum">—</span>
+      <div class="vrow"><span>quanta released by this impulse</span><b id="nRel">—</b></div>
+      <div class="vrow"><span>vesicles docked and ready</span><b id="nReady">—</b></div>
+      <div class="vrow"><span>quanta needed to reach threshold</span><b id="nNeed">—</b></div>
+      <div class="vrow"><span>one quantum (mEPP)</span><b id="nQ">—</b></div>
+      <div class="vrow"><span>safety factor, first impulse</span><b id="nSF">—</b></div>
+      <div class="vrow"><span>this fibre fired</span><b id="nFired">—</b></div>
+      <div class="vrow"><span>whole muscle, last vs first</span><b id="nDec">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The junction</legend>
+      <div class="sgroup">
+        <span class="gtitle">Stimulating the nerve</span>
+        <div class="seg" role="group" aria-label="Stimulus rate">
+          <button type="button" data-nrate="2" aria-pressed="false">2 Hz</button><button type="button" data-nrate="3" aria-pressed="true">3 Hz</button><button type="button" data-nrate="20" aria-pressed="false">20 Hz</button><button type="button" data-nrate="50" aria-pressed="false">50 Hz</button>
+        </div>
+        <div class="row"><label for="nN">Impulses</label><input type="range" id="nN" min="1" max="10" step="1" value="5"><output id="nNo" for="nN"></output>
+          <span class="hint">the clinic's test: 3 Hz for myasthenia, 20–50 Hz for Lambert–Eaton, 2 Hz for the anaesthetist's train-of-four</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Nerve terminal</span>
+        <div class="row"><label for="nP"><i class="dot ca"></i>Release p</label><input type="range" id="nP" min="0.01" max="0.5" step="0.005" value="0.2"><output id="nPo" for="nP"></output>
+          <span class="hint">the chance a docked vesicle is released, set by Ca²⁺ entry; low in Lambert–Eaton, whose antibodies remove Ca²⁺ channels</span></div>
+        <div class="row"><label for="nSites">Release sites</label><input type="range" id="nSites" min="2" max="100" step="1" value="100"><output id="nSiteso" for="nSites"></output>
+          <span class="hint">n, the sites still able to release; botulinum toxin stops them</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Cleft and end-plate</span>
+        <div class="row"><label for="nAChE"><i class="dot ache"></i>Esterase</label><input type="range" id="nAChE" min="0" max="100" step="1" value="100"><output id="nAChEo" for="nAChE"></output>
+          <span class="hint">acetylcholinesterase still working; neostigmine and pyridostigmine block it, so ACh lingers</span></div>
+        <div class="row"><label for="nRec"><i class="dot syn"></i>Receptors</label><input type="range" id="nRec" min="5" max="100" step="1" value="100"><output id="nReco" for="nRec"></output>
+          <span class="hint">ACh receptors left; myasthenia gravis antibodies remove them</span></div>
+        <div class="row"><label for="nCur">Curare</label><input type="range" id="nCur" min="0" max="95" step="1" value="0"><output id="nCuro" for="nCur"></output>
+          <span class="hint">the share of the remaining receptors blocked by curare, or by rocuronium in surgery</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card meas" id="nmj-meas" aria-labelledby="nLogTitle">
+  <div class="mhead"><span class="sect-title" id="nLogTitle">Your measurements: one row per train</span><button type="button" id="nLogClear">Clear</button></div>
+  <div class="mtable" id="nLogTable"></div>
+  <div class="mplot">
+    <div class="axpick"><label>X <select id="nLogX" aria-label="Column to plot across"></select></label><label>Y <select id="nLogY" aria-label="Column to plot up"></select></label></div>
+    <canvas id="nLogPlot" aria-label="A plot of the two columns you chose, one dot per train"></canvas>
+    <p class="caption">Each train that runs to the end adds a row. Choose a column for each axis to plot one against the other.</p>
+  </div>
+</section>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Real units</p>
+      <dl class="unitlist">
+        <dt>mV</dt><dd>millivolts, for voltage, the inside measured against the outside. The muscle fibre rests near −85 mV and fires when the end-plate reaches about −65 mV.</dd>
+        <dt>ms</dt><dd>milliseconds, for time. ACh is released, acts and is split within about two milliseconds; a muscle action potential lasts about three.</dd>
+        <dt>Hz</dt><dd>impulses per second. 3 Hz is one impulse every 333 ms; 50 Hz, one every 20 ms.</dd>
+        <dt>quanta</dt><dd>a count, not a unit: how many vesicles one impulse releases (the quantal content, m), or how many it takes to reach threshold.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">In the simulation</p>
+      <dl class="unitlist">
+        <dt>mS/cm²</dt><dd>millisiemens per square centimetre of membrane, for conductance, as in the Hodgkin–Huxley lesson. The end-plate is treated as one patch of membrane.</dd>
+        <dt>µF/cm²</dt><dd>microfarads per square centimetre, for capacitance: about 1 for any cell membrane.</dd>
+        <dt>mV (whole muscle)</dt><dd>the compound muscle action potential, recorded through the skin: about 8 mV here when every fibre fires, less when some fail.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="nmjtheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Nerve to muscle</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">Quanta</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">The safety factor</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Trains of impulses</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">When it fails</button>
+    <button type="button" role="tab" id="tab-th6" aria-controls="pane-th6" aria-selected="false" tabindex="-1">In the clinic</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> This is the Chemical Synapse lesson's synapse, built big. One nerve impulse releases dozens of vesicles of acetylcholine at once; ACh opens receptor channels on the muscle; Na⁺ rushes in; the end-plate depolarizes well past threshold; and the muscle fibre's own Na⁺ channels fire an action potential that runs along the fibre and makes it contract.</p>
+      <h3>Six steps in two milliseconds</h3>
+      <ol>
+        <li>The nerve impulse reaches the terminal and depolarizes it.</li>
+        <li>Voltage-gated Ca²⁺ channels (the P/Q type) at the active zones open, and Ca²⁺ rushes in.</li>
+        <li>Ca²⁺ makes docked vesicles fuse with the membrane and empty their ACh into the cleft, about half a millisecond after the impulse arrives.</li>
+        <li>ACh crosses the 50 nm cleft and opens nicotinic receptors, channels for Na⁺ and K⁺ packed on the crests of the folds. The current through them depolarizes the end-plate: the end-plate potential.</li>
+        <li>Acetylcholinesterase in the cleft splits ACh within about a millisecond, so the receptors close again.</li>
+        <li>If the EPP reached threshold, Na⁺ channels deep in the folds fire a muscle action potential, which spreads along the fibre and triggers contraction.</li>
+      </ol>
+      <h3>The end-plate current: Ohm's law with its own battery</h3>
+      <p>An open nicotinic receptor is a conductance like any other, and the current through it is that conductance times the driving force, the distance from the voltage to the channel's own battery:</p>
+      <div class="eq">\[ I_\mathrm{EPC} = g_\mathrm{ACh}(t)\,\bigl(V - E_\mathrm{ACh}\bigr), \qquad E_\mathrm{ACh} \approx -5\ \mathrm{mV} \]</div>
+      <p>The channel passes both Na⁺ and K⁺, so its battery sits between E<sub>Na</sub> (about +60 mV) and E<sub>K</sub> (about −95 mV), a little below 0 mV. Takeuchi and Takeuchi measured it by holding the end-plate at different voltages and finding where the current reversed. At rest the driving force is large: V − E<sub>ACh</sub> = −85 − (−5) = −80 mV. If the open receptors come to 4 µS at the peak, the current is 4 µS × (−80 mV) = −320 nA, flowing into the fibre. (Negative means inward, the way electrophysiologists count it.)</p>
+      <details class="fullderiv">
+        <summary>Show where E<sub>ACh</sub> ≈ −5 mV comes from</summary>
+        <p>Inside the channel, Na⁺ and K⁺ are two conductances side by side, each pulling toward its own battery. The channel passes no net current where the two cancel:</p>
+        <div class="eq">\[ g_\mathrm{Na}\,(E_\mathrm{ACh} - E_\mathrm{Na}) + g_\mathrm{K}\,(E_\mathrm{ACh} - E_\mathrm{K}) = 0 \quad\Rightarrow\quad E_\mathrm{ACh} = \frac{g_\mathrm{Na}E_\mathrm{Na} + g_\mathrm{K}E_\mathrm{K}}{g_\mathrm{Na} + g_\mathrm{K}} \]</div>
+        <p>which is the conductance-weighted average, the same chord-conductance equation as in the Membrane Potential lesson. With E<sub>Na</sub> = +60 mV, E<sub>K</sub> = −95 mV and g<sub>Na</sub> about 1.4 times g<sub>K</sub>: E<sub>ACh</sub> = (1.4 × 60 − 95) / 2.4 ≈ −5 mV.</p>
+      </details>
+      <h3>From current to voltage</h3>
+      <p>The end-plate current joins the circuit from the Passive Properties: Time lesson: it charges the membrane's capacitor, while the resting conductance leaks it away.</p>
+      <div class="eq">\[ C\,\frac{dV}{dt} = -\,g_\mathrm{rest}\,(V - E_\mathrm{rest}) \;-\; g_\mathrm{ACh}(t)\,(V - E_\mathrm{ACh}) \]</div>
+      <p>This is the equation the simulation solves, step by step, for the end-plate. Because g<sub>ACh</sub> here is huge next to a brain synapse's, V moves a long way toward E<sub>ACh</sub>: about 45 mV in a healthy junction, when the fibre needs only 20.</p>
+      <h3>Why this synapse is not like one in the brain</h3>
+      <p>A neuron in the brain collects thousands of small synapses and adds them up (the Summation lesson). A muscle fibre has one junction, and that junction alone has to fire it every single time. So it is one very large synapse: hundreds of active zones, dozens of vesicles per impulse, receptors packed at about 10 000 per square micrometre on the fold crests, and the folds themselves, which put a dense patch of the muscle's Na⁺ channels right under those receptors.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="one">One impulse, healthy</button> Watch the six steps in slow motion.</p>
+      <p><button class="chip" data-try="slow">Slower</button> Slow enough to see the Ca²⁺ channels open before any vesicle fuses.</p>
+      <p><button class="chip" data-try="curare">Curare</button> The EPP on its own, too small to fire the fibre.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Even at rest a vesicle fuses now and then by itself and makes a blip of about a millivolt, a miniature EPP. The EPP is just many of those at once: a whole number of packets, the quanta. How big the packets are, and how many come out, tells you where a sick junction's problem is.</p>
+      <h3>Miniature EPPs</h3>
+      <p>Fatt and Katz, recording from inside a frog muscle fibre at its end-plate, saw small depolarizations arriving at random, about one a second, each a fraction of a millivolt, with the same shape as the EPP. Curare made them smaller and neostigmine made them bigger and longer, so they came from ACh acting on the receptors. Each is the ACh of one vesicle, a few thousand molecules: one <b>quantum</b>, of size q.</p>
+      <h3>The EPP is built from quanta</h3>
+      <p>Del Castillo and Katz lowered the Ca²⁺ outside until an impulse released only a few quanta. The EPPs then came in steps the size of one mEPP: 0, q, 2q, 3q… An impulse releases a whole number of quanta, the <b>quantal content</b>, m. If the terminal has n release sites and each releases with probability p,</p>
+      <div class="eq">\[ m = n\,p, \qquad \text{EPP} \approx m \times q \quad (\text{while the EPP is small}) \]</div>
+      <p>In the simulation n = 300 and p = 0.2, so m = 300 × 0.2 = 60 quanta per impulse, and one quantum makes a miniature EPP of about 1.2 mV. Rat end-plates release about 50 to 80 quanta per impulse (Wood and Slater), a frog's a few hundred.</p>
+      <h3>Before the cleft, or after it?</h3>
+      <p>Each disorder changes a different number, and the miniature EPPs show which:</p>
+      <table class="map">
+        <tr><th></th><th>mEPP size (q)</th><th>mEPPs per second</th><th>quanta per impulse (m)</th></tr>
+        <tr><td>Myasthenia gravis</td><td>small</td><td>normal</td><td>normal, or a little higher</td></tr>
+        <tr><td>Curare</td><td>small</td><td>normal</td><td>normal</td></tr>
+        <tr><td>Lambert–Eaton</td><td>normal</td><td>normal</td><td>low, rising at high rates</td></tr>
+        <tr><td>Botulinum toxin</td><td>normal</td><td>low</td><td>low</td></tr>
+      </table>
+      <p>A small q means fewer working receptors, so the trouble is after the cleft. A small m with a normal q means less is being released, so it is before the cleft. Elmqvist and colleagues found exactly this pattern in muscle from people with myasthenia gravis: miniature EPPs about a fifth of normal size, with a normal number of quanta per impulse.</p>
+      <details class="fullderiv">
+        <summary>Show how much m varies from impulse to impulse</summary>
+        <p>Each of the n sites releases or not by chance, so m follows the binomial distribution (the Chemical Synapse lesson), with mean n·p and standard deviation</p>
+        <div class="eq">\[ \sigma_m = \sqrt{n\,p\,(1-p)} = \sqrt{300 \times 0.2 \times 0.8} \approx 6.9 \]</div>
+        <p>So an impulse releases 60 ± 7 quanta, about ±12%: small next to a threefold margin, which is why the simulation just uses the average. At a brain synapse with n = 10 and p = 0.3, the same sum gives 3 ± 1.4 quanta, about ±50%, and some impulses release nothing at all.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="mg">Myasthenia gravis</button> Small miniature EPPs, as frequent as before.</p>
+      <p><button class="chip" data-try="botox">Botulinum toxin</button> Normal-sized mEPPs, but hardly any.</p>
+      <p><button class="chip" data-try="lems3">Lambert–Eaton</button> mEPPs normal in size and number; it is the impulse that releases few.</p>
+      <p><button class="chip" data-try="ache0">No esterase at all</button> Each mEPP bigger and longer, as Fatt and Katz saw with neostigmine.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The nerve releases about three times as many quanta as it takes to reach threshold. That margin, the safety factor, is why your muscles don't skip a beat as release runs down during use, and it is what every disease of the junction eats into. Above 1 the fibre fires; below 1 it fails.</p>
+      <h3>The safety factor</h3>
+      <p>Wood and Slater define it as the quanta an impulse releases divided by the quanta it takes to reach threshold:</p>
+      <div class="eq">\[ \text{safety factor} = \frac{m}{m_\mathrm{needed}} \]</div>
+      <p>In the simulation the fibre rests at −85 mV and fires at about −65 mV, so the EPP has to lift it 20 mV. That takes about 20 quanta, and a healthy impulse releases 60: a safety factor of 60 / 20 = 3. Wood and Slater, counting quanta from voltage recordings in the rat's soleus muscle, found 62 released and 20 needed, the same 3; counting them more carefully from the current, they put it at 3.5 in the soleus and 5.0 in a faster muscle. Between 3 and 5 is usual in adult mammals.</p>
+      <h3>Why a big EPP is less than the sum of its quanta</h3>
+      <p>Each quantum adds conductance, not voltage. The first quanta push V up from −85 mV, where the driving force is a full 80 mV. As V climbs toward E<sub>ACh</sub> that driving force shrinks, so each extra quantum adds less than the one before: each closes about the same <em>fraction</em> of the gap that is left. For a current much briefer than the membrane's time constant this gives</p>
+      <div class="eq">\[ \text{EPP} \approx D\,\bigl(1 - e^{-m q / D}\bigr), \qquad D = E_\mathrm{ACh} - V_\mathrm{rest} \]</div>
+      <p>With D = 80 mV, q = 1 mV and m = 60: EPP ≈ 80 × (1 − e<sup>−0.75</sup>) ≈ 42 mV, not 60. The EPP can approach E<sub>ACh</sub> but never pass it. The calculator below works this out for any numbers you like.</p>
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>While a brief end-plate current flows, the resting conductance has little time to act, so for those moments</p>
+        <div class="eq">\[ C\,\frac{dV}{dt} \approx -\,g_\mathrm{ACh}(t)\,(V - E_\mathrm{ACh}) \quad\Rightarrow\quad V - E_\mathrm{ACh} = (V_\mathrm{rest} - E_\mathrm{ACh})\,\exp\!\Bigl(-\tfrac{1}{C}\textstyle\int g_\mathrm{ACh}\,dt\Bigr) \]</div>
+        <p>The distance left to E<sub>ACh</sub> shrinks by the same factor for each bit of conductance. One quantum on its own, starting from rest, moves V by q ≈ D × (∫g₁ dt / C), so ∫g₁ dt / C ≈ q / D. Then m quanta give m times that, and</p>
+        <div class="eq">\[ \text{EPP} = D - D\,e^{-m q/D} = D\,\bigl(1 - e^{-m q / D}\bigr) \]</div>
+        <p>For small m q this is just m × q. Turning it around gives the quanta needed to lift V by N millivolts: m<sub>needed</sub> = (D / q) ln(D / (D − N)). Martin's classic correction, EPP = m q / (1 + m q / D), comes from the same idea for a conductance left on until V settles, and gives a somewhat smaller EPP. The simulation follows V moment by moment and lands between the two.</p>
+      </details>
+      <h3>The folds add to the margin</h3>
+      <p>The junctional folds put a dense patch of the muscle's Na⁺ channels right under the receptors, so the end-plate fires at a lower threshold than the rest of the fibre. Wood and Slater found that this alone doubles the safety factor. Frogs get their margin by releasing a great deal of transmitter; mammals release less and lean on the folds.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="normal">Healthy</button> Safety factor 3: every impulse fires.</p>
+      <p><button class="chip" data-try="rec35">Receptors at 35%</button> Each quantum about a third of its size, and the margin falls to about 1.</p>
+      <p><button class="chip" data-try="calc:25">Calculator: 25 quanta</button> Is a quarter of the healthy release enough? <button class="chip" data-try="calc:60">Try 60</button></p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Each impulse uses up some of the docked vesicles, and they take a second or two to come back, so later impulses release fewer quanta (depression). Each impulse also leaves a little Ca²⁺ behind, which makes the next one release more (facilitation). At a healthy junction both happen, and the safety factor covers the dip.</p>
+      <h3>Depression: the docked vesicles run down</h3>
+      <p>Let R be the share of docking sites with a vesicle ready. An impulse releases m = n p R quanta and leaves R smaller by the fraction p; between impulses the empty sites refill, with a time constant of about 1.5 s. At 3 Hz the next impulse comes long before refilling is done, so in the simulation the quanta fall 60 → 52 → 48 → 45 → 44 and then level off, where refilling just keeps up with use. The fifth impulse releases about a quarter less than the first, and a healthy junction, with three times what it needs, never notices.</p>
+      <h3>Facilitation: the Ca²⁺ left over</h3>
+      <p>The Ca²⁺ that enters with an impulse takes tens of milliseconds to be pumped out of the terminal. A second impulse soon after adds its own Ca²⁺ on top, and because release goes as about the fourth power of Ca²⁺ (Dodge and Rahamimoff; the Chemical Synapse lesson), a little extra Ca²⁺ raises release a lot. At 3 Hz the leftover Ca²⁺ is long gone before the next impulse. At 50 Hz it piles up: 46% extra Ca²⁺ gives 1.46⁴ ≈ 4.5 times the release probability.</p>
+      <h3>Which one wins depends on p</h3>
+      <p>A junction with a high p (healthy, p = 0.2) uses up its docked vesicles quickly, so at 50 Hz it facilitates for an impulse or two and then depresses. A junction with a low p (Lambert–Eaton, p = 0.05) uses few vesicles per impulse, so the extra Ca²⁺ wins and release keeps climbing. That difference is what the clinical tests in the next tab are built on.</p>
+      <details class="fullderiv">
+        <summary>Show the simulation's equations</summary>
+        <p>Before impulse k, with R<sub>k</sub> the share of sites docked and c<sub>k</sub> the leftover Ca²⁺ (as a fraction of what one impulse brings to the release sites):</p>
+        <div class="eq">\[ p_k = 1 - (1 - p)^{(1 + c_k)^4}, \qquad m_k = n\,p_k\,R_k, \qquad R \to R\,(1 - p_k), \qquad c \to c + 0.18 \]</div>
+        <p>The odd-looking form of p<sub>k</sub> behaves like p (1 + c<sub>k</sub>)⁴ while that is small but can never pass 1. Between impulses c decays with a time constant of 60 ms, and empty sites refill with a time constant of 1.5 s, faster while c is high, which is how a terminal keeps up during a fast train.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="normal">Healthy, 3 Hz</button> Release runs down by about a quarter.</p>
+      <p><button class="chip" data-try="norm50">Healthy, 50 Hz</button> A little facilitation, then depression; every impulse still fires.</p>
+      <p><button class="chip" data-try="lems50">Low p, 50 Hz</button> Release climbs impulse after impulse.</p>
+      <p><button class="chip" data-try="hip50">High p, 50 Hz</button> p = 0.5: the docked vesicles run out.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Each disorder breaks one link in the chain. Problems after the cleft (myasthenia gravis, curare) make each quantum do less; problems before it (Lambert–Eaton, botulinum toxin) mean fewer quanta. Either way the safety factor shrinks, and once it drops below 1 the fibre stops firing.</p>
+      <h3>Myasthenia gravis</h3>
+      <p>Antibodies against the ACh receptor make the muscle lose receptors and flatten the fold crests; Fambrough and colleagues counted the receptors at patients' end-plates and found far fewer. Each quantum then opens fewer channels, so the miniature EPPs are small. A rested muscle may still work, but with the margin near 1 the normal run-down during use pushes EPPs below threshold: muscles weaken as they are used, often the eyelids and eye muscles first. In patients the receptor loss is usually greater than in this simulation, and the nerve makes up part of it by releasing more quanta per impulse (Plomp and colleagues). The treatments are acetylcholinesterase blockers such as pyridostigmine, and drugs that calm the immune attack.</p>
+      <h3>Lambert–Eaton syndrome</h3>
+      <p>Antibodies against the terminal's P/Q-type Ca²⁺ channels; Lang and colleagues showed that patients' antibodies alone can cause it. Less Ca²⁺ enters, and because release goes as about the fourth power of Ca²⁺ entry, losing 30% of the Ca²⁺ entry cuts release to about a quarter: 0.7⁴ ≈ 0.24. That is the simulation's Lambert–Eaton setting, a release probability of 0.05 instead of 0.2; in the picture about 3 in 10 Ca²⁺ channels are grey. Few quanta leave the terminal, so the EPP falls short. Fast stimulation, or ten seconds of hard voluntary contraction, lets Ca²⁺ build up and release grows. About half the people with it have small-cell lung cancer, whose cells carry the same kind of Ca²⁺ channel.</p>
+      <h3>Botulinum toxin</h3>
+      <p>The toxin is an enzyme that gets into the terminal and cuts a SNARE protein that vesicles need in order to fuse (Schiavo and colleagues). Vesicles still dock but cannot empty, so release sites stop working: fewer quanta per impulse, far fewer miniature EPPs, each of normal size. Swallowed in spoiled food it causes botulism, a weakness that spreads from the face and throat. Injected locally in tiny doses it is a treatment, quieting overactive muscles for months, until the terminal sprouts and builds new release sites.</p>
+      <h3>Curare and the muscle relaxants used in surgery</h3>
+      <p>Curare (d-tubocurarine) sits in the ACh binding site without opening the channel, competing with ACh. Rocuronium and vecuronium work the same way and are used to relax muscles during surgery. With part of the receptors blocked the EPP is small and fades during a train, much as in myasthenia gravis. Neostigmine reverses the block: with acetylcholinesterase stopped, ACh lingers and outcompetes the blocker.</p>
+      <h3>Acetylcholinesterase blockers</h3>
+      <p>Neostigmine and pyridostigmine block the enzyme for hours, so the ACh of each quantum stays around longer and opens more receptors, and the EPP grows. That is a treatment for myasthenia gravis and the way anaesthetists reverse a muscle relaxant. Too much, though, and the end-plate never repolarizes: its Na⁺ channels inactivate, as in the Hodgkin–Huxley lesson, and the fibre stops responding again.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="mg">Myasthenia gravis</button> Fires, then fails as release runs down.</p>
+      <p><button class="chip" data-try="neo">… with neostigmine</button> Every impulse fires again.</p>
+      <p><button class="chip" data-try="lems3">Lambert–Eaton, 3 Hz</button><button class="chip" data-try="lems50">50 Hz</button></p>
+      <p><button class="chip" data-try="botox">Botulinum toxin</button> Few vesicles can fuse.</p>
+      <p><button class="chip" data-try="tof">Rocuronium, train-of-four</button> Part of the receptors blocked: the response fades.</p>
+      <p><button class="chip" data-try="tofneo">… reversed with neostigmine</button> The fade goes away.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th6" aria-labelledby="tab-th6" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> A clinician cannot record from one end-plate, but can stimulate a nerve through the skin and record the whole muscle's response, the compound muscle action potential: the muscle's version of the nerve's compound action potential in the Recording from Outside lesson. Its size counts how many fibres fired. In myasthenia gravis it shrinks during a slow 3 Hz train (a decrement); in Lambert–Eaton syndrome it starts small and grows with fast stimulation or after a brief hard contraction (an increment).</p>
+      <h3>One fibre is all-or-none; the muscle is not</h3>
+      <p>Each fibre either fires or fails, but the fibres of one muscle are not identical: some end-plates have more receptors or release more quanta than others. In the simulation each fibre's quanta × quantal size varies around the typical fibre's by about 30%. When the junctions are weak, the fibres with the least margin fail first, so the whole muscle's response falls away one fibre at a time.</p>
+      <h3>Repetitive nerve stimulation</h3>
+      <ul>
+        <li><b>Myasthenia gravis:</b> stimulate at 2 to 3 Hz and compare the 4th or 5th response with the 1st. A fall of more than about 10% is a decrement: the run-down of release pushes more and more fibres below threshold. It is deepest at the 4th or 5th impulse and then levels off, as refilling catches up.</li>
+        <li><b>Lambert–Eaton:</b> the first response is small, because many fibres fail even at rest. Stimulate at 20 to 50 Hz, or record again right after ten seconds of maximal contraction, and it grows; a rise of 100% or more is the classic sign. Botulism can show a smaller increment for the same reason.</li>
+      </ul>
+      <h3>Train-of-four in the operating room</h3>
+      <p>Anaesthetists check how much muscle relaxant is still acting by stimulating a nerve four times at 2 Hz and comparing the 4th twitch with the 1st. With part of the receptors blocked the response fades, as in myasthenia gravis, and the patient is not ready to breathe on their own until the 4th twitch is back to at least 90% of the 1st.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="normal">Healthy, 3 Hz</button> No decrement: every fibre keeps firing.</p>
+      <p><button class="chip" data-try="mg">Myasthenia gravis, 3 Hz</button> The muscle's response shrinks by about 45%.</p>
+      <p><button class="chip" data-try="lems50">Lambert–Eaton, 50 Hz</button> A small first response that grows several-fold.</p>
+      <p><button class="chip" data-try="tof">Train-of-four, partial block</button> The 4th twitch about half the 1st.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Fatt P, Katz B (1951).</b> An analysis of the end-plate potential recorded with an intra-cellular electrode. <i>Journal of Physiology</i> 115:320–370. <a href="https://doi.org/10.1113/jphysiol.1951.sp004675" target="_blank" rel="noopener">doi:10.1113/jphysiol.1951.sp004675</a><br><span class="why">The EPP recorded from inside a muscle fibre, held below threshold with curare.</span></li>
+        <li><b>Fatt P, Katz B (1952).</b> Spontaneous subthreshold activity at motor nerve endings. <i>Journal of Physiology</i> 117:109–128. <a href="https://doi.org/10.1113/jphysiol.1952.sp004735" target="_blank" rel="noopener">doi:10.1113/jphysiol.1952.sp004735</a><br><span class="why">The miniature EPPs: single packets of ACh released at random at rest.</span></li>
+        <li><b>del Castillo J, Katz B (1954).</b> Quantal components of the end-plate potential. <i>Journal of Physiology</i> 124:560–573. <a href="https://doi.org/10.1113/jphysiol.1954.sp005129" target="_blank" rel="noopener">doi:10.1113/jphysiol.1954.sp005129</a><br><span class="why">The EPP is made of whole numbers of miniature-sized quanta: m = n·p.</span></li>
+        <li><b>Martin AR (1955).</b> A further study of the statistical composition of the end-plate potential. <i>Journal of Physiology</i> 130:114–122. <a href="https://doi.org/10.1113/jphysiol.1955.sp005397" target="_blank" rel="noopener">doi:10.1113/jphysiol.1955.sp005397</a><br><span class="why">The correction for nonlinear summation: why a big EPP is less than m × q.</span></li>
+        <li><b>Takeuchi A, Takeuchi N (1960).</b> On the permeability of end-plate membrane during the action of transmitter. <i>Journal of Physiology</i> 154:52–67. <a href="https://doi.org/10.1113/jphysiol.1960.sp006564" target="_blank" rel="noopener">doi:10.1113/jphysiol.1960.sp006564</a><br><span class="why">The end-plate current under voltage clamp: one channel for Na⁺ and K⁺, reversing a little below 0 mV.</span></li>
+        <li><b>Elmqvist D, Hofmann WW, Kugelberg J, Quastel DMJ (1964).</b> An electrophysiological investigation of neuromuscular transmission in myasthenia gravis. <i>Journal of Physiology</i> 174:417–434. <a href="https://doi.org/10.1113/jphysiol.1964.sp007495" target="_blank" rel="noopener">doi:10.1113/jphysiol.1964.sp007495</a><br><span class="why">In myasthenic muscle the miniature EPPs are small while the number of quanta is normal: the fault is after the cleft.</span></li>
+        <li><b>Dodge FA, Rahamimoff R (1967).</b> Co-operative action of calcium ions in transmitter release at the neuromuscular junction. <i>Journal of Physiology</i> 193:419–432. <a href="https://doi.org/10.1113/jphysiol.1967.sp008367" target="_blank" rel="noopener">doi:10.1113/jphysiol.1967.sp008367</a><br><span class="why">Release rises as about the fourth power of Ca²⁺: why losing Ca²⁺ channels costs so much release, and why leftover Ca²⁺ adds so much.</span></li>
+        <li><b>Fambrough DM, Drachman DB, Satyamurti S (1973).</b> Neuromuscular junction in myasthenia gravis: decreased acetylcholine receptors. <i>Science</i> 182:293–295. <a href="https://doi.org/10.1126/science.182.4109.293" target="_blank" rel="noopener">doi:10.1126/science.182.4109.293</a><br><span class="why">Counting receptors with radioactive α-bungarotoxin: myasthenic end-plates have far fewer.</span></li>
+        <li><b>Lang B, Newsom-Davis J, Wray D, Vincent A, Murray N (1981).</b> Autoimmune aetiology for myasthenic (Eaton–Lambert) syndrome. <i>Lancet</i> 2:224–226. <a href="https://doi.org/10.1016/s0140-6736(81)90474-8" target="_blank" rel="noopener">doi:10.1016/s0140-6736(81)90474-8</a><br><span class="why">Patients' antibodies, given to mice, lower the quantal content: the syndrome is an autoimmune attack on the terminal.</span></li>
+        <li><b>Schiavo G, Benfenati F, Poulain B, Rossetto O, Polverino de Laureto P, DasGupta BR, Montecucco C (1992).</b> Tetanus and botulinum-B neurotoxins block neurotransmitter release by proteolytic cleavage of synaptobrevin. <i>Nature</i> 359:832–835. <a href="https://doi.org/10.1038/359832a0" target="_blank" rel="noopener">doi:10.1038/359832a0</a><br><span class="why">The toxins are enzymes that cut a SNARE protein vesicles need in order to fuse.</span></li>
+        <li><b>Drachman DB (1994).</b> Myasthenia gravis. <i>New England Journal of Medicine</i> 330:1797–1810. <a href="https://doi.org/10.1056/NEJM199406233302507" target="_blank" rel="noopener">doi:10.1056/NEJM199406233302507</a><br><span class="why">A clinical review: receptor antibodies, the decrement, and treatment.</span></li>
+        <li><b>Plomp JJ, van Kempen GTH, De Baets MB, Graus YM, Kuks JBM, Molenaar PC (1995).</b> Acetylcholine release in myasthenia gravis: regulation at single end-plate level. <i>Annals of Neurology</i> 37:627–636. <a href="https://doi.org/10.1002/ana.410370513" target="_blank" rel="noopener">doi:10.1002/ana.410370513</a><br><span class="why">Myasthenic end-plates release more quanta per impulse, making up for part of the receptor loss.</span></li>
+        <li><b>Wood SJ, Slater CR (1997).</b> The contribution of postsynaptic folds to the safety factor for neuromuscular transmission in rat fast- and slow-twitch muscles. <i>Journal of Physiology</i> 500:165–176. <a href="https://doi.org/10.1113/jphysiol.1997.sp022007" target="_blank" rel="noopener">doi:10.1113/jphysiol.1997.sp022007</a><br><span class="why">Quanta released against quanta needed in rat soleus and EDL: 62 and 79 released, 20 and 23 needed, counted from voltage; safety factors of 3.5 and 5.0 counted from current. The folds and their Na⁺ channels double the margin. The simulation's numbers (60 released, 20 needed) are the soleus voltage counts.</span></li>
+        <li><b>Wood SJ, Slater CR (2001).</b> Safety factor at the neuromuscular junction. <i>Progress in Neurobiology</i> 64:393–429. <a href="https://doi.org/10.1016/s0301-0082(00)00055-1" target="_blank" rel="noopener">doi:10.1016/s0301-0082(00)00055-1</a><br><span class="why">The review: how big the margin is in different species, what sets it, and how disease reduces it.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="sf-calc">
+  <div class="calc-head"><span class="sect-title">Safety factor calculator</span></div>
+  <p class="caption">Set how many quanta an impulse releases, how big one quantum is, and the fibre's voltages; see how big the EPP comes out, how many quanta it takes to reach threshold, and the safety factor.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh"><i class="dot nt"></i> Release</div>
+        <div class="gr"><label for="kM">m</label><input type="range" id="kM" min="1" max="200" step="1" value="60"><output id="kMo" for="kM"></output></div>
+        <span class="caption">quanta released by one impulse</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot syn"></i> One quantum</div>
+        <div class="gr"><label for="kQ">q</label><input type="range" id="kQ" min="0.1" max="2" step="0.05" value="1"><output id="kQo" for="kQ"></output></div>
+        <span class="caption">the size of one miniature EPP: smaller when receptors are lost or blocked</span>
+      </div>
+      <div class="gion">
+        <div class="gh">The muscle fibre</div>
+        <div class="gr"><label for="kRest">V<sub>rest</sub></label><input type="range" id="kRest" min="-95" max="-70" step="1" value="-85"><output id="kResto" for="kRest"></output></div>
+        <div class="gr"><label for="kThr">Threshold</label><input type="range" id="kThr" min="-75" max="-45" step="1" value="-65"><output id="kThro" for="kThr"></output></div>
+        <div class="gr"><label for="kE">E<sub>ACh</sub></label><input type="range" id="kE" min="-20" max="10" step="1" value="-5"><output id="kEo" for="kE"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kSF">—</span><span class="caption">safety factor: quanta released ÷ quanta needed</span></div>
+      <div class="es"><span>EPP <b id="kEPP">—</b></span><span>if quanta simply added up <b id="kLin">—</b></span><span>rise needed <b id="kNeed">—</b></span><span>quanta needed <b id="kMneed">—</b></span></div>
+      <div class="es"><span>this fibre: <b id="kVerdict">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator chart">
+        <button type="button" role="tab" id="tab-kc" aria-controls="pane-kc" aria-selected="true">EPP vs quanta</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kc" aria-labelledby="tab-kc">
+        <canvas id="kChart" class="kchart" aria-label="EPP size against the number of quanta released, levelling off toward the ACh receptors' battery, with the rise needed to reach threshold"></canvas>
+      </div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li><b>The curve:</b> how big the EPP is for each number of quanta, at this quantal size. It starts along the straight line m × q (dashed) and bends over as V nears E<sub>ACh</sub>, which it can never pass.</li>
+          <li><b>The red dashed line</b> is the rise needed to reach threshold; where the curve crosses it is the number of quanta needed. <b>The dot</b> is the m set above: the further right of the crossing it sits, the bigger the safety factor.</li>
+          <li>This is the brief-current estimate from the Theory. The simulation follows V moment by moment and, with the same numbers, lands within a quantum or two of it.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+<script>
+// ---------- shared: colours, number formats, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','syn','a','pos','neg','cyto','bath','mem','memdark','ca','nt','ache']
+    .forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const fmt = (v, d = 1) => isFinite(v) ? (+v.toFixed(d)).toFixed(d).replace('-', '−') : '—';
+const fmtSigned = (v, d = 1, u = ' mV') => isFinite(v) ? (+v.toFixed(d) > 0 ? '+' : +v.toFixed(d) < 0 ? '−' : '') + Math.abs(v).toFixed(d) + u : '—';
+function setupCanvas(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; }
+function bindRange(id, fmtv, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmtv(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// Canvas text with real subscripts: "E_ACh" draws ACh lowered and smaller, "m_{needed}" likewise.
+function fillSub(g, text, x, y, align) {
+  const parts = String(text).split(/_(\{[^}]*\}|[^\s_,;:()]+)/);
+  if (parts.length === 1) { g.fillText(text, x, y); return; }
+  const size = parseFloat(/([\d.]+)px/.exec(g.font)[1]), base = g.font, small = base.replace(/[\d.]+px/, (size * 0.74).toFixed(1) + 'px');
+  const w = parts.map((p, i) => { g.font = i % 2 ? small : base; return g.measureText(p.replace(/[{}]/g, '')).width; });
+  const total = w.reduce((a, b) => a + b, 0), keep = g.textAlign, al = align || keep;
+  let cx = al === 'right' || al === 'end' ? x - total : al === 'center' ? x - total / 2 : x;
+  g.textAlign = 'left';
+  parts.forEach((p, i) => { const t = p.replace(/[{}]/g, ''); if (t) { g.font = i % 2 ? small : base; g.fillText(t, cx, y + (i % 2 ? size * 0.28 : 0)); } cx += w[i]; });
+  g.font = base; g.textAlign = keep;
+}
+// about n round numbers between a and b, for the ticks
+function niceTicks(a, b, n) {
+  const span = Math.abs(b - a) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(Math.min(a, b) / step) * step; v <= Math.max(a, b) + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+const tickText = v => (Math.abs(v) < 1e-9 ? '0' : (+v.toPrecision(4)).toString()).replace('-', '−');
+/* One chart, drawn now, as wide as its canvas. s: { h, square, x:[a,b], y:[lo,hi], xlab, ylab, xticks, yticks,
+   lines:[{x, y, n, color, w, dash, alpha}], hlines:[{y, color, label, left}], dots:[{x, y, color, r}],
+   bars:[{x, y, color}], labels:[{x, y, text, color, align}], zoom (a redraw function: adds chartzoom.js's arrows) } */
+function plot(cv, s) {
+  const W = Math.max(240, cv.clientWidth || cv.parentElement.clientWidth || 420);
+  const L = s.left == null ? 50 : s.left, R = 16, T = 16, B = 36;
+  const H = s.square ? Math.round(W - L - R + T + B) : (s.h || 220);
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  cv.style.height = H + 'px';
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.fillStyle = C.surface; g.fillRect(0, 0, W, H);
+  if (s.prompt) {          // nothing to plot yet: an empty frame with a note in it
+    const pw = W - L - R, ph = H - T - B;
+    g.strokeStyle = C.line; g.lineWidth = 1; g.strokeRect(L + .5, T + .5, pw - 1, ph - 1);
+    g.font = '13px "IBM Plex Sans", sans-serif'; g.fillStyle = C.muted; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(s.prompt, L + pw / 2, T + ph / 2);
+    g.font = '12px "IBM Plex Sans", sans-serif';
+    if (s.xlab) { g.textBaseline = 'bottom'; fillSub(g, s.xlab, W - R, H - 1, 'right'); }
+    if (s.ylab) { g.textBaseline = 'top'; fillSub(g, s.ylab, 3, 0, 'left'); }
+    return;
+  }
+  let [x0, x1] = s.x, [y0, y1] = s.y;
+  if (s.zoom) { [x0, x1] = ChartZoom.x(cv, x0, x1, s.xpin); [y0, y1] = ChartZoom.y(cv, y0, y1, s.ypin); ChartZoom.bind(cv, s.zoom); }
+  const pw = W - L - R, ph = H - T - B;
+  const X = v => L + (v - x0) / (x1 - x0) * pw, Y = v => T + (y1 - v) / (y1 - y0) * ph;
+  g.font = '11px "IBM Plex Mono", monospace'; g.lineWidth = 1;
+  const xt = s.xticks || niceTicks(x0, x1, Math.max(3, Math.round(pw / 90))), yt = s.yticks || niceTicks(y0, y1, Math.max(3, Math.round(ph / 44)));
+  g.strokeStyle = C.line; g.fillStyle = C.muted; g.textAlign = 'center'; g.textBaseline = 'top';
+  for (const v of xt) { if (v < x0 - 1e-9 || v > x1 + 1e-9) continue; const x = Math.round(X(v)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.fillText(tickText(v), x, H - B + 5); }
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (const v of yt) { if (v < y0 - 1e-9 || v > y1 + 1e-9) continue; const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke(); g.fillText(tickText(v), L - 6, y); }
+  g.strokeStyle = C.muted; g.beginPath(); g.moveTo(L, H - B + .5); g.lineTo(W - R, H - B + .5); g.moveTo(L - .5, T); g.lineTo(L - .5, H - B); g.stroke();
+  g.font = '12px "IBM Plex Sans", sans-serif'; g.fillStyle = C.muted;
+  if (s.xlab) { g.textBaseline = 'bottom'; fillSub(g, s.xlab, W - R, H - 1, 'right'); }
+  if (s.ylab) { g.textBaseline = 'top'; fillSub(g, s.ylab, 3, 0, 'left'); }
+  g.save(); g.beginPath(); g.rect(L, T - 2, pw, ph + 4); g.clip();
+  for (const h of s.hlines || []) {
+    g.strokeStyle = h.color || C.muted; g.setLineDash([5, 4]); g.lineWidth = 1.2;
+    const y = Math.round(Y(h.y)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke();
+    if (h.label) { g.setLineDash([]); g.fillStyle = h.color || C.muted; g.textBaseline = 'bottom'; g.font = '600 11.5px "IBM Plex Sans", sans-serif'; fillSub(g, h.label, h.left ? L + 6 : W - R - 6, y - 3, h.left ? 'left' : 'right'); }
+  }
+  g.setLineDash([]);
+  for (const b of s.bars || []) { g.strokeStyle = b.color || C.muted; g.lineWidth = 1.2; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(b.x), Y(0)); g.lineTo(X(b.x), Y(b.y)); g.stroke(); }
+  g.setLineDash([]);
+  for (const l of s.lines || []) {
+    const n = Math.min(l.n == null ? l.y.length : l.n, l.y.length); if (n < 2) continue;
+    g.strokeStyle = l.color; g.lineWidth = l.w || 2; g.lineJoin = 'round'; g.setLineDash(l.dash ? [6, 4] : []); g.globalAlpha = l.alpha == null ? 1 : l.alpha;
+    g.beginPath();
+    const step = Math.max(1, Math.floor(n / (pw * 2)));
+    for (let i = 0; i < n; i += step) { const xv = X(l.x[i]), yv = Y(Math.max(Math.min(l.y[i], y1 + (y1 - y0)), y0 - (y1 - y0))); i ? g.lineTo(xv, yv) : g.moveTo(xv, yv); }
+    g.stroke(); g.globalAlpha = 1;
+  }
+  g.setLineDash([]);
+  for (const d of s.dots || []) {
+    g.fillStyle = C.surface; g.beginPath(); g.arc(X(d.x), Y(d.y), (d.r || 4.5) + 2, 0, 7); g.fill();
+    g.fillStyle = d.color || C.accent; g.beginPath(); g.arc(X(d.x), Y(d.y), d.r || 4.5, 0, 7); g.fill();
+  }
+  for (const t of s.labels || []) { g.fillStyle = t.color || C.muted; g.font = t.font || '600 11.5px "IBM Plex Sans", sans-serif'; g.textBaseline = 'bottom'; fillSub(g, t.text, X(t.x), Y(t.y) - 4, t.align || 'center'); }
+  g.restore();
+  g.strokeStyle = C.line; g.lineWidth = 1; g.strokeRect(L + .5, T + .5, pw - 1, ph - 1);
+}
+function chipGroup(attr, onPick) {
+  const bs = document.querySelectorAll(`[data-${attr}]`);
+  bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(b.dataset[attr]); }));
+}
+// an axis range that fits the data, with a little room at each end
+function fitRange(v) {
+  let a = Math.min(...v), b = Math.max(...v);
+  if (b - a < 1e-9) { const d = Math.abs(a) * 0.1 || 1; a -= d; b += d; }
+  const pad = (b - a) * 0.08; return [a - pad, b + pad];
+}
+/* "Your measurements": a table with a row per measurement, and a plot of two of its columns that the student
+   picks (both start at Choose…; nothing is plotted until they do). cols: [{ key, head (HTML), opt (menu text),
+   lab (axis label, subscripts as m_1), d (decimals), show (row → HTML, for the table only) }] */
+function makeLog(o) {
+  const rows = [];
+  const menu = '<option value="">Choose…</option>' + o.cols.filter(c => c.opt).map(c => `<option value="${c.key}">${c.opt}</option>`).join('');
+  o.xsel.innerHTML = menu; o.ysel.innerHTML = menu;
+  const cell = (c, r) => c.show ? c.show(r) : (r[c.key] == null || !isFinite(r[c.key]) ? '—' : fmt(r[c.key], c.d));
+  function table() {
+    o.table.innerHTML = `<table><thead><tr>${o.cols.map(c => `<th scope="col">${c.head}</th>`).join('')}</tr></thead><tbody>` +
+      (rows.length ? rows.map(r => `<tr>${o.cols.map(c => `<td>${cell(c, r)}</td>`).join('')}</tr>`).join('')
+                   : `<tr><td class="empty" colspan="${o.cols.length}">${o.empty}</td></tr>`) + '</tbody></table>';
+    o.table.scrollTop = o.table.scrollHeight;
+  }
+  function draw() {
+    const xc = o.cols.find(c => c.key === o.xsel.value), yc = o.cols.find(c => c.key === o.ysel.value);
+    const base = { square: true, x: [0, 1], y: [0, 1] };
+    if (!xc || !yc) return plot(o.canvas, { ...base, prompt: 'Choose what goes on each axis' });
+    const pts = rows.filter(r => isFinite(r[xc.key]) && isFinite(r[yc.key]));
+    if (!pts.length) return plot(o.canvas, { ...base, xlab: xc.lab, ylab: yc.lab, prompt: rows.length ? 'No row has both of these' : o.emptyPlot });
+    plot(o.canvas, { square: true, x: fitRange(pts.map(r => r[xc.key])), y: fitRange(pts.map(r => r[yc.key])), xlab: xc.lab, ylab: yc.lab,
+      dots: pts.map((r, i) => ({ x: r[xc.key], y: r[yc.key], color: C.accent, r: i === pts.length - 1 ? 6 : 4.5 })) });
+  }
+  o.xsel.addEventListener('change', draw); o.ysel.addEventListener('change', draw);
+  o.clear.addEventListener('click', () => { rows.length = 0; table(); draw(); });
+  colorHooks.push(draw); window.addEventListener('resize', draw); if (document.fonts) document.fonts.ready.then(draw);
+  table(); draw();
+  return { add(r) { r.row = rows.length + 1; rows.push(r); table(); draw(); }, rows };
+}
+// a seeded random generator, so the picture and the miniature EPPs don't jump about on every redraw
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
+// the normal distribution's cumulative probability (Abramowitz and Stegun 26.2.17)
+function Phi(x) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 * Math.exp(-x * x / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return x > 0 ? 1 - p : p;
+}
+</script>
+<script>
+// =====================================================================================
+// The model: one end-plate, treated as one patch of membrane (mV, ms, mS/cm², µF/cm²), as in the
+// Passive Properties: Time lesson:
+//     C dV/dt = −g_rest (V − E_rest) − g_ACh(t) (V − E_ACh)
+// Every quantum adds the same brief conductance (a two-exponential pulse, 0.2 ms rise, decay τ_d), scaled by the
+// share of receptors still working and free. One quantum alone makes a miniature EPP of about 1.2 mV.
+// Blocking acetylcholinesterase slows the decay (τ_d 1 → 3 ms) and lets each quantum reach a few more receptors.
+// Release in a train (del Castillo & Katz; Dodge & Rahamimoff): n sites, a share R of them docked; impulse k
+// releases m = n p_k R quanta, with p_k = 1 − (1 − p)^((1 + c)^4) and c the Ca²⁺ left over; empty sites refill
+// (τ 1.5 s, faster while c is high) and c decays with τ 60 ms.
+// The fibre fires when the EPP crosses threshold; its action potential is then a fixed shape.
+// Whole muscle: each fibre's quanta × quantal size varies around the typical fibre's (log-normal, σ 0.3), so the
+// share of fibres that fire is Φ(ln(Q/Q*)/σ), Q* being what just reaches threshold.
+// Tuned to Wood & Slater (1997): about 60 quanta released, about 20 needed, a safety factor of 3.
+// =====================================================================================
+const E_REST = -85, E_ACH = -5, G_REST = 0.25, CM = 1, VTH = -65, NS = 300, DT = 0.01, T_REL = 0.8, WIN = 14, KEEP = 2;
+const GQ = 0.016, AF = 0.25, TDX = 2, CF = 0.18, TF = 60, TR = 1500, KR = 25, SIG = 0.3, CMAP_MAX = 8;
+const NEED = VTH - E_REST, TSTEP = DT * KEEP;
+const TX = Float32Array.from({ length: Math.round(WIN / TSTEP) + 1 }, (_, i) => i * TSTEP);
+function alpha2(t, t0, tr, td) {
+  const d = t - t0; if (d <= 0) return 0;
+  const tp = tr * td / (td - tr) * Math.log(td / tr);
+  return (Math.exp(-d / td) - Math.exp(-d / tr)) / (Math.exp(-tp / td) - Math.exp(-tp / tr));
+}
+const tdOf = ache => 1 + TDX * (1 - ache / 100);                 // how long the end-plate current takes to decay, ms
+const gqOf = (r, ache) => GQ * r * Math.pow(tdOf(ache), AF);     // the peak conductance one quantum adds
+// the muscle fibre's own action potential, a fixed shape from where the EPP crossed threshold
+function apShape(d) {
+  if (d < 0.5) return VTH + (32 - VTH) * Math.sin(Math.PI / 2 * d / 0.5);
+  if (d < 2.4) return 32 - (32 - (E_REST - 6)) * (d - 0.5) / 1.9;
+  return E_REST - 6 + 6 * (1 - Math.exp(-(d - 2.4) / 2.5));
+}
+// Q = quanta × one quantum's conductance. The voltage every TSTEP ms, whether and when it fired, and the EPP's peak.
+function trace(Q, td, canFire, win) {
+  const n = Math.round((win || WIN) / DT), V = new Float32Array(Math.floor(n / KEEP) + 1);
+  let v = E_REST, tf = -1, pk = -Infinity, tpk = 0;
+  for (let i = 0; i <= n; i++) {
+    const t = i * DT;
+    if (i % KEEP === 0) V[i / KEEP] = tf >= 0 ? apShape(t - tf) : v;
+    if (tf < 0 && v > pk) { pk = v; tpk = t; }
+    v += DT / CM * (-G_REST * (v - E_REST) - Q * alpha2(t, T_REL, 0.2, td) * (v - E_ACH));
+    if (canFire && tf < 0 && v >= VTH) tf = t + DT;
+  }
+  return { V, fired: tf >= 0, tf, peak: pk - E_REST, tPeak: tpk };
+}
+function peakOf(Q, td) {
+  let v = E_REST, pk = v;
+  for (let i = 0, n = Math.round(WIN / DT); i <= n; i++) { v += DT / CM * (-G_REST * (v - E_REST) - Q * alpha2(i * DT, T_REL, 0.2, td) * (v - E_ACH)); if (v > pk) pk = v; }
+  return pk - E_REST;
+}
+const qStarCache = new Map();
+function qStar(td) {            // the conductance whose EPP just reaches threshold
+  const key = td.toFixed(4);
+  if (!qStarCache.has(key)) { let lo = 0, hi = 20; for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; peakOf(m, td) >= NEED ? hi = m : lo = m; } qStarCache.set(key, hi); }
+  return qStarCache.get(key);
+}
+const refillEx = (dt, c) => dt / TR + KR / TR * c * TF * (1 - Math.exp(-dt / TF));
+function trainOf(n, isi, p0, N) {
+  const m = [], Dpre = [], Dpost = [], cAfter = [], ps = [];
+  let D = N, c = 0;
+  for (let k = 0; k < n; k++) {
+    if (k) { D = N - (N - D) * Math.exp(-refillEx(isi, cAfter[k - 1])); c = cAfter[k - 1] * Math.exp(-isi / TF); }
+    const p = 1 - Math.pow(1 - p0, Math.pow(1 + c, 4));
+    Dpre.push(D); ps.push(p); m.push(D * p); D -= D * p; Dpost.push(D); cAfter.push(c + CF);
+  }
+  return { m, Dpre, Dpost, cAfter, p: ps };
+}
+// the controls' values, and everything worked out from them
+const P = { f: 3, n: 5, p: 0.2, sites: 100, ache: 100, rec: 100, cur: 0, speed: 3 };
+let plan = null;
+function buildPlan() {
+  const isi = 1000 / P.f, N = NS * P.sites / 100, td = tdOf(P.ache);
+  const r = P.rec / 100 * (1 - P.cur / 100), gq = gqOf(r, P.ache);
+  const tr = trainOf(P.n, isi, P.p, N), Qs = qStar(td);
+  const sweeps = tr.m.map(m => trace(m * gq, td, true)), alone = tr.m.map(m => trace(m * gq, td, false));
+  plan = Object.assign({}, tr, {
+    isi, N, td, gq, r, n: P.n, f: P.f, Qs, mthr: Qs / gq, q: peakOf(gq, td),
+    sweeps, alone, sizes: alone.map(a => a.peak), fired: sweeps.map(s => s.fired), tf: sweeps.map(s => s.tf),
+    cmap: tr.m.map(m => CMAP_MAX * Phi(Math.log(Math.max(1e-12, m * gq / Qs)) / SIG)),
+    mini: trace(gq, td, false, 40),
+  });
+}
+// how many vesicles of the whole junction are docked at time T (ms from the first impulse)
+function dockedAt(T) {
+  const pl = plan;
+  if (!(T > 0)) return pl.N;
+  const k = Math.min(pl.n - 1, Math.floor(T / pl.isi)), d = T - k * pl.isi, f = fuseFrac(d);
+  if (f < 1) return pl.Dpre[k] - pl.m[k] * f;
+  return pl.N - (pl.N - pl.Dpost[k]) * Math.exp(-refillEx(d, pl.cAfter[k]));
+}
+const fuseFrac = d => { const u = Math.min(1, Math.max(0, (d - 0.55) / 0.35)); return u * u * (3 - 2 * u); };
+buildPlan();
+</script>
+<script>
+// =====================================================================================
+// The simulation: the junction drawn ion by ion, a run of impulses in time, the charts and the readouts.
+// A run is one train. Time T (ms from the first impulse) runs in slow motion while each impulse acts (the speed
+// slider), faster through the tail of each EPP and faster still between impulses. The charts show only what has
+// happened by T, so they fill in as the run goes.
+// =====================================================================================
+(() => {
+  const W = 960, H = 470, AZ = 206, BL = 232, CB = 258, FD = 90, FW = 7;
+  const NZ = 10, ZX = z => 177 + z * 64;
+  const SITE_OFF = [-22, -11, 0, 11, 22], CA_OFF = [-16.5, -5.5, 5.5, 16.5], REC_OFF = [-21, -13, -5, 5, 13, 21];
+  const sitePos = [], caPos = [], recPos = [], naPos = [];
+  for (let z = 0; z < NZ; z++) {
+    SITE_OFF.forEach(o => sitePos.push(ZX(z) + o));
+    CA_OFF.forEach(o => caPos.push(ZX(z) + o));
+    REC_OFF.forEach(o => recPos.push(ZX(z) + (o < 0 ? o - FW : o + FW)));
+    naPos.push({ x: ZX(z) - FW, y: CB + 40 }, { x: ZX(z) + FW, y: CB + 40 }, { x: ZX(z), y: CB + FD - 10 });
+  }
+  const NSITE = sitePos.length, SCALE = NS / NSITE, NREC = recPos.length, NCA = caPos.length;
+  const achePos = Array.from({ length: 26 }, (_, i) => 160 + i * 25);
+  const R0 = rng(11);
+  const shuffled = n => { const a = Array.from({ length: n }, (_, i) => (i + 0.5) / n); for (let i = n - 1; i > 0; i--) { const j = Math.floor(R0() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  const siteRank = shuffled(NSITE), caRank = shuffled(NCA), recRank = shuffled(NREC), curRank = shuffled(NREC), openRank = shuffled(NREC), acheRank = shuffled(achePos.length);
+  const reserve = Array.from({ length: 34 }, (_, i) => ({ x: 200 + (i * 149) % 560 + (R0() - 0.5) * 14, y: 120 + (i * 53) % 54 }));
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const workingSite = i => siteRank[i] <= P.sites / 100;
+
+  let playing = false, frame = 0;
+  const run = { T: Infinity, active: false, selfPause: false, logged: true };
+
+  // ---------- your measurements: a row for each train that runs to the end ----------
+  const LOG = makeLog({ table: $('nLogTable'), xsel: $('nLogX'), ysel: $('nLogY'), canvas: $('nLogPlot'), clear: $('nLogClear'),
+    empty: 'No trains yet. Press Stimulate, or a Start-here button, and let the train run to the end.',
+    emptyPlot: 'Run a train to the end first',
+    cols: [
+      { key: 'row', head: '#', d: 0 },
+      { key: 'f', head: 'rate<br><span class="u">Hz</span>', opt: 'stimulus rate (Hz)', lab: 'stimulus rate (Hz)', d: 0 },
+      { key: 'rec', head: 'receptors<br><span class="u">% left</span>', opt: 'receptors left (%)', lab: 'receptors left (%)', d: 0 },
+      { key: 'cur', head: 'curare<br><span class="u">% blocked</span>', opt: 'curare (% of receptors blocked)', lab: 'curare (% blocked)', d: 0 },
+      { key: 'ache', head: 'esterase<br><span class="u">% working</span>', opt: 'esterase working (%)', lab: 'esterase working (%)', d: 0 },
+      { key: 'p', head: 'release<br>p', opt: 'release probability p', lab: 'release probability p', d: 3 },
+      { key: 'sites', head: 'release sites<br><span class="u">% working</span>', opt: 'release sites working (%)', lab: 'release sites working (%)', d: 0 },
+      { key: 'q', head: 'one quantum<br><span class="u">mEPP, mV</span>', opt: 'one quantum, the mEPP (mV)', lab: 'mEPP (mV)', d: 2 },
+      { key: 'm1', head: 'quanta,<br>1st impulse', opt: 'quanta released by the 1st impulse', lab: 'quanta, 1st impulse', d: 0 },
+      { key: 'mL', head: 'quanta,<br>last impulse', opt: 'quanta released by the last impulse', lab: 'quanta, last impulse', d: 0 },
+      { key: 'need', head: 'quanta<br>needed', opt: 'quanta needed to reach threshold', lab: 'quanta needed', d: 1 },
+      { key: 'sf', head: 'safety factor<br><span class="u">1st impulse</span>', opt: 'safety factor, 1st impulse', lab: 'safety factor', d: 2 },
+      { key: 'epp1', head: 'EPP alone, 1st<br><span class="u">mV above rest</span>', opt: 'EPP alone, 1st impulse (mV)', lab: 'EPP alone, 1st impulse (mV)', d: 1 },
+      { key: 'fired', head: 'impulses<br>that fired', opt: 'impulses that fired the fibre', lab: 'impulses that fired', show: r => `${r.fired} of ${r.imp}` },
+      { key: 'mus1', head: 'muscle, 1st<br><span class="u">% of fibres</span>', opt: 'whole muscle, 1st impulse (% of fibres)', lab: 'fibres firing, 1st impulse (%)', d: 0 },
+      { key: 'musD', head: 'muscle, last<br><span class="u">vs 1st</span>', opt: 'whole muscle, last vs 1st (% change)', lab: 'whole muscle, last vs 1st (% change)',
+        show: r => isFinite(r.musD) ? fmtSigned(r.musD, 0, '%') : '—' },
+    ] });
+  function logRun() {
+    const pl = plan, n = pl.n, c0 = pl.cmap[0] / CMAP_MAX * 100, cL = pl.cmap[n - 1] / CMAP_MAX * 100;
+    LOG.add({ f: P.f, rec: P.rec, cur: P.cur, ache: P.ache, p: P.p, sites: P.sites, q: pl.q, m1: pl.m[0], mL: pl.m[n - 1], need: pl.mthr,
+      sf: pl.m[0] / pl.mthr, epp1: pl.sizes[0], fired: pl.fired.filter(Boolean).length, imp: n, mus1: c0,
+      musD: n > 1 && c0 >= 1 ? (cL / c0 - 1) * 100 : NaN });
+  }
+  let sites = [], caP = [], achP = [], ionP = [];
+  const freshSites = () => { sites = sitePos.map(() => ({ docked: true, fuseT: -1e9 })); caP = []; achP = []; ionP = []; };
+  freshSites();
+
+  // ---------- the run in time ----------
+  const lastT = () => (plan.n - 1) * plan.isi + WIN, stopAt = () => lastT() + 400;
+  const kNow = T => isFinite(T) ? Math.max(0, Math.min(plan.n - 1, Math.floor((T + 0.5) / plan.isi))) : plan.n - 1;
+  function zone(T) {    // where T is now: how fast time should run, and where that stretch ends
+    const pl = plan, k = kNow(T), t0 = k * pl.isi, d = T - t0;
+    if (d < 4) return { kind: 'act', rate: P.speed, next: t0 + 4 };
+    if (d < WIN) return { kind: 'tail', rate: Math.max(P.speed, (WIN - 4) / 0.6), next: t0 + WIN };
+    if (k < pl.n - 1) { const next = t0 + pl.isi - 0.5; return { kind: 'gap', rate: Math.max(P.speed * 4, (next - T) / 0.35), next }; }
+    return { kind: 'end', rate: Math.max(P.speed * 4, 400), next: stopAt() };
+  }
+  function advance(realSec) {
+    let budget = realSec;
+    for (let i = 0; i < 16 && budget > 1e-6 && run.T < stopAt(); i++) {
+      const z = zone(run.T), dt = Math.min(budget * z.rate, z.next - run.T + 1e-6);
+      run.T += dt; budget -= dt / z.rate;
+      syncSites();
+    }
+    if (!run.logged && run.T >= lastT()) { run.logged = true; logRun(); }
+    if (run.T >= stopAt() && run.active) { run.active = false; if (playing) { run.selfPause = true; $('nPlay').click(); } }
+  }
+  // the picture's docking sites follow the model: fuse the right number, then refill as the model refills
+  function syncSites() {
+    if (!isFinite(run.T)) return;
+    const pl = plan, k = kNow(run.T), d = run.T - k * pl.isi;
+    const want = Math.round(dockedAt(run.T) / SCALE);
+    let have = 0;
+    for (const s of sites) if (s.docked) have++;
+    if (have > want) {
+      for (let i = 0; i < NSITE && have > want; i++) {
+        const s = sites[i];
+        if (s.docked && workingSite(i)) { s.docked = false; s.fuseT = run.T; have--; releaseACh(sitePos[i]); }
+      }
+    } else if (have < want && d > WIN) {
+      for (let i = 0; i < NSITE && have < want; i++) if (!sites[i].docked && run.T - sites[i].fuseT > 20) { sites[i].docked = true; have++; }
+    }
+  }
+  function releaseACh(x) { for (let j = 0; j < 7; j++) achP.push({ x: x + rnd(-5, 5), y: AZ + 4, vx: rnd(-1, 1), vy: rnd(0.4, 1.4) }); }
+  function startRun() { freshSites(); run.T = -0.5; run.active = true; run.logged = false; if (!playing) $('nPlay').click(); }
+
+  // ---------- drawing the junction ----------
+  const cv = $('nmj'), c = setupCanvas(cv, W, H);
+  const tint = (V, rest, up, down) => V >= rest ? mixc(C.pos, C.cyto, Math.min(1, (V - rest) / up) * 0.75) : mixc(C.neg, C.cyto, Math.min(1, (rest - V) / down) * 0.75);
+  const dot = (x, y, col, r) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fill(); };
+  function terminalPath(t) {
+    t = t || c; if (t === c) c.beginPath();
+    t.moveTo(455, -20); t.lineTo(455, 46); t.bezierCurveTo(455, 84, 160, 64, 155, 144); t.lineTo(155, AZ - 26);
+    t.quadraticCurveTo(155, AZ, 181, AZ); t.lineTo(779, AZ); t.quadraticCurveTo(805, AZ, 805, AZ - 26);
+    t.lineTo(805, 144); t.bezierCurveTo(800, 64, 515, 84, 515, 46); t.lineTo(515, -20);
+  }
+  function musclePath(t) {
+    t = t || c; if (t === c) c.beginPath();
+    t.moveTo(-20, CB);
+    for (let z = 0; z < NZ; z++) { const x = ZX(z); t.lineTo(x - FW, CB); t.lineTo(x - FW, CB + FD - FW); t.arc(x, CB + FD - FW, FW, Math.PI, 0, true); t.lineTo(x + FW, CB); }
+    t.lineTo(W + 20, CB); t.lineTo(W + 20, H + 20); t.lineTo(-20, H + 20); t.closePath();
+  }
+  const TP = new Path2D(), MP = new Path2D(); terminalPath(TP); musclePath(MP);
+  const ION_R = 1.5;
+  const ionPop = (() => {      // ions, as in the Membrane Potential lesson: one dot each, inside and outside
+    const out = [], R = rng(5);
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.lineWidth = 13;
+    for (let gy = 6; gy < H; gy += 15) for (let gx = 6; gx < W; gx += 15) {
+      const x = gx + (R() - 0.5) * 9, y = gy + (R() - 0.5) * 9;
+      if (c.isPointInStroke(TP, x, y) || c.isPointInStroke(MP, x, y)) continue;
+      const inPre = c.isPointInPath(TP, x, y), inMus = c.isPointInPath(MP, x, y);
+      if (inPre && y > AZ - 24) continue;                                            // leave the docking row clear
+      if (inPre && reserve.some(v => Math.hypot(v.x - x, v.y - y) < 11)) continue;
+      if (!inPre && !inMus && y > AZ && y < CB && R() < 0.45) continue;               // the cleft: a thinner scatter
+      const u = R(), inside = inPre || inMus;
+      const sp = inside ? (u < 0.52 ? 'k' : u < 0.92 ? 'a' : u < 0.96 ? 'na' : 'cl') : (u < 0.48 ? 'na' : u < 0.88 ? 'cl' : u < 0.92 ? 'k' : 'ca');
+      out.push({ x, y, sp, ph: R() * 6.28 });
+    }
+    c.restore();
+    return out;
+  })();
+  function drawIons() {
+    for (const sp of ['k', 'a', 'na', 'cl', 'ca']) {
+      c.fillStyle = C[sp]; c.beginPath();
+      for (const q of ionPop) {
+        if (q.sp !== sp) continue;
+        const x = q.x + 1.4 * Math.sin(frame / 30 + q.ph), y = q.y + 1.4 * Math.cos(frame / 37 + q.ph);
+        c.moveTo(x + ION_R, y); c.arc(x, y, ION_R, 0, 6.2832);
+      }
+      c.fill();
+    }
+  }
+  function bilayer(path) { c.lineJoin = 'round'; c.lineWidth = 9; c.strokeStyle = C.memdark; path(); c.stroke(); c.lineWidth = 3.5; c.strokeStyle = C.mem; path(); c.stroke(); }
+  // a vesicle on the membrane at yMem: f = 0 docked … 1 flattened into it (an Ω as it opens)
+  function vesicle(x, yMem, r, f, alpha, col) {
+    c.save(); c.globalAlpha = alpha == null ? 1 : alpha;
+    const cy = yMem - (r + 4) * (1 - f) - 2 * f, rr = r * (1 - 0.45 * f), gap = f * Math.PI * 0.85;
+    if (f > 0) { const gw = rr * Math.sin(gap); c.fillStyle = C.bath; c.fillRect(x - gw, yMem - 4.5, 2 * gw, 11); }
+    c.strokeStyle = col || C.nt; c.lineWidth = 1.6; c.beginPath(); c.arc(x, cy, rr, Math.PI / 2 + gap, Math.PI / 2 - gap + 6.2832); c.stroke();
+    if (f < 0.2) for (let k = 0; k < 3; k++) dot(x + rr * 0.45 * Math.cos(k * 2.1 + 1), cy + rr * 0.45 * Math.sin(k * 2.1 + 1), col || C.nt, 1.2);
+    c.restore();
+  }
+  function antibody(x, y, dir) {      // a Y, arms on the target, stem pointing away
+    c.save(); c.strokeStyle = C.ink; c.globalAlpha = 0.8; c.lineWidth = 1.4; c.lineCap = 'round'; c.beginPath();
+    c.moveTo(x - 3.5, y); c.lineTo(x, y + 4 * dir); c.lineTo(x + 3.5, y); c.moveTo(x, y + 4 * dir); c.lineTo(x, y + 10 * dir); c.stroke(); c.restore();
+  }
+  function enzyme(x, y, on) {         // acetylcholinesterase, an open mouth facing the end-plate
+    c.fillStyle = on ? C.ache : C.a; c.beginPath(); c.moveTo(x, y); c.arc(x, y, 4.6, Math.PI / 2 + 0.55, Math.PI / 2 - 0.55 + 6.2832); c.closePath(); c.fill();
+    if (!on) { c.strokeStyle = C.ink; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x - 3, y + 5); c.lineTo(x + 3, y + 5); c.stroke(); }
+  }
+  const leader = (x1, y1, x2, y2) => { c.save(); c.strokeStyle = C.ink; c.globalAlpha = 0.55; c.lineWidth = 1.1; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.restore(); };
+  const preV = d => d < -0.2 ? -70 : -70 + 100 * Math.exp(-(((d - 0.3) / 0.19) ** 2)) - (d > 0.5 ? 10 * (1 - Math.exp(-(d - 0.5) / 0.3)) * Math.exp(-(d - 0.5) / 3) : 0);
+
+  // what the junction is doing at time T, worked out from the plan (no state of its own)
+  function stateAt(T) {
+    const pl = plan, k = kNow(T), d = isFinite(T) ? T - k * pl.isi : 1e9;
+    const sw = pl.sweeps[k], i = Math.round(d / TSTEP);
+    const Vm = d >= 0 && i < sw.V.length ? sw.V[i] : E_REST;
+    const g = d > 0 && d < WIN ? alpha2(d, T_REL, 0.2, pl.td) : 0;
+    const openFrac = Math.min(0.92, pl.m[k] * pl.gq * g / 1.1);
+    const caOpen = d > 0.1 && d < 1.1 ? Math.min(1, (d - 0.1) / 0.2) * Math.min(1, (1.1 - d) / 0.35) : 0;
+    return { k, d, Vm, openFrac, caOpen, Vpre: d > -0.5 && d < 6 ? preV(d) : -70, firedAt: pl.fired[k] ? pl.tf[k] : -1 };
+  }
+  function moveParticles(simDt) {
+    const tauACh = 1.1 * plan.td;
+    caP.forEach(p => { p.x += rnd(-0.8, 0.8); p.y += p.vy + rnd(-0.5, 0.5); });
+    caP = caP.filter(p => p.y > AZ - 60 && Math.random() > simDt / 0.6 * 0.5).slice(-120);
+    achP.forEach(p => { p.x += p.vx + rnd(-1.3, 1.3); p.y += p.vy + rnd(-1.3, 1.3); if (p.y > CB - 6) { p.y = CB - 6; p.vy = -Math.abs(p.vy) * 0.6; } if (p.y < AZ + 4) { p.y = AZ + 4; p.vy = Math.abs(p.vy); } });
+    achP = achP.filter(() => Math.random() > simDt / tauACh).slice(-300);
+    ionP.forEach(p => { p.y += p.vy; p.x += rnd(-0.5, 0.5); p.life--; });
+    ionP = ionP.filter(p => p.life > 0).slice(-260);
+  }
+  function drawPicture() {
+    const s = stateAt(run.T), pl = plan;
+    c.fillStyle = C.bath; c.fillRect(0, 0, W, H);
+    terminalPath(); c.fillStyle = tint(s.Vpre, -70, 100, 10); c.fill();
+    musclePath(); c.fillStyle = tint(s.Vm, E_REST, 60, 10); c.fill();
+    // the basal lamina, a mesh across the cleft
+    c.save(); c.strokeStyle = C.memdark; c.globalAlpha = 0.5; c.setLineDash([5, 5]); c.lineWidth = 1.6;
+    c.beginPath(); c.moveTo(150, BL); c.lineTo(810, BL); c.stroke(); c.restore();
+    bilayer(terminalPath); bilayer(musclePath);
+    drawIons();
+    // the terminal: reserve vesicles, docked vesicles, Ca²⁺ channels
+    reserve.forEach((v, i) => vesicle(v.x + 2 * Math.sin(frame / 60 + i), v.y + 2 * Math.cos(frame / 75 + i), 9, 0, 0.5));
+    sites.forEach((st, i) => {
+      const x = sitePos[i], since = run.T - st.fuseT, ok = workingSite(i);
+      if (st.docked) vesicle(x, AZ, 9, 0, ok ? 1 : 0.4, ok ? C.nt : C.a);
+      else if (since >= 0 && since < 1.2) vesicle(x, AZ, 9, Math.min(1, since / 1.2));
+    });
+    const caKeep = Math.min(1, Math.pow(P.p / 0.2, 0.25));
+    for (let i = 0; i < NCA; i++) {
+      const x = caPos[i], gone = caRank[i] > caKeep, gap = s.caOpen > 0.3 && !gone ? 2.5 : 0;
+      c.fillStyle = gone ? C.a : C.ca;
+      c.beginPath(); c.roundRect(x - 5.5 - gap, AZ - 9, 5.5, 18, 2); c.roundRect(x + gap, AZ - 9, 5.5, 18, 2); c.fill();
+      if (gone) antibody(x, AZ - 12, -1);
+    }
+    // the cleft: acetylcholinesterase on the basal lamina, and free ACh
+    achePos.forEach((x, i) => enzyme(x, BL, acheRank[i] <= P.ache / 100));
+    for (const p of achP) dot(p.x, p.y, C.nt, 2.4);
+    for (const p of caP) dot(p.x, p.y, C.ca, ION_R);
+    // the end-plate: receptors on the crests, Na⁺ channels down in the folds
+    for (let i = 0; i < NREC; i++) {
+      const x = recPos[i];
+      if (recRank[i] > P.rec / 100) { antibody(x, CB - 2, 1); continue; }               // this receptor is gone
+      const blocked = curRank[i] <= P.cur / 100, open = !blocked && openRank[i] <= s.openFrac;
+      c.fillStyle = blocked ? C.a : C.syn;
+      if (open) { c.beginPath(); c.roundRect(x - 5.5, CB - 10, 4, 20, 1.5); c.roundRect(x + 1.5, CB - 10, 4, 20, 1.5); c.fill(); }
+      else { c.beginPath(); c.roundRect(x - 4, CB - 10, 8, 20, 1.5); c.fill(); }
+      if (blocked) { c.fillStyle = C.ink; c.fillRect(x - 3, CB - 15, 6, 3.5); }
+      else if (open) { c.fillStyle = C.surface; c.beginPath(); c.arc(x, CB - 15, 4, 0, 6.2832); c.fill(); dot(x, CB - 15, C.nt, 2.6); }
+      // ions through an open channel: Na⁺ in, a little K⁺ out
+      if (open && playing) {
+        if (Math.random() < 0.25) ionP.push({ x, y: CB - 16, vy: 1.6, col: C.na, life: 26 });
+        if (Math.random() < 0.07) ionP.push({ x, y: CB + 14, vy: -1.6, col: C.k, life: 20 });
+      }
+    }
+    const firing = s.firedAt >= 0 && s.d > s.firedAt - 0.1 && s.d < s.firedAt + 2.2;
+    for (const n of naPos) {
+      c.fillStyle = firing ? C.na : C.a;
+      if (firing) { c.beginPath(); c.roundRect(n.x - 5, n.y - 4, 4, 8, 1.2); c.roundRect(n.x + 1, n.y - 4, 4, 8, 1.2); c.fill(); }
+      else { c.beginPath(); c.roundRect(n.x - 3.5, n.y - 4, 7, 8, 1.2); c.fill(); }
+      if (firing && Math.random() < 0.08) ionP.push({ x: n.x, y: n.y - 6, vy: 1.4, col: C.na, life: 16 });
+    }
+    for (const p of ionP) { c.globalAlpha = Math.min(1, p.life / 12); dot(p.x, p.y, p.col, ION_R); }
+    c.globalAlpha = 1;
+    // labels
+    c.font = '600 13px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillStyle = C.ink;
+    c.fillText('motor nerve terminal', 585, 120);
+    c.fillText('active zone', 20, AZ - 4); leader(96, AZ - 8, 150, AZ - 6);
+    c.fillText('synaptic cleft', 828, AZ + 16);
+    c.fillText('basal lamina', 828, BL + 4); leader(826, BL, 812, BL);
+    c.fillText('end-plate: ACh receptors', 20, CB - 16); leader(190, CB - 20, 150, CB - 14);
+    c.fillText('junctional fold', 828, CB + 52); leader(826, CB + 48, 790, CB + 40);
+    c.fillText('Na⁺ channels', 20, CB + 58); leader(112, CB + 54, 150, CB + 44);
+    c.fillText('muscle fibre', 585, H - 18);
+    c.font = '12px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textAlign = 'right';
+    const z = isFinite(run.T) ? zone(run.T) : null;
+    c.fillText(!isFinite(run.T) ? 'press Stimulate' : z.kind === 'act' ? `slow motion · ${fmt(P.speed, P.speed < 1 ? 2 : 1)} ms per second`
+      : z.kind === 'tail' ? 'the EPP falls back · sped up' : z.kind === 'gap' ? `waiting for impulse ${s.k + 2} · sped up` : 'the train is over', W - 12, 20);
+    c.textAlign = 'left';
+    // the step strip
+    const step = !isFinite(run.T) || s.d > WIN ? -1 : s.d < 0.1 ? 0 : s.d < 0.55 ? 1 : s.d < 1.3 ? 2 : s.openFrac > 0.03 ? 3
+      : s.firedAt >= 0 && s.d > s.firedAt ? 5 : 4;
+    const failed = step === 4 && s.firedAt < 0;
+    if (step !== stepNow || failed !== stepFail) {
+      stepNow = step; stepFail = failed;
+      stepEls.forEach((el, i) => { el.classList.toggle('on', i === step && !(i === 5 && failed)); el.classList.toggle('fail', i === 5 && failed && step >= 4); });
+      if (failed) stepEls[5].classList.add('fail');
+    }
+  }
+  const stepEls = Array.from(document.querySelectorAll('#nSteps li'));
+  let stepNow = -2, stepFail = false;
+
+  // ---------- the charts ----------
+  const sweepCv = $('cSweep'), sizeCv = $('cSize'), cmapCv = $('cCmap'), miniCv = $('cMini');
+  let mini = null;
+  function buildMini() {          // 3 s at rest: single quanta, at random, about one a second
+    const T = 3000, N = 600, R = rng(23), rate = 1.0 * P.sites / 100;
+    const ev = [];
+    for (let t = 0; t < T; t += -Math.log(1 - R()) * 1000 / Math.max(rate, 1e-3)) ev.push([t, 0.8 + 0.4 * R()]);
+    const x = new Float32Array(N + 1), y = new Float32Array(N + 1), V = plan.mini.V;
+    for (let i = 0; i <= N; i++) {
+      const t = i * T / N; let v = 0;
+      for (const e of ev) { const d = t - e[0]; if (d > 0 && d < 40) v += e[1] * (V[Math.round(d / TSTEP)] - E_REST); }
+      x[i] = t; y[i] = v;
+    }
+    mini = { x, y, n: ev.length };
+  }
+  function drawCharts() {
+    const pl = plan, k = kNow(run.T), running = isFinite(run.T), d = running ? run.T - k * pl.isi : WIN;
+    const done = running ? (d >= WIN ? k + 1 : k) : pl.n;          // impulses finished
+    // 1 · the sweeps, one per impulse, newest darkest
+    const lines = [];
+    for (let i = 0; i <= Math.min(k, pl.n - 1); i++) {
+      const last = i === k && running && d < WIN;
+      lines.push({ x: TX, y: pl.sweeps[i].V, n: last ? Math.max(2, Math.round(Math.max(d, 0) / TSTEP) + 1) : TX.length,
+        color: pl.fired[i] ? C.accent : C.pos, w: 1.7, alpha: 0.35 + 0.65 * (i + 1) / (Math.min(k, pl.n - 1) + 1) });
+    }
+    const kk = Math.min(k, pl.n - 1);
+    lines.push({ x: TX, y: pl.alone[kk].V, n: running && kk === k && d < WIN ? Math.max(2, Math.round(Math.max(d, 0) / TSTEP) + 1) : TX.length, color: C.muted, w: 1.3, dash: true });
+    plot(sweepCv, { h: 230, x: [0, WIN], y: [-95, 40], xlab: 'ms after the impulse reaches the terminal', ylab: 'mV',
+      hlines: [{ y: VTH, color: C.pos, label: 'threshold' }, { y: E_ACH, color: C.muted, label: 'E_ACh', left: true }], lines, zoom: drawCharts });
+    // 2 · the size of each EPP alone, impulse by impulse, against what it takes to reach threshold
+    const ymax = Math.max(NEED * 1.6, ...pl.sizes) * 1.12;
+    plot(sizeCv, { h: 230, x: [0.4, pl.n + 0.6], y: [0, ymax], xticks: pl.m.map((_, i) => i + 1), xlab: 'impulse', ylab: 'EPP alone (mV)',
+      hlines: [{ y: NEED, color: C.pos, label: 'needed to fire', left: true }],
+      lines: [{ x: pl.sizes.map((_, i) => i + 1), y: pl.sizes, n: done, color: C.muted, w: 1.3 }],
+      dots: pl.sizes.slice(0, done).map((v, i) => ({ x: i + 1, y: v, color: pl.fired[i] ? C.accent : C.pos })), zoom: drawCharts });
+    // 3 · the whole muscle's response, one wave per impulse
+    const span = (pl.n - 1) * pl.isi + 40, M = 400, cx = new Float32Array(M + 1), cy = new Float32Array(M + 1);
+    for (let i = 0; i <= M; i++) {
+      const t = i * span / M; let v = 0;
+      for (let j = 0; j < done; j++) { const u = t - j * pl.isi; if (u > 0 && u < 40) v += pl.cmap[j] * (Math.exp(-(((u - 6) / 2.2) ** 2)) - 0.3 * Math.exp(-(((u - 12) / 4) ** 2))); }
+      cx[i] = t; cy[i] = v;
+    }
+    plot(cmapCv, { h: 200, x: [0, span], y: [-CMAP_MAX * 0.45, CMAP_MAX * 1.12], xlab: 'time (ms)', ylab: 'mV',
+      lines: [{ x: cx, y: cy, color: C.accent, w: 1.6 }], zoom: drawCharts });
+    // 4 · miniature EPPs at rest
+    plot(miniCv, { h: 200, x: [0, 3000], y: [-0.3, Math.max(2, plan.q * 1.6)], xlab: 'time (ms)', ylab: 'mV above rest',
+      lines: [{ x: mini.x, y: mini.y, color: C.nt, w: 1.3 }], zoom: drawCharts });
+  }
+  colorHooks.push(() => { if (plan) drawCharts(); });
+
+  // ---------- the readouts ----------
+  function readouts() {
+    const pl = plan, k = kNow(run.T), running = isFinite(run.T), d = running ? run.T - k * pl.isi : WIN;
+    const done = running ? (d >= WIN ? k + 1 : k + (d > 0 ? 1 : 0)) : pl.n;
+    const s = stateAt(run.T);
+    $('nVnum').textContent = fmtSigned(running ? s.Vm : E_REST, 1);
+    $('nRel').textContent = running && d > 1 ? Math.round(pl.m[k]) + ' of ' + Math.round(pl.N) : '—';
+    $('nReady').textContent = Math.round(running ? dockedAt(run.T) : pl.N) + ' of ' + Math.round(pl.N);
+    $('nNeed').textContent = fmt(pl.mthr, 0);
+    $('nQ').textContent = fmt(pl.q, 2) + ' mV';
+    $('nSF').textContent = fmt(pl.m[0] / pl.mthr, 2);
+    const firedN = pl.fired.slice(0, done).filter(Boolean).length;
+    $('nFired').textContent = done ? firedN + ' of ' + done : '—';
+    // (not worked out when under 1% of the fibres fired on the first impulse: a change of almost nothing means nothing)
+    const dec = done > 1 && pl.cmap[0] / CMAP_MAX >= 0.01 ? (pl.cmap[done - 1] / pl.cmap[0] - 1) * 100 : NaN;
+    $('nDec').textContent = !isFinite(dec) ? (done > 1 ? 'hardly any fired' : '—') : Math.abs(dec) < 0.5 ? 'no change' : (dec > 0 ? '+' : '−') + Math.abs(dec).toFixed(0) + '%';
+    $('nCmapCap').textContent = done ? `${(pl.cmap[0] / CMAP_MAX * 100).toFixed(0)}% of the muscle's fibres fired on the first impulse` +
+      (done > 1 ? `, ${(pl.cmap[done - 1] / CMAP_MAX * 100).toFixed(0)}% on the ${done === 2 ? 'second' : done === 3 ? 'third' : done === 4 ? 'fourth' : done + 'th'}.` : '.') : '';
+    const why = [];
+    if (pl.q < 0.85 * Q_HEALTHY) why.push('small, because fewer receptors answer each one');
+    else if (pl.q > 1.15 * Q_HEALTHY) why.push('bigger and longer, because less esterase is splitting the ACh');
+    if (P.sites < 50) why.push('few, because most release sites are stopped');
+    $('nMiniCap').textContent = `${mini.n} ${mini.n === 1 ? 'quantum' : 'quanta'} in 3 s, each about ${fmt(pl.q, 2)} mV` +
+      (why.length ? ': ' + why.join('; and ') : '') + '.';
+    const n = pl.n, allFired = firedN === done && done > 0, noneFired = firedN === 0 && done > 0;
+    if (running && done === 0) { $('nCap').textContent = 'The impulse is on its way down the motor axon.'; return; }
+    if (running && done < n) {
+      $('nCap').textContent = `Impulse ${done} of ${n}: ${pl.fired[done - 1] ? 'the EPP passed threshold and the fibre fired' : 'the EPP fell short and the fibre did not fire'}` +
+        `, with ${Math.round(pl.m[done - 1])} quanta against the ${fmt(pl.mthr, 0)} it takes.`;
+      return;
+    }
+    $('nCap').textContent = !done ? 'Press Stimulate to send a train of impulses down the motor nerve.' :
+      allFired && done === n ? `Every impulse fired the fibre. The EPP shrinks as release runs down, but with a safety factor of ${fmt(pl.m[0] / pl.mthr, 1)} it never comes close to threshold.` :
+      noneFired && done === n ? 'No impulse fired the fibre: every EPP falls short of threshold and the muscle stays relaxed.' :
+      pl.fired[0] && !pl.fired[done - 1] ? 'A decrement: the first impulses fire the fibre, then release runs down and the EPP no longer reaches threshold. This is the fatigue of myasthenia gravis.' :
+      !pl.fired[0] && pl.fired[done - 1] ? 'An increment: the first EPPs fall short, but leftover Ca²⁺ builds release up until the fibre fires. This is Lambert–Eaton syndrome at a high rate.' :
+      `${firedN} of the ${done} impulses fired the fibre: the EPP is sitting right at threshold.`;
+    if (!running) $('nCap').textContent += ' Press Stimulate to watch it happen, impulse by impulse.';
+  }
+
+  // ---------- controls ----------
+  const Q_HEALTHY = peakOf(gqOf(1, 100), tdOf(100));    // one quantum at a healthy junction, mV
+  const speedOf = v => 0.3 * Math.pow(40, v / 100);     // 0.3 to 12 ms of junction time per second
+  const replan = () => { buildPlan(); buildMini(); };
+  chipGroup('nrate', v => { P.f = +v; replan(); restart(); });
+  bindRange('nN', v => v + (v === 1 ? ' impulse' : ' impulses'), v => { P.n = v; replan(); });
+  bindRange('nP', v => fmt(v, 3), v => { P.p = v; replan(); });
+  bindRange('nSites', v => v + '% working', v => { P.sites = v; replan(); });
+  bindRange('nAChE', v => v + '% working', v => { P.ache = v; replan(); });
+  bindRange('nRec', v => v + '% left', v => { P.rec = v; replan(); });
+  bindRange('nCur', v => v === 0 ? 'none' : v + '% blocked', v => { P.cur = v; replan(); });
+  bindRange('nSpeed', v => fmt(speedOf(v), speedOf(v) < 1 ? 2 : 1) + ' ms per s', v => P.speed = speedOf(v));
+  const restart = () => { if (run.active || isFinite(run.T)) startRun(); };
+  ['nN', 'nP', 'nSites', 'nAChE', 'nRec', 'nCur'].forEach(id => $(id).addEventListener('change', restart));
+  $('nStim').addEventListener('click', startRun);
+  $('nReset').addEventListener('click', () => { run.T = Infinity; run.active = false; run.logged = true; freshSites(); });
+  $('nPlay').addEventListener('click', () => { playing = !playing; $('nPlay').textContent = playing ? 'Pause' : 'Play'; });
+  $('nPlay').textContent = 'Play';
+  Frames.sim(() => playing, 'nPlay');   // frames.js: starts paused, pauses itself when left alone (Stimulate starts it)
+
+  // ---------- the frame loop ----------
+  // the run keeps going while the card is off screen, but its canvases aren't drawn there (low lag elsewhere on the
+  // page); the readouts beside it always are, since on a narrow screen they sit below the card
+  let onScreen = true, last = performance.now();
+  const drawCanvases = () => { drawPicture(); drawCharts(); };
+  if ('IntersectionObserver' in window)
+    new IntersectionObserver(es => es.forEach(e => { onScreen = e.isIntersecting; if (onScreen) drawCanvases(); })).observe($('nmj-card'));
+  function loop(now) {
+    const real = Math.min(0.05, (now - last) / 1000); last = now; frame++;
+    if (playing && run.active) { const before = run.T; advance(real); moveParticles(Math.max(0, run.T - before)); }
+    if (onScreen) drawCanvases();
+    readouts();
+    requestAnimationFrame(loop);
+  }
+  buildMini();
+  // handles for checking the page from the console: tick(s) runs s seconds of the frame loop at once, in 1/30 s frames
+  window.NMJ = { startRun, setFreq: f => { document.querySelector(`[data-nrate="${f}"]`).click(); },
+    tick(sec) { for (let i = 0; i < Math.round(sec * 30); i++) { const b = run.T; if (playing && run.active) { advance(1 / 30); moveParticles(Math.max(0, run.T - b)); } frame++; } drawCanvases(); readouts(); return run.T; } };
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+// ---------- the safety factor calculator ----------
+(() => {
+  const K = { m: 60, q: 1, rest: -85, thr: -65, E: -5 };
+  const eppOf = (m, q, D) => D * (1 - Math.exp(-m * q / D));
+  function draw() {
+    const D = K.E - K.rest, need = K.thr - K.rest;
+    const mNeed = D <= need ? Infinity : (D / K.q) * Math.log(D / (D - need));
+    const epp = eppOf(K.m, K.q, D), sf = K.m / mNeed;
+    const mMax = Math.max(K.m * 1.4, mNeed * 1.6, 20);
+    const xs = [], ys = [], ls = [];
+    for (let i = 0; i <= 120; i++) { const m = i * mMax / 120; xs.push(m); ys.push(eppOf(m, K.q, D)); ls.push(m * K.q); }
+    plot($('kChart'), { square: true, x: [0, mMax], y: [0, Math.max(D * 1.05, need * 1.4)], xlab: 'quanta released, m', ylab: 'EPP (mV)',
+      hlines: [{ y: need, color: C.pos, label: 'needed to fire', left: true }, { y: D, color: C.muted, label: 'E_ACh', left: false }],
+      lines: [{ x: xs, y: ls, color: C.muted, w: 1.2, dash: true }, { x: xs, y: ys, color: C.accent, w: 2 }],
+      dots: [{ x: K.m, y: epp, color: epp >= need ? C.accent : C.pos }], zoom: draw });
+    $('kSF').textContent = isFinite(sf) ? fmt(sf, 2) : '—';
+    $('kEPP').textContent = fmt(epp, 1) + ' mV';
+    $('kLin').textContent = fmt(K.m * K.q, 1) + ' mV';
+    $('kNeed').textContent = fmt(need, 0) + ' mV';
+    $('kMneed').innerHTML = isFinite(mNeed) ? fmt(mNeed, 1) : 'never: E<sub>ACh</sub> is below threshold';
+    $('kVerdict').textContent = !isFinite(mNeed) ? 'cannot fire: the receptors’ battery sits below threshold'
+      : epp >= need ? 'fires, with ' + fmt(sf, 1) + '× the quanta it needs' : 'fails: the EPP falls ' + fmt(need - epp, 1) + ' mV short';
+    $('kFormula').innerHTML = `EPP = D (1 − e<sup>−mq/D</sup>) = ${fmt(D, 0)} × (1 − e<sup>−${fmt(K.m * K.q, 1)}/${fmt(D, 0)}</sup>) = <b>${fmt(epp, 1)} mV</b>` +
+      `&nbsp; · &nbsp;m<sub>needed</sub> = (D/q) ln(D / (D − ${fmt(need, 0)})) = <b>${isFinite(mNeed) ? fmt(mNeed, 1) : '—'}</b>` +
+      `&nbsp; · &nbsp;safety factor = ${K.m} / ${isFinite(mNeed) ? fmt(mNeed, 1) : '—'} = <b>${isFinite(sf) ? fmt(sf, 2) : '—'}</b>`;
+  }
+  bindRange('kM', v => v + ' quanta', v => { K.m = v; draw(); });
+  bindRange('kQ', v => fmt(v, 2) + ' mV', v => { K.q = v; draw(); });
+  bindRange('kRest', v => fmt(v, 0) + ' mV', v => { K.rest = v; draw(); });
+  bindRange('kThr', v => fmt(v, 0) + ' mV', v => { K.thr = v; draw(); });
+  bindRange('kE', v => fmtSigned(v, 0), v => { K.E = v; draw(); });
+  colorHooks.push(draw);
+  window.CALC = { setM: m => { const el = $('kM'); el.value = m; el.dispatchEvent(new Event('input')); } };
+  draw();
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = Array.from(list.querySelectorAll('[role=tab]'));
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they do exactly what clicking those would do.
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const press = sel => { const b = document.querySelector(sel); if (b.getAttribute('aria-pressed') !== 'true') b.click(); };
+  function junction(o) {
+    o = o || {};
+    press(`[data-nrate="${o.f == null ? 3 : o.f}"]`);
+    set('nN', o.n == null ? 5 : o.n); set('nP', o.p == null ? 0.2 : o.p); set('nSites', o.sites == null ? 100 : o.sites);
+    set('nAChE', o.ache == null ? 100 : o.ache); set('nRec', o.rec == null ? 100 : o.rec); set('nCur', o.cur == null ? 0 : o.cur);
+    set('nSpeed', o.speed == null ? 62 : o.speed);
+    showTab($('tab-nmj')); into('nmj-card'); $('nStim').click();
+  }
+  const TRY = {
+    normal: () => junction(),
+    one: () => junction({ n: 1 }),
+    slow: () => junction({ n: 1, speed: 12 }),
+    norm50: () => junction({ f: 50, n: 10 }),
+    hip50: () => junction({ f: 50, n: 10, p: 0.5 }),
+    mg: () => junction({ rec: 43 }),
+    neo: () => junction({ rec: 43, ache: 15 }),
+    rec35: () => junction({ rec: 35 }),
+    lems3: () => junction({ p: 0.05 }),
+    lems50: () => junction({ f: 50, n: 10, p: 0.05 }),
+    botox: () => junction({ sites: 12 }),
+    curare: () => junction({ n: 1, cur: 88 }),
+    tof: () => junction({ f: 2, n: 4, cur: 62 }),
+    tofneo: () => junction({ f: 2, n: 4, cur: 62, ache: 15 }),
+    ache0: () => junction({ n: 1, ache: 0 }),
+  };
+  document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => {
+    const [what, arg] = b.dataset.try.split(':');
+    if (what === 'calc') { window.CALC.setM(+arg); into('sf-calc'); }
+    else TRY[what]();
+  }));
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slow Signals: Metabotropic Receptors and Neuromodulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as the other lessons: the G-protein chain on top, acetylcholine changing how a cell fires below. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --nt:#c0287a; --gtp:#9c7a12; --gb:#2861c8; --pos:#d1373f; --warm:#b4582a;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --nt:#f477b7; --gtp:#e0bb5c; --gb:#6b9cf2; --pos:#f0646b; --warm:#e0915e;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --nt:#f477b7; --gtp:#e0bb5c; --gb:#6b9cf2; --pos:#f0646b; --warm:#e0915e;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:110ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* calculator, styled like the synaptic current calculator in synapse.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:64px minmax(0,1fr) 112px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.top.stacked{grid-template-columns:1fr}
+.cgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+.cgrid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.cgrid,.cgrid.even{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.chartcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.charthead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+canvas.sq{max-width:440px;margin:0 auto}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+/* the steps of the chain under the picture: the ones happening now are lit */
+.chain{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;font-size:12px;line-height:1.3}
+.chain li{padding:6px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted);transition:background .15s,color .15s,border-color .15s}
+.chain b{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.chain li.on{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+@media (max-width:700px){.chain{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.chain li{transition:none}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.cl{background:var(--cl)}.dot.k{background:var(--k)}.dot.nt{background:var(--nt)}.dot.na{background:var(--na)}
+.dot.gtp{background:var(--gtp);border-radius:40%;width:13px;height:9px}.dot.gdp{background:var(--line);border-radius:40%;width:13px;height:9px}
+.dot.gb{background:var(--gb)}.dot.acc{background:var(--accent)}.dot.mut{background:var(--muted)}
+.line{width:16px;height:3px;border-radius:2px;display:inline-block;flex:none}
+.line.acc{background:var(--accent)}.line.mut{background:var(--muted)}.line.cl{background:var(--cl)}.line.k{background:var(--k)}
+.line.ghost{background:var(--muted);opacity:.45}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.sgroup{display:flex;flex-direction:column;gap:10px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:128px minmax(0,1fr) 112px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;flex:none}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:999px;overflow:hidden;align-self:flex-start}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* theory card, styled like the GHK derivation in membrane_potential.html */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv ul,.deriv ol{margin:6px 0;padding-left:22px}
+.deriv li{margin-bottom:4px}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+table.map{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+</style>
+</head>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbRun" data-copy="p1Run" data-copy-also="p2Run" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="p1Play" data-copy-also="p2Play"></button>
+  <span id="fbSp1" style="display:contents"><label for="fbSpeed1" class="runlab">Speed</label><input type="range" id="fbSpeed1" data-copy="p1Speed"><output for="fbSpeed1"></output></span>
+  <span id="fbSp2" style="display:contents" hidden><label for="fbSpeed2" class="runlab">Speed</label><input type="range" id="fbSpeed2" data-copy="p2Speed"><output for="fbSpeed2"></output></span>
+</div>
+<div class="wrap">
+<p class="draftnote"><b>DRAFT</b> · Not yet in the course. The simulation's numbers have been checked in the browser and the references against Crossref. Still to check by a person: the G-protein picture (new: each molecule drawn stands for many), the slow IPSP's timing against recordings, and the theory text and drug examples.</p>
+<header>
+  <h1>Slow signals: metabotropic receptors and neuromodulation</h1>
+  <p>The receptors in the Chemical Synapse lesson are channels: transmitter binds and the pore opens within a millisecond. Many receptors aren’t channels at all. Transmitter binding switches on a <b>G protein</b> inside the cell, and only at the end of a short chain of proteins does a channel open or close, tens to hundreds of milliseconds later. These <b>metabotropic</b> receptors make slow synaptic potentials, and they are how dopamine, serotonin, noradrenaline and acetylcholine change the way a neuron answers everything else it hears.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>contrast an ionotropic receptor (a channel: fast and brief) with a metabotropic one (a G-protein-coupled receptor: slow, long-lasting and amplified)</li>
+        <li>follow a slow IPSP step by step: GABA<sub>B</sub> receptor → G protein → βγ subunits → GIRK K⁺ channel → V pulled toward E<sub>K</sub>, and work out its current with Ohm’s law</li>
+        <li>explain why a single spike gives almost no GABA<sub>B</sub> response but a burst gives a large one</li>
+        <li>explain neuromodulation: acetylcholine closing M-type K⁺ channels makes the same input give more spikes, without slowing down</li>
+        <li>name drugs that act on G-protein-coupled receptors: baclofen, opioids, atropine, β-blockers, antipsychotics</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-try="both">1 · Fast and slow, side by side</button> An inhibitory cell fires a burst of five spikes onto a cell held just below threshold. GABA<sub>A</sub> receptors (channels) make a quick IPSP; GABA<sub>B</sub> receptors (metabotropic) make one that starts late and lasts hundreds of milliseconds. Watch the G proteins carry the signal in the picture.</li>
+    <li><button class="chip" data-try="firing">2 · On a firing cell</button> The same burst onto a cell that fires steadily: a long silence.</li>
+    <li><button class="chip" data-try="single">3 · Just one spike</button> One presynaptic spike: the GABA<sub>A</sub> IPSP is still there, but the G proteins it switches on aren’t enough to open the GIRK channels, which need four βγ each.</li>
+    <li><button class="chip" data-try="bic">4 · Block GABA<sub>A</sub></button> Bicuculline blocks the channel receptors. Only the slow inhibition is left, and the pause hardly shortens.</li>
+    <li><button class="chip" data-try="bac">5 · Baclofen</button> A GABA<sub>B</sub> drug, given for muscle spasticity, holds the GIRK channels open: the cell goes quiet.</li>
+    <li><button class="chip" data-try="ach">6 · Acetylcholine on the cell</button> In Part 2: muscarinic receptors close the M-type K⁺ channels. The same current step gives more than twice as many spikes, and the cell no longer slows down.</li>
+  </ol>
+</section>
+
+<!-- =================== Part 1: fast and slow inhibition =================== -->
+<h3 class="part">1 · Fast and slow inhibition from the same transmitter</h3>
+<div class="top stacked">
+  <section class="card stage" id="p1-card">
+    <div class="tabs" role="tablist" aria-label="Fast and slow inhibition">
+      <button type="button" role="tab" id="tab-p1" aria-controls="pane-p1" aria-selected="true">G-protein chain</button>
+      <button type="button" role="tab" id="tab-p1help" aria-controls="pane-p1help" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-p1look" aria-controls="pane-p1look" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-p1" aria-labelledby="tab-p1">
+      <canvas id="pic1" aria-label="The inhibitory cell's terminal above the next cell's membrane, with a GABA-A receptor channel, a GABA-B receptor, a dozen G proteins inside the cell, and three GIRK potassium channels"></canvas>
+      <ol class="chain" id="chain" aria-label="The steps happening now">
+        <li><b>1 · Release</b>Each spike releases GABA</li>
+        <li><b>2 · GABA<sub>A</sub> opens</b>The channel opens at once: Cl⁻ in</li>
+        <li><b>3 · G protein on</b>GABA<sub>B</sub> makes α swap GDP for GTP</li>
+        <li><b>4 · βγ moves</b>βγ lets go of α and slides to GIRK</li>
+        <li><b>5 · GIRK opens</b>Four βγ bound: K⁺ flows out</li>
+        <li><b>6 · Switching off</b>α turns GTP into GDP and takes βγ back</li>
+      </ol>
+      <div class="runbar">
+        <button id="p1Run" class="primary">Run</button>
+        <button id="p1Play">Play</button>
+        <label for="p1Speed" class="runlab">Speed</label>
+        <input type="range" id="p1Speed" min="0" max="100" value="45">
+        <output id="p1Speedo" for="p1Speed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot nt"></i>GABA</span>
+        <span><i class="dot na"></i>baclofen</span>
+        <span><i class="dot cl"></i>Cl⁻</span>
+        <span><i class="dot k"></i>K⁺</span>
+        <span><i class="dot gdp"></i>α with GDP: off</span>
+        <span><i class="dot gtp"></i>α with GTP: on</span>
+        <span><i class="dot gb"></i>βγ</span>
+      </div>
+      <div class="cgrid">
+        <div class="ccol">
+          <div class="chartcol"><p class="sect-title">Post: membrane potential</p><canvas id="cV" aria-label="The next cell's voltage over time, with the burst marked"></canvas>
+            <div class="legend"><span><i class="line acc"></i>this run</span><span><i class="line ghost"></i>the run before, for comparison</span></div></div>
+          <div class="chartcol"><p class="sect-title">Post: synaptic conductances</p><canvas id="cG" aria-label="The GABA-A conductance and the GIRK conductance over time"></canvas>
+            <div class="legend"><span><i class="line cl"></i>GABA<sub>A</sub>: Cl⁻ channels</span><span><i class="line k"></i>GABA<sub>B</sub> → GIRK: K⁺ channels</span></div></div>
+        </div>
+        <div class="chartcol"><p class="sect-title">GIRK channels open vs active G protein</p><canvas id="cH" class="sq" aria-label="The fraction of GIRK channels open against the amount of active G protein: a steep S-shaped curve, with the path taken during this run"></canvas>
+          <p class="caption">The curve is G⁴ / (G⁴ + 100): a GIRK channel needs four βγ. The thick line is the path this run takes along it; the dot is now.</p></div>
+      </div>
+      <p class="caption" id="cap1"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p1help" aria-labelledby="tab-p1help" hidden>
+      <ul>
+        <li><b>The picture:</b> the axon terminal of an inhibitory cell (<b>Pre</b>) at the top left, and the membrane of the next cell across the middle, the outside above and the inside below. In the membrane, from the left: a <b>GABA<sub>A</sub> receptor</b>, which is a Cl⁻ channel; a <b>GABA<sub>B</sub> receptor</b>, which has no pore; a dozen <b>G proteins</b> waiting inside the cell; and three <b>GIRK</b> K⁺ channels. A real synapse has thousands of each: every molecule drawn stands for many.</li>
+        <li><b>A G protein</b> is drawn as its α subunit (the oval) next to its βγ pair (blue). A grey α holds GDP and is off. When GABA is bound, the GABA<sub>B</sub> receptor switches G proteins on: α swaps its GDP for GTP (gold) and lets go of βγ, which slides along the inside of the membrane to a GIRK channel. Each GIRK channel has four docking sites; the count under it says how many are filled, and it opens only when all four are. α turns its GTP back into GDP on its own, after a few hundred milliseconds; then βγ goes back to it and the channel shuts.</li>
+        <li><b>The steps under the picture:</b> the ones lit are happening now. During a burst several are lit at once.</li>
+        <li><b>Post: membrane potential:</b> the next cell treated as one point, as in the Passive Properties lessons, with the Na⁺ and K⁺ channels of a cortical pyramidal cell so it can fire. The dashed lines are the two batteries the inhibition pulls toward: E<sub>Cl</sub> for GABA<sub>A</sub>, E<sub>K</sub> for GIRK. The faint grey trace is the previous run, so you can compare.</li>
+        <li><b>The input:</b> one presynaptic spike here stands for many inhibitory axons firing together, as when an experimenter stimulates them with an electrode, so each IPSP is far bigger than one synapse alone would make.</li>
+        <li><b>The cell:</b> <b>Held just below threshold</b> injects a steady current that holds V just under threshold, so both IPSPs show. <b>Firing steadily</b> injects a little more, so the cell fires a spike about every 18 ms, more than 50 a second. This cell has no M-type K⁺ channels (Part 2 adds them), so its firing doesn’t slow down.</li>
+        <li><b>Post: synaptic conductances:</b> how many channels of each kind are open, as a conductance (the inverse of a resistance), in mS per cm² of membrane.</li>
+        <li><b>The square chart:</b> the fraction of GIRK channels open against the amount of active G protein G, in units of what one presynaptic spike switches on at its peak. The thick line is the path this run takes along the curve.</li>
+        <li><b>Timing:</b> each run is 900 ms of the cell’s time; the burst comes at 250 ms, its spikes 10 ms apart. <b>Run</b> starts it from the beginning; the speed is in milliseconds of the cell’s time per second of yours. After a run, moving a slider redraws the whole run at once.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p1look" aria-labelledby="tab-p1look" hidden>
+      <ul>
+        <li><b>Two IPSPs from one transmitter.</b> Held below threshold, V drops at once as the GABA<sub>A</sub> channels open. Where GABA<sub>A</sub> alone would let it recover, about 60 ms after the burst began (block GABA<sub>B</sub> to see), it sinks further instead as the GIRK channels open, is deepest about 120 ms after the burst, and takes about half a second to come back. In the picture, the GABA<sub>A</sub> channel opens and closes while the G proteins are still switching on.</li>
+        <li><b>The G proteins are the delay and the length.</b> GIRK opens only after G proteins have been switched on and their βγ have reached it; it stays open for as long as α keeps its GTP, long after the GABA is gone.</li>
+        <li><b>One spike isn’t enough.</b> Set the burst to 1 spike: two βγ reach the first GIRK channel, which needs four, so it stays shut, and the slow IPSP is under 1 mV. Then try 2, 3 and 5 spikes: about 8, 17 and 23 mV. The GIRK conductance grows far faster than the number of spikes, as the square chart’s curve says.</li>
+        <li><b>On a firing cell</b> GABA<sub>A</sub> alone (block GABA<sub>B</sub> with CGP 55845) stops the firing for about 90 ms; GABA<sub>B</sub> stops it for about 350 ms. Blocking GABA<sub>A</sub> with bicuculline hardly shortens the pause.</li>
+        <li><b>Baclofen</b> switches the GABA<sub>B</sub> receptors on all the time: GIRK channels stay open and the cell stops firing. Adding CGP 55845 undoes it.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Post: membrane potential</span>
+      <span class="vnum" id="p1Vnum">—</span>
+      <div class="vrow"><span>GABA<sub>A</sub> conductance now</span><b id="p1gA">—</b></div>
+      <div class="vrow"><span>active G protein now</span><b id="p1G">—</b></div>
+      <div class="vrow"><span>GIRK channels open now</span><b id="p1f">—</b></div>
+      <div class="vrow"><span id="p1m1lab">—</span><b id="p1m1">—</b></div>
+      <div class="vrow"><span id="p1m2lab">—</span><b id="p1m2">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The cells</legend>
+      <div class="sgroup">
+        <span class="gtitle">Post: the cell</span>
+        <div class="seg" role="group" aria-label="The cell">
+          <button type="button" data-mode="rest" aria-pressed="true">Held just below threshold</button><button type="button" data-mode="firing" aria-pressed="false">Firing steadily</button>
+        </div>
+        <span class="caption" id="modeCap"></span>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Pre: the inhibitory input</span>
+        <div class="row"><label for="gAin"><i class="dot cl"></i>GABA<sub>A</sub> strength</label><input type="range" id="gAin" min="0" max="1.5" step="0.01" value="0.4"><output id="gAino" for="gAin"></output>
+          <span class="hint">peak conductance for one spike: the channel receptors</span></div>
+        <div class="row"><label for="gBin"><i class="dot k"></i>GABA<sub>B</sub> strength</label><input type="range" id="gBin" min="0" max="0.5" step="0.005" value="0.2"><output id="gBino" for="gBin"></output>
+          <span class="hint">GIRK conductance with every GIRK channel open</span></div>
+        <div class="row"><label for="nIn">Spikes in the burst</label><input type="range" id="nIn" min="1" max="10" step="1" value="5"><output id="nIno" for="nIn"></output></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Drugs</span>
+        <label class="check" for="bic"><input type="checkbox" id="bic">Bicuculline: blocks GABA<sub>A</sub></label>
+        <label class="check" for="cgp"><input type="checkbox" id="cgp">CGP 55845: blocks GABA<sub>B</sub></label>
+        <label class="check" for="bac"><input type="checkbox" id="bac">Baclofen: switches GABA<sub>B</sub> on</label>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 2: acetylcholine and the M current =================== -->
+<h3 class="part">2 · Neuromodulation: acetylcholine changes how a cell fires</h3>
+<div class="top stacked">
+  <section class="card stage" id="p2-card">
+    <div class="tabs" role="tablist" aria-label="Neuromodulation">
+      <button type="button" role="tab" id="tab-p2" aria-controls="pane-p2" aria-selected="true">Two cells, one input</button>
+      <button type="button" role="tab" id="tab-p2help" aria-controls="pane-p2help" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-p2look" aria-controls="pane-p2look" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-p2" aria-labelledby="tab-p2">
+      <div class="cgrid even">
+        <div class="ccol">
+          <p class="sect-title">Without acetylcholine</p>
+          <canvas id="picA" aria-label="A patch of the first cell's membrane with a muscarinic receptor, PIP2, and ten M-type potassium channels"></canvas>
+          <canvas id="cVA" aria-label="The first cell's voltage during the current step"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title" id="p2Btitle">With acetylcholine</p>
+          <canvas id="picB" aria-label="A patch of the second cell's membrane: acetylcholine on the muscarinic receptor, PLC using up PIP2, and M channels shut"></canvas>
+          <canvas id="cVB" aria-label="The second cell's voltage during the same current step"></canvas>
+        </div>
+      </div>
+      <div class="runbar">
+        <button id="p2Run" class="primary">Run</button>
+        <button id="p2Play">Play</button>
+        <label for="p2Speed" class="runlab">Speed</label>
+        <input type="range" id="p2Speed" min="0" max="100" value="60">
+        <output id="p2Speedo" for="p2Speed"></output>
+        <button id="p2Sweep">Measure the f–I curve</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot nt"></i>acetylcholine (ACh)</span>
+        <span><i class="dot na"></i>PIP<sub>2</sub>, which M channels need to open</span>
+        <span><i class="dot k"></i>K⁺</span>
+        <span><i class="dot gtp"></i>G<sub>q</sub> α, on</span>
+      </div>
+      <div class="cgrid">
+        <div class="chartcol"><p class="sect-title">Firing rate during the step, from each interval between spikes</p><canvas id="cR" aria-label="Each cell's firing rate over time, one point per interval between spikes"></canvas>
+          <div class="legend"><span><i class="line mut"></i>without acetylcholine</span><span><i class="line acc"></i>with acetylcholine</span></div></div>
+        <div class="chartcol"><div class="charthead"><p class="sect-title">Firing rate vs current step (f–I)</p><button class="chip" id="p2Clear">Clear</button></div>
+          <canvas id="cFI" class="sq" aria-label="Firing rate against the size of the current step, one point per run, for each cell"></canvas>
+          <p class="caption" id="fiCap">Each run adds a point for each cell: its spikes in the 800 ms step, per second.</p></div>
+      </div>
+      <p class="caption" id="cap2">The same 800 ms current step into both cells. Acetylcholine here doesn’t excite the cell directly: it changes how the cell answers its input.</p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p2help" aria-labelledby="tab-p2help" hidden>
+      <ul>
+        <li><b>Two cells:</b> the same pyramidal cell twice, given the same 800 ms current step, from 100 to 900 ms. The left one has no acetylcholine; on the right, acetylcholine has been on the cell long enough to close the fraction of M channels you set.</li>
+        <li><b>The pictures:</b> a patch of each cell’s membrane, outside above. On the left of each is a muscarinic (M<sub>1</sub>) receptor with its G protein, G<sub>q</sub>, and the enzyme it switches on, PLC. To the right are ten M-type K⁺ channels (K<sub>V</sub>7, also called KCNQ), each needing a lipid of the inner membrane, PIP<sub>2</sub> (orange), to open. With acetylcholine bound, G<sub>q</sub> turns PLC on, PLC cuts up PIP<sub>2</sub>, and channels left without it stay shut (grey). The ones that can still open do so with the voltage: the count under each picture says how many are open now.</li>
+        <li><b>M channels</b> are voltage-gated K⁺ channels that open slowly, over a few hundred milliseconds, when the cell is depolarized and close again slowly at rest. At −70 mV only about 3% are open.</li>
+        <li><b>Firing rate chart:</b> one point per interval between two spikes, at the time of the second spike: 1000 / (interval in ms) spikes per second. A falling line is adaptation.</li>
+        <li><b>f–I chart:</b> each run adds a point for each cell, its spikes in the step per second, against the step’s size. <b>Measure the f–I curve</b> runs every step from 0 to 12 µA/cm² at once. Changing the acetylcholine starts a new curve for the cell on the right.</li>
+        <li><b>Timing:</b> each run is 1000 ms of the cells’ time, played at the speed you set.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-p2look" aria-labelledby="tab-p2look" hidden>
+      <ul>
+        <li><b>Without acetylcholine the cell adapts:</b> it starts fast and slows down. Watch the M channels in the left picture open one by one as it fires; each adds outward K⁺ current that the step has to overcome.</li>
+        <li><b>With acetylcholine</b> most M channels can’t open, so nothing builds up: the cell fires about twice as many spikes, at a nearly steady rate.</li>
+        <li><b>Rest barely changes.</b> Before the step both cells sit near −70 mV, where the M channels are nearly all shut anyway. Acetylcholine changes the answer to the input, not the voltage at rest: that is what makes it a modulator.</li>
+        <li><b>The f–I curve moves up and to the left.</b> Measure it with 0% and with 100% of the M channels closed: with acetylcholine the cell starts firing at a smaller input and fires faster at every input. The difference is largest for small and middling inputs: at 4 µA/cm², about 99 spikes/s instead of 38.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Spikes in the step: without → with ACh</span>
+      <span class="vnum" id="p2Num">—</span>
+      <div class="vrow"><span>rate at the start → end, without</span><b id="p2rA">—</b></div>
+      <div class="vrow"><span>rate at the start → end, with</span><b id="p2rB">—</b></div>
+      <div class="vrow"><span>M channels open now, without / with</span><b id="p2M">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The experiment</legend>
+      <div class="sgroup">
+        <span class="gtitle">Acetylcholine (on the right-hand cell)</span>
+        <div class="row"><label for="achIn"><i class="dot nt"></i>M channels closed</label><input type="range" id="achIn" min="0" max="100" step="1" value="80"><output id="achIno" for="achIn"></output>
+          <span class="hint">more acetylcholine closes more; 0% is what atropine, a muscarinic blocker, would leave</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">The input (both cells)</span>
+        <div class="row"><label for="stepIn">Current step</label><input type="range" id="stepIn" min="0" max="12" step="0.1" value="4"><output id="stepIno" for="stepIn"></output>
+          <span class="hint">injected from 100 to 900 ms</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Real units</p>
+      <dl class="unitlist">
+        <dt>mV</dt><dd>millivolts, for voltage. V is the inside measured relative to the outside.</dd>
+        <dt>ms</dt><dd>milliseconds, for time. A GABA<sub>A</sub> IPSP lasts tens of ms; a GABA<sub>B</sub> one, hundreds.</dd>
+        <dt>spikes/s</dt><dd>spikes per second (Hz), for firing rate. An interval of 25 ms between two spikes is 1000 / 25 = 40 spikes/s.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">Per square centimetre of membrane, as in the Hodgkin–Huxley lesson</p>
+      <dl class="unitlist">
+        <dt>mS/cm²</dt><dd>millisiemens per cm², for conductance (1/resistance). This cell’s resting (leak) conductance is 0.1 mS/cm²; its GIRK channels add up to 0.2 mS/cm² with every one open.</dd>
+        <dt>µA/cm²</dt><dd>microamps per cm², for current. mS/cm² × mV = µA/cm²: 0.1 mS/cm² × 30 mV = 3 µA/cm². Positive is outward.</dd>
+        <dt>µF/cm²</dt><dd>microfarads per cm², for capacitance: 1 µF/cm² here, so 1 µA/cm² changes V by 1 mV every ms.</dd>
+        <dt>G</dt><dd>active G protein, in units of the peak that one presynaptic spike switches on (a made-up unit for this model).</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="theory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Two kinds of receptor</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">The slow IPSP</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Neuromodulation</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Amplification</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Drugs</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> An ionotropic receptor is a channel with a transmitter switch: fast and brief, one receptor opening one pore. A metabotropic receptor is a switch with no pore. It turns on G proteins inside the cell, and they do the work: open or close channels, or start enzymes that make messengers like cAMP. It is slower and lasts longer, and it amplifies, because one receptor can switch on many G proteins.</p>
+      <h3>Most transmitters have both kinds</h3>
+      <table class="map">
+        <tr><th>Transmitter</th><th>Ionotropic (a channel)</th><th>Metabotropic (G-protein-coupled)</th></tr>
+        <tr><td>Glutamate</td><td>AMPA, NMDA, kainate</td><td>mGluR1–8</td></tr>
+        <tr><td>GABA</td><td>GABA<sub>A</sub></td><td>GABA<sub>B</sub></td></tr>
+        <tr><td>Acetylcholine</td><td>nicotinic</td><td>muscarinic, M<sub>1</sub>–M<sub>5</sub></td></tr>
+        <tr><td>Serotonin</td><td>5-HT<sub>3</sub></td><td>about a dozen (5-HT<sub>1</sub>, 5-HT<sub>2</sub>, 5-HT<sub>4–7</sub>)</td></tr>
+        <tr><td>ATP</td><td>P2X</td><td>P2Y</td></tr>
+        <tr><td>Dopamine, noradrenaline, neuropeptides</td><td>none</td><td>D<sub>1</sub>–D<sub>5</sub>; α and β adrenergic; opioid (μ, δ, κ) and many more</td></tr>
+      </table>
+      <h3>The G-protein switch</h3>
+      <p>Every metabotropic receptor is one protein that crosses the membrane seven times. Its partner inside the cell is a G protein made of three parts, α, β and γ (β and γ stay together as βγ). The switch works in four steps:</p>
+      <ol>
+        <li>Transmitter binds the receptor on the outside of the cell.</li>
+        <li>The receptor makes the α subunit let go of the GDP it holds and pick up GTP instead. That is the “on” switch.</li>
+        <li>α·GTP and βγ come apart, and each can act on its own targets: channels, or enzymes.</li>
+        <li>α slowly splits its GTP into GDP (it is an enzyme, a GTPase, with its own timer), joins βγ again, and the signal stops.</li>
+      </ol>
+      <p>Step 4 sets how long the response lasts: not how long transmitter stays around, but how long α keeps its GTP, hundreds of milliseconds or more. The receptor can switch on G protein after G protein while transmitter is bound, which is where amplification starts.</p>
+      <h3>Three families of G protein</h3>
+      <ul>
+        <li><b>G<sub>i/o</sub></b> (“inhibitory”): its βγ opens GIRK K⁺ channels and closes voltage-gated Ca²⁺ channels; its α lowers cAMP. GABA<sub>B</sub>, μ-opioid, dopamine D<sub>2</sub>, M<sub>2</sub> muscarinic.</li>
+        <li><b>G<sub>s</sub></b> (“stimulatory”): its α turns on adenylyl cyclase, which makes cAMP. β-adrenergic (noradrenaline), dopamine D<sub>1</sub>.</li>
+        <li><b>G<sub>q</sub></b>: its α turns on phospholipase C (PLC), which splits the membrane lipid PIP<sub>2</sub> into two messengers, IP<sub>3</sub> (releases Ca²⁺ from stores) and DAG. M<sub>1</sub> muscarinic, mGluR1, α<sub>1</sub>-adrenergic.</li>
+      </ul>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="both">Both receptors</button> One burst of GABA, two responses: a fast one and a slow one.</p>
+      <p><button class="chip" data-try="cgprest">Block GABA<sub>B</sub></button> Only the fast, channel-receptor IPSP is left.</p>
+      <p><button class="chip" data-try="bicrest">Block GABA<sub>A</sub></button> Only the slow, G-protein IPSP is left.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> GABA on a GABA<sub>B</sub> receptor switches on G proteins. Their βγ parts open GIRK K⁺ channels, and K⁺ leaving the cell pulls V down toward E<sub>K</sub>. It starts late, because each step takes time, and it lasts as long as the G proteins stay on. A GIRK channel needs four βγ to open, so it takes a burst of spikes, not one.</p>
+      <h3>Ohm’s law with the K⁺ battery</h3>
+      <p>Once open, a GIRK channel is a K⁺ conductance like any other (Membrane Potential lesson). The current through all of them is the conductance times the driving force:</p>
+      <div class="eq">\[ I_\mathrm{GIRK} = g_\mathrm{GIRK}(t)\,\bigl(V - E_\mathrm{K}\bigr) \]</div>
+      <p>E<sub>K</sub> is about −90 mV, below rest, so at any normal V the current is outward and pulls V down: a hyperpolarizing IPSP. For example, with g<sub>GIRK</sub> = 0.17 mS/cm² and the cell at −60 mV, I = 0.17 × (−60 − (−90)) = 0.17 × 30 ≈ 5.1 µA/cm², outward. The GABA<sub>A</sub> IPSP uses a different battery, E<sub>Cl</sub>, about −75 mV in this cell.</p>
+      <h3>How far V goes</h3>
+      <p>With the GIRK channels open, the cell has two conductances pulling it to two batteries, its resting conductance toward E<sub>rest</sub> and GIRK toward E<sub>K</sub>, and V settles at their conductance-weighted average, the chord-conductance formula from the Membrane Potential lesson:</p>
+      <div class="eq">\[ V = \frac{g_\mathrm{rest}E_\mathrm{rest} + g_\mathrm{GIRK}E_\mathrm{K}}{g_\mathrm{rest} + g_\mathrm{GIRK}} \]</div>
+      <p>With g<sub>rest</sub> = 0.1 mS/cm² at −70 mV and g<sub>GIRK</sub> = 0.17 mS/cm²: V = (0.1 × −70 + 0.17 × −90) / 0.27 ≈ −83 mV, a 13 mV IPSP if it lasted long enough to settle. Try other numbers in the calculator below.</p>
+      <h3>Why a burst, not a spike</h3>
+      <p>A GIRK channel is made of four subunits, and each can hold one βγ. The channel opens only when all four sites are filled, so the fraction of channels open depends on the fourth power of the active G protein, G:</p>
+      <div class="eq">\[ \text{fraction of GIRK open} = \frac{G^4}{G^4 + K_\mathrm{d}} \]</div>
+      <p>In this simulation K<sub>d</sub> = 100, after Destexhe and Sejnowski, with G measured in units of what one presynaptic spike switches on. One spike: G = 1, so 1 / 101 = 1% of channels open, an IPSP of well under a millivolt. A burst of five spikes piles up about five times as much G protein: 5⁴ = 625, and 625 / 725 = 86% open. Five times the G protein, eighty-six times the channels. It is the same trick as the fourth power of Ca²⁺ in transmitter release (Chemical Synapse lesson): a threshold built from molecules cooperating.</p>
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>Suppose a closed channel C becomes an open channel O only when it has bound four βγ, and that the in-between states are short-lived, so we can ignore them:</p>
+        <div class="eq">\[ \mathrm{C} + 4\,\beta\gamma \;\rightleftharpoons\; \mathrm{O}, \qquad K_\mathrm{d} = \frac{[\mathrm{C}]\,[\beta\gamma]^4}{[\mathrm{O}]} \]</div>
+        <p>K<sub>d</sub> is the dissociation constant: at equilibrium, the product of what has come apart over what is together. Solve it for [C] = K<sub>d</sub>[O] / [βγ]⁴ and put that into the fraction of channels open:</p>
+        <div class="eq">\[ \frac{[\mathrm{O}]}{[\mathrm{C}] + [\mathrm{O}]} = \frac{[\mathrm{O}]}{K_\mathrm{d}[\mathrm{O}]/[\beta\gamma]^4 + [\mathrm{O}]} = \frac{[\beta\gamma]^4}{K_\mathrm{d} + [\beta\gamma]^4} \]</div>
+        <p>This is a Hill equation with Hill coefficient 4. Half the channels are open when [βγ]⁴ = K<sub>d</sub>, that is at [βγ] = K<sub>d</sub><sup>1/4</sup> = 100<sup>1/4</sup> ≈ 3.2 spikes’ worth. Well below that, doubling G multiplies the open fraction by 2⁴ = 16.</p>
+      </details>
+      <h3>Timing</h3>
+      <p>The GABA<sub>A</sub> conductance follows the transmitter: it rises in a millisecond and is gone in tens. The GIRK conductance waits for every step of the chain: G proteins switching on, βγ reaching the channels, four of them binding. It starts tens of milliseconds after the burst, peaks after about 100–200 ms, and lasts until α has turned its GTP back into GDP, several hundred milliseconds. In the brain a second effect adds to the need for a burst: GABA<sub>B</sub> receptors sit around the edges of the synapse, and GABA reaches them in quantity only when many vesicles are released together and it spills out.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="n:1">1 spike</button> <button class="chip" data-try="n:2">2 spikes</button> <button class="chip" data-try="n:3">3 spikes</button> <button class="chip" data-try="n:5">5 spikes</button> Held below threshold: compare the slow IPSP with the fast one as the burst grows.</p>
+      <p><button class="chip" data-try="single">One spike, firing cell</button> A short gap from GABA<sub>A</sub>; no GABA<sub>B</sub> pause at all.</p>
+      <p><button class="chip" data-try="calcn1">Calculator: one βγ enough</button> Set the calculator to 1 βγ per channel: one spike would open a quarter of them.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> A neuromodulator often barely moves the resting voltage. What it changes is how the cell answers its other inputs: more spikes or fewer, slowing down or not. Acetylcholine does it by shutting K⁺ channels that would otherwise build up and brake the firing.</p>
+      <h3>The M current, the brake on firing</h3>
+      <p>Pyramidal cells have slow voltage-gated K⁺ channels called M channels (K<sub>V</sub>7, made of KCNQ2 and KCNQ3 subunits). They open slowly when the cell depolarizes and close slowly again, over hundreds of milliseconds. Each spike opens a few more, so during a long input the outward K⁺ current grows and the firing slows: <b>adaptation</b> (Firing Rate lesson). Their current is Ohm’s law once more:</p>
+      <div class="eq">\[ I_\mathrm{M} = g_\mathrm{M}\,p_\mathrm{M}(t)\,\bigl(V - E_\mathrm{K}\bigr) \]</div>
+      <p>where p<sub>M</sub> is the fraction of M channels open. At rest, −70 mV, p<sub>M</sub> is about 3%, so the M channels hardly matter. While the cell fires they open further, and late in Part 2’s step they are about half open. With g<sub>M</sub> = 0.1 mS/cm², between spikes at about −53 mV, the M current is then 0.1 × 0.5 × (−53 − (−90)) ≈ 1.9 µA/cm², outward: nearly half of a 4 µA/cm² step goes into cancelling it.</p>
+      <h3>How acetylcholine closes them</h3>
+      <p>Acetylcholine on M<sub>1</sub> muscarinic receptors switches on G<sub>q</sub>, whose α turns on phospholipase C. PLC cuts up PIP<sub>2</sub>, a lipid in the inner face of the membrane, and M channels can’t open without PIP<sub>2</sub>. So the more acetylcholine, the fewer M channels left to open; the “M” stands for muscarinic, because this is how the current was found. With no brake building up, the same input gives more spikes and the rate stays up.</p>
+      <details class="fullderiv">
+        <summary>Show why closing K⁺ channels also makes the cell easier to excite</summary>
+        <p>For a small, steady input current I, the voltage change is Ohm’s law with the cell’s total conductance:</p>
+        <div class="eq">\[ \Delta V = \frac{I}{g_\mathrm{total}} \]</div>
+        <p>Close some K⁺ channels and g<sub>total</sub> falls, so the same input moves V further. If K⁺ channels made up 0.15 of a total 0.25 mS/cm², closing all of them would leave 0.1: a 1 µA/cm² input would move V by 10 mV instead of 4 mV. Closing open K⁺ channels also depolarizes the cell a little, since less K⁺ leaves; in this simulation that is small, because at rest the M channels are nearly all shut already.</p>
+      </details>
+      <h3>Other modulators, the same idea</h3>
+      <p>Noradrenaline on β receptors switches on G<sub>s</sub>, which raises cAMP; cAMP turns on protein kinase A, which shuts the Ca²⁺-activated K⁺ channels behind the slow afterhyperpolarization, another brake on firing. The cell stops adapting, as with acetylcholine. Acetylcholine comes from a few nuclei in the basal forebrain and noradrenaline from the locus coeruleus, and each sends axons all over the cortex, releasing its modulator from swellings along the way rather than at one tight synapse. That is part of how waking, attention and arousal change the way the whole cortex responds.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="ach">All M channels closed</button> More than twice the spikes, with no slowing down.</p>
+      <p><button class="chip" data-try="ach0">No acetylcholine</button> Both cells the same: both adapt.</p>
+      <p><button class="chip" data-try="fi">Measure the f–I curve</button> With acetylcholine the curve moves up and to the left: more spikes for the same input.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Each step of a G-protein chain can multiply the signal: one receptor switches on many G proteins, one enzyme makes many messenger molecules, one kinase changes many proteins. That is how a few molecules of a hormone or modulator can have a large effect, and why the effect can outlast the transmitter by seconds to hours.</p>
+      <h3>Multiplying at each step</h3>
+      <p>A receptor with transmitter bound switches on one G protein after another until the transmitter leaves. If the G protein’s target is an enzyme, such as adenylyl cyclase, each enzyme makes many cAMP molecules, and each protein kinase that cAMP turns on adds phosphate to many proteins. As an example with made-up but reasonable numbers: 10 G proteins per receptor, each turning on a cyclase that makes 100 cAMP, gives 1000 cAMP from one receptor, before the kinase step multiplies again. In the eye, one rhodopsin molecule hit by light switches on many G proteins in the same way, which is how a rod can respond to a single photon.</p>
+      <h3>Two speeds of metabotropic signalling</h3>
+      <ul>
+        <li><b>Direct, through the membrane:</b> βγ reaches a channel near the receptor, as in Part 1. No messenger leaves the membrane. Tens to hundreds of milliseconds, and local.</li>
+        <li><b>Through a second messenger:</b> cAMP, IP<sub>3</sub>, Ca²⁺ or DAG spreads through the cell and turns on kinases. Seconds to minutes; it can change many kinds of channel at once, and kinases that reach the nucleus can change which genes are read, the start of changes that last for days.</li>
+      </ul>
+      <p>The slow end of this scale overlaps with learning: the long-lasting forms of the synaptic plasticity in the Spines and Plasticity lesson need kinases and new proteins.</p>
+    </div>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> About a third of all prescription drugs act on G-protein-coupled receptors. Some switch a receptor on (agonists), more of them block it (antagonists). Knowing the chain, receptor → G protein → target, tells you what a drug will do and what its side effects will be.</p>
+      <table class="map">
+        <tr><th>Drug</th><th>Receptor (G protein)</th><th>What it does</th><th>Used for</th></tr>
+        <tr><td>Baclofen</td><td>GABA<sub>B</sub>, switches on (G<sub>i/o</sub>)</td><td>opens GIRK channels and cuts transmitter release in the spinal cord</td><td>muscle spasticity (multiple sclerosis, spinal cord injury)</td></tr>
+        <tr><td>Morphine, fentanyl</td><td>μ-opioid, switch on (G<sub>i/o</sub>)</td><td>open GIRK channels, close presynaptic Ca²⁺ channels: less transmitter in pain pathways</td><td>pain. In the brainstem’s breathing centre the same action stops breathing in an overdose; naloxone blocks the receptor and reverses it</td></tr>
+        <tr><td>Atropine</td><td>muscarinic, blocks</td><td>stops acetylcholine from slowing the heart, which it does through M<sub>2</sub> receptors and GIRK channels in the pacemaker; widens the pupil</td><td>a heart beating too slowly, eye exams, nerve-agent poisoning</td></tr>
+        <tr><td>Metoprolol, propranolol</td><td>β-adrenergic, block (G<sub>s</sub>)</td><td>less cAMP in heart muscle: slower, weaker beats</td><td>high blood pressure, angina, abnormal heart rhythms</td></tr>
+        <tr><td>Haloperidol, risperidone</td><td>dopamine D<sub>2</sub>, block (G<sub>i/o</sub>)</td><td>less dopamine signalling</td><td>psychosis, schizophrenia</td></tr>
+        <tr><td>Sumatriptan</td><td>serotonin 5-HT<sub>1B/1D</sub>, switches on (G<sub>i/o</sub>)</td><td>narrows dilated vessels, cuts release from pain fibres</td><td>migraine</td></tr>
+        <tr><td>Loratadine, diphenhydramine</td><td>histamine H<sub>1</sub>, block (G<sub>q</sub>)</td><td>less histamine signalling</td><td>allergy</td></tr>
+      </table>
+      <h3>When the M channels are wrong</h3>
+      <p>Mutations in KCNQ2, one of the two M-channel genes, cause seizures in newborn babies: with too little M current, neurons fire too easily. Retigabine (ezogabine), a drug that holds M channels open, was approved for epilepsy and later withdrawn because of its side effects.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="bac">Baclofen</button> GIRK channels held open: a firing cell goes quiet.</p>
+      <p><button class="chip" data-try="baccgp">Baclofen, then CGP 55845</button> Block the receptor and baclofen does nothing.</p>
+      <p><button class="chip" data-try="ach0">Atropine</button> Muscarinic receptors blocked: acetylcholine can’t close the M channels.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Brown DA, Adams PR (1980).</b> Muscarinic suppression of a novel voltage-sensitive K⁺ current in a vertebrate neurone. <i>Nature</i> 283:673–676. <a href="https://doi.org/10.1038/283673a0" target="_blank" rel="noopener">doi:10.1038/283673a0</a><br><span class="why">The M current: a slow K⁺ current that acetylcholine shuts through muscarinic receptors.</span></li>
+        <li><b>Bowery NG, Hill DR, Hudson AL, et al. (1980).</b> (−)Baclofen decreases neurotransmitter release in the mammalian CNS by an action at a novel GABA receptor. <i>Nature</i> 283:92–94. <a href="https://doi.org/10.1038/283092a0" target="_blank" rel="noopener">doi:10.1038/283092a0</a><br><span class="why">The GABA<sub>B</sub> receptor: a GABA receptor that bicuculline doesn’t block and baclofen switches on.</span></li>
+        <li><b>Madison DV, Nicoll RA (1982).</b> Noradrenaline blocks accommodation of pyramidal cell discharge in the hippocampus. <i>Nature</i> 299:636–638. <a href="https://doi.org/10.1038/299636a0" target="_blank" rel="noopener">doi:10.1038/299636a0</a><br><span class="why">A modulator that stops a cell slowing down during a long input.</span></li>
+        <li><b>Newberry NR, Nicoll RA (1984).</b> Direct hyperpolarizing action of baclofen on hippocampal pyramidal cells. <i>Nature</i> 308:450–452. <a href="https://doi.org/10.1038/308450a0" target="_blank" rel="noopener">doi:10.1038/308450a0</a><br><span class="why">GABA<sub>B</sub> receptors open K⁺ channels and hyperpolarize the cell.</span></li>
+        <li><b>Gilman AG (1987).</b> G proteins: transducers of receptor-generated signals. <i>Annual Review of Biochemistry</i> 56:615–649. <a href="https://doi.org/10.1146/annurev.bi.56.070187.003151" target="_blank" rel="noopener">doi:10.1146/annurev.bi.56.070187.003151</a><br><span class="why">G proteins as the link between receptors and what they control, and the GDP/GTP switch.</span></li>
+        <li><b>Logothetis DE, Kurachi Y, Galper J, Neer EJ, Clapham DE (1987).</b> The βγ subunits of GTP-binding proteins activate the muscarinic K⁺ channel in heart. <i>Nature</i> 325:321–326. <a href="https://doi.org/10.1038/325321a0" target="_blank" rel="noopener">doi:10.1038/325321a0</a><br><span class="why">βγ, not α, opens the K⁺ channel that acetylcholine opens in the heart: the channel later named GIRK.</span></li>
+        <li><b>Nicoll RA (1988).</b> The coupling of neurotransmitter receptors to ion channels in the brain. <i>Science</i> 241:545–551. <a href="https://doi.org/10.1126/science.2456612" target="_blank" rel="noopener">doi:10.1126/science.2456612</a><br><span class="why">How transmitters acting through G proteins open and close channels in central neurons: slow IPSPs and modulation of firing.</span></li>
+        <li><b>Otis TS, De Koninck Y, Mody I (1993).</b> Characterization of synaptically elicited GABA<sub>B</sub> responses using patch-clamp recordings in rat hippocampal slices. <i>Journal of Physiology</i> 463:391–407. <a href="https://doi.org/10.1113/jphysiol.1993.sp019600" target="_blank" rel="noopener">doi:10.1113/jphysiol.1993.sp019600</a><br><span class="why">The time course of the slow GABA<sub>B</sub> current: its delay, slow rise and long decay.</span></li>
+        <li><b>Destexhe A, Sejnowski TJ (1995).</b> G protein activation kinetics and spillover of γ-aminobutyric acid may account for differences between inhibitory responses in the hippocampus and thalamus. <i>Proceedings of the National Academy of Sciences USA</i> 92:9515–9519. <a href="https://doi.org/10.1073/pnas.92.21.9515" target="_blank" rel="noopener">doi:10.1073/pnas.92.21.9515</a><br><span class="why">Why GABA<sub>B</sub> responses need a burst: the four-βγ step, G⁴ / (G⁴ + 100), used in this simulation.</span></li>
+        <li><b>Lüscher C, Jan LY, Stoffel M, Malenka RC, Nicoll RA (1997).</b> G protein-coupled inwardly rectifying K⁺ channels (GIRKs) mediate postsynaptic but not presynaptic transmitter actions in hippocampal neurons. <i>Neuron</i> 19:687–695. <a href="https://doi.org/10.1016/S0896-6273(00)80381-5" target="_blank" rel="noopener">doi:10.1016/S0896-6273(00)80381-5</a><br><span class="why">In mice without GIRK channels the slow IPSP is gone: GIRK carries it.</span></li>
+        <li><b>Singh NA, Charlier C, Stauffer D, et al. (1998).</b> A novel potassium channel gene, KCNQ2, is mutated in an inherited epilepsy of newborns. <i>Nature Genetics</i> 18:25–29. <a href="https://doi.org/10.1038/ng0198-25" target="_blank" rel="noopener">doi:10.1038/ng0198-25</a><br><span class="why">Too little M current causes seizures.</span></li>
+        <li><b>Wang HS, Pan Z, Shi W, Brown BS, Wymore RS, Cohen IS, Dixon JE, McKinnon D (1998).</b> KCNQ2 and KCNQ3 potassium channel subunits: molecular correlates of the M-channel. <i>Science</i> 282:1890–1893. <a href="https://doi.org/10.1126/science.282.5395.1890" target="_blank" rel="noopener">doi:10.1126/science.282.5395.1890</a><br><span class="why">The M channel is made of KCNQ2 and KCNQ3 subunits.</span></li>
+        <li><b>Scanziani M (2000).</b> GABA spillover activates postsynaptic GABA<sub>B</sub> receptors to control rhythmic hippocampal activity. <i>Neuron</i> 25:673–681. <a href="https://doi.org/10.1016/S0896-6273(00)81069-7" target="_blank" rel="noopener">doi:10.1016/S0896-6273(00)81069-7</a><br><span class="why">GABA<sub>B</sub> receptors are reached when GABA spills out of synapses, during strong, synchronous release.</span></li>
+        <li><b>Suh BC, Hille B (2002).</b> Recovery from muscarinic modulation of M current channels requires phosphatidylinositol 4,5-bisphosphate synthesis. <i>Neuron</i> 35:507–520. <a href="https://doi.org/10.1016/S0896-6273(02)00790-0" target="_blank" rel="noopener">doi:10.1016/S0896-6273(02)00790-0</a><br><span class="why">M channels come back only when PIP<sub>2</sub> is made again: losing PIP<sub>2</sub> is how acetylcholine shuts them.</span></li>
+        <li><b>Zhang H, Craciun LC, Mirshahi T, et al. (2003).</b> PIP<sub>2</sub> activates KCNQ channels, and its hydrolysis underlies receptor-mediated inhibition of M currents. <i>Neuron</i> 37:963–975. <a href="https://doi.org/10.1016/S0896-6273(03)00125-9" target="_blank" rel="noopener">doi:10.1016/S0896-6273(03)00125-9</a><br><span class="why">M channels need PIP<sub>2</sub> to open, and PLC cutting it up closes them.</span></li>
+        <li><b>Pospischil M, Toledo-Rodriguez M, Monier C, et al. (2008).</b> Minimal Hodgkin–Huxley type models for different classes of cortical and thalamic neurons. <i>Biological Cybernetics</i> 99:427–441. <a href="https://doi.org/10.1007/s00422-008-0263-8" target="_blank" rel="noopener">doi:10.1007/s00422-008-0263-8</a><br><span class="why">The pyramidal-cell model used in both simulations: Na⁺ and K⁺ channels and a slow M current.</span></li>
+        <li><b>Whorton MR, MacKinnon R (2013).</b> X-ray structure of the mammalian GIRK2–βγ G-protein complex. <i>Nature</i> 498:190–197. <a href="https://doi.org/10.1038/nature12241" target="_blank" rel="noopener">doi:10.1038/nature12241</a><br><span class="why">The GIRK channel with four βγ bound, one on each subunit.</span></li>
+        <li><b>Hauser AS, Attwood MM, Rask-Andersen M, Schiöth HB, Gloriam DE (2017).</b> Trends in GPCR drug discovery: new agents, targets and indications. <i>Nature Reviews Drug Discovery</i> 16:829–842. <a href="https://doi.org/10.1038/nrd.2017.178" target="_blank" rel="noopener">doi:10.1038/nrd.2017.178</a><br><span class="why">About a third of approved drugs act on G-protein-coupled receptors.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="calc">
+  <div class="calc-head">
+    <span class="sect-title">Slow IPSP calculator</span>
+  </div>
+  <p class="caption">From active G protein to GIRK channels open, to conductance, to how far the cell’s voltage goes: the chain of Part 1 one number at a time.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh"><i class="dot gb"></i> The G protein</div>
+        <div class="gr"><label for="kG">G</label><input type="range" id="kG" min="0" max="10" step="0.1" value="5"><output id="kGo" for="kG"></output></div>
+        <div class="gr"><label for="kN">βγ to open</label><input type="range" id="kN" min="1" max="4" step="1" value="4"><output id="kNo" for="kN"></output></div>
+        <span class="caption">G in units of one spike’s worth at its peak; half the channels are open at G = 3.2</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot k"></i> The GIRK channels</div>
+        <div class="gr"><label for="kGmax">g<sub>max</sub></label><input type="range" id="kGmax" min="0" max="0.5" step="0.01" value="0.2"><output id="kGmaxo" for="kGmax"></output></div>
+        <div class="gr"><label for="kEK">E<sub>K</sub></label><input type="range" id="kEK" min="-110" max="-60" step="1" value="-90"><output id="kEKo" for="kEK"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">The cell at rest</div>
+        <div class="gr"><label for="kGr">g<sub>rest</sub></label><input type="range" id="kGr" min="0.02" max="0.5" step="0.01" value="0.1"><output id="kGro" for="kGr"></output></div>
+        <div class="gr"><label for="kEr">E<sub>rest</sub></label><input type="range" id="kEr" min="-80" max="-50" step="1" value="-70"><output id="kEro" for="kEr"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kV">—</span><span class="caption">the voltage with these GIRK channels open, held long enough to settle</span></div>
+      <div class="es"><span>GIRK open <b id="kP">—</b></span><span>g<sub>GIRK</sub> <b id="kgo">—</b></span><span>IPSP <b id="kdV">—</b></span><span>current at rest <b id="kI">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <canvas id="cK" class="sq" aria-label="Fraction of GIRK channels open against active G protein, for the number of beta-gamma needed and for one"></canvas>
+      <p class="caption">Solid: the fraction open with the number of βγ you set. Dashed: if one βγ were enough. The dot is G now; the dotted lines mark one spike’s and five spikes’ worth.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+<script>
+// ---------- shared: colours, number formats, charts, the cell model ----------
+const $ = id => document.getElementById(id);
+let C = {};
+const redrawHooks = [];          // each simulation's "draw again" (after a resize, a theme change, a tab shown)
+const redrawAll = () => redrawHooks.forEach(f => f());
+// frames.js calls readColors() after the browser throws a canvas's drawing away
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','nt','gtp','gb','pos','cyto','bath','mem','memdark'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  redrawAll();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+addEventListener('resize', redrawAll);
+if (document.fonts) document.fonts.ready.then(redrawAll);
+readColors();
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+const MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace', SANS = '"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif';
+// a number with a real minus sign, d decimals
+const fmt = (v, d = 1) => isFinite(v) ? (+v.toFixed(d)).toFixed(d).replace('-', '−') : '—';
+const fmtSigned = (v, d = 1) => isFinite(v) ? (+v.toFixed(d) > 0 ? '+' : '') + fmt(v, d) : '—';
+function bindRange(id, show, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = show(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// the simulations' speed: slider 0–100 → 10–1000 ms of the cell's time per second
+const speedOf = v => 10 * Math.pow(100, v / 100);
+const fmtSpeed = v => (v < 100 ? v.toFixed(0) : (Math.round(v / 10) * 10).toFixed(0)) + ' ms per s';
+// a picture canvas: a fixed logical size, scaled to the page's width by CSS
+function setupCanvas(cv, w, h) { const d = Math.min(window.devicePixelRatio || 1, 2); cv.width = w * d; cv.height = h * d; const c = cv.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); return c; }
+
+// Canvas text with real subscripts: "E_K" and "GABA_{A}" draw K and A lowered and smaller.
+function fillSub(g, text, x, y, align) {
+  text = String(text); const a = align || g.textAlign;
+  if (!text.includes('_')) { const s = g.textAlign; g.textAlign = a; g.fillText(text, x, y); g.textAlign = s; return; }
+  const parts = text.split(/_(\{[^}]*\}|[A-Za-z0-9∞]+)/);   // even: normal text, odd: subscript
+  const font = g.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]), sub = font.replace(/([\d.]+)px/, (size * 0.74).toFixed(1) + 'px');
+  const ws = parts.map((p, i) => { g.font = i % 2 ? sub : font; return g.measureText(p.replace(/[{}]/g, '')).width; });
+  const total = ws.reduce((s, w) => s + w, 0);
+  let px = a === 'center' ? x - total / 2 : (a === 'right' || a === 'end') ? x - total : x;
+  const save = g.textAlign; g.textAlign = 'left';
+  parts.forEach((p, i) => { g.font = i % 2 ? sub : font; g.fillText(p.replace(/[{}]/g, ''), px, y + (i % 2 ? size * 0.3 : 0)); px += ws[i]; });
+  g.font = font; g.textAlign = save;
+}
+function niceTicks(a, b, n) {
+  const span = Math.abs(b - a) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag, out = [];
+  for (let v = Math.ceil(Math.min(a, b) / step - 1e-9) * step; v <= Math.max(a, b) + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+const niceUp = v => { if (!(v > 0)) return 1; const m = Math.pow(10, Math.floor(Math.log10(v))); return [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].map(k => k * m).find(s => s >= v * 0.999); };
+
+/* One chart, drawn now, sized to its canvas's width. s: { h | square, x:[a,b], y:[lo,hi], xlab, ylab,
+   lines:[{x, y, n (points to draw), color, w, dash, alpha}], hlines:[{y, color, label}], vlines:[{x, label}],
+   dots:[{x, y, color, r}], cursor: x, note: text in the middle (an empty chart) }. Colours are C's names or CSS colours. */
+function plot(cv, s) {
+  const W = cv.clientWidth; if (!W) return null;
+  const col = c => C[c] || c || C.ink;
+  const L = 52, R = 14, T = 18, B = s.xlab ? 38 : 24;
+  const H = s.square ? Math.round(W - L - R + T + B) : s.h;
+  const d = Math.min(window.devicePixelRatio || 1, 2);
+  if (cv.width !== Math.round(W * d) || cv.height !== Math.round(H * d)) { cv.width = Math.round(W * d); cv.height = Math.round(H * d); cv.style.height = H + 'px'; }
+  const g = cv.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0);
+  g.fillStyle = C.surface; g.fillRect(0, 0, W, H);
+  const [x0, x1] = s.x, [y0, y1] = s.y, pw = W - L - R, ph = H - T - B;
+  const X = v => L + (v - x0) / (x1 - x0) * pw, Y = v => T + (y1 - v) / (y1 - y0) * ph;
+  g.font = '11px ' + MONO; g.lineWidth = 1;
+  g.strokeStyle = C.line; g.fillStyle = C.muted; g.textAlign = 'center'; g.textBaseline = 'top';
+  for (const v of niceTicks(x0, x1, Math.max(3, Math.round(pw / 90)))) { const x = Math.round(X(v)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + ph); g.stroke(); g.fillText(fmt(v, v % 1 ? 1 : 0), x, T + ph + 5); }
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (const v of niceTicks(y0, y1, Math.max(3, Math.round(ph / 42)))) { const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(L + pw, y); g.stroke(); g.fillText(fmt(v, Math.abs(v) < 1 && v ? 2 : v % 1 ? 1 : 0), L - 6, y); }
+  g.strokeStyle = C.muted; g.beginPath(); g.moveTo(L, T + ph + .5); g.lineTo(L + pw, T + ph + .5); g.moveTo(L - .5, T); g.lineTo(L - .5, T + ph); g.stroke();
+  g.font = '12px ' + SANS; g.fillStyle = C.muted;
+  if (s.xlab) { g.textBaseline = 'bottom'; fillSub(g, s.xlab, L + pw, H - 2, 'right'); }
+  if (s.ylab) { g.textBaseline = 'top'; fillSub(g, s.ylab, 4, 1, 'left'); }
+  g.save(); g.beginPath(); g.rect(L, T - 2, pw, ph + 4); g.clip();
+  for (const h of s.hlines || []) {
+    g.strokeStyle = col(h.color); g.setLineDash([5, 4]); const y = Math.round(Y(h.y)) + .5;
+    g.beginPath(); g.moveTo(L, y); g.lineTo(L + pw, y); g.stroke(); g.setLineDash([]);
+    if (h.label) { g.fillStyle = col(h.color); g.font = '600 11.5px ' + SANS; g.textBaseline = 'bottom'; fillSub(g, h.label, L + pw - 4, y - 2, 'right'); }
+  }
+  (s.vlines || []).forEach((v, i) => {
+    g.strokeStyle = col(v.color || 'muted'); g.setLineDash([2, 3]); const x = Math.round(X(v.x)) + .5;
+    g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + ph); g.stroke(); g.setLineDash([]);
+    if (v.label) { g.fillStyle = col(v.color || 'muted'); g.font = '11.5px ' + SANS; g.textBaseline = 'top'; fillSub(g, v.label, x + 4, T + 2 + 14 * (v.row ?? 0), 'left'); }
+  });
+  for (const l of s.lines || []) {
+    const n = Math.min(l.n ?? l.y.length, l.y.length); if (n < 2) continue;
+    g.strokeStyle = col(l.color); g.lineWidth = l.w || 1.6; g.lineJoin = 'round'; g.globalAlpha = l.alpha ?? 1;
+    g.setLineDash(l.dash ? [6, 4] : []);
+    const step = Math.max(1, Math.floor(n / (pw * 2)));   // at most two points per pixel
+    g.beginPath();
+    for (let i = 0; i < n; i += step) { const xv = l.x[i], yv = Math.max(y0 - (y1 - y0), Math.min(y1 + (y1 - y0), l.y[i])); i ? g.lineTo(X(xv), Y(yv)) : g.moveTo(X(xv), Y(yv)); }
+    if ((n - 1) % step) g.lineTo(X(l.x[n - 1]), Y(l.y[n - 1]));
+    g.stroke(); g.globalAlpha = 1; g.setLineDash([]);
+  }
+  for (const p of s.dots || []) {
+    g.fillStyle = C.surface; g.beginPath(); g.arc(X(p.x), Y(p.y), (p.r || 3.5) + 1.5, 0, 7); g.fill();
+    g.fillStyle = col(p.color); g.beginPath(); g.arc(X(p.x), Y(p.y), p.r || 3.5, 0, 7); g.fill();
+  }
+  if (s.cursor !== undefined && s.cursor < x1) { g.strokeStyle = C.accent; g.globalAlpha = .5; g.lineWidth = 1; const x = Math.round(X(s.cursor)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + ph); g.stroke(); g.globalAlpha = 1; }
+  g.restore();
+  if (s.note) { g.fillStyle = C.muted; g.font = '13px ' + SANS; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s.note, L + pw / 2, T + ph / 2); }
+  return { X, Y };
+}
+
+/* ---------- a cortical pyramidal cell, one compartment ----------
+   Na⁺ and K⁺ channels with Traub and Miles' kinetics and a slow K⁺ "M" current, in the form Pospischil et al.
+   (2008) used for regular-spiking cortical cells. Units: mV, ms, µF/cm², mS/cm², µA/cm².
+   o: { T (ms), I(t) injected current, gM, syn: [{ g: conductance at every step (Float64Array), E }] }.
+   Returns V and the M gates' open fraction every EVERY steps (0.1 ms), and the spike times. */
+const DT = 0.025, EVERY = 4, TS = DT * EVERY;
+const CELL = { gL: 0.1, EL: -70, gNa: 50, gK: 5, VT: -55, ENa: 50, EK: -90, tauM: 1000 };
+const vtrap = (x, k) => Math.abs(x / k) < 1e-6 ? k * (1 - x / k / 2) : x / (Math.exp(x / k) - 1);
+function neuron(o) {
+  const p = Object.assign({}, CELL, o), n = Math.round(p.T / DT), keep = Math.floor(n / EVERY) + 1, syn = p.syn || [];
+  const V = new Float32Array(keep), M = new Float32Array(keep), spikes = [];
+  let v = p.EL, u = v - p.VT;
+  const am0 = 0.32 * vtrap(13 - u, 4), bm0 = 0.28 * vtrap(u - 40, 5), ah0 = 0.128 * Math.exp(-(u - 17) / 18), bh0 = 4 / (1 + Math.exp(-(u - 40) / 5));
+  const an0 = 0.032 * vtrap(15 - u, 5), bn0 = 0.5 * Math.exp(-(u - 10) / 40);
+  let m = am0 / (am0 + bm0), h = ah0 / (ah0 + bh0), nn = an0 / (an0 + bn0), pm = 1 / (1 + Math.exp(-(v + 35) / 10)), k = 0, above = false;
+  for (let i = 0; i <= n; i++) {
+    const t = i * DT;
+    if (i % EVERY === 0) { V[k] = v; M[k] = pm; k++; }
+    u = v - p.VT;
+    const am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5);
+    const ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5));
+    const an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+    const pinf = 1 / (1 + Math.exp(-(v + 35) / 10)), taup = p.tauM / (3.3 * Math.exp((v + 35) / 20) + Math.exp(-(v + 35) / 20));
+    m += (1 - Math.exp(-DT * (am + bm))) * (am / (am + bm) - m);
+    h += (1 - Math.exp(-DT * (ah + bh))) * (ah / (ah + bh) - h);
+    nn += (1 - Math.exp(-DT * (an + bn))) * (an / (an + bn) - nn);
+    pm += (1 - Math.exp(-DT / taup)) * (pinf - pm);
+    let ix = 0; for (const s of syn) ix += s.g[i] * (v - s.E);
+    const iion = p.gNa * m * m * m * h * (v - p.ENa) + p.gK * nn * nn * nn * nn * (v - p.EK) + p.gM * pm * (v - p.EK) + p.gL * (v - p.EL);
+    v += DT * (p.I(t) - iion - ix);
+    if (!above && v > 0) { above = true; spikes.push(t); }
+    if (above && v < -20) above = false;
+  }
+  return { V, M, spikes, n: keep };
+}
+// a double exponential rising with tr and falling with td (ms), peak 1, starting at t0
+function alpha2(t, t0, tr, td) {
+  const d = t - t0; if (d <= 0) return 0;
+  const tp = tr * td / (td - tr) * Math.log(td / tr);
+  return (Math.exp(-d / td) - Math.exp(-d / tr)) / (Math.exp(-tp / td) - Math.exp(-tp / tr));
+}
+const timeAxis = n => { const t = new Float32Array(n); for (let i = 0; i < n; i++) t[i] = i * TS; return t; };
+// draw only while the card is on screen (and its picture tab shown); mark it to draw when it comes back
+function watchVisible(el, onShow) { let vis = true; new IntersectionObserver(es => { vis = es[es.length - 1].isIntersecting; if (vis) onShow(); }).observe(el); return () => vis; }
+// a rounded rectangle path
+function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, r) : g.rect(x, y, w, h); }
+function ellipse(g, x, y, rx, ry) { g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); }
+</script>
+<script>
+// =====================================================================================
+// Part 1: GABA_A and GABA_B onto one cell.
+// GABA_A: each presynaptic spike opens Cl⁻ channels, a double exponential (0.5 ms up, 8 ms down), E_Cl −75 mV.
+// GABA_B: each spike switches on G protein G, a double exponential starting 10 ms later (40 ms up, 200 ms down),
+// 1 at its peak. A GIRK channel needs four βγ, so the GIRK conductance is g_B · G⁴ / (G⁴ + 100)
+// (Destexhe & Sejnowski 1995), E_K −90 mV. Baclofen adds a steady G = 3; CGP 55845 sets all G to 0.
+// The whole run is worked out at once (when anything changes), then revealed at the chosen speed.
+// =====================================================================================
+(() => {
+  const T1 = 900, BURST = 250, E_CL = -75, E_K = -90, KD = 100, GBAC = 3, NS = Math.round(T1 / DT) + 1, NK = (NS - 1) / EVERY + 1;
+  const HOLD = { rest: 1.6, firing: 2.6 };   // threshold for steady firing is about 1.75 µA/cm²
+  const tAx = timeAxis(NK);
+  const kerA = new Float64Array(NS), kerG = new Float64Array(NS);
+  for (let i = 0; i < NS; i++) { kerA[i] = alpha2(i * DT, 0, 0.5, 8); kerG[i] = alpha2(i * DT, 10, 40, 200); }
+  const P = { mode: 'rest', gA: 0.4, gB: 0.2, n: 5, bic: false, cgp: false, bac: false, speed: speedOf(45) };
+  let R = null, ghost = null, tc = T1, playing = false, need = true, dirty = true, phase = 0;
+
+  // ---------- the picture's βγ: n(t) = min(12, round(2G)) of them are off their α at any moment ----------
+  // Twelve G proteins, each with a GIRK docking site of its own (three channels × four sites). The newest to switch on
+  // is the first to switch off, so G protein k is on whenever n > k: its βγ slides to site k, and back when it ends.
+  const NG = 12, TR = 15;   // ms for βγ to slide between its α and the channel
+  function onIntervals(Gs) {
+    const out = Array.from({ length: NG }, () => []), from = new Array(NG).fill(-1);
+    for (let j = 0; j < Gs.length; j++) {
+      const n = Math.min(NG, Math.round(2 * Gs[j])), t = j * TS;
+      for (let k = 0; k < NG; k++) {
+        if (k < n && from[k] < 0) from[k] = t;
+        else if (k >= n && from[k] >= 0) { out[k].push([from[k], t]); from[k] = -1; }
+      }
+    }
+    from.forEach((f, k) => { if (f >= 0) out[k].push([f, Infinity]); });
+    return out;
+  }
+
+  function compute() {
+    const gA = new Float64Array(NS), G = new Float64Array(NS), gB = new Float64Array(NS);
+    const pre = Array.from({ length: P.n }, (_, k) => BURST + 10 * k);
+    for (const s of pre) { const o = Math.round(s / DT); for (let i = o; i < NS; i++) { gA[i] += kerA[i - o]; G[i] += kerG[i - o]; } }
+    const A = new Float32Array(NK), Gs = new Float32Array(NK), gAs = new Float32Array(NK), gBs = new Float32Array(NK), fs = new Float32Array(NK);
+    const sA = P.bic ? 0 : P.gA;
+    for (let i = 0; i < NS; i++) {
+      const Gi = P.cgp ? 0 : G[i] + (P.bac ? GBAC : 0), G4 = Gi * Gi * Gi * Gi, f = G4 / (G4 + KD);
+      const raw = gA[i]; gA[i] = sA * raw; gB[i] = P.gB * f;
+      if (i % EVERY === 0) { const k = i / EVERY; A[k] = raw; Gs[k] = Gi; fs[k] = f; gAs[k] = gA[i]; gBs[k] = gB[i]; }
+    }
+    const hold = HOLD[P.mode];
+    const r = neuron({ T: T1, gM: 0, I: () => hold, syn: [{ g: gA, E: E_CL }, { g: gB, E: E_K }] });
+    // what the run measured: the deepest point after the burst; the usual interval and the longest pause
+    let vmin = Infinity, tmin = NaN;
+    for (let k = Math.round(BURST / TS); k < NK; k++) if (r.V[k] < vmin) { vmin = r.V[k]; tmin = k * TS; }
+    const sp = r.spikes, before = sp.filter(t => t < BURST);
+    const isi = before.length > 2 ? (before[before.length - 1] - before[1]) / (before.length - 2) : NaN;
+    const ends = [...sp, T1]; let gap = 0, toEnd = false;
+    for (let i = 0; i + 1 < ends.length; i++) if (ends[i + 1] > BURST && ends[i + 1] - ends[i] > gap) { gap = ends[i + 1] - ends[i]; toEnd = i + 1 === ends.length - 1; }
+    let gmax = 0, Gmax = 0; for (let k = 0; k < NK; k++) { gmax = Math.max(gmax, gAs[k], gBs[k]); Gmax = Math.max(Gmax, Gs[k]); }
+    return { V: r.V, A, G: Gs, f: fs, gA: gAs, gB: gBs, pre, spikes: sp, on: onIntervals(Gs), vmin, tmin, isi, gap, toEnd, gmax, Gmax,
+             mode: P.mode, fired: sp.length > 0 };
+  }
+  function recompute() { R = compute(); need = false; dirty = true; }
+
+  // ---------- the picture ----------
+  const PW = 960, PH = 330, MT = 150, MB = 176, XA = 175, XB = 320, GIRKX = [640, 750, 860], SLOTDX = [-27, -9, 9, 27], SLOTY = MB + 24;
+  const homes = Array.from({ length: NG }, (_, k) => ({ x: 392 + (k % 6) * 34, y: MB + 26 + Math.floor(k / 6) * 34 }));
+  const slotOf = k => ({ x: GIRKX[Math.floor(k / 4)] + SLOTDX[k % 4], y: SLOTY });
+  const pic = setupCanvas($('pic1'), PW, PH);
+  const ease = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
+  // G protein k at time t: on (α holds GTP)? how far its βγ is toward the channel (0 at α, 1 docked)? switched on just now?
+  function gstate(k, t) {
+    for (const [b, e] of R.on[k]) {
+      if (t < b) break;
+      if (t < e) return { on: true, u: ease((t - b) / TR), fresh: t - b < 8 };
+      if (t < e + TR) { const at = ease((e - b) / TR); return { on: false, u: at * (1 - ease((t - e) / TR)) }; }
+    }
+    return { on: false, u: 0 };
+  }
+  function stream(x, yFrom, yTo, n, color, speed) {   // ions passing through an open pore
+    pic.fillStyle = color;
+    for (let i = 0; i < n; i++) { const f = ((phase * speed + i / n) % 1 + 1) % 1; pic.beginPath(); pic.arc(x, yFrom + (yTo - yFrom) * f, 3.6, 0, 7); pic.fill(); }
+  }
+  function halves(x, top, bot, gap, color, w) {
+    pic.fillStyle = color;
+    rr(pic, x - gap / 2 - w, top, w, bot - top, 6); pic.fill();
+    rr(pic, x + gap / 2, top, w, bot - top, 6); pic.fill();
+  }
+  function drawBG(x, y) { pic.fillStyle = C.gb; pic.beginPath(); pic.arc(x, y, 6.5, 0, 7); pic.fill(); pic.fillStyle = mixc(C.gb, C.surface, .55); pic.beginPath(); pic.arc(x + 6, y - 5, 3.8, 0, 7); pic.fill(); }
+  function drawPicture(j) {
+    const g = pic, t = j * TS;
+    g.clearRect(0, 0, PW, PH);
+    g.fillStyle = C.bath; g.fillRect(0, 0, PW, MT);
+    g.fillStyle = C.cyto; g.fillRect(0, MB, PW, PH - MB);
+    g.fillStyle = C.mem; g.fillRect(0, MT, PW, MB - MT);
+    g.strokeStyle = C.memdark; g.lineWidth = 1; g.beginPath(); g.moveTo(0, MT + .5); g.lineTo(PW, MT + .5); g.moveTo(0, MB - .5); g.lineTo(PW, MB - .5); g.stroke();
+    // the presynaptic terminal, red for a moment at each spike
+    const ago = R.pre.reduce((a, s) => t >= s ? Math.min(a, t - s) : a, Infinity);
+    g.fillStyle = ago < 4 ? mixc(C.pos, C.cyto, .4) : C.cyto; g.strokeStyle = C.memdark; g.lineWidth = 2;
+    rr(g, 60, -40, 330, 112, 40); g.fill(); g.stroke();
+    for (let i = 0; i < 7; i++) { g.fillStyle = mixc(C.nt, C.surface, .3); g.strokeStyle = C.memdark; g.lineWidth = 1; g.beginPath(); g.arc(112 + i * 37, 44, 11, 0, 7); g.fill(); g.stroke(); }
+    g.font = '12px ' + SANS; g.fillStyle = C.muted; g.textBaseline = 'middle';
+    fillSub(g, 'Pre: the inhibitory cell’s axon terminal', 225, 14, 'center');
+    g.textAlign = 'right'; g.fillText('outside', PW - 10, MT - 12); g.fillText('inside', PW - 10, MB + 14); g.textAlign = 'left';
+    // GABA released by each spike in the last 30 ms, spreading out across the cleft
+    for (const s of R.pre) {
+      const d = t - s; if (d < 0 || d >= 30) continue;
+      g.globalAlpha = d < 12 ? 1 : 1 - (d - 12) / 18; g.fillStyle = C.nt;
+      for (let i = 0; i < 10; i++) {
+        const dx = -70 + i * 22 + ((i * 37) % 11 - 5), y = 74 + 62 * (1 - Math.exp(-d / 1.6)) * (0.8 + 0.2 * ((i * 53) % 7) / 6);
+        g.beginPath(); g.arc(205 + dx * Math.min(1, 0.25 + d / 6), Math.min(MT - 10, y), 3.4, 0, 7); g.fill();
+      }
+      g.globalAlpha = 1;
+    }
+    // GABA_A receptor: a Cl⁻ channel, open while GABA is bound
+    const openA = P.bic ? 0 : Math.min(1, R.A[j] * 1.4);
+    halves(XA, MT - 16, MB + 12, 2 + 10 * openA, openA > 0.2 ? C.cl : mixc(C.cl, C.surface, .45), 15);
+    if (P.bic) { g.fillStyle = C.muted; g.fillRect(XA - 5, MT - 27, 10, 10); }
+    else if (R.A[j] > 0.12) { g.fillStyle = C.nt; g.beginPath(); g.arc(XA, MT - 22, 4.5, 0, 7); g.fill(); }
+    if (openA > 0.2) stream(XA, MT - 34, MB + 36, 1 + Math.round(2 * openA), C.cl, 1.1);
+    // GABA_B receptor: seven helices and no pore; its outer lobes close on GABA (or baclofen)
+    const sinceB = R.pre.reduce((a, s) => t >= s ? Math.min(a, t - s) : a, Infinity);
+    const ligand = P.cgp ? 'cgp' : P.bac ? 'bac' : sinceB < 40 ? 'gaba' : null, closed = ligand && ligand !== 'cgp';
+    g.fillStyle = mixc(C.ink, C.surface, .28); rr(g, XB - 25, MT - 8, 50, MB - MT + 18, 9); g.fill();
+    g.strokeStyle = mixc(C.ink, C.surface, .5); g.lineWidth = 2;
+    for (let i = 0; i < 7; i++) { const x = XB - 18 + i * 6; g.beginPath(); g.moveTo(x, MT - 3); g.lineTo(x, MB + 6); g.stroke(); }
+    g.fillStyle = mixc(C.ink, C.surface, .28);
+    for (const sd of [-1, 1]) { g.save(); g.translate(XB + sd * 9, MT - 18); g.rotate(sd * (closed ? 0.15 : 0.6)); ellipse(g, 0, -4, 8, 13); g.fill(); g.restore(); }
+    if (ligand) { g.fillStyle = ligand === 'gaba' ? C.nt : ligand === 'bac' ? C.na : C.muted; if (ligand === 'cgp') g.fillRect(XB - 5, MT - 30, 10, 10); else { g.beginPath(); g.arc(XB, MT - 24, 4.5, 0, 7); g.fill(); } }
+    // GIRK channels' docking sites, then the G proteins (α stays put, βγ travels)
+    const st = Array.from({ length: NG }, (_, k) => gstate(k, t));
+    const docked = GIRKX.map((_, c) => st.slice(4 * c, 4 * c + 4).filter(s => s.on && s.u >= 1).length);
+    GIRKX.forEach((x, c) => {
+      const open = docked[c] === 4;
+      halves(x, MT - 14, MB + 12, open ? 11 : 2, open ? C.k : mixc(C.k, C.surface, .45), 15);
+      g.strokeStyle = mixc(C.gb, C.surface, .5); g.lineWidth = 1.2; g.setLineDash([2, 2]);
+      for (const dx of SLOTDX) { g.beginPath(); g.arc(x + dx, SLOTY, 6.5, 0, 7); g.stroke(); }
+      g.setLineDash([]);
+      g.font = '11.5px ' + SANS; g.fillStyle = open ? C.k : C.muted; g.textAlign = 'center';
+      g.fillText(`${docked[c]} of 4 βγ`, x, SLOTY + 22);
+      if (open) stream(x, MB + 30, MT - 36, 3, C.k, 0.9);
+    });
+    for (let k = 0; k < NG; k++) {
+      const h = homes[k], s = st[k], to = slotOf(k);
+      if (s.fresh) { g.strokeStyle = C.gtp; g.globalAlpha = .55; g.lineWidth = 1.5; g.beginPath(); g.moveTo(XB, MB + 8); g.lineTo(h.x - 7, h.y); g.stroke(); g.globalAlpha = 1; }
+      g.fillStyle = s.on ? C.gtp : mixc(C.muted, C.surface, .45); ellipse(g, h.x - 7, h.y, 8.5, 6); g.fill();
+      const bx = h.x + 8 + (to.x - h.x - 8) * s.u, by = h.y + (to.y - h.y) * s.u;
+      drawBG(bx, by);
+    }
+    // names along the bottom
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    const name = (x, a, b) => { g.font = '600 12px ' + SANS; g.fillStyle = C.ink; fillSub(g, a, x, PH - 34, 'center'); g.font = '11.5px ' + SANS; g.fillStyle = C.muted; fillSub(g, b, x, PH - 16, 'center'); };
+    name(XA - 20, 'GABA_A receptor', 'a Cl⁻ channel: fast');
+    name(XB - 10, 'GABA_B receptor', 'no pore: starts the chain');
+    name(487, 'G proteins', 'α (gold when on) and βγ');
+    name(750, 'GIRK K⁺ channels', 'open with four βγ bound');
+    g.textAlign = 'left';
+    return { docked, st };
+  }
+
+  // ---------- charts and readouts ----------
+  const steps = [...$('chain').children];
+  function draw() {
+    const j = Math.min(NK - 1, Math.max(0, Math.round(tc / TS))), t = j * TS, n = j + 1;
+    const pv = drawPicture(j);
+    plot($('cV'), { h: 250, x: [0, T1], y: [-100, 50], ylab: 'V (mV)', xlab: 'time (ms)', cursor: tc < T1 ? t : undefined,
+      hlines: [{ y: E_CL, color: 'cl', label: 'E_Cl' }, { y: E_K, color: 'k', label: 'E_K' }], vlines: [{ x: BURST, label: 'burst' }],
+      lines: [ghost ? { x: tAx, y: ghost.V, color: 'muted', w: 1.2, alpha: .45 } : null, { x: tAx, y: R.V, n, color: 'accent', w: 1.5 }].filter(Boolean) });
+    plot($('cG'), { h: 160, x: [0, T1], y: [0, niceUp(Math.max(0.05, R.gmax * 1.08))], ylab: 'g (mS/cm²)', xlab: 'time (ms)', cursor: tc < T1 ? t : undefined,
+      lines: [{ x: tAx, y: R.gA, n, color: 'cl', w: 1.6 }, { x: tAx, y: R.gB, n, color: 'k', w: 1.8 }] });
+    const gx = Math.max(6, Math.ceil(R.Gmax + 0.5)), curveX = [], curveY = [];
+    for (let i = 0; i <= 200; i++) { const G = gx * i / 200, G4 = G ** 4; curveX.push(G); curveY.push(100 * G4 / (G4 + KD)); }
+    const pathY = R.f.map(v => 100 * v);
+    plot($('cH'), { square: true, x: [0, gx], y: [0, 100], xlab: 'active G protein, G', ylab: 'GIRK open (%)',
+      vlines: [{ x: 1, label: '1 spike' }],
+      lines: [{ x: curveX, y: curveY, color: 'muted', w: 1.2 }, { x: R.G, y: pathY, n, color: 'k', w: 3 }],
+      dots: [{ x: R.G[j], y: pathY[j], color: 'k', r: 4.5 }] });
+    // readouts
+    $('p1Vnum').textContent = fmt(R.V[j], 1) + ' mV';
+    $('p1gA').textContent = fmt(R.gA[j], 3) + ' mS/cm²';
+    $('p1G').textContent = fmt(R.G[j], 2);
+    $('p1f').textContent = fmt(100 * R.f[j], 1) + ' %';
+    const done = tc >= T1;
+    if (R.mode === 'rest') {
+      $('p1m1lab').textContent = 'lowest V after the burst'; $('p1m2lab').textContent = 'reached after the burst';
+      $('p1m1').textContent = done ? fmt(R.vmin, 1) + ' mV' : '…'; $('p1m2').textContent = done ? fmt(R.tmin - BURST, 0) + ' ms' : '…';
+    } else {
+      $('p1m1lab').textContent = 'usual interval between spikes'; $('p1m2lab').textContent = 'longest pause after the burst';
+      $('p1m1').textContent = isFinite(R.isi) ? fmt(R.isi, 0) + ' ms' : R.fired ? '—' : 'no spikes';
+      $('p1m2').textContent = !done ? '…' : R.fired ? fmt(R.gap, 0) + ' ms' + (R.toEnd ? ' (to the end)' : '') : 'silent the whole run';
+    }
+    // the chain's steps happening now
+    const dG = R.G[j] - R.G[Math.max(0, j - 20)];
+    const lit = [
+      R.pre.some(s => t >= s && t - s < 6),
+      !P.bic && R.A[j] > 0.1,
+      pv.st.some(s => s.fresh) || (dG > 0.004 && R.G[j] > 0.05),
+      pv.st.some(s => s.u > 0 && s.u < 1),
+      pv.docked.some(d => d === 4),
+      dG < -0.004 && R.G[j] > 0.05,
+    ];
+    steps.forEach((li, i) => li.classList.toggle('on', lit[i]));
+  }
+  const CAP = {
+    rest: 'The cell is held just below threshold so both IPSPs show. Green: the GABA<sub>A</sub> conductance, a few milliseconds per spike. Purple: the GIRK conductance that GABA<sub>B</sub> receptors open through G proteins, slow to rise and slow to fall.',
+    firing: 'The cell fires steadily. Count how long it stays silent after the burst: GABA<sub>A</sub> alone gives a gap of tens of milliseconds; GABA<sub>B</sub> silences it for hundreds.',
+  };
+  const MODECAP = { rest: 'a steady 1.6 µA/cm² holds V at about −54 mV, just under threshold', firing: 'a steady 2.6 µA/cm²: a spike about every 18 ms' };
+  function setMode(m) { P.mode = m; $('cap1').innerHTML = CAP[m]; $('modeCap').textContent = MODECAP[m]; need = true; }
+
+  // ---------- controls ----------
+  const changed = () => { need = true; };
+  bindRange('gAin', v => fmt(v, 2) + ' mS/cm²', v => { P.gA = v; changed(); });
+  bindRange('gBin', v => fmt(v, 3) + ' mS/cm²', v => { P.gB = v; changed(); });
+  bindRange('nIn', v => v + (v === 1 ? ' spike' : ' at 100 Hz'), v => { P.n = v; changed(); });
+  bindRange('p1Speed', v => fmtSpeed(speedOf(v)), v => P.speed = speedOf(v));
+  for (const id of ['bic', 'cgp', 'bac']) $(id).addEventListener('change', e => { P[id] = e.target.checked; changed(); });
+  const modeBtns = document.querySelectorAll('[data-mode]');
+  modeBtns.forEach(b => b.addEventListener('click', () => { modeBtns.forEach(x => x.setAttribute('aria-pressed', String(x === b))); setMode(b.dataset.mode); }));
+  setMode('rest');
+  $('p1Run').addEventListener('click', () => { if (R) ghost = R; recompute(); tc = 0; if (!playing) $('p1Play').click(); });
+  $('p1Play').addEventListener('click', () => {
+    playing = !playing; $('p1Play').textContent = playing ? 'Pause' : 'Play';
+    if (playing && tc >= T1) tc = 0;
+    dirty = true;
+  });
+  redrawHooks.push(() => { dirty = true; });
+  const visible = watchVisible($('p1-card'), () => { dirty = true; });
+
+  // one frame, `real` seconds after the last; `force` draws even off screen (for checking from the console)
+  function frame(real, force) {
+    if (need) recompute();
+    if (playing) {
+      tc = Math.min(T1, tc + P.speed * real); phase += real; dirty = true;
+      if (tc >= T1) $('p1Play').click();   // the run is over
+    }
+    if (dirty && (force || visible() && !$('pane-p1').hidden)) { draw(); dirty = false; }
+  }
+  let last = performance.now();
+  function loop(now) { const real = Math.min(0.05, (now - last) / 1000); last = now; frame(real); requestAnimationFrame(loop); }
+  Frames.sim(() => playing, 'p1Play');   // frames.js: pauses itself when left alone
+  window.NM1 = { P, get R() { return R; }, get tc() { return tc; }, recompute, frame };   // for checking from the console
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+// =====================================================================================
+// Part 2: the same pyramidal cell twice, now with M channels (g_M 0.1 mS/cm²), given the same 800 ms current step.
+// Acetylcholine, through M1 receptors, G_q, PLC and the loss of PIP₂, leaves only (1 − closed) of the M channels able to open.
+// =====================================================================================
+(() => {
+  const T2 = 1000, ON = 100, OFF = 900, GM0 = 0.1, NK = Math.round(T2 / TS) + 1;
+  const tAx = timeAxis(NK);
+  const P = { ach: 80, I: 4, speed: speedOf(60) };
+  let R = null, tc = T2, playing = false, need = true, dirty = true, phase = 0;
+  let fiA = [], fiB = [], fiAch = null;   // f–I points [I, rate] without and with acetylcholine (at fiAch % closed)
+
+  const run = (I, ach) => {
+    const step = t => (t >= ON && t < OFF ? I : 0);
+    return neuron({ T: T2, gM: GM0 * (1 - ach / 100), I: step });
+  };
+  const inStep = sp => sp.filter(t => t >= ON && t < OFF + 5);
+  const rates = sp => { const s = inStep(sp), out = []; for (let i = 1; i < s.length; i++) out.push([s[i], 1000 / (s[i] - s[i - 1])]); return out; };
+  function compute() {
+    const a = run(P.I, 0), b = run(P.I, P.ach);
+    return { a, b, ra: rates(a.spikes), rb: rates(b.spikes), na: inStep(a.spikes).length, nb: inStep(b.spikes).length, ach: P.ach, I: P.I };
+  }
+  function recompute() { R = compute(); need = false; dirty = true; }
+  function addFI(I, na, nb) {
+    if (fiAch !== P.ach) { fiB = []; fiAch = P.ach; }
+    const put = (arr, v) => { const i = arr.findIndex(p => Math.abs(p[0] - I) < 1e-9); if (i >= 0) arr[i] = [I, v]; else arr.push([I, v]); arr.sort((p, q) => p[0] - q[0]); };
+    put(fiA, na / ((OFF - ON) / 1000)); put(fiB, nb / ((OFF - ON) / 1000));
+  }
+
+  // ---------- the pictures: a patch of each cell's membrane ----------
+  const QW = 480, QH = 150, QT = 52, QB = 76, NCH = 10, chX = i => 170 + i * 31;
+  const ORDER = [3, 7, 1, 9, 5, 0, 8, 2, 6, 4];   // which of the channels that can open, open first
+  const picA = setupCanvas($('picA'), QW, QH), picB = setupCanvas($('picB'), QW, QH);
+  function drawPatch(g, ach, pM) {
+    g.clearRect(0, 0, QW, QH);
+    g.fillStyle = C.bath; g.fillRect(0, 0, QW, QT); g.fillStyle = C.cyto; g.fillRect(0, QB, QW, QH - QB);
+    g.fillStyle = C.mem; g.fillRect(0, QT, QW, QB - QT);
+    g.strokeStyle = C.memdark; g.lineWidth = 1; g.beginPath(); g.moveTo(0, QT + .5); g.lineTo(QW, QT + .5); g.moveTo(0, QB - .5); g.lineTo(QW, QB - .5); g.stroke();
+    const on = ach > 0;
+    // M1 receptor, G_q and PLC
+    g.fillStyle = mixc(C.ink, C.surface, .28); rr(g, 30, QT - 6, 40, QB - QT + 14, 8); g.fill();
+    g.strokeStyle = mixc(C.ink, C.surface, .5); g.lineWidth = 2;
+    for (let i = 0; i < 7; i++) { const x = 36 + i * 4.7; g.beginPath(); g.moveTo(x, QT - 1); g.lineTo(x, QB + 4); g.stroke(); }
+    if (on) { g.fillStyle = C.nt; g.beginPath(); g.arc(50, QT - 13, 4.5, 0, 7); g.fill(); }
+    g.fillStyle = on ? C.gtp : mixc(C.muted, C.surface, .45); ellipse(g, 46, QB + 20, 9, 6); g.fill();
+    g.fillStyle = on ? mixc(C.na, C.surface, .55) : mixc(C.muted, C.surface, .25); rr(g, 74, QB + 10, 40, 20, 6); g.fill();
+    g.font = '600 10.5px ' + SANS; g.fillStyle = on ? C.ink : C.muted; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('PLC', 94, QB + 20.5);
+    g.font = '10.5px ' + SANS; g.fillStyle = C.muted; fillSub(g, 'M_1 + G_q', 50, QB + 44, 'center');
+    // M channels: the first `closed` have lost their PIP₂ to PLC; of the others, a fraction pM is open now
+    const closed = Math.round(NCH * ach / 100), avail = NCH - closed, nOpen = Math.min(avail, Math.round(avail * pM));
+    const openSet = new Set(ORDER.filter(i => i >= closed).slice(0, nOpen));
+    for (let i = 0; i < NCH; i++) {
+      const x = chX(i), shut = i < closed, open = openSet.has(i);
+      g.fillStyle = shut ? mixc(C.muted, C.surface, .4) : open ? C.k : mixc(C.k, C.surface, .45);
+      rr(g, x - (open ? 5.5 : 1) - 9, QT - 8, 9, QB - QT + 16, 4); g.fill();
+      rr(g, x + (open ? 5.5 : 1), QT - 8, 9, QB - QT + 16, 4); g.fill();
+      if (!shut) { g.fillStyle = C.na; g.beginPath(); g.arc(x - 7, QB + 11, 3.2, 0, 7); g.arc(x + 7, QB + 11, 3.2, 0, 7); g.fill(); }
+      if (open) { g.fillStyle = C.k; for (let q = 0; q < 2; q++) { const f = ((phase * 0.9 + q / 2 + i * 0.13) % 1 + 1) % 1; g.beginPath(); g.arc(x, QB + 18 - (QB - QT + 44) * f, 3.2, 0, 7); g.fill(); } }
+    }
+    g.font = '12px ' + SANS; g.fillStyle = C.ink; g.textAlign = 'left';
+    fillSub(g, `M channels (K_V7) open: ${nOpen} of ${NCH}`, 170 - 9, QH - 14, 'left');
+    g.fillStyle = C.muted; g.textAlign = 'right'; g.fillText('outside', QW - 6, 12);
+    return nOpen;
+  }
+
+  function draw() {
+    const j = Math.min(NK - 1, Math.max(0, Math.round(tc / TS))), t = j * TS, n = j + 1, cur = tc < T2 ? t : undefined;
+    const oA = drawPatch(picA, 0, R.a.M[j]), oB = drawPatch(picB, R.ach, R.b.M[j]);
+    const vl = [{ x: ON, label: 'step on' }, { x: OFF, label: 'off' }];
+    plot($('cVA'), { h: 190, x: [0, T2], y: [-95, 50], ylab: 'V (mV)', xlab: 'time (ms)', cursor: cur, vlines: vl, lines: [{ x: tAx, y: R.a.V, n, color: 'muted', w: 1.3 }] });
+    plot($('cVB'), { h: 190, x: [0, T2], y: [-95, 50], ylab: 'V (mV)', xlab: 'time (ms)', cursor: cur, vlines: vl, lines: [{ x: tAx, y: R.b.V, n, color: 'accent', w: 1.3 }] });
+    const upto = arr => arr.filter(p => p[0] <= t);
+    const rA = upto(R.ra), rB = upto(R.rb), top = niceUp(Math.max(20, ...R.ra.map(p => p[1]), ...R.rb.map(p => p[1])) * 1.05);
+    const asLine = (pts, color) => ({ x: pts.map(p => p[0]), y: pts.map(p => p[1]), color, w: 1.6 });
+    plot($('cR'), { h: 220, x: [0, T2], y: [0, top], ylab: 'spikes/s', xlab: 'time (ms)', cursor: cur, vlines: vl,
+      lines: [asLine(rA, 'muted'), asLine(rB, 'accent')],
+      dots: [...rA.map(p => ({ x: p[0], y: p[1], color: 'muted', r: 3 })), ...rB.map(p => ({ x: p[0], y: p[1], color: 'accent', r: 3 }))] });
+    // f–I: axes fitted to the points measured so far
+    const all = [...fiA, ...fiB], xmax = all.length ? Math.max(2, niceUp(Math.max(...all.map(p => p[0])))) : 12, ymax = all.length ? niceUp(Math.max(10, ...all.map(p => p[1])) * 1.05) : 100;
+    plot($('cFI'), { square: true, x: [0, xmax], y: [0, ymax], xlab: 'current step (µA/cm²)', ylab: 'spikes/s',
+      note: all.length ? '' : 'Run, or measure the f–I curve, to add points',
+      lines: [asLine(fiA, 'muted'), asLine(fiB, 'accent')],
+      dots: [...fiA.map(p => ({ x: p[0], y: p[1], color: 'muted' })), ...fiB.map(p => ({ x: p[0], y: p[1], color: 'accent' }))] });
+    $('fiCap').textContent = fiB.length ? `Each run adds a point for each cell: its spikes in the 800 ms step, per second. Right-hand cell: ${fiAch}% of M channels closed.` : 'Each run adds a point for each cell: its spikes in the 800 ms step, per second.';
+    // readouts, once the step is over
+    const done = tc >= OFF + 5, first = r => r.length ? fmt(r[0][1], 0) : '—', lastR = r => r.length ? fmt(r[r.length - 1][1], 0) : '—';
+    $('p2Num').textContent = done ? `${R.na} → ${R.nb}` : '…';
+    $('p2rA').textContent = done ? `${first(R.ra)} → ${lastR(R.ra)} /s` : '…';
+    $('p2rB').textContent = done ? `${first(R.rb)} → ${lastR(R.rb)} /s` : '…';
+    $('p2M').textContent = `${oA} / ${oB} of 10`;
+  }
+
+  // ---------- controls ----------
+  bindRange('achIn', v => Math.round(v) + ' %', v => { P.ach = v; $('p2Btitle').textContent = v > 0 ? `With acetylcholine: ${Math.round(v)}% of M channels closed` : 'With acetylcholine, blocked (as by atropine)'; need = true; });
+  bindRange('stepIn', v => fmt(v, 1) + ' µA/cm²', v => { P.I = v; need = true; });
+  bindRange('p2Speed', v => fmtSpeed(speedOf(v)), v => P.speed = speedOf(v));
+  $('p2Run').addEventListener('click', () => { recompute(); tc = 0; if (!playing) $('p2Play').click(); });
+  $('p2Play').addEventListener('click', () => {
+    playing = !playing; $('p2Play').textContent = playing ? 'Pause' : 'Play';
+    if (playing && tc >= T2) tc = 0;
+    dirty = true;
+  });
+  $('p2Sweep').addEventListener('click', () => {
+    for (let I = 0; I <= 12; I++) addFI(I, inStep(run(I, 0).spikes).length, inStep(run(I, P.ach).spikes).length);
+    dirty = true;
+  });
+  $('p2Clear').addEventListener('click', () => { fiA = []; fiB = []; fiAch = null; dirty = true; });
+  redrawHooks.push(() => { dirty = true; });
+  const visible = watchVisible($('p2-card'), () => { dirty = true; });
+
+  function frame(real, force) {
+    if (need) recompute();
+    if (playing) {
+      tc = Math.min(T2, tc + P.speed * real); phase += real; dirty = true;
+      if (tc >= T2) { addFI(R.I, R.na, R.nb); $('p2Play').click(); }   // the run is over: its point goes on the f–I chart
+    }
+    if (dirty && (force || visible() && !$('pane-p2').hidden)) { draw(); dirty = false; }
+  }
+  let last = performance.now();
+  function loop(now) { const real = Math.min(0.05, (now - last) / 1000); last = now; frame(real); requestAnimationFrame(loop); }
+  Frames.sim(() => playing, 'p2Play');   // frames.js: pauses itself when left alone
+  window.NM2 = { P, get R() { return R; }, get tc() { return tc; }, get fi() { return { fiA, fiB }; }, frame };   // for checking from the console
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+// =====================================================================================
+// The calculator: G → fraction of GIRK open → g_GIRK → the voltage it settles at (chord conductance).
+// =====================================================================================
+(() => {
+  const K = { G: 5, n: 4, gmax: 0.2, EK: -90, gr: 0.1, Er: -70 }, KHALF = Math.pow(100, 1 / 4);
+  const frac = (G, n) => { const a = Math.pow(G, n); return a / (a + Math.pow(KHALF, n)); };
+  function update() {
+    const p = frac(K.G, K.n), g = p * K.gmax, V = (K.gr * K.Er + g * K.EK) / (K.gr + g), I = g * (K.Er - K.EK);
+    $('kV').textContent = fmt(V, 1) + ' mV';
+    $('kP').textContent = fmt(100 * p, 1) + ' %';
+    $('kgo').textContent = fmt(g, 3) + ' mS/cm²';
+    $('kdV').textContent = fmtSigned(V - K.Er, 1) + ' mV';
+    $('kI').textContent = fmtSigned(I, 2) + ' µA/cm²';
+    const sup = K.n > 1 ? `<sup>${K.n}</sup>` : '';
+    $('kFormula').innerHTML =
+      `open = G${sup} / (G${sup} + 3.2${sup}) = ${fmt(K.G, 1)}${sup} / (${fmt(K.G, 1)}${sup} + 3.2${sup}) = ${fmt(p, 3)}<br>` +
+      `g<sub>GIRK</sub> = open × g<sub>max</sub> = ${fmt(p, 3)} × ${fmt(K.gmax, 2)} = ${fmt(g, 3)} mS/cm²<br>` +
+      `V = (g<sub>rest</sub>E<sub>rest</sub> + g<sub>GIRK</sub>E<sub>K</sub>) / (g<sub>rest</sub> + g<sub>GIRK</sub>) = (${fmt(K.gr, 2)} × ${fmt(K.Er, 0)} + ${fmt(g, 3)} × ${fmt(K.EK, 0)}) / ${fmt(K.gr + g, 3)} = <span class="res">${fmt(V, 1)} mV</span>`;
+    drawK();
+  }
+  function drawK() {
+    const xs = [], ys = [], y1 = [];
+    for (let i = 0; i <= 200; i++) { const G = 10 * i / 200; xs.push(G); ys.push(100 * frac(G, K.n)); y1.push(100 * frac(G, 1)); }
+    plot($('cK'), { square: true, x: [0, 10], y: [0, 100], xlab: 'active G protein, G', ylab: 'GIRK open (%)',
+      vlines: [{ x: 1, label: '1 spike' }, { x: 4.94, label: '5 spikes' }],
+      lines: [K.n > 1 ? { x: xs, y: y1, color: 'muted', w: 1.3, dash: true } : null, { x: xs, y: ys, color: 'k', w: 2.2 }].filter(Boolean),
+      dots: [{ x: K.G, y: 100 * frac(K.G, K.n), color: 'k', r: 5 }] });
+  }
+  bindRange('kG', v => fmt(v, 1), v => { K.G = v; update(); });
+  bindRange('kN', v => v + ' βγ', v => { K.n = v; update(); });
+  bindRange('kGmax', v => fmt(v, 2) + ' mS/cm²', v => { K.gmax = v; update(); });
+  bindRange('kEK', v => fmt(v, 0) + ' mV', v => { K.EK = v; update(); });
+  bindRange('kGr', v => fmt(v, 2) + ' mS/cm²', v => { K.gr = v; update(); });
+  bindRange('kEr', v => fmt(v, 0) + ' mV', v => { K.Er = v; update(); });
+  redrawHooks.push(drawK);
+  Frames.onRestore(drawK);
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    redrawAll(); Frames.poke();
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const nx = tabs[(k + d + tabs.length) % tabs.length]; showTab(nx); nx.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they behave exactly like clicking them.
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const press = sel => { const b = document.querySelector(sel); if (b.getAttribute('aria-pressed') !== 'true') b.click(); };
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
+  const check = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change', { bubbles: true })); } };
+  const p1 = (o = {}) => {
+    press(`[data-mode="${o.mode || 'rest'}"]`); set('gAin', 0.4); set('gBin', 0.2); set('nIn', o.n ?? 5);
+    check('bic', !!o.bic); check('cgp', !!o.cgp); check('bac', !!o.bac);
+    showTab($('tab-p1')); into('p1-card'); $('p1Run').click();
+  };
+  const p2 = (o = {}) => { set('achIn', o.ach ?? 100); set('stepIn', o.I ?? 4); showTab($('tab-p2')); into('p2-card'); $('p2Run').click(); };
+  const TRY = {
+    both: () => p1(), firing: () => p1({ mode: 'firing' }), single: () => p1({ mode: 'firing', n: 1 }),
+    bic: () => p1({ mode: 'firing', bic: true }), bicrest: () => p1({ bic: true }), cgprest: () => p1({ cgp: true }),
+    bac: () => p1({ mode: 'firing', bac: true }), baccgp: () => p1({ mode: 'firing', bac: true, cgp: true }),
+    ach: () => p2({ ach: 100 }), ach0: () => p2({ ach: 0 }),
+    fi: () => { set('achIn', 100); showTab($('tab-p2')); into('p2-card'); $('p2Clear').click(); $('p2Sweep').click(); },
+    calcn1: () => { set('kN', 1); set('kG', 1); into('calc'); },
+  };
+  document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => {
+    const [what, v] = b.dataset.try.split(':');
+    if (what === 'n') p1({ n: +v }); else TRY[what]();
+  }));
+})();
+</script>
+<script>
+// The floating bar's buttons and speed slider follow the simulation crossing the middle of the screen.
+(() => {
+  const run = $('fbRun'), play = $('fbPlay');
+  const cards = [['p1-card', 'p1Run', 'p1Play'], ['p2-card', 'p2Run', 'p2Play']];
+  const update = () => {
+    let pick = cards[0];
+    for (const cd of cards) { const r = $(cd[0]).getBoundingClientRect(); if (r.top < innerHeight / 2) pick = cd; }
+    if (run.dataset.copy !== pick[1]) run.dataset.copy = pick[1];
+    if (play.dataset.copy !== pick[2]) play.dataset.copy = pick[2];
+    $('fbSp1').hidden = pick !== cards[0]; $('fbSp2').hidden = pick !== cards[1];
+  };
+  addEventListener('scroll', update, { passive: true }); addEventListener('resize', update);
+  update();
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

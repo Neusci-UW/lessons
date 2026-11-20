@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Na⁺/K⁺ Pump</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as the other lessons: one cell over minutes, as a picture and as a circuit, with its concentrations free to change. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --pump:#0d6b7c; --ouab:#3b2a4d; --warm:#b4582a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    --pump:#4cb2c4; --ouab:#e8d9f7; --warm:#e0915e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  --pump:#4cb2c4; --ouab:#e8d9f7; --warm:#e0915e;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:110ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* calculator, styled like the GHK calculator in membrane_potential.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:64px minmax(0,1fr) 116px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.top.stacked{grid-template-columns:1fr}
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 160px;min-width:120px;max-width:300px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:120px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.runbar .clock{font-family:var(--font-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:120px}
+.runbar .spacer{flex:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.cl{background:var(--cl)}.dot.k{background:var(--k)}.dot.na{background:var(--na)}
+.sw{display:inline-block;flex:none}
+.sw.pump{width:12px;height:14px;border-radius:3px;background:var(--pump)}
+.sw.ouab{width:9px;height:9px;transform:rotate(45deg);background:var(--ouab);margin:0 2px}
+.sw.chan{width:12px;height:14px;background:linear-gradient(90deg,var(--muted) 0 40%,transparent 40% 60%,var(--muted) 60%)}
+.ln{display:inline-block;width:18px;height:0;border-top:2px solid currentColor;flex:none}
+.ln.dash{border-top-style:dashed}
+.ln.thick{border-top-width:3px}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.sgroup{display:flex;flex-direction:column;gap:10px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap;text-align:right}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:118px minmax(0,1fr) 104px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:flex-start;gap:8px;font-size:14px}
+.check .hint{display:block;font-size:12px;color:var(--muted)}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin-top:3px;flex:none}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips .chip{font-size:12px;padding:3px 9px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.worked{margin:8px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:14px}
+.worked b:first-child{color:var(--accent)}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+.charthead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+.chartcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pickrow{display:grid;grid-template-columns:58px minmax(0,1fr);gap:6px;align-items:start;font-size:12.5px;color:var(--muted)}
+.pickrow > span{padding-top:4px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+#cXY,#kIV{max-width:440px;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" data-copy="pBurst" class="primary"></button>
+  <button type="button" data-copy="pPlay"></button>
+  <label for="fbSpeed" class="runlab">Speed</label><input type="range" id="fbSpeed" data-copy="pSpeed"><output for="fbSpeed"></output>
+</div>
+<div class="wrap">
+<p class="draftnote"><b>DRAFT</b> · Not yet in the course. Still to check: the cell picture and the circuit beside it are new and were not mocked up first; the model’s round numbers (pump current at rest 0.62 µA/cm², Na⁺ per spike 0.15 µC/cm², Cl⁻ conductance half of K⁺’s, an outside bath that never changes) and its pump formula (borrowed from a heart-cell model) want a physiologist’s eye; and the text has not yet been read by a teacher. The references and their DOIs were checked.</p>
+<header>
+  <h1>The Na⁺/K⁺ pump: keeping the batteries charged</h1>
+  <p>The Membrane Potential lesson held the concentrations fixed: K⁺ high inside, Na⁺ high outside, and those differences are the batteries E<sub>K</sub> and E<sub>Na</sub>. But at rest Na⁺ leaks in and K⁺ leaks out all the time, and every spike lets in more. Left alone, the differences would run down and the batteries would go flat. The Na⁺/K⁺ pump (the Na⁺/K⁺-ATPase) keeps them charged: for every ATP it splits, it pushes 3 Na⁺ out and brings 2 K⁺ in. On this page the concentrations are free to change, and time runs in minutes.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>explain why a steady resting voltage needs a pump: the leaks never stop, so the concentrations are a balance, not an equilibrium</li>
+        <li>use Ohm’s law, I = g(V − E), to find each leak current, and the pump current that balances them</li>
+        <li>explain why the pump is electrogenic (3 charges out, 2 in) and how much that adds to the resting voltage</li>
+        <li>predict what blocking the pump (ouabain, digoxin, no ATP) does to [Na⁺]<sub>i</sub>, [K⁺]<sub>i</sub>, E<sub>Na</sub>, E<sub>K</sub>, V and the cell’s volume, and why it is slow, and faster in small cells</li>
+        <li>explain why a burst of spikes is followed by a hyperpolarization, and why the brain spends most of its energy on this pump</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-try="rest">1 · At rest</button> Leak in, pump out, exactly balanced: nothing changes. Yet in the Na⁺ traffic chart ions flow in and out all the time.</li>
+    <li><button class="chip" data-try="ouabain">2 · Block the pump</button> Ouabain at 1 minute. V jumps about 10 mV at once (the pump’s own current is gone), then creeps up over an hour as Na⁺ builds up inside, K⁺ leaks away and the batteries E<sub>Na</sub> and E<sub>K</sub> shrink.</li>
+    <li><button class="chip" data-try="burst">3 · A burst of spikes</button> 4,000 spikes at 50 Hz from 1 minute load the cell with Na⁺. The pump speeds up to clear it, and the cell sits about 7 mV more negative for many minutes.</li>
+    <li><button class="chip" data-try="small">4 · A small cell, or a thin axon</button> Ouabain again, in a cell of 1 µm radius instead of 10 µm: the same leak per square centimetre, but a tenth of the volume behind it, so it runs down ten times faster.</li>
+    <li><button class="chip" data-try="hyperk">5 · High K⁺ outside</button> [K⁺]<sub>o</sub> from 4 to 8 mM at 1 minute, as in hyperkalemia. E<sub>K</sub> rises and the cell depolarizes at once, to about −57 mV.</li>
+    <li><button class="chip" data-try="swell">6 · Let Cl⁻ in: the cell swells</button> Cl⁻ can cross now, and ouabain at 1 minute. Cl⁻ follows the Na⁺ in, water follows by osmosis, and the cell slowly swells, as brain cells do in a stroke.</li>
+  </ol>
+</section>
+
+<!-- =================== the cell, minute by minute =================== -->
+<h3 class="part">One cell, minute by minute: leaks, pump and batteries</h3>
+<div class="top stacked">
+  <section class="card stage" id="pump-card">
+    <div class="tabs" role="tablist" aria-label="Cell">
+      <button type="button" role="tab" id="tab-cell" aria-controls="pane-cell" aria-selected="true">Cell</button>
+      <button type="button" role="tab" id="tab-help" aria-controls="pane-help" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-look" aria-controls="pane-look" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-cell" aria-labelledby="tab-cell">
+      <div class="cgrid">
+        <canvas id="cell" aria-label="A cell body in a bath: Na⁺, K⁺ and Cl⁻ ions inside and outside, leak channels and pumps in the membrane, with ions passing through"></canvas>
+        <canvas id="circ" aria-label="The membrane as a circuit: Na⁺, K⁺ and Cl⁻ branches, each a conductance with its battery, the pump as a current source, and a voltmeter"></canvas>
+      </div>
+      <div class="runbar">
+        <button type="button" id="pBurst" class="primary">Fire burst</button>
+        <button type="button" id="pPlay" class="primary">Pause</button>
+        <button type="button" id="pReset">Reset</button>
+        <label for="pSpeed" class="runlab">Speed</label>
+        <input type="range" id="pSpeed" min="0" max="11" step="1" value="6">
+        <output id="pSpeedo" for="pSpeed"></output>
+        <span class="clock" id="pTime" aria-live="off">t = 0 min 00 s</span>
+        <span class="spacer"></span>
+        <span class="runlab">Show</span>
+        <div class="btns" role="group" aria-label="Time shown on the charts">
+          <button type="button" class="chip" data-win="5" aria-pressed="false">5 min</button><button type="button" class="chip" data-win="15" aria-pressed="true">15</button><button type="button" class="chip" data-win="30" aria-pressed="false">30</button><button type="button" class="chip" data-win="60" aria-pressed="false">60</button><button type="button" class="chip" data-win="120" aria-pressed="false">120</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot na"></i>Na⁺</span>
+        <span><i class="dot k"></i>K⁺</span>
+        <span><i class="dot cl"></i>Cl⁻</span>
+        <span><i class="sw pump"></i>Na⁺/K⁺ pump</span>
+        <span><i class="sw chan"></i>channel (grey when closed)</span>
+        <span><i class="sw ouab"></i>ouabain on a pump</span>
+      </div>
+      <div class="cgrid">
+        <div class="chartcol"><p class="sect-title">Concentrations inside the cell</p><canvas id="cConc" aria-label="Na⁺, K⁺ and Cl⁻ concentrations inside the cell over time"></canvas><div class="legend" id="legConc"></div></div>
+        <div class="chartcol">
+          <div class="charthead"><p class="sect-title">The batteries and the membrane potential</p>
+            <div class="btns" role="group" aria-label="Voltage range"><button type="button" class="chip" data-vr="all" aria-pressed="true">All</button><button type="button" class="chip" data-vr="rest" aria-pressed="false">Near rest</button></div></div>
+          <canvas id="cBat" aria-label="E_Na, E_K and the membrane potential over time"></canvas><div class="legend" id="legBat"></div></div>
+        <div class="chartcol">
+          <div class="charthead"><p class="sect-title" id="trafTitle">Na⁺ traffic</p>
+            <div class="btns" role="group" aria-label="Traffic chart"><button type="button" class="chip" data-tv="na" aria-pressed="true">Na⁺</button><button type="button" class="chip" data-tv="k" aria-pressed="false">K⁺</button><button type="button" class="chip" data-tv="pump" aria-pressed="false">Pump</button><button type="button" class="chip" data-tv="vol" aria-pressed="false">Volume</button></div></div>
+          <canvas id="cTraf" aria-label="Ions moving in and out over time"></canvas><div class="legend" id="legTraf"></div></div>
+        <div class="chartcol">
+          <p class="sect-title">Plot your run</p>
+          <div class="pickrow"><span>Across</span><div class="chips" role="group" aria-label="Across (x axis)" id="pickX"></div></div>
+          <div class="pickrow"><span>Up</span><div class="chips" role="group" aria-label="Up (y axis)" id="pickY"></div></div>
+          <canvas id="cXY" aria-label="One quantity against another, for every moment since Reset"></canvas>
+        </div>
+      </div>
+      <p class="caption">One spherical cell body at 37 °C, with Na⁺ and K⁺ leak channels, Cl⁻ channels you can open, and pumps. The outside is a big, stirred bath whose concentrations never change. At each moment V is found from the balance of currents, as in the Membrane Potential lesson, with the pump’s current added; then the currents move ions and change the concentrations.</p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-help" aria-labelledby="tab-help" hidden>
+      <ul>
+        <li><b>The picture:</b> a cell body (the circle) in a big bath. Each small dot is an ion, coloured as in the key, drawn at a density that follows its concentration: crowded K⁺ inside; crowded Na⁺ and Cl⁻ outside. Count the Na⁺ dots inside when the pump is blocked. When Cl⁻ can cross, the circle’s size shows the cell’s volume.</li>
+        <li><b>In the membrane:</b> leak channels (a pair of bars in their ion’s colour) let ions through on their own, always downhill. The pumps (teal blocks) push 3 Na⁺ out and bring 2 K⁺ in at each cycle, using one ATP; they light up as they cycle. Grey channels are closed: the Cl⁻ channels until you let Cl⁻ cross, and the pair at the bottom, the spike’s own voltage-gated Na⁺ and K⁺ channels, except during a burst. A dark diamond on a pump is ouabain blocking it.</li>
+        <li><b>Moving dots</b> show the traffic: how often they go follows the real currents, but the real numbers are millions of times larger, so this is a sample, not a count.</li>
+        <li><b>The circuit:</b> the same membrane as in the Membrane Potential lesson. Each leak is a resistor (conductance g) with its battery (E); the pump is a current source, which pushes its current whatever the voltage. The arrows show each branch’s current right now, pointing up when positive charge flows into the cell, with its size in µA/cm². The gauge beside each battery shows how charged it still is compared with the start. The capacitor is left out: it charges in milliseconds, far faster than anything here.</li>
+        <li><b>Time</b> runs fast: the speed says how many times faster than real life, from 1× to 1800× (30 minutes of the cell’s life each second). <b>Reset</b> starts again from the resting cell, with the settings as they are now.</li>
+        <li><b>Charts:</b> they show the last 5 to 120 minutes (<b>Show</b>), newest at the right. Grey shading marks time when the pump was partly or fully blocked, orange a burst of spikes; dotted lines mark when you changed something. <b>Near rest</b> zooms the voltage chart to −100…−40 mV.</li>
+        <li><b>Traffic:</b> the Na⁺ view shows Na⁺ coming in (through the leaks, and with spikes during a burst) and Na⁺ being pumped out, as currents in µA/cm². Where the two lines meet, [Na⁺]<sub>i</sub> holds steady; where they part, it changes. The Pump view is the pump’s net current, which is also its rate of using ATP (one ATP per net charge).</li>
+        <li><b>Plot your run:</b> choose what goes across and what goes up. The chart then shows every moment since Reset, one against the other, with a dot for now.</li>
+        <li><b>Left out:</b> the spikes themselves (during a burst V is the voltage between spikes), K⁺ piling up just outside the cell, other transporters (the Na⁺/Ca²⁺ exchanger, the Cl⁻ pumps of mature neurons) and Ca²⁺.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-look" aria-labelledby="tab-look" hidden>
+      <ul>
+        <li><b>At rest nothing changes, but nothing stops.</b> In the Na⁺ traffic chart the inflow and the outflow lie on top of each other: a balance kept up with ATP, not an equilibrium.</li>
+        <li><b>Block the pump and watch two things happen at two speeds.</b> At once, V jumps about 10 mV: the pump’s own outward current is gone. Then, over tens of minutes, the concentrations run down. E<sub>Na</sub> falls first, because [Na⁺]<sub>i</sub> starts small, so each millimole that leaks in is a big fraction of it.</li>
+        <li><b>Wash the ouabain out</b> after 20 minutes (Pump working back to 100 %). With all that Na⁺ inside, the pump now runs faster than at rest, and V drops below −70 mV while it catches up.</li>
+        <li><b>After a burst,</b> plot the pump current (up) against [Na⁺]<sub>i</sub> (across): the pump speeds up with Na⁺ inside, but less and less, as it saturates.</li>
+        <li><b>Make the cell smaller.</b> Everything happens faster, because each square centimetre of leaky membrane has less volume behind it.</li>
+        <li><b>Change K⁺ outside.</b> More K⁺ depolarizes at once (E<sub>K</sub> moves up). Less K⁺ hyperpolarizes, but the pump slows (it needs K⁺ outside to bind), so Na⁺ slowly builds up inside.</li>
+        <li><b>Let Cl⁻ cross.</b> The pump’s own share of the voltage shrinks, and so does the hyperpolarization after a burst: Cl⁻ short-circuits the pump’s current. Block the pump and the cell swells.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Membrane potential V</span>
+      <span class="vnum" id="rV">—</span>
+      <div class="vrow"><span>E<sub>Na</sub> / E<sub>K</sub></span><b id="rE">—</b></div>
+      <div class="vrow"><span>[Na⁺]<sub>i</sub> / [K⁺]<sub>i</sub></span><b id="rC">—</b></div>
+      <div class="vrow"><span>[Na⁺]<sub>i</sub> is</span><b id="rBal">—</b></div>
+      <div class="vrow"><span>[Cl⁻]<sub>i</sub> · cell volume</span><b id="rCl">—</b></div>
+      <div class="vrow"><span>pump current</span><b id="rP">—</b></div>
+      <div class="vrow"><span>ATP split by the whole cell</span><b id="rATP">—</b></div>
+      <div class="vrow"><span>spikes still to fire</span><b id="rSp">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The cell</legend>
+      <div class="sgroup">
+        <span class="gtitle">The pump</span>
+        <div class="row"><label for="pPump"><i class="sw pump"></i>Pump working</label><input type="range" id="pPump" min="0" max="100" step="1" value="100"><output id="pPumpo" for="pPump"></output>
+          <span class="hint">ouabain and digoxin block it; so does running out of ATP</span></div>
+        <div class="btns"><button type="button" class="chip" id="pBlock">Block it (ouabain)</button><button type="button" class="chip" id="pWash">Wash it out</button></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">A burst of spikes</span>
+        <div class="row"><label for="pN">Spikes</label><input type="range" id="pN" min="100" max="10000" step="100" value="4000"><output id="pNo" for="pN"></output></div>
+        <div class="row"><label for="pRate">Rate</label><input type="range" id="pRate" min="5" max="100" step="5" value="50"><output id="pRateo" for="pRate"></output>
+          <span class="hint">each spike lets in 0.15 µC/cm² of Na⁺, and lets out as much K⁺; fire with the button by Play</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Outside and in</span>
+        <div class="row"><label for="pKo"><i class="dot k"></i>[K⁺] outside</label><input type="range" id="pKo" min="1" max="12" step="0.1" value="4"><output id="pKoo" for="pKo"></output>
+          <span class="hint">blood plasma has about 3.5–5 mM</span></div>
+        <div class="row"><label for="pR">Cell radius</label><input type="range" id="pR" min="0" max="1000" step="1" value="732"><output id="pRo" for="pR"></output>
+          <span class="hint">a sphere; a thin axon behaves like a small one</span></div>
+        <label class="check" for="pCl"><input type="checkbox" id="pCl"><span>Let Cl⁻ cross, and water follow<span class="hint">Cl⁻ channels open; the cell’s volume can change</span></span></label>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Real units</p>
+      <dl class="unitlist">
+        <dt>mM</dt><dd>millimolar, for concentration (millimoles per litre). Inside a neuron, about 12 mM Na⁺ and 140 mM K⁺; outside, about 145 mM Na⁺ and 4 mM K⁺.</dd>
+        <dt>mV</dt><dd>millivolts, for voltage. V is the inside measured relative to the outside.</dd>
+        <dt>min, s</dt><dd>minutes and seconds. Concentrations change over minutes; a spike lasts a millisecond.</dd>
+        <dt>µm</dt><dd>micrometres, for size. A neuron’s cell body is about 10–30 µm across; a thin unmyelinated axon is well under 1 µm.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">For each square centimetre of membrane</p>
+      <dl class="unitlist">
+        <dt>µA/cm²</dt><dd>microamps per square centimetre, for current. The pump’s current here is 0.62 µA/cm² at rest; during a spike, the Na⁺ current reaches about a thousand times more, for a millisecond.</dd>
+        <dt>mS/cm²</dt><dd>millisiemens per square centimetre, for conductance. The resting leaks here are 0.014 (Na⁺) and 0.050 (K⁺); in the Hodgkin–Huxley lesson the Na⁺ conductance during a spike reaches tens. mS/cm² × mV = µA/cm².</dd>
+        <dt>µC/cm²</dt><dd>microcoulombs per square centimetre, for charge. Each spike here lets in 0.15 µC/cm² of Na⁺.</dd>
+        <dt>ATP/s</dt><dd>molecules of ATP split per second: one per pump cycle, and each cycle moves one net charge out, so 1 µA/cm² of pump current is 62,000 ATP per µm² of membrane each second.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="pumptheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">A balance, not an equilibrium</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">The pump makes a current</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Running down</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">After a burst</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Energy and the clinic</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> At rest, Na⁺ trickles in and K⁺ trickles out through the leak channels, all the time. The concentrations stay put only because the pump carries the same amounts back, using ATP. Think of a leaky boat with a bilge pump: the water level is steady because the pumping matches the leaking, not because nothing moves.</p>
+      <h3>Each leak is Ohm’s law</h3>
+      <p>As in the Membrane Potential lesson, each ion’s channels are a resistor (conductance g) in series with a battery (that ion’s Nernst potential E). The current through them is Ohm’s law: the conductance times the driving force, how far V is from that battery.</p>
+      <div class="eq">\[ I_\text{Na} = g_\text{Na}\,(V - E_\text{Na}), \qquad I_\text{K} = g_\text{K}\,(V - E_\text{K}) \]</div>
+      <p>A negative current is positive charge flowing in. At −70 mV, V is far below E<sub>Na</sub>, so Na⁺ flows in; V is a little above E<sub>K</sub>, so K⁺ flows out.</p>
+      <div class="worked"><b>Worked number.</b> In this cell E<sub>Na</sub> = +66.5 mV and E<sub>K</sub> = −94.9 mV. With g<sub>Na</sub> = 0.0136 mS/cm², I<sub>Na</sub> = 0.0136 × (−70 − 66.5) = −1.86 µA/cm², inward. With g<sub>K</sub> = 0.0497 mS/cm², I<sub>K</sub> = 0.0497 × (−70 + 94.9) = +1.24 µA/cm², outward.</div>
+      <h3>The pump pays it back</h3>
+      <p>In the steady state the pump carries out exactly the Na⁺ that leaks in, and brings back exactly the K⁺ that leaks out. It moves 3 Na⁺ for every 2 K⁺, so if P is the pump current (one net charge out per cycle), the two leaks must be</p>
+      <div class="eq">\[ I_\text{Na} = -3P, \qquad I_\text{K} = +2P \]</div>
+      <p>Here P = 1.86 / 3 = 0.62 µA/cm², and then 2P = 1.24 µA/cm², exactly the K⁺ leak. The leaks must stand in the ratio 3 : 2, and that, more than anything, is what fixes where the resting voltage sits.</p>
+      <details class="fullderiv"><summary>Show how fast the concentrations change</summary>
+        <p>A current is charge per second, and Faraday’s constant F = 96,485 C/mol turns charge into moles. So a current density I (in A/cm²) of one ion carries I/F moles per second through each cm² of membrane. Spread over the volume behind that membrane, the concentration changes at</p>
+        <div class="eq">\[ \frac{d[\text{X}]_i}{dt} = -\frac{I_\text{X}}{F}\cdot\frac{A}{\text{Vol}}, \qquad \frac{A}{\text{Vol}} = \frac{4\pi r^2}{\tfrac{4}{3}\pi r^3} = \frac{3}{r}\ \text{for a sphere of radius } r. \]</div>
+        <p>For a cell body of radius 10 µm (10⁻³ cm), A/Vol = 3000 cm⁻¹, and 1 µA/cm² of one ion changes its concentration by 10⁻⁶ / 96,485 × 3000 = 3.1 × 10⁻⁸ mol/cm³ each second: 0.031 mM per second.</p>
+        <p>Without the pump, the Na⁺ leak of 1.86 µA/cm² would add 1.86 × 0.031 = 0.058 mM a second, about 3.5 mM a minute. [Na⁺]<sub>i</sub> starts at 12 mM, so it would nearly double in 4 minutes; [K⁺]<sub>i</sub>, losing as much K⁺ but starting at 140 mM, would drop by only a tenth. A thin axon of radius 0.5 µm has twenty times the area per volume, so the same leak changes it twenty times faster.</p>
+      </details>
+    </div>
+    <aside class="try"><span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="rest">At rest</button> Na⁺ in and Na⁺ out are the same line.</p>
+      <p><button class="chip" data-try="ouabain">Block the pump</button> The two lines part, and [Na⁺]<sub>i</sub> climbs.</p>
+      <p><button class="chip" data-try="small">A 1 µm cell</button> The same leak per cm², ten times faster.</p>
+      <p><button class="chip" data-try="calc">Open the calculator</button> Set your own leaks and pump, and see if they balance.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Each cycle pushes three positive charges out and brings two back, so one net positive charge leaves. The pump is therefore a small, steady outward current. That current alone makes the inside a few millivolts more negative, but the pump’s bigger job is indirect: keeping the batteries E<sub>Na</sub> and E<sub>K</sub> where they are.</p>
+      <h3>Add it to the balance of currents</h3>
+      <p>At a steady voltage all the currents across the membrane add to zero (otherwise the membrane’s capacitor would keep charging). With the pump’s current included:</p>
+      <div class="eq">\[ g_\text{Na}(V - E_\text{Na}) + g_\text{K}(V - E_\text{K}) + I_\text{pump} = 0 \]</div>
+      <p>Solve for V:</p>
+      <div class="eq">\[ V = \frac{g_\text{Na}E_\text{Na} + g_\text{K}E_\text{K} - I_\text{pump}}{g_\text{Na} + g_\text{K}} \]</div>
+      <p>This is the chord-conductance equation from the Membrane Potential lesson with one more term. The first part is an average of the two batteries, each weighted by its conductance; the pump subtracts I<sub>pump</sub> divided by the total conductance, which is just Ohm’s law, V = I/g.</p>
+      <div class="worked"><b>Worked number.</b> The total conductance is 0.0136 + 0.0497 = 0.0633 mS/cm². The pump’s share is 0.62 / 0.0633 = 9.8 mV. Without the pump, V would be (0.0136 × 66.5 + 0.0497 × (−94.9)) / 0.0633 = −60.2 mV; with it, −70.0 mV.</div>
+      <h3>Why it is smaller in real neurons</h3>
+      <p>Any other open channel adds to the total conductance and so shrinks the pump’s share. Cl⁻ channels are the main ones: tick <b>Let Cl⁻ cross</b> and the share drops from 9.8 to 7.0 mV. Rang and Ritchie saw this directly in thin nerve fibres: the hyperpolarization after a burst grew from a few millivolts to about 20 mV when they replaced the Cl⁻ outside with large anions that cannot cross. In most neurons the pump’s direct share of the resting voltage is a few millivolts.</p>
+      <details class="fullderiv"><summary>Show why the share is about 10 mV, whatever the pump’s size</summary>
+        <p>With only Na⁺ and K⁺ leaks, the steady state says g<sub>K</sub>(V − E<sub>K</sub>) = 2P and g<sub>Na</sub>(E<sub>Na</sub> − V) = 3P. So</p>
+        <div class="eq">\[ \frac{P}{g_\text{Na} + g_\text{K}} = \frac{1}{\dfrac{3}{E_\text{Na} - V} + \dfrac{2}{V - E_\text{K}}} = \frac{1}{\dfrac{3}{136.5} + \dfrac{2}{24.9}} = 9.8\ \text{mV} \]</div>
+        <p>P cancels: a bigger pump needs bigger leaks to balance it, and the bigger leaks shrink its effect just as much. The share is set by the 3 : 2 ratio and by where V sits between the batteries. Mullins and Noda wrote the same idea with the Goldman–Hodgkin–Katz equation, putting the factor 3/2 in front of the K⁺ terms:</p>
+        <div class="eq">\[ V = \frac{RT}{F}\ln\frac{r[\text{K}^+]_o + b[\text{Na}^+]_o}{r[\text{K}^+]_i + b[\text{Na}^+]_i}, \qquad r = \tfrac{3}{2},\ \ b = \frac{P_\text{Na}}{P_\text{K}} \]</div>
+      </details>
+      <h3>How to see the pump’s current</h3>
+      <p>Block the pump suddenly and V jumps up by that share at once, long before any concentration has had time to change. A fast jump like this, followed by a slow drift, is the mark of an electrogenic pump.</p>
+    </div>
+    <aside class="try"><span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="ouabain">Block the pump</button> The 10 mV jump at 1 minute is the pump’s own current going.</p>
+      <p><button class="chip" data-try="ouabaincl">Block it with Cl⁻ crossing</button> A smaller jump: about 7 mV.</p>
+      <p><button class="chip" data-try="calcnopump">Calculator, pump off</button> The total current line moves up by I<sub>pump</sub>, and the zero crossing moves to −60 mV.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Block the pump and nothing collapses at once. Na⁺ creeps in and K⁺ creeps out, the batteries E<sub>Na</sub> and E<sub>K</sub> slowly shrink, and the cell depolarizes, faster and faster. How fast depends on the cell’s size: small cells and thin axons run down first. If Cl⁻ can cross, the cell also swells.</p>
+      <h3>A fast part and a slow part</h3>
+      <p>At once, the pump’s own current is gone: V jumps about 10 mV. Then, over tens of minutes, the concentrations run down. E<sub>Na</sub> falls first: [Na⁺]<sub>i</sub> starts small, so each millimole that leaks in is a big fraction of it. E<sub>K</sub> falls later, because [K⁺]<sub>i</sub> starts large.</p>
+      <div class="worked"><b>Worked number</b> (this cell, radius 10 µm). After 10 minutes without the pump, [Na⁺]<sub>i</sub> has gone from 12 to 37 mM and E<sub>Na</sub> from +66 to +36 mV, while E<sub>K</sub> has moved only from −95 to −90 mV. After 30 minutes V is about −57 mV, after an hour about −39 mV, and in about two hours both batteries are flat and V is near 0.</div>
+      <h3>Small cells run down faster</h3>
+      <p>The leak is set per square centimetre of membrane; the amount of Na⁺ and K⁺ is set by the volume behind it. A sphere has 3/r cm² of membrane per cm³, so a cell of radius 1 µm has ten times the membrane per volume of one of radius 10 µm, and runs down ten times faster. Thin unmyelinated axons (C fibres, 1 µm across or less) and fine dendrites depend on their pumps minute by minute.</p>
+      <h3>Why the cell swells</h3>
+      <p>Without the pump, Na⁺ in and K⁺ out swap roughly one for one, so the number of particles inside hardly changes and no water moves. But once V rises above E<sub>Cl</sub>, Cl⁻ starts to flow in, and each Cl⁻ brings a positive ion with it to keep the charges balanced. More particles inside means water follows by osmosis, and the cell swells. So the pump has a quieter second job: by throwing Na⁺ back out as fast as it leaks in, it makes the membrane behave as if Na⁺ could not cross, and that keeps the cell’s volume steady. This is Tosteson and Hoffman’s “pump–leak” idea.</p>
+      <details class="fullderiv"><summary>Show the osmotic bookkeeping</summary>
+        <p>Water crosses the membrane quickly, so the cell keeps the total concentration of particles inside equal to the outside, here 298 mM. Inside at rest: 12 Na⁺ + 140 K⁺ + 8.7 Cl⁻ + 137 of large anions (proteins, phosphates) that are trapped inside = 298 mM. The trapped anions carry about −1 charge each, balancing the 152 − 8.7 = 143 mM of extra positive charge.</p>
+        <div class="eq">\[ \text{Vol} = \frac{\text{total amount of particles inside}}{298\ \text{mM}} \]</div>
+        <p>When the pump stops and Cl⁻ can cross, Na⁺ and Cl⁻ come in, the amount of particles grows, and so does the volume: in the simulation, by about 7 % in an hour and 25 % in two. With nothing to stop it, the trapped anions would keep drawing ions and water in (the Donnan effect) until the cell was several times its size.</p>
+      </details>
+    </div>
+    <aside class="try"><span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="ouabain">Block the pump</button> E<sub>Na</sub> falls first, E<sub>K</sub> later.</p>
+      <p><button class="chip" data-try="washout">Block it, then wash it out</button> At 21 minutes the pump comes back: it runs fast and overshoots.</p>
+      <p><button class="chip" data-try="small">A 1 µm cell</button> Flat batteries in a quarter of an hour.</p>
+      <p><button class="chip" data-try="swell">Block it with Cl⁻ crossing</button> Watch the circle grow and the Volume chart rise.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Every spike lets a little Na⁺ in and a little K⁺ out. One spike changes almost nothing, but thousands add up. The extra Na⁺ inside speeds up the pump, and the faster pump, being electrogenic, makes the cell more negative until it has cleared the Na⁺: a hyperpolarization that lasts minutes.</p>
+      <h3>How much Na⁺ one spike lets in</h3>
+      <p>The membrane is a capacitor of about 1 µF/cm². To swing it by about 100 mV takes 1 µF/cm² × 0.1 V = 0.1 µC/cm² of charge, the least Na⁺ a spike could let in. Real spikes let in more, because some Na⁺ channels are still open while the K⁺ channels open and let charge back out; Carter and Bean measured how much more in several kinds of neuron (from about a quarter more in pyramidal cells to more in fast-spiking ones). This simulation uses 0.15 µC/cm², and the same amount of K⁺ leaves.</p>
+      <div class="worked"><b>Worked number.</b> In a cell of radius 10 µm, 0.15 µC/cm² changes [Na⁺]<sub>i</sub> by 0.15 × 0.031 = 0.0047 mM. One spike: nothing. A burst of 4,000 spikes: 19 mM, taking [Na⁺]<sub>i</sub> from 12 mM to about 29 mM (the pump clears some during the 80 seconds of the burst).</div>
+      <h3>The pump speeds up</h3>
+      <p>The pump’s rate rises with the Na⁺ inside and the K⁺ outside, each saturating, like an enzyme with its substrate:</p>
+      <div class="eq">\[ I_\text{pump} = I_\text{max}\cdot\frac{1}{1 + \left(10\ \text{mM}/[\text{Na}^+]_i\right)^{1.5}}\cdot\frac{[\text{K}^+]_o}{[\text{K}^+]_o + 1.5\ \text{mM}} \]</div>
+      <p>At rest (12 mM Na⁺ inside, 4 mM K⁺ outside) it runs at 41 % of its top speed, I<sub>max</sub> = 1.5 µA/cm². At 29 mM it runs at 60 %: half again as fast. Plot the pump current against [Na⁺]<sub>i</sub> after a burst to see the curve.</p>
+      <h3>The post-tetanic hyperpolarization</h3>
+      <p>The extra pump current, about 0.29 µA/cm², pushes V down by about 0.29 / 0.0633 = 4.6 mV (Ohm’s law again). The rest of the 7 mV comes from the batteries: E<sub>Na</sub> has shrunk, which pulls V down, more than the slightly shrunken E<sub>K</sub> pushes it up. Then, as the pump clears the Na⁺, everything returns over many minutes. In thin fibres, with far less volume per cm², it returns within a few minutes, and Rang and Ritchie found it needs K⁺ outside and is abolished by ouabain: it is the pump’s doing.</p>
+      <details class="fullderiv"><summary>Show where the 7 mV comes from</summary>
+        <p>At the lowest point, [Na⁺]<sub>i</sub> ≈ 29 mM and [K⁺]<sub>i</sub> ≈ 123 mM, so E<sub>Na</sub> = 26.7 ln(145/29) = +43.0 mV and E<sub>K</sub> = 26.7 ln(4/123) = −91.5 mV, and I<sub>pump</sub> = 0.91 µA/cm². Change each term of V = (g<sub>Na</sub>E<sub>Na</sub> + g<sub>K</sub>E<sub>K</sub> − I<sub>pump</sub>)/(g<sub>Na</sub> + g<sub>K</sub>) in turn:</p>
+        <div class="eq">\[ \Delta V = \underbrace{\tfrac{0.0136}{0.0633}(-23.5)}_{E_\text{Na}\ \text{smaller}:\ -5.1} + \underbrace{\tfrac{0.0497}{0.0633}(+3.5)}_{E_\text{K}\ \text{smaller}:\ +2.7} \underbrace{-\ \tfrac{0.29}{0.0633}}_{\text{faster pump}:\ -4.6} \approx -7.0\ \text{mV} \]</div>
+        <p>In a real nerve, the K⁺ that leaves during the burst also piles up just outside the fibres, which pushes the other way; this simulation’s bath is big and stirred, so that is left out.</p>
+      </details>
+    </div>
+    <aside class="try"><span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="burst">4,000 spikes at 50 Hz</button> About 7 mV down, back over a quarter of an hour.</p>
+      <p><button class="chip" data-try="burstplot">The same, with the pump curve</button> Pump current against [Na⁺]<sub>i</sub>, drawn as it happens.</p>
+      <p><button class="chip" data-try="burstcl">With Cl⁻ crossing</button> Cl⁻ short-circuits the pump: a smaller dip.</p>
+      <p><button class="chip" data-try="burstsmall">400 spikes in a 1 µm cell</button> A tenth of the spikes, the same dip, over in minutes.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Every pump cycle uses one ATP. The brain spends most of its energy pumping back the Na⁺ that its signals let in, so when its blood supply stops, the pump is the first thing to fail, and the batteries start to run down. Drugs and blood K⁺ levels that change the pump or E<sub>K</sub> matter for the heart as much as for nerves.</p>
+      <h3>The cost</h3>
+      <p>One net charge out per cycle, one ATP per cycle: 0.62 µA/cm² is 0.62 × 10⁻⁶ / 1.6 × 10⁻¹⁹ = 3.9 × 10¹² cycles per second per cm², about 39,000 per µm². This cell, with 1,260 µm² of membrane, splits about 49 million ATP each second just to stand still, and more when it fires. Attwell and Laughlin added up such costs for the grey matter of the brain and found that most of its signalling energy goes into pumping out the Na⁺ let in by spikes and synaptic currents. The brain is 2 % of the body’s weight but uses about a fifth of its energy at rest.</p>
+      <h3>Stroke</h3>
+      <p>Without blood flow there is no oxygen or glucose, ATP runs out within minutes, and the pumps stop, as if ouabain had been poured on every cell. Neurons depolarize, Na⁺, Cl⁻ and water flow in, and the cells swell: cytotoxic edema, which shows up on diffusion-weighted MRI and is one reason the swollen brain is dangerous after a large stroke.</p>
+      <h3>Digoxin</h3>
+      <p>Digoxin, from the foxglove plant, partly blocks the heart’s pumps. [Na⁺]<sub>i</sub> rises a little, so the Na⁺/Ca²⁺ exchanger, which uses the Na⁺ gradient to push Ca²⁺ out, removes less Ca²⁺; more Ca²⁺ is stored, and each beat is stronger. Too much digoxin and the cells depolarize, causing arrhythmias, and K⁺ builds up in the blood because the pumps everywhere take up less of it.</p>
+      <h3>Potassium in the blood</h3>
+      <p>Hyperkalemia (high K⁺ outside) raises E<sub>K</sub> and depolarizes nerve and heart cells, at first making them more excitable, then less as their Na⁺ channels inactivate (the Action Potential lesson). Hypokalemia does the reverse and also slows the pump, which needs K⁺ outside to bind.</p>
+      <div class="worked"><b>Worked number.</b> Doubling [K⁺]<sub>o</sub> from 4 to 8 mM moves E<sub>K</sub> by 26.7 × ln 2 = 18.5 mV, from −94.9 to −76.4 mV. V jumps to about −57 mV at once. The pump speeds up a little (it binds K⁺ outside better), lowers [Na⁺]<sub>i</sub> from 12 to 9 mM over the next quarter of an hour, and V drifts up a few more millivolts.</div>
+    </div>
+    <aside class="try"><span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="hyperk">[K⁺]<sub>o</sub> 8 mM</button> Depolarized at once.</p>
+      <p><button class="chip" data-try="hypok">[K⁺]<sub>o</sub> 1.5 mM</button> Hyperpolarized at once, then Na⁺ creeps up as the pump slows.</p>
+      <p><button class="chip" data-try="digoxin">A partial block (digoxin)</button> Pump at 70 %: V rises about 3 mV at once; then [Na⁺]<sub>i</sub> climbs until the remaining pumps, running faster, keep up again, near 19 mM.</p>
+      <p><button class="chip" data-try="swell">Stroke: no ATP, Cl⁻ crossing</button> The cell runs down and swells.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Boyle PJ, Conway EJ (1941).</b> Potassium accumulation in muscle and associated changes. <i>Journal of Physiology</i> 100:1–63. <a href="https://doi.org/10.1113/jphysiol.1941.sp003922" target="_blank" rel="noopener">doi:10.1113/jphysiol.1941.sp003922</a><br><span class="why">K⁺ and Cl⁻ cross the membrane, trapped anions inside do not: how concentrations, voltage and the cell’s volume are tied together. Muscle swells when K⁺ outside is raised.</span></li>
+        <li><b>Hodgkin AL, Keynes RD (1955).</b> Active transport of cations in giant axons from <i>Sepia</i> and <i>Loligo</i>. <i>Journal of Physiology</i> 128:28–60. <a href="https://doi.org/10.1113/jphysiol.1955.sp005290" target="_blank" rel="noopener">doi:10.1113/jphysiol.1955.sp005290</a><br><span class="why">With radioactive Na⁺: axons pump Na⁺ out against its gradient, using metabolic energy, coupled to K⁺ uptake from outside.</span></li>
+        <li><b>Skou JC (1957).</b> The influence of some cations on an adenosine triphosphatase from peripheral nerves. <i>Biochimica et Biophysica Acta</i> 23:394–401. <a href="https://doi.org/10.1016/0006-3002(57)90343-8" target="_blank" rel="noopener">doi:10.1016/0006-3002(57)90343-8</a><br><span class="why">The enzyme itself: an ATPase in nerve membranes that needs both Na⁺ and K⁺. Nobel Prize, 1997.</span></li>
+        <li><b>Post RL, Jolly PC (1957).</b> The linkage of sodium, potassium, and ammonium active transport across the human erythrocyte membrane. <i>Biochimica et Biophysica Acta</i> 25:118–128. <a href="https://doi.org/10.1016/0006-3002(57)90426-2" target="_blank" rel="noopener">doi:10.1016/0006-3002(57)90426-2</a><br><span class="why">3 Na⁺ out for every 2 K⁺ in.</span></li>
+        <li><b>Tosteson DC, Hoffman JF (1960).</b> Regulation of cell volume by active cation transport in high and low potassium sheep red cells. <i>Journal of General Physiology</i> 44:169–194. <a href="https://doi.org/10.1085/jgp.44.1.169" target="_blank" rel="noopener">doi:10.1085/jgp.44.1.169</a><br><span class="why">The pump–leak idea: the pump keeps the cell’s volume steady by balancing the leaks.</span></li>
+        <li><b>Mullins LJ, Noda K (1963).</b> The influence of sodium-free solutions on the membrane potential of frog muscle fibers. <i>Journal of General Physiology</i> 47:117–132. <a href="https://doi.org/10.1085/jgp.47.1.117" target="_blank" rel="noopener">doi:10.1085/jgp.47.1.117</a><br><span class="why">The resting voltage with a 3 : 2 pump: the factor r = 3/2 in the Goldman–Hodgkin–Katz equation.</span></li>
+        <li><b>Rang HP, Ritchie JM (1968).</b> On the electrogenic sodium pump in mammalian non-myelinated nerve fibres and its activation by various external cations. <i>Journal of Physiology</i> 196:183–221. <a href="https://doi.org/10.1113/jphysiol.1968.sp008502" target="_blank" rel="noopener">doi:10.1113/jphysiol.1968.sp008502</a><br><span class="why">The hyperpolarization after a burst is the electrogenic pump: it needs K⁺ outside, it fades over 1–3 minutes, and Cl⁻ short-circuits it.</span></li>
+        <li><b>Thomas RC (1972).</b> Electrogenic sodium pump in nerve and muscle cells. <i>Physiological Reviews</i> 52:563–594. <a href="https://doi.org/10.1152/physrev.1972.52.3.563" target="_blank" rel="noopener">doi:10.1152/physrev.1972.52.3.563</a><br><span class="why">A review of the evidence that the pump makes a current of its own and moves the voltage directly.</span></li>
+        <li><b>Luo CH, Rudy Y (1994).</b> A dynamic model of the cardiac ventricular action potential. I. Simulations of ionic currents and concentration changes. <i>Circulation Research</i> 74:1071–1096. <a href="https://doi.org/10.1161/01.RES.74.6.1071" target="_blank" rel="noopener">doi:10.1161/01.RES.74.6.1071</a><br><span class="why">The form of the pump’s dependence on Na⁺ inside and K⁺ outside used here (without its small voltage dependence), from a model of heart cells.</span></li>
+        <li><b>Attwell D, Laughlin SB (2001).</b> An energy budget for signaling in the grey matter of the brain. <i>Journal of Cerebral Blood Flow and Metabolism</i> 21:1133–1145. <a href="https://doi.org/10.1097/00004647-200110000-00001" target="_blank" rel="noopener">doi:10.1097/00004647-200110000-00001</a><br><span class="why">Most of the brain’s signalling energy goes to pumping out the Na⁺ that spikes and synapses let in.</span></li>
+        <li><b>Liang D, Bhatta S, Gerzanich V, Simard JM (2007).</b> Cytotoxic edema: mechanisms of pathological cell swelling. <i>Neurosurgical Focus</i> 22(5):E2. <a href="https://doi.org/10.3171/foc.2007.22.5.3" target="_blank" rel="noopener">doi:10.3171/foc.2007.22.5.3</a><br><span class="why">How cells swell when ATP runs out in a stroke: Na⁺, Cl⁻ and water flow in.</span></li>
+        <li><b>Carter BC, Bean BP (2009).</b> Sodium entry during action potentials of mammalian neurons: incomplete inactivation and reduced metabolic efficiency in fast-spiking neurons. <i>Neuron</i> 64:898–909. <a href="https://doi.org/10.1016/j.neuron.2009.12.011" target="_blank" rel="noopener">doi:10.1016/j.neuron.2009.12.011</a><br><span class="why">How much Na⁺ a spike really lets in, compared with the least it could.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="pump-calc">
+  <div class="calc-head">
+    <span class="sect-title">Pump and leak calculator</span>
+  </div>
+  <p class="caption">Set the concentrations, the two leaks and the pump, and see the batteries, the resting voltage with and without the pump’s own current, and whether the pump keeps up with the leaks.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh"><i class="dot na"></i> Na⁺</div>
+        <div class="gr"><label for="kNai">inside</label><input type="range" id="kNai" min="3" max="150" step="0.5" value="12"><output id="kNaio" for="kNai"></output></div>
+        <div class="gr"><label for="kNao">outside</label><input type="range" id="kNao" min="100" max="160" step="1" value="145"><output id="kNaoo" for="kNao"></output></div>
+        <div class="gr"><label for="kGNa">g<sub>Na</sub></label><input type="range" id="kGNa" min="0.002" max="0.05" step="0.0002" value="0.0136"><output id="kGNao" for="kGNa"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot k"></i> K⁺</div>
+        <div class="gr"><label for="kKi">inside</label><input type="range" id="kKi" min="5" max="160" step="1" value="140"><output id="kKio" for="kKi"></output></div>
+        <div class="gr"><label for="kKo">outside</label><input type="range" id="kKo" min="1" max="15" step="0.1" value="4"><output id="kKoo" for="kKo"></output></div>
+        <div class="gr"><label for="kGK">g<sub>K</sub></label><input type="range" id="kGK" min="0.01" max="0.2" step="0.0005" value="0.0497"><output id="kGKo" for="kGK"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="sw pump"></i> The pump and the cell</div>
+        <div class="gr"><label for="kP">I<sub>pump</sub></label><input type="range" id="kP" min="0" max="2" step="0.01" value="0.62"><output id="kPo" for="kP"></output></div>
+        <div class="gr"><label for="kR">radius</label><input type="range" id="kR" min="0" max="1000" step="1" value="732"><output id="kRo" for="kR"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kV">—</span><span class="caption">resting voltage V, with the pump</span></div>
+      <div class="es"><span>E<sub>Na</sub> <b id="kENa">—</b></span><span>E<sub>K</sub> <b id="kEK">—</b></span><span>without the pump <b id="kV0">—</b></span><span>the pump’s share <b id="kShare">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <div class="gformula" id="kBal" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator chart">
+        <button type="button" role="tab" id="tab-kiv" aria-controls="pane-kiv" aria-selected="true">Current vs voltage</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kiv" aria-labelledby="tab-kiv">
+        <canvas id="kIV" aria-label="Each branch's current against the membrane voltage, and their total, which crosses zero at the resting voltage"></canvas>
+        <div class="legend"><span style="color:var(--na)"><i class="ln"></i><span style="color:var(--muted)">I<sub>Na</sub></span></span><span style="color:var(--k)"><i class="ln"></i><span style="color:var(--muted)">I<sub>K</sub></span></span><span style="color:var(--pump)"><i class="ln"></i><span style="color:var(--muted)">I<sub>pump</sub></span></span><span style="color:var(--ink)"><i class="ln thick"></i><span style="color:var(--muted)">total</span></span><span style="color:var(--ink)"><i class="ln dash"></i><span style="color:var(--muted)">total without the pump</span></span></div>
+      </div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li><b>The lines:</b> each branch’s current at every voltage. The leaks are straight lines (Ohm’s law): I<sub>Na</sub> crosses zero at E<sub>Na</sub>, I<sub>K</sub> at E<sub>K</sub>, and the steeper a line, the bigger its conductance. The pump is flat: the same outward current whatever the voltage.</li>
+          <li><b>The thick line</b> is their total. The resting voltage is where it crosses zero (the dot): there the currents cancel. The dashed line is the total without the pump; it crosses zero at the open circle. The pump lifts the total by I<sub>pump</sub>, which moves the crossing to the left, more negative.</li>
+          <li>Outward current is positive, inward negative.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<script>
+// ---------- shared: colours, number formats, canvas text, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+const FONT = '"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif', MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','pos','neg','cyto','bath','mem','memdark','pump','ouab','warm'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+const num = (v, d = 1) => isFinite(v) ? (Math.abs(v) < 0.5 * Math.pow(10, -d) ? 0 : v).toFixed(d).replace('-', '−') : '—';
+const sgn = (v, d = 1) => isFinite(v) ? (+v.toFixed(d) > 0 ? '+' : '') + num(v, d) : '—';
+const bigCount = v => v >= 1e9 ? num(v / 1e9, 1) + ' billion' : v >= 1e6 ? num(v / 1e6, v < 1e7 ? 1 : 0) + ' million' : Math.round(v).toLocaleString('en-US');
+function sizeCanvas(cv, W, H) {
+  const bw = Math.round(W * dpr), bh = Math.round(H * dpr);
+  if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; cv.style.height = H + 'px'; }
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c;
+}
+function bindRange(id, fmt, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmt(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// Canvas text with real subscripts: "E_Na", "[K⁺]_o" and "g_{Na}" draw what follows the underscore lowered and smaller.
+function fillSub(c, text, x, y) {
+  text = String(text);
+  if (!text.includes('_')) { c.fillText(text, x, y); return; }
+  const parts = [], re = /_(\{[^}]*\}|[A-Za-z0-9]+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { parts.push([text.slice(last, m.index), false], [m[1].replace(/[{}]/g, ''), true]); last = re.lastIndex; }
+  parts.push([text.slice(last), false]);
+  const font = c.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]);
+  const subFont = font.replace(/[\d.]+px/, (size * 0.74).toFixed(1) + 'px');
+  const w = parts.map(([t, sub]) => { c.font = sub ? subFont : font; return c.measureText(t).width; });
+  const total = w.reduce((a, b) => a + b, 0), align = c.textAlign;
+  let px = align === 'center' ? x - total / 2 : align === 'right' || align === 'end' ? x - total : x;
+  c.textAlign = 'left';
+  parts.forEach(([t, sub], i) => { c.font = sub ? subFont : font; c.fillText(t, px, y + (sub ? size * 0.28 : 0)); px += w[i]; });
+  c.font = font; c.textAlign = align;
+}
+function niceTicks(a, b, n) {
+  const span = Math.abs(b - a) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag, out = [];
+  for (let v = Math.ceil(Math.min(a, b) / step) * step; v <= Math.max(a, b) + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+const niceCeil = v => { const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; };
+const tick = v => (Math.abs(v) >= 1e4 ? Math.round(v).toLocaleString('en-US') : String(+v.toFixed(4))).replace('-', '−');
+function roundRect(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function arrow(c, x, yc, len, up, color, lw = 2.2) {
+  if (len < 3) return;
+  const y0 = yc + (up ? len / 2 : -len / 2), y1 = yc + (up ? -len / 2 : len / 2), hd = Math.min(7, len * 0.5);
+  c.strokeStyle = color; c.fillStyle = color; c.lineWidth = lw;
+  c.beginPath(); c.moveTo(x, y0); c.lineTo(x, y1 + (up ? hd : -hd)); c.stroke();
+  c.beginPath(); c.moveTo(x, y1); c.lineTo(x - 4.5, y1 + (up ? hd : -hd)); c.lineTo(x + 4.5, y1 + (up ? hd : -hd)); c.closePath(); c.fill();
+}
+
+// One chart on a canvas. o: { h, square, x:[x0,x1], y:[y0,y1], xlab, ylab, empty (a message instead of a chart),
+//   lines:[{xs, ys, i0, i1, xk, yk, color, w, dash, alpha}] (xs, ys arrays; xk, yk multiply them), shades:[{a, b, color, alpha}],
+//   hlines:[{y, color, dash}], vlines:[{x, label}], dots:[{x, y, color, r, ring}], labels:[{x, y, text, color, align}] }
+function plot(cv, o) {
+  const W = cv.clientWidth || 560, L = 54, R = o.right ?? 14, T = 16, B = 34;
+  const H = o.square ? Math.round(W - L - R + T + B) : (o.h || 200);
+  const c = sizeCanvas(cv, W, H);
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  if (o.empty) {
+    c.strokeStyle = C.line; c.setLineDash([4, 4]); c.strokeRect(L + .5, T + .5, W - L - R, H - T - B); c.setLineDash([]);
+    c.fillStyle = C.muted; c.font = '13px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(o.empty, L + (W - L - R) / 2, T + (H - T - B) / 2); return;
+  }
+  const pw = W - L - R, ph = H - T - B, [x0, x1] = o.x, [y0, y1] = o.y;
+  const X = v => L + (v - x0) / (x1 - x0) * pw, Y = v => T + (y1 - v) / (y1 - y0) * ph;
+  for (const s of o.shades || []) { const a = Math.max(L, X(s.a)), b = Math.min(L + pw, X(s.b)); if (b > a) { c.fillStyle = s.color; c.globalAlpha = s.alpha ?? 0.13; c.fillRect(a, T, Math.max(1, b - a), ph); } }
+  c.globalAlpha = 1;
+  c.font = '11px ' + MONO; c.lineWidth = 1;
+  const xt = niceTicks(x0, x1, Math.max(3, Math.round(pw / 90))), yt = niceTicks(y0, y1, Math.max(3, Math.round(ph / 42)));
+  c.strokeStyle = C.line; c.fillStyle = C.muted; c.textAlign = 'center'; c.textBaseline = 'top';
+  for (const v of xt) { const x = Math.round(X(v)) + .5; c.beginPath(); c.moveTo(x, T); c.lineTo(x, T + ph); c.stroke(); c.fillText(tick(v), x, T + ph + 5); }
+  c.textAlign = 'right'; c.textBaseline = 'middle';
+  for (const v of yt) { const y = Math.round(Y(v)) + .5; c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.fillText(tick(v), L - 6, y); }
+  c.strokeStyle = C.muted; c.beginPath(); c.moveTo(L - .5, T); c.lineTo(L - .5, T + ph + .5); c.lineTo(L + pw, T + ph + .5); c.stroke();
+  c.font = '12px ' + FONT; c.fillStyle = C.muted;
+  if (o.xlab) { c.textAlign = 'right'; c.textBaseline = 'bottom'; fillSub(c, o.xlab, W - R, H - 1); }
+  if (o.ylab) { c.textAlign = 'left'; c.textBaseline = 'top'; fillSub(c, o.ylab, 4, 0); }
+  c.save(); c.beginPath(); c.rect(L, T - 1, pw, ph + 2); c.clip();
+  for (const h of o.hlines || []) { c.strokeStyle = h.color || C.muted; c.lineWidth = 1; c.setLineDash(h.dash ? [5, 4] : []); const y = Math.round(Y(h.y)) + .5; c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); }
+  c.setLineDash([]);
+  (o.vlines || []).forEach((v, i) => {
+    const x = Math.round(X(v.x)) + .5; c.strokeStyle = C.muted; c.setLineDash([2, 3]); c.lineWidth = 1;
+    c.beginPath(); c.moveTo(x, T); c.lineTo(x, T + ph); c.stroke(); c.setLineDash([]);
+    if (v.label) { c.font = '11px ' + FONT; c.fillStyle = C.muted; c.textBaseline = 'top'; c.textAlign = x > L + pw * 0.7 ? 'right' : 'left'; fillSub(c, v.label, x + (c.textAlign === 'right' ? -4 : 4), T + 2 + 13 * (i % 3)); }
+  });
+  for (const l of o.lines || []) {
+    const i0 = l.i0 ?? 0, i1 = l.i1 ?? l.ys.length; if (i1 - i0 < 1) continue;
+    const xk = l.xk ?? 1, yk = l.yk ?? 1, st = Math.max(1, Math.floor((i1 - i0) / (pw * 1.5)));
+    c.strokeStyle = l.color; c.lineWidth = l.w || 2; c.lineJoin = 'round'; c.setLineDash(l.dash ? [6, 4] : []); c.globalAlpha = l.alpha ?? 1;
+    c.beginPath(); c.moveTo(X(l.xs[i0] * xk), Y(l.ys[i0] * yk));
+    for (let i = i0 + st; i < i1; i += st) c.lineTo(X(l.xs[i] * xk), Y(l.ys[i] * yk));
+    c.lineTo(X(l.xs[i1 - 1] * xk), Y(l.ys[i1 - 1] * yk));
+    c.stroke(); c.globalAlpha = 1;
+  }
+  c.setLineDash([]);
+  for (const d of o.dots || []) {
+    c.beginPath(); c.arc(X(d.x), Y(d.y), d.r || 4, 0, 2 * Math.PI);
+    if (d.ring) { c.fillStyle = C.surface; c.fill(); c.strokeStyle = d.color; c.lineWidth = 2; c.stroke(); } else { c.fillStyle = d.color; c.fill(); }
+  }
+  c.font = '12px ' + FONT;
+  for (const t of o.labels || []) { c.fillStyle = t.color || C.muted; c.textAlign = t.align || 'left'; c.textBaseline = 'bottom'; fillSub(c, t.text, X(t.x), Y(t.y) - 4); }
+  c.restore();
+}
+
+// ---------- the model: one cell's Na⁺, K⁺ and Cl⁻, its volume, and the pump ----------
+// Units: mM, mV, µA/cm², mS/cm², seconds. Amounts are kept per litre of the cell's starting volume, so a
+// concentration is amount / w, where w is the volume as a fraction of the start.
+const RTF = 26.7, F = 96485, NA_O = 145, CL_O = 120, OSM = 298;      // RT/F at 37 °C; the bath; total particles outside
+const NA0 = 12, K0 = 140, V0 = -70, KO0 = 4, KM_NA = 10, KM_K = 1.5;  // the resting cell; the pump's half-points (Luo & Rudy 1994)
+const QSPIKE = 0.15;                                                 // µC/cm² of Na⁺ in (and of K⁺ out) per spike
+const nernst = (o, i) => RTF * Math.log(o / i);
+const pumpRate = (nai, ko) => 1 / (1 + Math.pow(KM_NA / nai, 1.5)) * ko / (ko + KM_K);
+// leak conductances and the pump's top current, chosen so the cell sits still at V0 with NA0, K0 and [K⁺]o = 4 mM
+const P0 = 0.62, ENA0 = nernst(NA_O, NA0), EK0 = nernst(KO0, K0);
+const GK = 2 * P0 / (V0 - EK0), GNA = -3 * P0 / (V0 - ENA0), PMAX = P0 / pumpRate(NA0, KO0), GCL = 0.5 * GK;
+const CL0 = CL_O * Math.exp(V0 / RTF), A0 = OSM - NA0 - K0 - CL0;   // Cl⁻ at equilibrium at rest; trapped anions make up the rest
+const P = { pump: 1, ko: 4, r: 10, cl: false, nSp: 4000, rate: 50, speed: 60 };
+const S = { t: 0, na: NA0, ki: K0, cli: CL0, w: 1, left: 0, fire: 0 };
+const kOf = r => 3 / (r * 1e-4) / F;          // mM per second for 1 µA/cm², a sphere of radius r µm (area per volume 3/r)
+function solve() {
+  const w = S.w, na = S.na / w, k = S.ki / w, cl = S.cli / w, ko = P.ko;
+  const ena = nernst(NA_O, na), ek = nernst(ko, k), ecl = -nernst(CL_O, cl);
+  const p = PMAX * P.pump * pumpRate(na, ko), g = P.cl ? GCL : 0;
+  const v = (GNA * ena + GK * ek + g * ecl - p) / (GNA + GK + g);   // all currents add to zero
+  return { na, k, cl, ena, ek, ecl, p, v, iNa: GNA * (v - ena), iK: GK * (v - ek), iCl: g * (v - ecl) };
+}
+let D = solve();
+function step(dt) {
+  let fire = 0;
+  if (S.left > 0) { const n = Math.min(S.left, P.rate * dt); S.left -= n; fire = n / dt; if (S.left < 1e-6) S.left = 0; }
+  S.fire = fire;
+  const d = solve(), bI = fire * QSPIKE, k = kOf(P.r);
+  S.na -= k * (d.iNa + 3 * d.p - bI) * dt;     // leak, pump, spikes
+  S.ki -= k * (d.iK - 2 * d.p + bI) * dt;
+  if (P.cl) S.cli += k * d.iCl * dt;           // outward current = Cl⁻ moving in
+  const lo = 0.2 * S.w;
+  if (S.na < lo) S.na = lo; if (S.ki < lo) S.ki = lo; if (S.cli < lo) S.cli = lo;
+  S.w = (S.na + S.ki + S.cli + A0) / OSM;      // water follows until the inside has as many particles per litre as the outside
+  S.t += dt;
+}
+
+// history: a sample each second of the cell's time, up to 6 hours
+const HMAX = 21600, REC = 1;
+const HK = ['t', 'na', 'k', 'cl', 'ena', 'ek', 'ecl', 'v', 'p', 'inNa', 'outNa', 'outK', 'inK', 'vol', 'ko', 'pf', 'fire'];
+const Hs = {}; HK.forEach(k => Hs[k] = new Float32Array(HMAX));
+let hn = 0, nextRec = 0;
+function record() {
+  if (hn === HMAX) { const h = HMAX >> 1; HK.forEach(k => Hs[k].copyWithin(0, h)); hn = HMAX - h; }
+  const d = D, bI = S.fire * QSPIKE, i = hn++;
+  Hs.t[i] = S.t; Hs.na[i] = d.na; Hs.k[i] = d.k; Hs.cl[i] = d.cl; Hs.ena[i] = d.ena; Hs.ek[i] = d.ek; Hs.ecl[i] = d.ecl; Hs.v[i] = d.v; Hs.p[i] = d.p;
+  Hs.inNa[i] = -d.iNa + bI; Hs.outNa[i] = 3 * d.p; Hs.outK[i] = d.iK + bI; Hs.inK[i] = 2 * d.p;
+  Hs.vol[i] = S.w * 100; Hs.ko[i] = P.ko; Hs.pf[i] = P.pump; Hs.fire[i] = S.fire > 0 ? 1 : 0;
+}
+const pending = [], events = [];   // things to do at a set time (the Start-here buttons); marks on the charts
+let lastMark = { kind: '', at: 0 }, scheduled = false;
+// a mark for each change; a slider dragged for a moment updates its own mark (but a scheduled change always gets its own)
+function mark(label, kind) {
+  if (scheduled) kind += S.t;
+  const now = performance.now(), e = events[events.length - 1];
+  if (e && e.kind === kind && now - lastMark.at < 1500) e.label = label; else events.push({ t: S.t, label, kind });
+  lastMark = { kind, at: now }; dirty = true;
+}
+function advance(sim) {
+  const dtMax = Math.min(1, 0.1 * P.r), n = Math.min(5000, Math.ceil(sim / dtMax)), dt = sim / n;
+  for (let i = 0; i < n; i++) {
+    while (pending.length && S.t >= pending[0].t) { scheduled = true; try { pending.shift().fn(); } finally { scheduled = false; } }
+    step(dt);
+    if (S.t >= nextRec) { D = solve(); record(); nextRec += REC; }
+  }
+  D = solve();
+}
+function reset() {
+  Object.assign(S, { t: 0, na: NA0, ki: K0, cli: CL0, w: 1, left: 0, fire: 0 });
+  hn = 0; events.length = 0; pending.length = 0;
+  D = solve(); record(); nextRec = REC; parts.length = 0; dirty = true;
+}
+
+// ---------- the picture: the cell in its bath ----------
+const SLOTS = [['pump', -90], ['k', -60], ['na', -30], ['cl', 0], ['pump', 30], ['k', 60], ['nav', 90], ['kv', 120], ['pump', 150], ['k', 180], ['na', 210], ['cl', 240]]
+  .map(([kind, deg]) => ({ kind, a: deg * Math.PI / 180, acc: 0, flash: 0, blocked: false }));
+const ION = { na: 'na', k: 'k', cl: 'cl', nav: 'na', kv: 'k' };
+const parts = [];                      // ions on their way through: { s (slot), ion, dir (+1 in, −1 out), off, u (0 → 1) }
+const dots = { in: { na: [], k: [], cl: [] }, out: { na: [], k: [], cl: [] } };
+const VC = 3.9;                        // traffic shown per second, per µA/cm² (a sample: the real numbers are millions of times larger)
+function blockPumps() {
+  let nb = Math.round((1 - P.pump) * 3); if (P.pump > 0 && nb > 2) nb = 2;
+  let i = 0; for (const s of SLOTS) if (s.kind === 'pump') s.blocked = i++ < nb;
+  return 3 - nb;
+}
+function animate(real) {
+  for (const set of Object.values(dots.in)) for (const d of set) {
+    d.x += (Math.random() - .5) * 0.025; d.y += (Math.random() - .5) * 0.025;
+    const r2 = d.x * d.x + d.y * d.y; if (r2 > 1) { const f = 0.98 / Math.sqrt(r2); d.x *= f; d.y *= f; }
+  }
+  for (const set of Object.values(dots.out)) for (const d of set) {
+    d.u += (Math.random() - .5) * 0.004; d.v += (Math.random() - .5) * 0.006;
+    d.u -= Math.floor(d.u); d.v -= Math.floor(d.v);
+  }
+  const working = blockPumps(), bI = S.fire * QSPIKE;
+  SLOTS.forEach((s, si) => {
+    let rate = 0, dir = 1;
+    switch (s.kind) {
+      case 'pump': rate = s.blocked || !working ? 0 : D.p * VC / working; break;
+      case 'na': rate = Math.abs(D.iNa) * VC / 2; dir = D.iNa < 0 ? 1 : -1; break;
+      case 'k': rate = Math.abs(D.iK) * VC / 3; dir = D.iK > 0 ? -1 : 1; break;
+      case 'cl': rate = P.cl ? Math.abs(D.iCl) * VC / 2 : 0; dir = D.iCl > 0 ? 1 : -1; break;
+      case 'nav': rate = bI * VC; dir = 1; break;
+      case 'kv': rate = bI * VC; dir = -1; break;
+    }
+    s.acc += Math.min(rate, 12) * real;
+    while (s.acc >= 1) {
+      s.acc -= 1;
+      if (parts.length > 240) continue;
+      if (s.kind === 'pump') {
+        for (const off of [-6, 0, 6]) parts.push({ s: si, ion: 'na', dir: -1, off, u: 0 });
+        for (const off of [-3.5, 3.5]) parts.push({ s: si, ion: 'k', dir: 1, off, u: 0 });
+        s.flash = 0.2;
+      } else parts.push({ s: si, ion: ION[s.kind], dir, off: (Math.random() - .5) * 2, u: 0 });
+    }
+    s.flash = Math.max(0, s.flash - real);
+  });
+  for (let i = parts.length - 1; i >= 0; i--) { parts[i].u += real / 0.8; if (parts[i].u >= 1) parts.splice(i, 1); }
+}
+function syncDots(list, n, mk) { n = Math.max(0, Math.min(600, n)); while (list.length < n) list.push(mk()); if (list.length > n) list.length = n; }
+const inDot = () => { let x, y; do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; } while (x * x + y * y > 0.96); return { x, y }; };
+const outDot = () => ({ u: Math.random(), v: Math.random() });
+function drawCell() {
+  const cv = $('cell'), W = cv.clientWidth || 560, H = 330, c = sizeCanvas(cv, W, H);
+  const R0 = Math.min(W * 0.28, H * 0.32), R = Math.min(H * 0.47, R0 * Math.cbrt(S.w)), cx = W / 2, cy = H / 2 + 8;
+  c.fillStyle = C.bath; c.fillRect(0, 0, W, H);
+  c.fillStyle = C.cyto; c.beginPath(); c.arc(cx, cy, R, 0, 2 * Math.PI); c.fill();
+  // ions, at a density that follows their concentration
+  const dens = 36 / (K0 * Math.PI * R0 * R0), ri = R - 9, ain = Math.PI * ri * ri, aout = W * H - Math.PI * (R + 9) ** 2;
+  syncDots(dots.in.k, Math.round(D.k * ain * dens), inDot); syncDots(dots.in.na, Math.round(D.na * ain * dens), inDot); syncDots(dots.in.cl, Math.round(D.cl * ain * dens), inDot);
+  syncDots(dots.out.na, Math.round(NA_O * aout * dens), outDot); syncDots(dots.out.k, Math.round(P.ko * aout * dens), outDot); syncDots(dots.out.cl, Math.round(CL_O * aout * dens), outDot);
+  const rr = (R + 10) * (R + 10);
+  for (const ion of ['cl', 'na', 'k']) {
+    c.fillStyle = C[ion]; c.beginPath();
+    for (const d of dots.in[ion]) { const x = cx + d.x * ri, y = cy + d.y * ri; c.moveTo(x + 2.3, y); c.arc(x, y, 2.3, 0, 2 * Math.PI); }
+    for (const d of dots.out[ion]) { const x = d.u * W, y = d.v * H; if ((x - cx) ** 2 + (y - cy) ** 2 < rr) continue; c.moveTo(x + 2.3, y); c.arc(x, y, 2.3, 0, 2 * Math.PI); }
+    c.fill();
+  }
+  // the membrane and what sits in it
+  c.strokeStyle = C.mem; c.lineWidth = 10; c.beginPath(); c.arc(cx, cy, R, 0, 2 * Math.PI); c.stroke();
+  blockPumps();
+  for (const s of SLOTS) {
+    c.save(); c.translate(cx + R * Math.cos(s.a), cy + R * Math.sin(s.a)); c.rotate(s.a + Math.PI / 2);   // local +y points into the cell
+    if (s.kind === 'pump') {
+      c.fillStyle = s.blocked ? C.line : s.flash > 0 ? mixc(C.pump, C.surface, 0.5) : C.pump;
+      roundRect(c, -11, -15, 22, 30, 5); c.fill();
+      c.fillStyle = s.blocked ? C.muted : C.surface; c.font = '600 8px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('ATP', 0, 8);
+      if (s.blocked) { c.fillStyle = C.ouab; c.beginPath(); c.moveTo(0, -27); c.lineTo(6, -21); c.lineTo(0, -15); c.lineTo(-6, -21); c.closePath(); c.fill(); }
+    } else {
+      const open = s.kind === 'cl' ? P.cl : (s.kind === 'nav' || s.kind === 'kv') ? S.fire > 0 : true;
+      const gap = open ? 2.5 : 0;
+      c.fillStyle = open ? C[ION[s.kind]] : C.line;
+      roundRect(c, -gap - 7, -13, 7, 26, 3); c.fill(); roundRect(c, gap, -13, 7, 26, 3); c.fill();
+      if (s.kind === 'nav' || s.kind === 'kv') { c.strokeStyle = open ? C[ION[s.kind]] : C.muted; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-gap - 7, 15.5); c.lineTo(gap + 7, 15.5); c.stroke(); }
+    }
+    c.restore();
+  }
+  // ions passing through
+  for (const ion of ['na', 'k', 'cl']) {
+    c.fillStyle = C[ion]; c.strokeStyle = C.surface; c.lineWidth = 1; c.beginPath();
+    for (const q of parts) {
+      if (q.ion !== ion) continue;
+      const s = SLOTS[q.s], ca = Math.cos(s.a), sa = Math.sin(s.a), ly = q.dir > 0 ? -24 + 48 * q.u : 24 - 48 * q.u;
+      const x = cx + R * ca - sa * q.off - ca * ly, y = cy + R * sa + ca * q.off - sa * ly;
+      c.moveTo(x + 3, y); c.arc(x, y, 3, 0, 2 * Math.PI);
+    }
+    c.fill(); c.stroke();
+  }
+  c.font = '12px ' + FONT; c.fillStyle = C.muted; c.textAlign = 'left'; c.textBaseline = 'top';
+  c.fillText('outside: a big bath', 10, 8);
+  c.textAlign = 'center'; c.fillText('inside the cell', cx, cy - 8);
+  c.textAlign = 'left'; c.textBaseline = 'bottom';
+  if (P.cl || Math.abs(S.w - 1) > 0.001) c.fillText(`volume ${num(S.w * 100, 0)} % of the start`, 10, H - 8);
+  c.textAlign = 'right'; c.fillText('spike channels', cx + R * Math.cos(1.85) - 18, cy + R * Math.sin(1.85) + 18 > H - 4 ? H - 4 : cy + R * Math.sin(1.85) + 18);
+}
+
+// ---------- the circuit ----------
+function drawCirc() {
+  const cv = $('circ'), W = cv.clientWidth || 560, H = 330, c = sizeCanvas(cv, W, H);
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  const top = 62, bot = H - 44, vmX = W - 36, x0 = 66, sp = (vmX - x0 - 96) / 3, mid = (top + bot) / 2;
+  c.font = '11.5px ' + FONT; c.fillStyle = C.muted; c.textAlign = 'left'; c.textBaseline = 'top';
+  c.fillText('Currents now, in µA/cm²: arrows point up when + charge flows in', 10, 8);
+  c.strokeStyle = C.ink; c.lineWidth = 1.6;
+  c.beginPath(); c.moveTo(x0 - 20, top); c.lineTo(vmX, top); c.moveTo(x0 - 20, bot); c.lineTo(vmX, bot); c.stroke();
+  c.fillStyle = C.muted; c.font = '12px ' + FONT; c.textBaseline = 'bottom'; c.fillText('inside', 10, top - 4); c.textBaseline = 'top'; c.fillText('outside', 10, bot + 5);
+  const leak = (x, ion, gl, El, E, E0, I, off) => {
+    const col = off ? C.line : C[ion], wire = off ? C.line : C.ink, r0 = top + 18, r1 = r0 + 48, by = r1 + 50;
+    c.strokeStyle = wire; c.lineWidth = 1.6; c.setLineDash(off ? [4, 4] : []);
+    c.beginPath(); c.moveTo(x, top); c.lineTo(x, r0); c.moveTo(x, r1); c.lineTo(x, by - 5); c.moveTo(x, by + 5); c.lineTo(x, bot); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = col; c.lineWidth = 2; c.beginPath(); c.moveTo(x, r0);
+    for (let i = 1; i <= 6; i++) c.lineTo(x + (i === 6 ? 0 : i % 2 ? 7 : -7), r0 + (r1 - r0) * i / 6);
+    c.stroke();
+    const plus = E >= 0, yl = by + (plus ? -5 : 5), ys = by + (plus ? 5 : -5);
+    c.strokeStyle = off ? C.line : C.ink; c.lineWidth = 1.8; c.beginPath(); c.moveTo(x - 14, yl); c.lineTo(x + 14, yl); c.stroke();
+    c.lineWidth = 4.5; c.beginPath(); c.moveTo(x - 7, ys); c.lineTo(x + 7, ys); c.stroke();
+    c.fillStyle = off ? C.muted : C.ink; c.font = '12px ' + FONT; c.textAlign = 'left'; c.textBaseline = 'middle';
+    fillSub(c, gl, x + 11, (r0 + r1) / 2);
+    fillSub(c, El, x + 18, by - 9);
+    c.font = '12px ' + MONO; c.fillText(off ? 'closed' : sgn(E, 0) + ' mV', x + 18, by + 7);
+    if (E0 != null && !off) {   // how charged the battery still is
+      const f = Math.max(0, Math.min(1, E / E0)), gx = x + 18, gy = by + 17;
+      c.strokeStyle = C.muted; c.lineWidth = 1; c.strokeRect(gx + .5, gy + .5, 28, 10); c.fillStyle = C.muted; c.fillRect(gx + 29, gy + 3, 2, 5);
+      c.fillStyle = col; c.fillRect(gx + 2, gy + 2, 25 * f, 7);
+    }
+    if (!off && Math.abs(I) > 0.005) {
+      const len = Math.min(70, 8 + Math.abs(I) * 26), yc = (r0 + r1) / 2;
+      arrow(c, x - 17, yc, len, I < 0, col);
+      c.fillStyle = col; c.font = '11px ' + MONO; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText(num(Math.abs(I), 2), x - 17, yc + Math.max(len / 2, 14) + 4);
+    }
+  };
+  leak(x0, 'na', 'g_Na', 'E_Na', D.ena, ENA0, D.iNa, false);
+  leak(x0 + sp, 'k', 'g_K', 'E_K', D.ek, EK0, D.iK, false);
+  leak(x0 + 2 * sp, 'cl', 'g_Cl', 'E_Cl', D.ecl, null, D.iCl, !P.cl);
+  // the pump: a current source, pushing one net + charge out each cycle
+  const xp = x0 + 3 * sp, off = D.p < 1e-4, col = off ? C.line : C.pump;
+  c.strokeStyle = C.ink; c.lineWidth = 1.6; c.beginPath(); c.moveTo(xp, top); c.lineTo(xp, mid - 17); c.moveTo(xp, mid + 17); c.lineTo(xp, bot); c.stroke();
+  c.strokeStyle = col; c.lineWidth = 2; c.beginPath(); c.arc(xp, mid, 17, 0, 2 * Math.PI); c.stroke();
+  arrow(c, xp, mid, 20, false, col, 2);
+  c.fillStyle = off ? C.muted : C.ink; c.font = '12px ' + FONT; c.textAlign = 'left'; c.textBaseline = 'middle';
+  fillSub(c, 'I_pump', xp + 23, mid - 22); c.fillStyle = C.muted; c.font = '11.5px ' + FONT;
+  c.fillText(off ? 'blocked' : '3 Na⁺ out', xp + 23, mid + 2); if (!off) c.fillText('2 K⁺ in', xp + 23, mid + 17);
+  if (!off) { const len = Math.min(70, 8 + D.p * 26); arrow(c, xp - 26, mid, len, false, col); c.fillStyle = col; c.font = '11px ' + MONO; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText(num(D.p, 2), xp - 26, mid + Math.max(len / 2, 14) + 4); }
+  // the voltmeter
+  c.strokeStyle = C.ink; c.lineWidth = 1.6; c.beginPath(); c.moveTo(vmX, top); c.lineTo(vmX, mid - 16); c.moveTo(vmX, mid + 16); c.lineTo(vmX, bot); c.stroke();
+  c.fillStyle = C.surface; c.beginPath(); c.arc(vmX, mid, 16, 0, 2 * Math.PI); c.fill(); c.stroke();
+  c.fillStyle = C.ink; c.font = '600 13px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('V', vmX, mid + 1);
+  c.font = '600 12px ' + MONO; c.textAlign = 'right'; c.fillText(num(D.v, 1) + ' mV', W - 6, mid + 30);
+}
+
+// ---------- the charts ----------
+let WIN = 15, VR = 'all', TV = 'na', PX = null, PY = null;
+const XY = {   // what can go on the axes of "Plot your run": [label, unit, history key, scale]
+  t: ['time', 'min', 't', 1 / 60], na: ['[Na⁺]_i', 'mM', 'na', 1], k: ['[K⁺]_i', 'mM', 'k', 1], cl: ['[Cl⁻]_i', 'mM', 'cl', 1],
+  ena: ['E_Na', 'mV', 'ena', 1], ek: ['E_K', 'mV', 'ek', 1], v: ['V', 'mV', 'v', 1], p: ['I_pump', 'µA/cm²', 'p', 1],
+  inNa: ['Na⁺ in', 'µA/cm²', 'inNa', 1], vol: ['volume', '% of start', 'vol', 1], ko: ['[K⁺]_o', 'mM', 'ko', 1],
+};
+const XYHTML = { t: 'time', na: '[Na⁺]<sub>i</sub>', k: '[K⁺]<sub>i</sub>', cl: '[Cl⁻]<sub>i</sub>', ena: 'E<sub>Na</sub>', ek: 'E<sub>K</sub>', v: 'V',
+  p: 'I<sub>pump</sub>', inNa: 'Na⁺ coming in', vol: 'volume', ko: '[K⁺]<sub>o</sub>' };
+function firstAt(t) { let lo = 0, hi = hn; while (lo < hi) { const m = (lo + hi) >> 1; if (Hs.t[m] < t) lo = m + 1; else hi = m; } return lo; }
+function spans(i0, i1) {
+  const out = [];
+  for (const [key, test, color, alpha] of [['pf', v => v < 0.999, C.muted, 0.16], ['fire', v => v > 0, C.na, 0.18]]) {
+    let a = -1;
+    for (let i = i0; i <= i1; i++) {
+      const on = i < i1 && test(Hs[key][i]);
+      if (on && a < 0) a = i;
+      if (!on && a >= 0) { out.push({ a: Hs.t[a] / 60, b: Hs.t[i - 1] / 60 + REC / 60, color, alpha }); a = -1; }
+    }
+  }
+  return out;
+}
+const legend = (id, items) => { const html = items.map(([col, label, cls]) => `<span style="color:${col}"><i class="ln ${cls || ''}"></i><span style="color:var(--muted)">${label}</span></span>`).join(''); const el = $(id); if (el.dataset.h !== html) { el.innerHTML = html; el.dataset.h = html; } };
+function maxOf(keys, i0, i1) { let m = -Infinity; for (const k of keys) { const a = Hs[k]; for (let i = i0; i < i1; i++) if (a[i] > m) m = a[i]; } return m; }
+function minOf(keys, i0, i1) { let m = Infinity; for (const k of keys) { const a = Hs[k]; for (let i = i0; i < i1; i++) if (a[i] < m) m = a[i]; } return m; }
+function drawCharts() {
+  const win = WIN * 60, tEnd = Math.max(win, S.t), tStart = tEnd - win, i0 = firstAt(tStart), i1 = hn;
+  const base = { x: [tStart / 60, tEnd / 60], xlab: 'time (min)', h: 210, shades: spans(i0, i1),
+    vlines: events.filter(e => e.t >= tStart && e.t <= tEnd).map(e => ({ x: e.t / 60, label: e.label })) };
+  const L = (key, color, o = {}) => Object.assign({ xs: Hs.t, ys: Hs[key], i0, i1, xk: 1 / 60, color }, o);
+  plot($('cConc'), Object.assign({}, base, { y: [0, 160], ylab: 'mM', lines: [L('na', C.na), L('k', C.k)].concat(P.cl ? [L('cl', C.cl)] : []) }));
+  legend('legConc', [[C.na, '[Na⁺]<sub>i</sub>'], [C.k, '[K⁺]<sub>i</sub>']].concat(P.cl ? [[C.cl, '[Cl⁻]<sub>i</sub>']] : []));
+  const dl = { w: 1.5, dash: true };
+  plot($('cBat'), Object.assign({}, base, { y: VR === 'all' ? [-110, 80] : [-100, -40], ylab: 'mV',
+    lines: [L('ena', C.na, dl), L('ek', C.k, dl)].concat(P.cl ? [L('ecl', C.cl, dl)] : [], [L('v', C.ink, { w: 2.4 })]) }));
+  legend('legBat', [[C.ink, 'membrane potential V', 'thick'], [C.na, 'E<sub>Na</sub>', 'dash'], [C.k, 'E<sub>K</sub>', 'dash']].concat(P.cl ? [[C.cl, 'E<sub>Cl</sub>', 'dash']] : []));
+  let spec, items, title;
+  if (TV === 'na') {
+    spec = { y: [0, niceCeil(Math.max(3, maxOf(['inNa', 'outNa'], i0, i1) * 1.12))], ylab: 'µA/cm²', lines: [L('inNa', C.na), L('outNa', C.pump, { dash: true })] };
+    items = [[C.na, 'Na⁺ coming in (leaks, and spikes)'], [C.pump, 'Na⁺ pumped out (3 × I<sub>pump</sub>)', 'dash']]; title = 'Na⁺ traffic';
+  } else if (TV === 'k') {
+    spec = { y: [0, niceCeil(Math.max(2, maxOf(['outK', 'inK'], i0, i1) * 1.12))], ylab: 'µA/cm²', lines: [L('outK', C.k), L('inK', C.pump, { dash: true })] };
+    items = [[C.k, 'K⁺ going out (leaks, and spikes)'], [C.pump, 'K⁺ pumped in (2 × I<sub>pump</sub>)', 'dash']]; title = 'K⁺ traffic';
+  } else if (TV === 'pump') {
+    spec = { y: [0, niceCeil(Math.max(1.2, maxOf(['p'], i0, i1) * 1.12))], ylab: 'µA/cm²', lines: [L('p', C.pump)] };
+    items = [[C.pump, 'pump current I<sub>pump</sub> = one ATP per net charge']]; title = 'Pump current';
+  } else {
+    const lo = minOf(['vol'], i0, i1), hi = maxOf(['vol'], i0, i1);
+    spec = { y: [Math.min(95, Math.floor(lo - 1)), Math.max(110, Math.ceil(hi + 3))], ylab: '% of start', lines: [L('vol', C.accent)], hlines: [{ y: 100, color: C.muted, dash: true }] };
+    items = [[C.accent, P.cl ? 'cell volume' : 'cell volume (tick Let Cl⁻ cross to let it change)']]; title = 'Cell volume';
+  }
+  plot($('cTraf'), Object.assign({}, base, spec)); legend('legTraf', items);
+  if ($('trafTitle').textContent !== title) $('trafTitle').textContent = title;
+  drawXY();
+}
+function drawXY() {
+  const cv = $('cXY');
+  if (!PX || !PY) { plot(cv, { square: true, empty: PX || PY ? `Now choose what goes ${PX ? 'up' : 'across'}.` : 'Choose what goes across and what goes up.' }); return; }
+  const [xl, xu, xkey, xk] = XY[PX], [yl, yu, ykey, yk] = XY[PY];
+  const range = (key, k) => { let lo = minOf([key], 0, hn) * k, hi = maxOf([key], 0, hn) * k, pad = (hi - lo) * 0.08; if (pad < 1e-6) pad = Math.max(Math.abs(hi) * 0.05, 0.5); return [lo - pad, hi + pad]; };
+  const j = hn - 1;
+  plot(cv, { square: true, x: range(xkey, xk), y: range(ykey, yk), xlab: `${xl} (${xu})`, ylab: `${yl} (${yu})`,
+    lines: [{ xs: Hs[xkey], ys: Hs[ykey], i0: 0, i1: hn, xk, yk, color: C.accent, w: 1.8 }], dots: [{ x: Hs[xkey][j] * xk, y: Hs[ykey][j] * yk, color: C.ink }] });
+}
+
+// ---------- readouts ----------
+const shown = {};
+const put = (id, s, html) => { if (shown[id] !== s) { shown[id] = s; html ? $(id).innerHTML = s : $(id).textContent = s; } };
+const clock = t => { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m >= 60 ? `t = ${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `t = ${m} min ${String(s).padStart(2, '0')} s`; };
+function readouts() {
+  put('rV', num(D.v, 1) + ' mV');
+  put('pTime', clock(S.t));
+  put('rE', `${sgn(D.ena, 1)} / ${num(D.ek, 1)} mV`);
+  put('rC', `${num(D.na, 1)} / ${num(D.k, 1)} mM`);
+  const rate = -kOf(P.r) * (D.iNa + 3 * D.p - S.fire * QSPIKE) * 60 / S.w;   // mM a minute
+  put('rBal', Math.abs(rate) < 0.05 ? 'steady' : (rate > 0 ? 'rising ' : 'falling ') + num(Math.abs(rate), Math.abs(rate) < 10 ? 2 : 0) + ' mM/min');
+  put('rCl', `${P.cl ? num(D.cl, 1) + ' mM' : 'not crossing'} · ${num(S.w * 100, 1)} %`);
+  put('rP', `${num(D.p, 2)} µA/cm² (${num(100 * D.p / PMAX, 0)} % of top speed)`);
+  const area = 4 * Math.PI * (P.r * 1e-4) ** 2;
+  put('rATP', bigCount(D.p * 1e-6 / 1.602e-19 * area) + ' a second');
+  put('rSp', S.left > 0 ? Math.ceil(S.left).toLocaleString('en-US') : '—');
+}
+
+// ---------- controls and the loop ----------
+const SPEEDS = [1, 2, 5, 10, 20, 30, 60, 120, 240, 600, 1200, 1800];
+const speedText = s => `${s}× (${s === 1 ? 'real time' : s < 60 ? s + ' s/s' : s / 60 + ' min/s'})`;
+const rOf = p => 0.5 * Math.pow(60, p / 1000), pOfR = r => Math.round(1000 * Math.log(r / 0.5) / Math.log(60));
+let playing = true, dirty = true, last = performance.now();
+bindRange('pSpeed', v => speedText(SPEEDS[v]), v => { P.speed = SPEEDS[v]; });
+bindRange('pPump', v => v + ' %', v => { if (P.pump !== v / 100 && hn) mark(v === 0 ? 'pump blocked' : v === 100 ? 'pump back' : `pump ${v} %`, 'pump'); P.pump = v / 100; D = solve(); dirty = true; });
+bindRange('pN', v => v.toLocaleString('en-US') + ' spikes', v => { P.nSp = v; });
+bindRange('pRate', v => v + ' Hz', v => { P.rate = v; });
+bindRange('pKo', v => num(v, 1) + ' mM', v => { if (P.ko !== v && hn) mark(`[K⁺]_o ${num(v, 1)} mM`, 'ko'); P.ko = v; D = solve(); dirty = true; });
+bindRange('pR', p => { const r = rOf(p); return num(r, r < 2 ? 1 : 0) + ' µm'; }, p => { P.r = rOf(p); dirty = true; });
+$('pCl').addEventListener('change', e => { P.cl = e.target.checked; mark(P.cl ? 'Cl⁻ crossing' : 'Cl⁻ stopped', 'cl'); D = solve(); dirty = true; });
+const setVal = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+const setCheck = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
+$('pBlock').addEventListener('click', () => setVal('pPump', 0));
+$('pWash').addEventListener('click', () => setVal('pPump', 100));
+$('pBurst').addEventListener('click', () => { S.left += P.nSp; mark(`${P.nSp.toLocaleString('en-US')} spikes, ${P.rate} Hz`, 'burst' + S.t); });
+$('pPlay').addEventListener('click', () => { playing = !playing; $('pPlay').textContent = playing ? 'Pause' : 'Play'; last = performance.now(); });
+$('pReset').addEventListener('click', reset);
+function chipGroup(attr, f) {
+  const bs = document.querySelectorAll(`[data-${attr}]`);
+  const set = v => { bs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(v)))); f(v); dirty = true; };
+  bs.forEach(b => b.addEventListener('click', () => set(b.dataset[attr])));
+  return set;
+}
+const setWin = chipGroup('win', v => { WIN = +v; });
+const setVR = chipGroup('vr', v => { VR = v; });
+const setTV = chipGroup('tv', v => { TV = v; });
+// Plot your run: chips for each axis, none chosen at first
+function pickGroup(id, f) {
+  const box = $(id);
+  box.innerHTML = Object.keys(XY).map(k => `<button type="button" class="chip" data-k="${k}" aria-pressed="false">${XYHTML[k]}</button>`).join('');
+  const set = k => { box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === k))); f(k); dirty = true; };
+  box.addEventListener('click', e => { const b = e.target.closest('button'); if (b) set(b.dataset.k); });
+  return set;
+}
+const setPX = pickGroup('pickX', k => { PX = k; }), setPY = pickGroup('pickY', k => { PY = k; });
+colorHooks.push(() => { dirty = true; });
+addEventListener('resize', () => { dirty = true; });
+if (document.fonts) document.fonts.ready.then(() => { dirty = true; });
+function loop(now) {
+  const real = Math.min(0.1, (now - last) / 1000); last = now;
+  if (playing) { advance(P.speed * real); animate(real); dirty = true; }
+  if (dirty) { dirty = false; drawCell(); drawCirc(); drawCharts(); readouts(); }
+  requestAnimationFrame(loop);
+}
+reset();
+Frames.sim(() => playing, 'pPlay', ['pBurst']);   // frames.js: starts paused, pauses itself when left alone
+requestAnimationFrame(loop);
+
+// ---------- Start here and Try it ----------
+// Each sets the controls, starts again from the resting cell, and does its one thing at 1 minute.
+function setup(o = {}) {
+  setVal('pPump', o.pump ?? 100); setVal('pKo', o.ko ?? 4); setVal('pR', pOfR(o.r ?? 10)); setCheck('pCl', !!o.cl);
+  setVal('pN', o.n ?? 4000); setVal('pRate', o.rate ?? 50);
+  setVal('pSpeed', SPEEDS.indexOf(o.speed ?? 60)); setWin(o.win ?? 15); setVR(o.vr ?? 'all'); setTV(o.tv ?? 'na');
+  if (o.px !== undefined) { setPX(o.px); setPY(o.py); }
+  reset();
+  for (const [t, fn] of o.at || []) pending.push({ t, fn });
+  pending.sort((a, b) => a.t - b.t);
+  showTab($('tab-cell'));
+  if (!playing) $('pPlay').click();
+  $('pump-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+const block = () => setVal('pPump', 0), burst = () => $('pBurst').click();
+const TRY = {
+  rest: () => setup({ speed: 30 }),
+  ouabain: () => setup({ speed: 120, win: 60, at: [[60, block]] }),
+  ouabaincl: () => setup({ speed: 120, win: 60, cl: true, vr: 'rest', at: [[60, block]] }),
+  washout: () => setup({ speed: 120, win: 60, at: [[60, block], [1260, () => setVal('pPump', 100)]] }),
+  burst: () => setup({ speed: 30, vr: 'rest', at: [[60, burst]] }),
+  burstplot: () => setup({ speed: 30, vr: 'rest', tv: 'pump', px: 'na', py: 'p', at: [[60, burst]] }),
+  burstcl: () => setup({ speed: 30, vr: 'rest', cl: true, at: [[60, burst]] }),
+  burstsmall: () => setup({ speed: 5, win: 5, vr: 'rest', r: 1, n: 400, at: [[60, burst]] }),
+  small: () => setup({ speed: 60, win: 30, r: 1, at: [[60, block]] }),
+  hyperk: () => setup({ speed: 30, at: [[60, () => setVal('pKo', 8)]] }),
+  hypok: () => setup({ speed: 60, win: 30, at: [[60, () => setVal('pKo', 1.5)]] }),
+  digoxin: () => setup({ speed: 60, win: 30, at: [[60, () => setVal('pPump', 70)]] }),
+  swell: () => setup({ speed: 240, win: 120, cl: true, tv: 'vol', at: [[60, block]] }),
+};
+function showTab(tab) {
+  tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+    const on = t === tab;
+    t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+    $(t.getAttribute('aria-controls')).hidden = !on;
+  });
+  dirty = true;
+}
+document.querySelectorAll('[role=tablist]').forEach(list => {
+  const tabs = [...list.querySelectorAll('[role=tab]')];
+  tabs.forEach((t, k) => {
+    t.addEventListener('click', () => showTab(t));
+    t.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+    });
+  });
+});
+document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.try;
+  if (k === 'calc' || k === 'calcnopump') {
+    if (k === 'calcnopump') calcSet('kP', 0);
+    $('pump-calc').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else TRY[k]();
+}));
+
+// ---------- the calculator ----------
+const calcSet = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+(() => {
+  const K = {};
+  let ready = false;
+  const upd = () => { if (ready) calc(); };
+  bindRange('kNai', v => num(v, 1) + ' mM', v => { K.nai = v; upd(); });
+  bindRange('kNao', v => num(v, 0) + ' mM', v => { K.nao = v; upd(); });
+  bindRange('kGNa', v => num(v, 4) + ' mS/cm²', v => { K.gna = v; upd(); });
+  bindRange('kKi', v => num(v, 0) + ' mM', v => { K.ki = v; upd(); });
+  bindRange('kKo', v => num(v, 1) + ' mM', v => { K.ko = v; upd(); });
+  bindRange('kGK', v => num(v, 4) + ' mS/cm²', v => { K.gk = v; upd(); });
+  bindRange('kP', v => num(v, 2) + ' µA/cm²', v => { K.p = v; upd(); });
+  bindRange('kR', p => { const r = rOf(p); return num(r, r < 2 ? 1 : 0) + ' µm'; }, p => { K.r = rOf(p); upd(); });
+  function calc() {
+    const ena = nernst(K.nao, K.nai), ek = nernst(K.ko, K.ki), g = K.gna + K.gk;
+    const v = (K.gna * ena + K.gk * ek - K.p) / g, v0 = (K.gna * ena + K.gk * ek) / g;
+    const inNa = K.gna * (ena - v), outK = K.gk * (v - ek), perMin = kOf(K.r) * 60;
+    $('kV').textContent = num(v, 1) + ' mV';
+    $('kENa').textContent = sgn(ena, 1) + ' mV'; $('kEK').textContent = sgn(ek, 1) + ' mV';
+    $('kV0').textContent = num(v0, 1) + ' mV'; $('kShare').textContent = num(v - v0, 1) + ' mV';
+    const f = (x, d = 4) => num(x, d), par = x => x < 0 ? `(${num(x, 1)})` : sgn(x, 1);
+    $('kFormula').innerHTML = `V = (g<sub>Na</sub>E<sub>Na</sub> + g<sub>K</sub>E<sub>K</sub> − I<sub>pump</sub>) / (g<sub>Na</sub> + g<sub>K</sub>)<br>` +
+      `&nbsp;&nbsp;= (${f(K.gna)} × ${par(ena)} + ${f(K.gk)} × ${par(ek)} − ${num(K.p, 2)}) / (${f(K.gna)} + ${f(K.gk)})<br>` +
+      `&nbsp;&nbsp;= (${num(K.gna * ena, 3)} ${K.gk * ek < 0 ? '−' : '+'} ${num(Math.abs(K.gk * ek), 3)} − ${num(K.p, 2)}) / ${num(g, 4)} = <span class="res">${num(v, 1)} mV</span>`;
+    const bal = (ion, leak, pumped, leakWord, pumpWord, n) => {
+      const net = leak - pumped, r = net * perMin * (ion === 'Na⁺' ? 1 : -1);
+      const verdict = Math.abs(net) < 0.005 ? 'balanced: steady' : `[${ion}]<sub>i</sub> ${r > 0 ? 'rises' : 'falls'} ${num(Math.abs(r), Math.abs(r) < 10 ? 2 : 0)} mM a minute in this cell`;
+      return `${ion} ${leakWord} through its leak: ${num(leak, 2)}; ${pumpWord} by the pump: ${n} × ${num(K.p, 2)} = ${num(pumped, 2)} µA/cm² → ${verdict}`;
+    };
+    $('kBal').innerHTML = bal('Na⁺', inNa, 3 * K.p, 'in', 'out', 3) + '<br>' + bal('K⁺', outK, 2 * K.p, 'out', 'in', 2);
+    // the current–voltage chart: each branch, and the total, which crosses zero at the resting voltage
+    const lo = Math.min(ek, v0, v) - 15, hi = Math.max(ena, v0, v) + 10, xs = [lo, hi];
+    const iNa = x => K.gna * (x - ena), iK = x => K.gk * (x - ek), tot = x => iNa(x) + iK(x) + K.p;
+    const vals = [iNa(lo), iNa(hi), iK(lo), iK(hi), tot(lo), tot(hi), K.p, 0];
+    let ylo = Math.min(...vals), yhi = Math.max(...vals); const pad = (yhi - ylo) * 0.08; ylo -= pad; yhi += pad;
+    plot($('kIV'), { square: true, x: [lo, hi], y: [ylo, yhi], xlab: 'V (mV)', ylab: 'current (µA/cm², outward +)',
+      hlines: [{ y: 0, color: C.muted }],
+      lines: [{ xs, ys: xs.map(iNa), color: C.na, w: 1.8 }, { xs, ys: xs.map(iK), color: C.k, w: 1.8 }, { xs, ys: [K.p, K.p], color: C.pump, w: 1.8 },
+        { xs, ys: xs.map(x => tot(x) - K.p), color: C.ink, w: 1.5, dash: true, alpha: 0.6 }, { xs, ys: xs.map(tot), color: C.ink, w: 2.6 }],
+      dots: [{ x: v0, y: 0, color: C.ink, ring: true }, { x: v, y: 0, color: C.ink }] });
+  }
+  ready = true; calc();
+  colorHooks.push(calc); addEventListener('resize', calc); if (document.fonts) document.fonts.ready.then(calc);
+  Frames.onRestore(calc);
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

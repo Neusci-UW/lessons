@@ -7,7 +7,8 @@ and shows the pages on its Lessons tabs.
 
 | Page | What it covers |
 |---|---|
-| `index.html` | Landing page: links to the lessons in order |
+| `index.html` | Landing page: a clickable map of a neuron (each part: what it does, its rule, which lessons cover it) and the lessons in the course’s order |
+| `course.html` | Choose lessons: tick which lessons are in the course and drag them into order; saves `course.js` |
 | `membrane_potential.html` | Exploring the membrane potential: ions crossing a membrane one by one, Q = C·V, Nernst, chord conductance and GHK, with a GHK calculator |
 | `rc_membrane.html` | Passive properties: time. Charging a membrane: the membrane as an RC circuit, then the same thing ion by ion, with an RC calculator |
 | `passive_space.html` | Passive properties: space. Lesson 2's RC patches in a row (a cable), in lesson 2's four circuits, with each patch's membrane currents over time: the length constant λ and the time constant τ together, with a cable calculator |
@@ -17,6 +18,22 @@ and shows the pages on its Lessons tabs.
 | `plasticity.html` | Spines and plasticity: the EPSP at the spine head, dendrite and soma, Ca²⁺ through NMDA receptors as a coincidence detector, and LTP and LTD from a tetanus, 1 Hz or pairing, read out with a test pulse and a time-lapse of the spine, with a calculator for the NMDA I–V curve and LTP vs LTD by frequency |
 | `hodgkin_huxley.html` | The Hodgkin–Huxley model: lesson 2's circuit in three steps (Na⁺ on a switch, voltage-gated Na⁺, complete active membrane), with a threshold calculator and a voltage-clamp calculator |
 
+
+Draft lessons (in `course.js` but not yet in the course; turn them on in `course.html`). Each is a
+full, self-contained lesson page; its DRAFT banner lists what still needs checking before students see it.
+
+| Page | What it covers |
+|---|---|
+| `pump.html` | The Na⁺/K⁺ pump: concentrations free to change over minutes; ouabain, a burst of spikes, cell size, hyperkalemia |
+| `firing.html` | Firing rate and patterns: the f–I curve, the refractory ceiling, adaptation by the M current, regular- and fast-spiking cells |
+| `extracellular.html` | Recording from outside: the triphasic extracellular spike, and a nerve’s compound action potential (Aα, Aβ, Aδ, C), local anaesthetics, demyelination |
+| `nmj.html` | The neuromuscular junction: quanta, mEPPs, the safety factor; myasthenia gravis, Lambert–Eaton, botulinum, curare, neostigmine |
+| `electrical_synapses.html` | Gap junctions (coupling coefficient, spikelets, synchrony) and presynaptic inhibition and autoreceptors (release ∝ [Ca²⁺]⁴) |
+| `neuromodulation.html` | Metabotropic receptors: fast GABA<sub>A</sub> vs slow GABA<sub>B</sub>/GIRK inhibition, and acetylcholine closing M channels |
+| `active_dendrites.html` | The back-propagating spike, NMDA spikes from clustered inputs, and HCN channels shortening far EPSPs |
+| `glia.html` | Astrocytes buffering K⁺ outside and clearing glutamate; the other glia |
+| `sensory.html` | Sensory receptors: receptor potential to spike rate; slowly vs rapidly adapting endings, vibration |
+| `circuits.html` | The stretch reflex with reciprocal inhibition, and lateral inhibition (Mach bands) |
 ## Running a page
 
 Open the HTML file in a browser, or serve the folder so the lesson questions load too:
@@ -27,6 +44,7 @@ then go to http://localhost:8000/ for the list of lessons.
 
 ## Files
 
+- `course.js`: the course: every lesson page in order and whether students see it (`window.COURSE = [...]`, plain JSON between the brackets). `index.html`, `course.html` and Newt’s Lessons tabs all read it.
 - `breadboard.js`: inside Newt, a "Build on breadboard" button beside a simulation that rebuilds its circuit on the Breadboard simulator with the cell's own values (mV, µF, ms), or, with `scale: 'breadboard'` (the RC circuit), scaled to parts you could buy and volts (Newt's `lessoncircuit.py`). A page loads it in `<head>` and calls `NewtBreadboard.add(element, () => circuit)`, the circuit as compartments (a capacitor and up to four conductance-plus-battery branches each), axial links, injected currents and synapses the Stimulator opens; the file's header gives the format. Voltage-gated channels become potentiometers set to how open they are at that moment. In a plain browser the button doesn't appear.
 - `floatbar.js`: a bar of the main controls (run, pause, speed) that floats in the corner while the page scrolls. Its buttons and slider are copies of the page's own, named with `data-copy`.
 - `frames.js`: caps every requestAnimationFrame loop at 30 frames a second, and stops them while all the page's simulations are paused and nobody is touching the page. Each page loads it first (in `<head>`) and registers each simulation with `Frames.sim(() => running, 'playButtonId')`. Simulations start paused and pause themselves after 60 s without a click, key, slider move or scroll.

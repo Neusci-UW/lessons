@@ -304,7 +304,7 @@ button:disabled{opacity:.45;cursor:default}
         <li><b>The steps under the picture:</b> the one lit is what is happening right now. In a train of spikes several happen at once, so it jumps about.</li>
         <li><b>On the terminal's lower membrane:</b> the yellow marks are voltage-gated Ca²⁺ channels; they split open while the spike passes. The circles above them are vesicles docked and ready to fuse, each full of transmitter. The vesicles farther up are the reserve, which refills empty docking sites.</li>
         <li><b>On the spine:</b> the receptors, which are channels. Closed they are solid; open they split, with transmitter bound on top (a larger pink dot with a light ring; the small pink dots above are free transmitter). Ions flowing through an open channel are shown as dots in their own colour. A slate-blue dot sitting in an NMDA channel is a Mg²⁺ ion plugging it.</li>
-        <li><b>Post: voltage (whole cell):</b> the next cell is treated as one point, as in lesson 2: spine, dendrite and soma always share one voltage, which is what an electrode at the soma would read if the cell were compact. In a real neuron the EPSP is biggest and fastest at the spine; by the time it reaches the soma it is smaller and slower, smoothed out along the dendrite (lesson 3 shows this; lessons 6 and 7 build on it).</li>
+        <li><b>Post: voltage (whole cell):</b> the next cell is treated as one point, as in lesson 2: spine, dendrite and soma always share one voltage, which is what an electrode at the soma would read if the cell were compact. In a real neuron the EPSP is biggest and fastest at the spine; by the time it reaches the soma it is smaller and slower, smoothed out along the dendrite (lesson 3 shows this; lessons 7 and 8 build on it).</li>
         <li><b>Charts:</b> they scroll, showing the last stretch of time (its length is under each chart); the newest moment is at the right edge. The Ca²⁺ chart puts a pink tick at every vesicle that fuses. Current is negative when positive charge flows into the cell (inward), as electrophysiologists draw it.</li>
         <li><b>Timing:</b> a real synapse does all of this in about a millisecond, so the simulation runs in slow motion; the speed is in milliseconds of synapse time per second of yours.</li>
       </ul>
@@ -371,8 +371,7 @@ button:disabled{opacity:.45;cursor:default}
           <div class="runbar">
             <button id="cFire" class="primary">Fire spike</button>
             <button id="cPlay" class="primary">Pause</button>
-            <button id="cSweep">Sweep</button>
-            <button id="cSweepCC" title="Current clamp: a steady current sets each starting voltage, from the lowest to the highest V in the sweep; then one spike, and V is free to move">Current-clamp sweep</button>
+            <button id="cSweep">Voltage-clamp sweep</button>
             <button id="cClear">Clear</button>
             <label for="cSpeed" class="runlab">Speed</label>
             <input type="range" id="cSpeed" min="0" max="100" value="62">
@@ -398,8 +397,8 @@ button:disabled{opacity:.45;cursor:default}
         <li><b>The circuit:</b> the next cell's membrane, as in lesson 2. The capacitor C stores charge; the resting conductance g<sub>rest</sub> with its battery E<sub>rest</sub> holds the cell at rest; the synapse adds a second conductance, g<sub>syn</sub>, with its own battery, the reversal potential E<sub>rev</sub>. The synaptic resistor darkens as more receptor channels open.</li>
         <li><b>Arrows:</b> the current through each branch, pointing up when positive charge flows into the cell. Their length shows the size.</li>
         <li><b>Voltage clamp:</b> an amplifier holds V fixed at the holding voltage by supplying whatever current the synapse lets through, so the synaptic current can be measured directly. What the voltage does when nothing holds it is in Part 1.</li>
-        <li><b>Post: voltage (whole cell):</b> the next cell is treated as one point, as in lesson 2: spine, dendrite and soma always share one voltage, which is what an electrode at the soma would read if the cell were compact. In a real neuron the EPSP is biggest and fastest at the spine; by the time it reaches the soma it is smaller and slower, smoothed out along the dendrite (lesson 3 shows this; lessons 6 and 7 build on it). For the same reason, a clamp at a real soma cannot fully hold a distant spine, so E<sub>rev</sub> measured that way comes out a little off.</li>
-        <li><b>Charts:</b> in voltage clamp each Fire adds a trace, labelled with its command voltage V<sub>C</sub> (the holding voltage the amplifier imposes), until you press Clear. <b>Sweep</b> does this for you: it steps the holding voltage from the <b>lowest</b> to the <b>highest V<sub>C</sub></b> in the <b>number of steps</b> you set, and fires once at each, so the family of currents builds up trace by trace. The dashed line on the voltage chart is E<sub>rev</sub>; the dotted line is rest.</li>
+        <li><b>Post: voltage (whole cell):</b> the next cell is treated as one point, as in lesson 2: spine, dendrite and soma always share one voltage, which is what an electrode at the soma would read if the cell were compact. In a real neuron the EPSP is biggest and fastest at the spine; by the time it reaches the soma it is smaller and slower, smoothed out along the dendrite (lesson 3 shows this; lessons 7 and 8 build on it). For the same reason, a clamp at a real soma cannot fully hold a distant spine, so E<sub>rev</sub> measured that way comes out a little off.</li>
+        <li><b>Charts:</b> in voltage clamp each Fire adds a trace, labelled with its command voltage V<sub>C</sub> (the holding voltage the amplifier imposes), until you press Clear. <b>Voltage-clamp sweep</b> does this for you: it steps the holding voltage from the <b>lowest</b> to the <b>highest V<sub>C</sub></b> in the <b>number of steps</b> you set, and fires once at each, so the family of currents builds up trace by trace. The dashed line on the voltage chart is E<sub>rev</sub>; the dotted line is rest.</li>
         <li><b>I–V chart</b> (under the circuit): one dot per Fire, at its holding voltage: the trace's largest current, marked on the current chart; Sweep fills in the curve, and the ring marks the trace running now. Where the dots cross zero is E<sub>rev</sub> (dashed): the channels open there but pass no net current. <b>I–V / V–I</b> swaps the axes.</li>
       </ul>
     </div>
@@ -557,7 +556,7 @@ button:disabled{opacity:.45;cursor:default}
       <h3>From current to voltage</h3>
       <p>In the next cell, the synaptic current joins lesson 2's circuit: it either charges the capacitor, moving V, or leaks back out through the resting conductance.</p>
       <div class="eq">\[ C\,\frac{dV}{dt} = -\,g_\mathrm{rest}(V - E_\mathrm{rest}) \;-\; g_\mathrm{syn}(t)\,(V - E_\mathrm{rev}) \]</div>
-      <p>So V moves from rest toward E<sub>rev</sub>, but only part of the way: g<sub>syn</sub> is small and brief, and the resting conductance pulls back. A single synapse typically moves V by well under a millivolt to a few millivolts. Summation (lesson 6) is how many of them add up.</p>
+      <p>So V moves from rest toward E<sub>rev</sub>, but only part of the way: g<sub>syn</sub> is small and brief, and the resting conductance pulls back. A single synapse typically moves V by well under a millivolt to a few millivolts. Summation (lesson 7) is how many of them add up.</p>
     </div>
     <aside class="try">
       <span class="sect-title">Try it</span>
@@ -824,7 +823,7 @@ function chipGroup(attr, onPick) {
 // top and the inside (intracellular) rail at the bottom; each branch a resistor in series with its battery; the
 // capacitor at the left, the amplifier at the right. Branch currents are counted from inside to outside
 // (+ = outward), and their arrows point up when outward.
-// o: { V, capX, capLabel, branches: [{ x, col, E, Elabel, glabel, variable, I, Ilabel }], amp: { x, mode: 'vc' | 'cc', I, Vc },
+// o: { V, capX, capLabel, branches: [{ x, col, E, Elabel, glabel, variable, I, Ilabel }], amp: { x, I, Vc },
 //      Icap, scale (a current that gets a full arrow), fmt (a current as text), units (footer) }
 function drawClampCircuit(c, W, H, o) {
   const OUT = 72, IN = H - 64, MID = (OUT + IN) / 2;
@@ -898,23 +897,14 @@ function drawClampCircuit(c, W, H, o) {
     label(b.glabel, b.x + 24, yr + 5, b.col, 'left', '500 12.5px "IBM Plex Sans", sans-serif');
     arrowLabel(b.x, b.I, b.Ilabel, b.col);
   }
-  // the amplifier: a box that holds V (voltage clamp) or a current source (current clamp)
+  // the amplifier: a box that holds V (voltage clamp)
   const a = o.amp;
-  if (a.mode === 'vc') {
-    blank(a.x, MID - 40, MID + 40, 76);
-    c.strokeStyle = C.accent; c.lineWidth = 2.2; c.beginPath(); c.roundRect(a.x - 36, MID - 34, 72, 68, 8); c.stroke();
-    label('voltage', a.x, MID - 12, C.accent, 'center', '600 12px "IBM Plex Sans", sans-serif');
-    label('clamp', a.x, MID + 3, C.accent, 'center', '600 12px "IBM Plex Sans", sans-serif');
-    label('V_C ' + fmtSigned(a.Vc, 0), a.x, MID + 22, C.accent, 'center', '600 11.5px "IBM Plex Mono", monospace');
-    arrowLabel(a.x, a.I, 'I_amp', C.accent);
-  } else {
-    blank(a.x, MID - 26, MID + 26);
-    c.strokeStyle = C.accent; c.lineWidth = 2; c.beginPath(); c.arc(a.x, MID, 24, 0, 6.283); c.stroke();
-    const down = a.I <= 0;   // outward-counted: negative means current flows down into the cell
-    c.beginPath(); c.moveTo(a.x, MID + (down ? -13 : 13)); c.lineTo(a.x, MID + (down ? 13 : -13)); c.stroke();
-    c.beginPath(); c.moveTo(a.x - 6, MID + (down ? 6 : -6)); c.lineTo(a.x, MID + (down ? 13 : -13)); c.lineTo(a.x + 6, MID + (down ? 6 : -6)); c.stroke();
-    arrowLabel(a.x, a.I, 'I_src', C.accent);
-  }
+  blank(a.x, MID - 40, MID + 40, 76);
+  c.strokeStyle = C.accent; c.lineWidth = 2.2; c.beginPath(); c.roundRect(a.x - 36, MID - 34, 72, 68, 8); c.stroke();
+  label('voltage', a.x, MID - 12, C.accent, 'center', '600 12px "IBM Plex Sans", sans-serif');
+  label('clamp', a.x, MID + 3, C.accent, 'center', '600 12px "IBM Plex Sans", sans-serif');
+  label('V_C ' + fmtSigned(a.Vc, 0), a.x, MID + 22, C.accent, 'center', '600 11.5px "IBM Plex Mono", monospace');
+  arrowLabel(a.x, a.I, 'I_amp', C.accent);
   label(o.units, W - 12, H - 8, C.muted, 'right', '500 11.5px "IBM Plex Sans", sans-serif');
 }
 
@@ -1286,7 +1276,6 @@ function thin(xs, yss, max = 1400) {
 // =====================================================================================
 // Part 2: the synapse as a circuit. g_syn(t) is a sum of two-exponential pulses, one per spike;
 // I_syn = g_syn·(V − E_rev).
-// Current clamp: C dV/dt = −g_rest(V − E_rest) + I_hold − I_syn, with I_hold bringing rest to the holding V.
 // Voltage clamp: V stays at the holding V, and the amplifier supplies I_syn.
 // The whole trace is worked out when you press Fire, then revealed at the chosen speed.
 // =====================================================================================
@@ -1300,7 +1289,7 @@ function thin(xs, yss, max = 1400) {
     musc: { E: -90, tr: 20, td: 300, g: 1, col: 'k', sign: -1, win: 800 },
   };
   const closes = () => PRESET[P.rec].sign === -1;
-  const P = { rec: 'ampa', g: 1, E: 0, td: 2, n: 1, dt: 10, Vh: -70, gr: 2.5, mode: 'vc', speed: speedOf(62) };   // voltage clamp only: Part 1 shows the free voltage
+  const P = { rec: 'ampa', g: 1, E: 0, td: 2, n: 1, dt: 10, Vh: -70, gr: 2.5, speed: speedOf(62) };   // voltage clamp only: Part 1 shows the free voltage
   let tr = null, overlays = [], tc = 0, playing = true, queue = [], wait = 0, sweeping = false;
   const SWP = { a: -100, b: 40, n: 8 };   // the sweep: lowest and highest V_C (mV), number of steps
   const recCol = () => C[PRESET[P.rec].col];
@@ -1321,31 +1310,25 @@ function thin(xs, yss, max = 1400) {
     const shape = t => t <= 0 ? 0 : norm * (Math.exp(-t / tD) - Math.exp(-t / tR));
     const spikes = Array.from({ length: P.n }, (_, k) => 2 + k * P.dt);
     const W = pr.win || 15;   // every trace is 15 ms long, the spike at 2 ms (the slow muscarinic response needs longer)
-    const dt = 0.02, N = Math.round(W / dt) + 1, Ihold = P.gr * (Vh - E_REST);
+    const dt = 0.02, N = Math.round(W / dt) + 1;
     const t = new Float64Array(N), g = new Float64Array(N), I = new Float64Array(N), V = new Float64Array(N);
-    let v = Vh;
     for (let i = 0; i < N; i++) {
       const ti = i * dt; let gi = 0; for (const s of spikes) gi += (pr.sign || 1) * P.g * shape(ti - s);
-      const Ii = gi * (v - P.E);
-      t[i] = ti; g[i] = gi; I[i] = Ii; V[i] = v;
-      if (P.mode === 'cc') v += dt * (-P.gr * (v - E_REST) + Ihold - Ii) / C_CELL;
+      t[i] = ti; g[i] = gi; I[i] = gi * (Vh - P.E); V[i] = Vh;
     }
-    return { t, g, I, V, W, Vh, Ihold, mode: P.mode, dt };
+    return { t, g, I, V, W, Vh, dt };
   }
   function fire() {
-    if (P.mode !== 'vc') { P.mode = 'vc'; overlays = []; tr = null; }   // Fire is voltage clamp
     queue = []; sweeping = false;
-    // in voltage clamp the last trace stays on the charts, one per holding voltage
-    if (P.mode === 'vc' && tr && tr.mode === 'vc') { overlays = overlays.filter(o => o.Vh !== tr.Vh); overlays.push(tr); }
+    // the last trace stays on the charts, one per holding voltage
+    if (tr) { overlays = overlays.filter(o => o.Vh !== tr.Vh); overlays.push(tr); }
     tr = compute(P.Vh); tc = 0;
     if (!playing) $('cPlay').click();
   }
   // the sweep holds the cell at one voltage after another, lowest to highest V_C in the number of steps set, firing once at each:
   // the holding slider steps along and each trace stays on the charts as the next one runs
-  // mode 'cc': current clamp. A steady current through the electrode sets each starting voltage, then V is free:
-  // the EPSPs move toward E_rev from every start, and change sign where they cross it.
-  function sweep(mode = 'vc') {
-    P.mode = mode; overlays = []; tr = null;
+  function sweep() {
+    overlays = []; tr = null;
     const lo = Math.min(SWP.a, SWP.b), hi = Math.max(SWP.a, SWP.b);
     queue = Array.from({ length: SWP.n }, (_, k) => Math.round(lo + (hi - lo) * k / (SWP.n - 1)));
     sweeping = true;
@@ -1379,9 +1362,9 @@ function thin(xs, yss, max = 1400) {
     c.beginPath(); c.moveTo(x, y1 + dir * 8); c.lineTo(x - 7, y1 - dir * 2); c.lineTo(x + 7, y1 - dir * 2); c.fill();
   }
   function now() {
-    if (!tr) return { V: P.mode === 'vc' ? P.Vh : P.Vh, g: 0, I: 0, Ihold: P.gr * (P.Vh - E_REST) };
+    if (!tr) return { V: P.Vh, g: 0, I: 0 };
     const i = Math.min(tr.t.length - 1, Math.floor(tc / tr.dt));
-    return { V: tr.V[i], g: tr.g[i], I: tr.I[i], Ihold: tr.Ihold };
+    return { V: tr.V[i], g: tr.g[i], I: tr.I[i] };
   }
   function drawCircuit() {
     const s = now(), Irest = P.gr * (s.V - E_REST), f1 = v => (v > 0.05 ? '+' : v < -0.05 ? '−' : '') + Math.abs(v).toFixed(1);
@@ -1390,7 +1373,7 @@ function thin(xs, yss, max = 1400) {
         { x: 220, col: C.ink, E: E_REST, Elabel: 'E_rest −70 mV', glabel: 'g_rest ' + P.gr + ' nS', I: Irest, Ilabel: 'I_rest' },
         { x: 370, col: recCol(), E: P.E, Elabel: 'E_rev ' + fmtSigned(P.E, 0), variable: true, I: s.I, Ilabel: 'I_syn',
           glabel: (closes() ? 'Δg ' : 'g_syn ') + (s.g < -0.005 ? '−' : '') + Math.abs(s.g).toFixed(2) + ' nS' } ],
-      amp: P.mode === 'vc' ? { x: 530, mode: 'vc', Vc: P.Vh, I: -(Irest + s.I) } : { x: 530, mode: 'cc', I: -s.Ihold } });
+      amp: { x: 530, Vc: P.Vh, I: -(Irest + s.I) } });
     drawMem(s, Irest);
   }
   // ---------- the same membrane as a cartoon (membrane.js): each channel under its branch ----------
@@ -1402,7 +1385,7 @@ function thin(xs, yss, max = 1400) {
   const REC = { ampa: ['AMPA receptor', 'syn'], gaba: ['GABA_A receptor', 'cl'], gly: ['glycine receptor', 'cl'], musc: ['K⁺ (muscarinic)', 'k'] };
   function drawMem(s, Irest) {
     const t = performance.now(), real = Math.min(0.05, (t - memT) / 1000); memT = t;
-    const [rname, rion] = REC[P.rec], Iamp = P.mode === 'vc' ? -(Irest + s.I) : -s.Ihold;
+    const [rname, rion] = REC[P.rec], Iamp = -(Irest + s.I);
     const open = closes() ? Math.max(0, 1 + s.g / Math.max(1e-9, P.g)) : Math.min(1, s.g / Math.max(1e-9, P.g));
     if (playing && tr) memO = MemSlice.step(memO, [-Irest, (rion === 'cl' ? 1 : -1) * s.I, -Iamp].map(I => I / 60 * 240 * real));
     MemSlice.draw(mc, MW, MH, C, { where: 'dendrite', cap: { x: 80, q: s.V / 4 }, ions: MIONS, channels: [
@@ -1444,7 +1427,7 @@ function thin(xs, yss, max = 1400) {
       }
     }
     const col = o => o === tr ? (overlays.length ? vhColor(o.Vh) : recCol()) : vhColor(o.Vh);
-    const lab = (name) => o => overlays.length || o !== tr ? (P.mode === 'vc' ? 'V_C ' : 'V₀ ') + fmtSigned(o.Vh, 0).replace(' mV', '') : name;   // the command (or starting) voltage
+    const lab = (name) => o => overlays.length || o !== tr ? 'V_C ' + fmtSigned(o.Vh, 0).replace(' mV', '') : name;   // the command voltage
     // fixed y ranges, so traces can be compared from one Fire to the next; the zoom arrows rescale them
     multi(chs.g, mk('g', col, lab(closes() ? 'Δg' : 'g_syn')), closes() ? [-2, 1] : [0, 4], 'nS');
     $('cGTitle').innerHTML = closes() ? 'Post: change in K⁺ conductance Δg (channels closing, so it is negative)' : 'Post: synaptic conductance g<sub>syn</sub>';
@@ -1508,21 +1491,19 @@ function thin(xs, yss, max = 1400) {
   }
   function readouts() {
     const s = now(), R = P.rec;
-    $('cVlab').textContent = P.mode === 'vc' ? 'Post: synaptic current (V held)' : 'Post: voltage (whole cell)';
-    $('cVnum').textContent = P.mode === 'vc' ? fmtPA(s.I) : fmtSigned(s.V, 2);
+    $('cVlab').textContent = 'Post: synaptic current (V held)';
+    $('cVnum').textContent = fmtPA(s.I);
     $('cDrive').textContent = fmtSigned(s.V - P.E, 1);
     $('cNow').textContent = s.g.toFixed(2) + ' nS / ' + fmtPA(s.I);
-    $('cPeakLab').textContent = P.mode === 'vc' ? 'largest current' : 'largest change in V';
+    $('cPeakLab').textContent = 'largest current';
     let pk = 0;
-    if (tr) { const n = Math.min(tr.t.length, Math.floor(tc / tr.dt) + 1); for (let i = 0; i < n; i++) { const v = P.mode === 'vc' ? tr.I[i] : tr.V[i] - tr.Vh; if (Math.abs(v) > Math.abs(pk)) pk = v; } }
-    $('cPeak').textContent = !tr ? '—' : P.mode === 'vc' ? fmtPA(pk) : fmtSigned(pk, 2);
+    if (tr) { const n = Math.min(tr.t.length, Math.floor(tc / tr.dt) + 1); for (let i = 0; i < n; i++) { if (Math.abs(tr.I[i]) > Math.abs(pk)) pk = tr.I[i]; } }
+    $('cPeak').textContent = !tr ? '—' : fmtPA(pk);
     const name = R === 'gaba' ? 'GABA<sub>A</sub>' : R === 'gly' ? 'glycine' : R.toUpperCase();
-    if (closes()) { $('cCap').innerHTML = P.mode === 'vc'
-      ? `Voltage clamp at ${fmtSigned(P.Vh, 0)}: ACh closes K⁺ channels, so less K⁺ leaves. That missing outward current shows up as ${Math.abs(P.Vh - P.E) < 1 ? 'nothing at all: at E<sub>K</sub> = ' + fmtSigned(P.E, 0) + ' no K⁺ was flowing to stop' : P.Vh > P.E ? 'an inward (negative) current' : 'an outward (positive) current, because below E<sub>K</sub> = ' + fmtSigned(P.E, 0) + ' K⁺ was flowing in'}. It reverses at E<sub>K</sub>, not at 0 mV.`
-      : `Current clamp: closing K⁺ channels weakens the pull toward E<sub>K</sub> = ${fmtSigned(P.E, 0)}, so V drifts up, away from E<sub>K</sub>, and the membrane gets less leaky: a slow EPSP with the conductance going down, not up.`; return; }
-    $('cCap').innerHTML = P.mode === 'vc'
-      ? `Voltage clamp at ${fmtSigned(P.Vh, 0)}: the driving force V − E<sub>rev</sub> is ${fmtSigned(P.Vh - P.E, 0)}, so the ${name} current is ${Math.abs(P.Vh - P.E) < 1 ? 'zero: the channels open, but no net charge flows' : P.Vh < P.E ? 'inward (negative)' : 'outward (positive)'}.`
-      : `Current clamp: V starts at ${fmtSigned(P.Vh, 0)} and moves toward E<sub>rev</sub> = ${fmtSigned(P.E, 0)}, ${P.E > P.Vh ? 'up' : 'down'}, but only part of the way.`;
+    if (closes()) { $('cCap').innerHTML =
+        `Voltage clamp at ${fmtSigned(P.Vh, 0)}: ACh closes K⁺ channels, so less K⁺ leaves. That missing outward current shows up as ${Math.abs(P.Vh - P.E) < 1 ? 'nothing at all: at E<sub>K</sub> = ' + fmtSigned(P.E, 0) + ' no K⁺ was flowing to stop' : P.Vh > P.E ? 'an inward (negative) current' : 'an outward (positive) current, because below E<sub>K</sub> = ' + fmtSigned(P.E, 0) + ' K⁺ was flowing in'}. It reverses at E<sub>K</sub>, not at 0 mV.`; return; }
+    $('cCap').innerHTML =
+      `Voltage clamp at ${fmtSigned(P.Vh, 0)}: the driving force V − E<sub>rev</sub> is ${fmtSigned(P.Vh - P.E, 0)}, so the ${name} current is ${Math.abs(P.Vh - P.E) < 1 ? 'zero: the channels open, but no net charge flows' : P.Vh < P.E ? 'inward (negative)' : 'outward (positive)'}.`;
   }
 
   // ---------- controls ----------
@@ -1541,8 +1522,7 @@ function thin(xs, yss, max = 1400) {
   chipGroup('crec', k => { P.rec = k; const pr = PRESET[k]; set('cE', pr.E); set('cTd', pr.td); set('cG', pr.g); clear(); });
   chipGroup('civ', a => { ivAxes = a; });
   $('cFire').addEventListener('click', fire);
-  $('cSweep').addEventListener('click', () => sweep('vc'));
-  $('cSweepCC').addEventListener('click', () => sweep('cc'));
+  $('cSweep').addEventListener('click', () => sweep());
   $('cClear').addEventListener('click', clear);
   $('cPlay').addEventListener('click', () => { playing = !playing; $('cPlay').textContent = playing ? 'Pause' : 'Play'; });
 
@@ -1657,8 +1637,8 @@ function thin(xs, yss, max = 1400) {
     else if (what === 'srec') syn({ rec: id });
     else if (what === 'gaba') syn({ rec: 'gaba' });
     else if (what === 'shunt') circ({ rec: 'gaba', E: -65, sweep: true });
-    else if (what === 'sweep') circ({ mode: 'vc', sweep: true });
-    else if (what === 'hold0') circ({ mode: 'vc', vh: 0 });
+    else if (what === 'sweep') circ({ sweep: true });
+    else if (what === 'hold0') circ({ vh: 0 });
     else if (what === 'set') {
       set(id, v);
       if (id.startsWith('s')) { go('syn'); $('sFire').click(); }

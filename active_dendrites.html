@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active Dendrites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script src="chartzoom.js"></script>
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* The lessons' shared look (as in passive_space.html and summation.html) */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8; --ca:#c0287a; --warm:#b4582a;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2; --ca:#f477b7; --warm:#e0915e;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2; --ca:#f477b7; --warm:#e0915e;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:90ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* calculator, styled like the others' */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px;max-width:600px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.top.stacked{grid-template-columns:1fr}
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.cgrid.three{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr)}
+@media (max-width:1100px){.cgrid.three{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media (max-width:900px){.cgrid,.cgrid.three{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+canvas.pic{cursor:default}
+canvas.pick{cursor:pointer}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.runbar .swline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.k{background:var(--k)}.dot.na{background:var(--na)}.dot.cl{background:var(--cl)}.dot.syn{background:var(--syn)}.dot.ca{background:var(--ca)}
+.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg)}.dot.ink{background:var(--ink)}.dot.a{background:var(--a)}
+.dot.ring{background:none;border:2px solid var(--syn)}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.sgroup{display:flex;flex-direction:column;gap:10px}
+.gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:120px minmax(0,1fr) 112px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.segrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* theory */
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv ul{padding-left:20px}
+.deriv li{margin-bottom:4px}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+table.map{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+table.map th,table.map td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{display:block;color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="draftnote" id="draftNote"><b>DRAFT</b> · Not yet in the course. Still to check before students see it: the new picture of the cell (20 identical, unbranched dendrites drawn side by side); the model's simplifications (the spike starts in the cell body, with no axon; one kind of K⁺ channel; input sizes and the HCN gradient chosen for teaching, not fitted to one cell); and the medical examples under Theory › Why it matters, which cite no paper here.</p>
+<header>
+  <h1>Active dendrites: the cable fights back</h1>
+  <p>Passive Properties: Space treated a dendrite as a leaky cable: every input shrinks and slows on its way to the cell body, and inputs simply add. Real dendrites also carry voltage-gated channels, so the cable can push back. A spike in the cell body runs back out into the dendrites, kept going by their Na⁺ channels. A handful of inputs close together on one thin branch can set off a local spike of their own, through NMDA receptors. And HCN channels, open at rest, keep far-away inputs brief. Some of the adding-up happens in the dendrites, before the cell body sees anything.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>explain the back-propagating action potential, and why the dendrites' Na⁺ channels keep it from dying out</li>
+        <li>explain why inputs clustered on one thin branch can add up to more than their sum: their NMDA receptors lose their Mg²⁺ block</li>
+        <li>use Ohm's law, I = g (V − E), to see why a current that grows as the voltage rises feeds on itself</li>
+        <li>explain what HCN channels (I<sub>h</sub>) do: open at rest, they shorten far-off EPSPs and stop them piling up</li>
+        <li>contrast a passive cable's shrinking, simply added inputs with an active dendrite's</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-adtry="bap">1 · A spike runs backwards</button> Fire the cell body and watch the spike spread out into the dendrites in slow motion, shrinking a little but kept alive by their Na⁺ channels.</li>
+    <li><button class="chip" data-adtry="ttx">2 · Block the dendrites' Na⁺ channels</button> The same spike now spreads only passively, as in Passive Properties: Space, and has mostly faded by 200 µm.</li>
+    <li><button class="chip" data-adtry="cluster">3 · Inputs on one branch</button> Fire 1, 2, 3 … 12 inputs all on one spot of one dendrite. Past about four, the EPSP jumps: an NMDA spike. The cell body gets more than the sum.</li>
+    <li><button class="chip" data-adtry="spread">4 · The same inputs, spread out</button> One input on each of 1, 2, 3 … 12 dendrites. Each branch sees one input's small bump, no NMDA receptors unplug, and the cell body gets the simple sum.</li>
+    <li><button class="chip" data-adtry="apv">5 · Block NMDA receptors</button> With APV, inputs on one branch add up to a little less than their sum, never more.</li>
+    <li><button class="chip" data-adtry="hcn">6 · Five inputs far out</button> Five inputs at 350 µm, 25 ms apart, with HCN channels working: each EPSP is brief, and they barely pile up.</li>
+    <li><button class="chip" data-adtry="zd">7 · Block I<sub>h</sub></button> With ZD7288 the cell rests lower, each EPSP lasts longer, and the five pile up much more.</li>
+  </ol>
+</section>
+
+<!-- =================== Part 1: the back-propagating spike =================== -->
+<h3 class="part">1 · A spike runs back into the dendrites</h3>
+<div class="top stacked">
+  <section class="card stage" id="bap-card">
+    <div class="tabs" role="tablist" aria-label="Back-propagating spike">
+      <button type="button" role="tab" id="tab-bap" aria-controls="pane-bap" aria-selected="true">Neuron</button>
+      <button type="button" role="tab" id="tab-baphelp" aria-controls="pane-baphelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-baplook" aria-controls="pane-baplook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-bap" aria-labelledby="tab-bap">
+      <canvas id="bPic" class="pic" aria-label="A neuron: the cell body on the right and twenty dendrites fanning out to the left, coloured by voltage, with electrodes on the cell body and at 100, 200, 300 and 400 µm along the top dendrite"></canvas>
+      <div class="runbar">
+        <button id="bFire" class="primary">Fire the cell body</button>
+        <button id="bPlay">Play</button>
+        <button id="bClear">Clear</button>
+        <label for="bSpeed" class="runlab">Speed</label>
+        <input type="range" id="bSpeed" min="0" max="100" value="50">
+        <output id="bSpeedo" for="bSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot neg"></i>resting voltage</span><span><i class="dot pos"></i>depolarized</span>
+        <span><i class="dot na"></i>dendrites' Na⁺ channels (darker: more)</span>
+        <span>recording at: <i class="dot ink"></i>the cell body <i class="dot" style="background:var(--accent)"></i>100 <i class="dot k"></i>200 <i class="dot na"></i>300 <i class="dot ca"></i>400 µm</span>
+      </div>
+      <div class="cgrid">
+        <div class="ccol">
+          <p class="sect-title">Voltage over time at the recording sites</p>
+          <canvas id="bTime" aria-label="Voltage against time at the cell body and at 100, 200, 300 and 400 µm along the dendrite"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">Spike height along the dendrite, one line per Fire</p>
+          <canvas id="bProf" aria-label="The highest voltage each place reached, above rest, against distance from the cell body, one line per Fire, and the voltage now"></canvas>
+        </div>
+      </div>
+      <p class="caption" id="bCap"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-baphelp" aria-labelledby="tab-baphelp" hidden>
+      <ul>
+        <li><b>The picture:</b> a simplified neuron. On the right the cell body; to the left its 20 dendrites, all alike, each 600 µm long and 1.2 µm thick, drawn side by side as they fan out (in a real neuron they point every way and branch). Colour is voltage, blue at rest to red at +40 mV (the scale is under the cell body). The orange dots stand for the dendrites' Na⁺ channels: the more there are, the darker the dots.</li>
+        <li><b>Electrodes</b> record at the cell body (black) and at 100, 200, 300 and 400 µm along the top dendrite, in the colours used on the charts. Every dendrite does the same thing here, so one stands for all of them.</li>
+        <li><b>Fire the cell body</b> puts a brief pulse of current into the cell body (4 nA for 1 ms, starting at 1 ms), which fires a spike there. <b>Play</b> and <b>Pause</b> replay it; <b>Speed</b> is how many ms of the cell's time pass each second, so the spike's spread can be followed by eye.</li>
+        <li><b>Voltage over time:</b> the voltage at each recording site, drawn as the run plays.</li>
+        <li><b>Spike height along the dendrite:</b> the highest the voltage reached at each place, above its resting value, against the distance from the cell body (0 is the cell body). One line per Fire, labelled with the dendrites' ḡ<sub>Na</sub> and coloured from blue (none) to red (20 mS/cm²). The thin black line is the voltage now, measured from rest, as it sweeps out along the dendrite. Clear empties the chart.</li>
+        <li><b>The model:</b> each piece of membrane has a leak, HCN channels, and Na⁺ and K⁺ channels like those in The Hodgkin–Huxley Model (with rates fitted to cortical neurons). The cell body has ḡ<sub>Na</sub> = 50 mS/cm²; the dendrites have the amount set. There is no axon: here the spike starts in the cell body. In a real neuron it starts in the axon initial segment (Summation and the Spike Trigger Zone) and spreads back through the cell body into the dendrites in the same way.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-baplook" aria-labelledby="tab-baplook" hidden>
+      <ul>
+        <li>Fire with the starting 7 mS/cm². The spike is about 88 mV tall at the cell body and still about 60 mV at 300–400 µm. In slow motion, the farther sites peak later: the spike travels out along the dendrites.</li>
+        <li>Set ḡ<sub>Na</sub> to 0 (the dendrites' Na⁺ channels blocked, the cell body's left alone) and Fire again. The cell body still fires, but only about 10 mV reaches 400 µm. The spike now spreads passively, as in Passive Properties: Space, and a 1 ms spike is too quick to charge much of the dendrites' membrane on the way.</li>
+        <li>Compare the two lines on the height chart: the passive one falls steeply from the start; with Na⁺ channels the fall levels off, because each stretch of dendrite adds current of its own as the spike reaches it.</li>
+        <li>Raise ḡ<sub>Na</sub> to 20 mS/cm²: the spike hardly shrinks at all and travels like a spike in an axon. Real pyramidal-cell dendrites sit in between: the spike is boosted but still shrinks with distance.</li>
+        <li>Watch the thin black line: behind the spike the voltage dips below rest, as K⁺ channels open in the cell body and dendrites.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">The spike's height, above rest</span>
+      <span class="vnum" id="bBig">—</span>
+      <div class="vrow"><span>at 400 µm along the dendrite</span></div>
+      <div class="vrow"><span>at the cell body</span><b id="bSoma">—</b></div>
+      <div class="vrow"><span>at 200 µm</span><b id="b200">—</b></div>
+      <div class="vrow"><span>at 400 µm, as a share of the cell body's</span><b id="bFrac">—</b></div>
+      <div class="vrow"><span>resting voltage</span><b id="bRest">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The dendrites</legend>
+      <div class="sgroup">
+        <div class="row"><label for="bNa"><i class="dot na"></i>Na⁺, ḡ<sub>Na</sub></label><input type="range" id="bNa" min="0" max="20" step="0.5" value="7"><output id="bNao" for="bNa"></output>
+          <span class="hint">in every dendrite (the cell body keeps 50); 0 is the dendrites' Na⁺ channels blocked</span></div>
+      </div>
+      <p class="caption">Changes take effect at the next Fire. Each Fire keeps its line on the height chart, so runs with different ḡ<sub>Na</sub> can be compared.</p>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 2: clustered and spread inputs =================== -->
+<h3 class="part">2 · Inputs together: all on one branch, or spread out</h3>
+<div class="top stacked">
+  <section class="card stage" id="syn-card">
+    <div class="tabs" role="tablist" aria-label="Clustered and spread inputs">
+      <button type="button" role="tab" id="tab-syn" aria-controls="pane-syn" aria-selected="true">Neuron</button>
+      <button type="button" role="tab" id="tab-synhelp" aria-controls="pane-synhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-synlook" aria-controls="pane-synlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-syn" aria-labelledby="tab-syn">
+      <div class="segrow">
+        <span class="sect-title">Where the inputs land</span>
+        <div class="seg" role="group" aria-label="Where the inputs land">
+          <button type="button" data-slay="cluster" aria-pressed="true">All on one branch</button><button type="button" data-slay="spread" aria-pressed="false">One on each of several branches</button>
+        </div>
+      </div>
+      <canvas id="sPic" class="pick" aria-label="The neuron with its inputs: all on the top dendrite, or one on each of several dendrites, at the distance set; click a dendrite to move them"></canvas>
+      <div class="runbar">
+        <button id="sFire" class="primary">Fire inputs</button>
+        <button id="sPlay">Play</button>
+        <button id="sClear">Clear</button>
+        <button id="sSweep" title="1, 2, 3 … inputs, one run after another; each adds a point to the chart">Sweep</button>
+        <label for="sSpeed" class="runlab">Speed</label>
+        <input type="range" id="sSpeed" min="0" max="100" value="50">
+        <output id="sSpeedo" for="sSpeed"></output>
+        <span class="swline" id="sSwLine">Sweep fires 1, 2, 3 … up to the number of inputs set, one run after another, where the inputs land now.</span>
+      </div>
+      <div class="legend">
+        <span><i class="dot neg"></i>resting voltage</span><span><i class="dot pos"></i>depolarized</span>
+        <span><i class="dot syn"></i>input (synapse), filled while its receptors are open</span>
+        <span>recording at: <i class="dot ca"></i>the inputs (top dendrite) <i class="dot ink"></i>the cell body</span>
+      </div>
+      <div class="cgrid three">
+        <div class="ccol">
+          <p class="sect-title">At the inputs</p>
+          <canvas id="sDend" aria-label="Change in voltage over time where the inputs are, one line per run"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">At the cell body</p>
+          <canvas id="sSoma" aria-label="Change in voltage over time at the cell body, one line per run"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">EPSP at the cell body against number of inputs</p>
+          <canvas id="sIO" aria-label="One point per run: the EPSP's peak at the cell body against the number of inputs, one line per arrangement, with the simple sum dashed"></canvas>
+          <p class="caption" id="sIOcap"></p>
+        </div>
+      </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-synhelp" aria-labelledby="tab-synhelp" hidden>
+      <ul>
+        <li><b>The picture:</b> the same neuron, coloured from blue at rest to red at −15 mV. The teal dots are the inputs, synapses, filled while their receptors are open. <b>All on one branch:</b> every input on the top dendrite at the distance set (drawn a little apart, on one spot in the model). <b>One on each of several branches:</b> one input on each of that many dendrites, all at the same distance. Move them with the distance slider, or click on a dendrite.</li>
+        <li><b>Each input</b> is a synapse with 0.2 nS of AMPA receptors and 1.5 nS of NMDA receptors at its peak, with 1 mM Mg²⁺ outside. Untick <b>NMDA receptors</b> to block them, as the drug APV does. All the inputs fire together, 5 ms into the run.</li>
+        <li><b>TTX</b> is in the bath, as in the experiments: every Na⁺ channel is blocked, so the cell cannot fire and only the inputs show. The HCN channels and leak are working as usual.</li>
+        <li><b>Fire</b> runs the number of inputs set. <b>Sweep</b> fires 1, 2, 3 … up to that number, one run after another. Play, Pause and Speed work as in part 1.</li>
+        <li><b>At the inputs</b> and <b>At the cell body:</b> the change in voltage from rest, one line per run. A single Fire's line is coloured by where the inputs landed (magenta all on one branch, purple spread out; orange and green the same with APV). A sweep's lines go from blue (one input) to red (the most).</li>
+        <li><b>EPSP at the cell body against number of inputs:</b> one point per run, its peak at the cell body; points from the same arrangement are joined. The dashed line is the <b>simple sum</b>: the number of inputs times one input alone (here, with these receptors), which is what a passive cable would give.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-synlook" aria-labelledby="tab-synlook" hidden>
+      <ul>
+        <li>All on one branch, Sweep to 12: the first few inputs add a little more than the one before; from about four to seven each new input adds much more, and the points climb well above the dashed line; past about ten they level off. At the inputs, the voltage leaps nearly 40 mV above rest and stays up for tens of ms: an NMDA spike.</li>
+        <li>Switch to one input on each branch and Sweep again: the points lie on the dashed line. Each branch sees only its own input's bump of 2–3 mV, far too little to unplug its NMDA receptors, so the cell body gets the simple sum.</li>
+        <li>Back on one branch, untick NMDA receptors (APV) and Sweep: the points now fall a little below the dashed line. AMPA receptors' battery is at 0 mV, so as the branch depolarizes each input's driving force, and with it its current, shrinks.</li>
+        <li>Watch the readout of NMDA receptors free of Mg²⁺: about 7% at rest, about 45% at the peak of an NMDA spike. That rise, multiplied over many receptors, is the extra current.</li>
+        <li>Move the inputs closer to the cell body (100 µm): it now takes about eight on one branch to set off the NMDA spike. Far out (500 µm) three are enough. Near its sealed tip a thin dendrite has a high resistance to current leaving it, so by Ohm's law (ΔV = I × R) the same synaptic current depolarizes it more.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">The last run, at the cell body</span>
+      <span class="vnum" id="sBig">—</span>
+      <div class="vrow"><span>peak change in voltage (the EPSP)</span></div>
+      <div class="vrow"><span>the simple sum: inputs × one input alone</span><b id="sSum">—</b></div>
+      <div class="vrow"><span>EPSP ÷ simple sum</span><b id="sRatio">—</b></div>
+      <div class="vrow"><span>peak at the inputs</span><b id="sLoc">—</b></div>
+      <div class="vrow"><span>NMDA receptors free of Mg²⁺ at the inputs, at rest → at the peak</span><b id="sMg">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The inputs</legend>
+      <div class="sgroup">
+        <div class="row"><label for="sN"><i class="dot syn"></i>Inputs</label><input type="range" id="sN" min="1" max="20" step="1" value="10"><output id="sNo" for="sN"></output>
+          <span class="hint" id="sNhint">all on the top dendrite</span></div>
+        <div class="row"><label for="sPos">Distance</label><input type="range" id="sPos" min="50" max="550" step="10" value="300"><output id="sPoso" for="sPos"></output>
+          <span class="hint">from the cell body</span></div>
+        <label class="check" for="sNmda"><input type="checkbox" id="sNmda" checked>NMDA receptors (untick for APV)</label>
+      </div>
+      <p class="caption">Changes take effect at the next Fire or Sweep. The chart keeps every point until Clear.</p>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 3: HCN channels =================== -->
+<h3 class="part">3 · HCN channels and far-off inputs</h3>
+<div class="top stacked">
+  <section class="card stage" id="h-card">
+    <div class="tabs" role="tablist" aria-label="HCN channels">
+      <button type="button" role="tab" id="tab-h" aria-controls="pane-h" aria-selected="true">Neuron</button>
+      <button type="button" role="tab" id="tab-hhelp" aria-controls="pane-hhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-hlook" aria-controls="pane-hlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-h" aria-labelledby="tab-h">
+      <canvas id="hPic" class="pick" aria-label="The neuron with five inputs on the top dendrite at the distance set, and its HCN channels drawn as green dots, denser farther out; click a dendrite to move the inputs"></canvas>
+      <div class="runbar">
+        <button id="hFire" class="primary">Fire five inputs</button>
+        <button id="hPlay">Play</button>
+        <button id="hClear">Clear</button>
+        <label for="hSpeed" class="runlab">Speed</label>
+        <input type="range" id="hSpeed" min="0" max="100" value="50">
+        <output id="hSpeedo" for="hSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot neg"></i>−72 mV</span><span><i class="dot pos"></i>−47 mV</span>
+        <span><i class="dot cl"></i>HCN channels (darker: more; grey: blocked)</span>
+        <span><i class="dot syn"></i>input, filled while it is open</span>
+        <span>recording at: <i class="dot ca"></i>the inputs <i class="dot ink"></i>the cell body</span>
+      </div>
+      <div class="cgrid">
+        <div class="ccol">
+          <p class="sect-title">At the cell body</p>
+          <canvas id="hSoma" aria-label="Change in voltage from rest at the cell body over time, one line per run"></canvas>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">At the inputs</p>
+          <canvas id="hDend" aria-label="Change in voltage from rest where the inputs are, over time, one line per run"></canvas>
+        </div>
+      </div>
+      <p class="caption" id="hCap"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-hhelp" aria-labelledby="tab-hhelp" hidden>
+      <ul>
+        <li><b>The picture:</b> the same neuron, coloured from blue at −72 mV to red at −47 mV. The green dots stand for HCN channels: few near the cell body, more and more farther out (0.02 mS/cm² at the cell body, 0.4 at the dendrites' tips), as in many pyramidal cells. They turn grey when ZD7288 blocks them. The five inputs are on the top dendrite at the distance set; each fills while it is open.</li>
+        <li><b>Each input</b> is 2 nS of AMPA receptors only (a few synapses firing together, with NMDA receptors blocked), so the HCN channels are the only thing that changes between runs. TTX blocks every Na⁺ channel. The first input comes at 10 ms, the rest at the interval set.</li>
+        <li><b>Charts:</b> the change in voltage from each run's own resting value, at the cell body and at the inputs. One line per Fire: green with I<sub>h</sub>, purple with ZD7288; the latest is drawn bold. The cell rests at a different voltage with and without I<sub>h</sub>, which the readouts show.</li>
+        <li><b>Biggest ÷ first:</b> how much the five EPSPs piled up at the cell body: the highest point reached, divided by the first EPSP's peak. 1 means no piling up at all.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-hlook" aria-labelledby="tab-hlook" hidden>
+      <ul>
+        <li>Fire with HCN channels working, then untick them (ZD7288) and Fire again. Without I<sub>h</sub> the cell rests about 8 mV lower (−70 instead of −62 mV), each EPSP lasts longer, and the five pile up more at the cell body: the biggest is about 1.45 times the first, against about 1.1 with I<sub>h</sub>.</li>
+        <li>Shorten the interval to 10 ms: both pile up more, but still more without I<sub>h</sub>. At 50 ms neither piles up much: each EPSP has gone before the next arrives.</li>
+        <li>Move the inputs to 50 µm and compare again. With I<sub>h</sub>, near and far inputs pile up about equally (about 1.09 near, 1.11 far). Without it, far inputs pile up more (about 1.28 near, 1.45 far). The extra HCN channels far out make up for the dendrite's slowing of far inputs.</li>
+        <li>Compare the first EPSP's size with and without I<sub>h</sub>: it is a little bigger without, as the membrane is less leaky. The big change is in how long it lasts: one EPSP alone from 350 µm is about 16 ms wide at half its peak with I<sub>h</sub>, about 21 ms without.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">The last run, at the cell body</span>
+      <span class="vnum" id="hBig">—</span>
+      <div class="vrow"><span>biggest ÷ first EPSP</span></div>
+      <div class="vrow"><span>first EPSP's peak</span><b id="hFirst">—</b></div>
+      <div class="vrow"><span>biggest</span><b id="hBiggest">—</b></div>
+      <div class="vrow"><span>one EPSP alone: its width at half its peak</span><b id="hWidth">—</b></div>
+      <div class="vrow"><span>resting voltage, cell body / inputs</span><b id="hRest">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The inputs</legend>
+      <div class="sgroup">
+        <label class="check" for="hHcn"><input type="checkbox" id="hHcn" checked><i class="dot cl"></i>HCN channels (untick for ZD7288)</label>
+        <div class="row"><label for="hIsi">Interval</label><input type="range" id="hIsi" min="5" max="60" step="1" value="25"><output id="hIsio" for="hIsi"></output>
+          <span class="hint">between the five inputs</span></div>
+        <div class="row"><label for="hPos">Distance</label><input type="range" id="hPos" min="20" max="550" step="10" value="350"><output id="hPoso" for="hPos"></output>
+          <span class="hint">from the cell body</span></div>
+      </div>
+      <p class="caption">Changes take effect at the next Fire. The charts keep the last four runs.</p>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units and words</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Units</p>
+      <dl class="unitlist">
+        <dt>mV, ms</dt><dd>millivolts and milliseconds, as in the earlier lessons.</dd>
+        <dt>µm</dt><dd>micrometres: distance along a dendrite, measured from the cell body, and its thickness.</dd>
+        <dt>mS/cm²</dt><dd>conductance per cm² of membrane: how densely a kind of channel is packed. ḡ (g-bar) is the most there can be, with every channel open.</dd>
+        <dt>nS</dt><dd>nanosiemens: a synapse's conductance. 1 nS passes 1 pA for each mV of driving force (Ohm's law: pA = nS × mV).</dd>
+        <dt>pA, nA</dt><dd>picoamps and nanoamps of current; 1 nA = 1000 pA.</dd>
+        <dt>mM</dt><dd>millimolar: the concentration of Mg²⁺ outside the cell, about 1 mM in the body.</dd>
+        <dt>× the sum</dt><dd>an EPSP divided by the simple sum of its inputs: 1 means they simply add, more than 1 that the dendrite amplified them.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">Words and drugs</p>
+      <dl class="unitlist">
+        <dt>bAP</dt><dd>back-propagating action potential: the spike spreading from the cell body back into the dendrites.</dd>
+        <dt>NMDA spike</dt><dd>a local, long-lasting depolarization of a thin branch, carried mainly by NMDA receptors losing their Mg²⁺ block.</dd>
+        <dt>I<sub>h</sub></dt><dd>the current through HCN channels (hyperpolarization-activated, cyclic-nucleotide-gated): they open when the voltage falls.</dd>
+        <dt>TTX</dt><dd>tetrodotoxin, from pufferfish: blocks voltage-gated Na⁺ channels.</dd>
+        <dt>APV</dt><dd>also called AP5: blocks NMDA receptors.</dd>
+        <dt>ZD7288</dt><dd>blocks HCN channels.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="theory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Channels in the cable</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">The back-propagating spike</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">NMDA spikes</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">HCN channels</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Why it matters</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> In Passive Properties: Space each short piece of dendrite was a patch of membrane, a resistor with its battery (the leak) plus a capacitor, joined to its neighbours by the resistance of the cytoplasm. Here each piece just gets more resistors: one for each kind of channel, each with its own battery, and some of them change with the voltage, as in The Hodgkin–Huxley Model. Each one still obeys Ohm's law: its current is its conductance times its driving force, I = g (V − E).</p>
+      <h3>One piece of dendrite</h3>
+      <p>For piece \(k\), current arriving along the cytoplasm from its two neighbours either charges its capacitor or leaves through its channels:</p>
+      <div class="eq">\[ C\,\frac{dV_k}{dt} = g_c\,(V_{k-1} - V_k) + g_c\,(V_{k+1} - V_k) - \sum_\text{channels} g_x(V_k, t)\,(V_k - E_x) \]</div>
+      <p>With every \(g_x\) fixed, this is the passive cable and its length constant λ. The new part is the sign of each channel's feedback. If a conductance <i>grows</i> as V rises and its battery is above V (Na⁺ channels, NMDA receptors), the current it lets in pushes V up further: the dendrite amplifies. If a conductance <i>shrinks</i> as V rises while its battery is above V (HCN channels), rising V turns off inward current: the dendrite damps.</p>
+      <h3>The channels in this model</h3>
+      <table class="map">
+        <tr><th>Channel</th><th>Battery E</th><th>Where, how many</th><th>Opened by</th></tr>
+        <tr><td>Leak</td><td>−70 mV</td><td>everywhere, 0.05 mS/cm²</td><td>always open</td></tr>
+        <tr><td>Na⁺</td><td>+50 mV</td><td>cell body 50 mS/cm²; dendrites 0–20 (part 1), 0 with TTX (parts 2, 3)</td><td>depolarization, fast; then inactivates</td></tr>
+        <tr><td>K⁺</td><td>−90 mV</td><td>cell body 10 mS/cm²; dendrites 0.4 × their Na⁺, at least 1</td><td>depolarization, slower</td></tr>
+        <tr><td>HCN (I<sub>h</sub>)</td><td>−30 mV</td><td>0.02 mS/cm² at the cell body, rising to 0.4 at 600 µm</td><td>hyperpolarization, slowly (40 ms)</td></tr>
+        <tr><td>AMPA receptors</td><td>0 mV</td><td>at the inputs</td><td>glutamate</td></tr>
+        <tr><td>NMDA receptors</td><td>0 mV</td><td>at the inputs (part 2)</td><td>glutamate, once depolarization has pushed out the Mg²⁺</td></tr>
+      </table>
+      <h3>A quick number: HCN channels at rest</h3>
+      <p>350 µm out, the dendrite has \(\bar g_h \approx 0.24\) mS/cm² of HCN channels, of which about 7% are open at its resting −61 mV: \(g_h \approx 0.017\) mS/cm². Their driving force is \(V - E_h = -61 - (-30) = -31\) mV, so by Ohm's law \(I_h = 0.017 \times (-31) \approx -0.5\ \mu\text{A/cm}^2\): a small, steady inward current. Across the whole cell it holds rest about 8 mV above where it would otherwise be (−70 mV, the leak's battery).</p>
+      <details class="fullderiv"><summary>Show the derivation: how the page solves the cell</summary>
+        <p>Each dendrite is cut into 60 pieces 10 µm long, each with the equation above. The page steps time forward by 0.025 ms (0.05 ms in part 3), writing every piece's equation at the end of the step (implicitly), so the voltages in a dendrite form a chain of equations that can be solved exactly, from the tip inward (the Thomas algorithm). The cell body's equation joins the 20 chains. The gates move by the same steps, with Traub and Miles' rates for the Na⁺ and K⁺ channels, in the form Pospischil and colleagues used for cortical neurons.</p>
+        <p>Dendrites that receive the same inputs behave identically, so the page solves one of each kind and counts its current into the cell body as many times as there are of them. With inputs on 6 of the 20 dendrites, it solves one dendrite with an input (×6) and one without (×14). This is exact, not an approximation: spread inputs really are simulated on separate dendrites, and a run takes a few tens of milliseconds.</p>
+      </details>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-adtry="bap">Fire the cell body</button> Na⁺ channels amplify: watch the spike keep going.</p>
+      <p><button class="chip" data-adtry="zd">Block I<sub>h</sub></button> HCN channels damp: without them the cell rests lower and EPSPs last longer.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> When the cell fires, its cell body's inside suddenly becomes about 90 mV more positive than the dendrites'. By Ohm's law current flows along the cytoplasm from high to low, out into the dendrites, and charges them. In a passive dendrite that is all, and a quick spike fades fast. With Na⁺ channels in the dendrite, each stretch the spike reaches opens its own Na⁺ channels and adds inward current, boosting the spike as it goes. Dendrites have fewer Na⁺ channels than an axon, so the spike is boosted, not fully rebuilt, and still shrinks with distance.</p>
+      <h3>Where it starts and where it goes</h3>
+      <p>A spike starts in the axon initial segment, where Na⁺ channels are densest (Summation and the Spike Trigger Zone). It runs forward down the axon, and it also spreads backwards, through the cell body and out into the dendrites. Stuart and Sakmann showed this in 1994 by recording from the cell body and the apical dendrite of the same neuron at once: the spike reached the dendrite later and smaller, and TTX on the dendrite made it much smaller still.</p>
+      <h3>A quick number</h3>
+      <p>The dendrites here are 1.2 µm thick, with membrane resistance \(R_m = 1/(0.05\ \text{mS/cm}^2) = 20\,000\ \Omega\,\text{cm}^2\) and cytoplasm \(R_i = 150\ \Omega\,\text{cm}\). As in Passive Properties: Space:</p>
+      <div class="eq">\[ \lambda = \sqrt{\frac{d\,R_m}{4\,R_i}} = \sqrt{\frac{1.2\times10^{-4}\ \text{cm} \times 20\,000\ \Omega\,\text{cm}^2}{600\ \Omega\,\text{cm}}} \approx 0.063\ \text{cm} = 632\ \mu\text{m} \]</div>
+      <p>A <i>steady</i> voltage change would keep \(e^{-300/632} \approx 62\%\) of its size 300 µm out. The spike, with the dendrites' Na⁺ channels blocked, keeps only about 17% there in the simulation. A spike lasts about 1 ms, much less than the membrane's time constant (\(\tau = R_m C = 20\) ms), so most of the current that flows out is spent charging the capacitance of the first stretch of dendrite, and little gets farther: a quick signal fades faster than a steady one. With ḡ<sub>Na</sub> = 7 mS/cm², about two thirds of the spike reaches 300–400 µm.</p>
+      <details class="fullderiv"><summary>Show the derivation: why a quick signal fades faster</summary>
+        <p>The cable equation of Passive Properties: Space, with V measured from rest, is</p>
+        <div class="eq">\[ \lambda^2\,\frac{\partial^2 V}{\partial x^2} = V + \tau\,\frac{\partial V}{\partial t} \]</div>
+        <p>For a voltage that wobbles in time as \(e^{i\omega t}\) (frequency \(f = \omega/2\pi\)), \(\partial V/\partial t = i\omega V\), and the equation becomes \(\lambda^2 V'' = (1 + i\omega\tau)\,V\). Its solution falls with distance as \(e^{-x/\lambda_f}\), with</p>
+        <div class="eq">\[ \lambda_f = \frac{\lambda}{\operatorname{Re}\sqrt{1 + i\,\omega\tau}} \]</div>
+        <p>For a steady change (\(\omega = 0\)) this is λ. A 1 ms spike is made mostly of frequencies around 300 Hz: \(\omega\tau = 2\pi \times 300\ \text{s}^{-1} \times 0.02\ \text{s} \approx 38\), and \(\sqrt{1 + 38i} \approx 4.4 + 4.3i\). So \(\lambda_f \approx 632/4.4 \approx 144\ \mu\text{m}\), and \(e^{-300/144} \approx 12\%\) is left at 300 µm: the same range as the simulation's 17% (whose dendrites are finite and sealed at the tip, which holds a little more voltage).</p>
+      </details>
+      <h3>Why it matters</h3>
+      <p>The back-propagating spike tells every synapse on the dendrites that the cell has just fired. Its depolarization adds to a recent EPSP and helps drive Mg²⁺ out of that synapse's NMDA receptors, letting Ca²⁺ in: the coincidence that triggers LTP in Spines and Plasticity. Because it shrinks with distance (and shrinks more when the cell fires fast, as the dendrites' Na⁺ channels inactivate), synapses far out hear less of it.</p>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-adtry="bap">ḡ<sub>Na</sub> = 7 mS/cm²</button> Boosted, but still shrinking with distance.</p>
+      <p><button class="chip" data-adtry="ttx">ḡ<sub>Na</sub> = 0</button> Passive: about 17% left at 300 µm.</p>
+      <p><button class="chip" data-adtry="axonlike">ḡ<sub>Na</sub> = 20 mS/cm²</button> Rebuilt all the way, like a spike in an axon.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> An NMDA receptor's pore is plugged by a Mg²⁺ ion at rest, and the plug falls out as the inside becomes more positive. One input on a branch depolarizes it only a little. Ten inputs on the same thin branch depolarize it a lot, which unplugs their NMDA receptors, which lets in more current, which depolarizes it more: positive feedback, like Na⁺ channels at threshold, but slower and local to the branch. Spread the same inputs over many branches and none of them depolarizes enough to start it.</p>
+      <h3>The Mg²⁺ block</h3>
+      <p>The share of NMDA receptors free of Mg²⁺ depends on the voltage and on the Mg²⁺ concentration outside. The page uses Jahr and Stevens' fit (V in mV):</p>
+      <div class="eq">\[ B(V) = \frac{1}{1 + \dfrac{[\text{Mg}^{2+}]}{3.57\ \text{mM}}\; e^{-0.062\,V}}, \qquad I_\text{NMDA} = \bar g_\text{NMDA}(t)\; B(V)\,(V - 0) \]</div>
+      <p>The second part is Ohm's law: the receptor's battery is at 0 mV, and its conductance is the open receptors' conductance times the share that are unplugged.</p>
+      <h3>A quick number</h3>
+      <p>With 1 mM Mg²⁺: at −70 mV, \(e^{4.34}/3.57 \approx 21.5\), so \(B \approx 1/22.5 \approx 4.4\%\). At −20 mV, \(e^{1.24}/3.57 \approx 0.97\), so \(B \approx 51\%\): more than eleven times as many receptors conduct. Take ten inputs' NMDA receptors, 15 nS when all are unplugged. At −70 mV: \(g = 15 \times 0.044 \approx 0.67\) nS and \(I = 0.67 \times (-70 - 0) \approx -47\) pA. At −20 mV: \(g \approx 7.6\) nS and \(I \approx 7.6 \times (-20) \approx -152\) pA. The driving force has shrunk to less than a third, yet the inward current has more than tripled. That is the positive feedback.</p>
+      <h3>Why a thin branch, and why all on one</h3>
+      <p>By Ohm's law the depolarization an input causes is its current times the resistance it meets, ΔV = I × R. Far out on a thin dendrite, current has few places to go, so R is high: in the simulation one input at 300 µm gives about 2 mV where it lands but only 0.16 mV at the cell body. Ten inputs on the same spot add their currents into that one high resistance, the branch climbs past the point where the feedback takes over, and it jumps to about −25 mV, where it stays while glutamate holds the receptors open (tens of ms). Spread one input to each of ten branches and each branch only gets its own 2 mV: the receptors stay plugged, and the cell body sees ten small bumps simply added. So where inputs land, not just how many, changes what the cell does: each thin branch can act as a small threshold unit of its own (Polsky, Mel and Schiller, 2004).</p>
+      <details class="fullderiv"><summary>Show the derivation: a current that grows as the driving force shrinks</summary>
+        <p>How the NMDA current changes with voltage is its slope, \(dI/dV\). Differentiating \(I = \bar g\,B(V)\,V\), and using \(dB/dV = 0.062\,B\,(1 - B)\) (which follows from the fit above):</p>
+        <div class="eq">\[ \frac{dI_\text{NMDA}}{dV} = \bar g\,B\,\bigl[\,1 + 0.062\,V\,(1 - B)\,\bigr] \]</div>
+        <p>The bracket is negative whenever \(V\,(1 - B) < -16\) mV, which with 1 mM Mg²⁺ holds from rest up to about −27 mV. There the current becomes <i>more</i> inward as V rises: a negative slope. Every other current in the branch (the leak, the cell body pulling back along the dendrite) has a positive slope and opposes it. When the inputs' \(\bar g\) is small, the positive slopes win and the branch settles near rest; when it is large enough, the total slope turns negative and any push sets off the run-up, which stops only where the NMDA current's slope turns positive again, near −25 mV. The calculator below draws this I–V curve and shades its negative-slope part.</p>
+      </details>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-adtry="cluster">On one branch</button> Sweep 1 to 12 inputs: the jump between four and six.</p>
+      <p><button class="chip" data-adtry="spread">Spread out</button> The same inputs on separate branches: the simple sum.</p>
+      <p><button class="chip" data-adtry="near">Closer to the cell body</button> At 100 µm it takes about eight.</p>
+      <p><button class="chip" data-adtry="apv">APV</button> Without NMDA receptors, a little less than the sum.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> HCN channels work backwards from most voltage-gated channels: they open when the voltage goes down, and close, slowly, when it goes up. Their battery is near −30 mV, so at rest the few that are open let in a small inward current, I<sub>h</sub>. An EPSP far out depolarizes the membrane and, over tens of ms, closes some of them. Losing inward current pulls the voltage back down, cutting the EPSP short, so far-off EPSPs stay brief and pile up less.</p>
+      <h3>Two effects</h3>
+      <ul>
+        <li><b>At rest,</b> the open HCN channels are extra conductance, a leakier membrane. Far out (350 µm) they add about 0.017 mS/cm² to the leak's 0.05, so the membrane's time constant falls from about 20 ms to \(1/(0.05 + 0.017) \approx 15\) ms.</li>
+        <li><b>During an EPSP,</b> they close slowly (here with a time constant of 40 ms), so the inward current they carry shrinks just as the EPSP should be decaying. That acts like an extra outward current arriving late: it does little to the EPSP's rise but pulls its tail down sooner.</li>
+      </ul>
+      <p>In many pyramidal cells HCN channels get denser with distance from the cell body; Magee (1998) measured more than a sixfold rise along CA1 dendrites. Far inputs, which a passive dendrite would spread out and slow down the most, get cut short the most. In the simulation, five inputs 25 ms apart pile up about equally whether they land at 50 or 350 µm, as long as I<sub>h</sub> is working; block it and the far ones pile up more. Magee (1999) found the same in CA1 neurons: I<sub>h</sub> makes how inputs add up in time independent of where they land.</p>
+      <details class="fullderiv"><summary>Show the derivation: a current that switches itself off</summary>
+        <p>The HCN current obeys Ohm's law, with q the share of channels open:</p>
+        <div class="eq">\[ I_h = \bar g_h\, q\, (V - E_h), \qquad \frac{dq}{dt} = \frac{q_\infty(V) - q}{\tau_q}, \qquad q_\infty(V) = \frac{1}{1 + e^{(V + 82)/8}} \]</div>
+        <p>Near rest, \(V - E_h \approx -32\) mV: \(I_h\) is inward. When an EPSP raises V, \(q_\infty\) falls and q follows it over \(\tau_q \approx 40\) ms. The change in current is \(\Delta I_h \approx \bar g_h\,(V - E_h)\,\Delta q\): a negative driving force times a negative \(\Delta q\), a positive (outward) change. It grows over tens of ms, so it arrives as the EPSP is falling, and pulls it down. Block the channels and both effects go: the membrane is less leaky, rest drops to the leak's −70 mV, and nothing hurries the EPSPs' tails.</p>
+      </details>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-adtry="hcn">With I<sub>h</sub></button> Five far inputs, 25 ms apart.</p>
+      <p><button class="chip" data-adtry="zd">ZD7288</button> The same five, I<sub>h</sub> blocked.</p>
+      <p><button class="chip" data-adtry="hnear">Near, with I<sub>h</sub></button> At 50 µm: about as much piling up as far out.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> A neuron is not a bag that simply adds up its inputs. Its dendrites amplify some inputs and damp others, depending on where they land and when, and they tell their synapses when the cell has fired. That shapes what a neuron computes, how its synapses learn, and how several common drugs act.</p>
+      <h3>Learning</h3>
+      <p>A synapse strengthens (LTP) when its NMDA receptors pass enough Ca²⁺, which takes glutamate and depolarization at once. The back-propagating spike supplies the depolarization when the cell fires just after the synapse: input, then output, strengthens the input (Spines and Plasticity). An NMDA spike can supply it too, without the cell firing at all, which may let inputs that arrive together on one branch strengthen together.</p>
+      <h3>Computing</h3>
+      <p>Inputs on the same thin branch combine in an S-shaped way (little, then a jump, then a ceiling), while inputs on different branches simply add. A pyramidal neuron with dozens of thin branches behaves somewhat like a two-layer network: many small threshold units, the branches, feeding one big one, the cell body and axon.</p>
+      <h3>Medicine</h3>
+      <ul>
+        <li><b>Memantine</b> (used in Alzheimer's disease) and <b>ketamine</b> (an anaesthetic; esketamine is used for depression) block NMDA receptors by lodging in the open channel, near where Mg²⁺ sits.</li>
+        <li><b>Ivabradine</b>, used in heart failure, blocks HCN channels in the heart's pacemaker cells, where their current is called I<sub>f</sub> (the "funny" current), and so slows the heart. The same family of channels makes I<sub>h</sub> in dendrites.</li>
+        <li><b>Mg²⁺</b> itself: in Mg²⁺-free solution NMDA receptors are unblocked at every voltage (set [Mg²⁺] to 0 in the calculator), and brain slices bathed in it tend to produce seizure-like bursts.</li>
+      </ul>
+    </div>
+    <aside class="try" aria-label="Try it">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-adtry="cluster">On one branch</button> The S-shaped curve of one branch.</p>
+      <p><button class="chip" data-adtry="spread">Spread out</button> Different branches simply add.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv">
+      <h3>Where these ideas come from</h3>
+      <p>The papers behind this lesson, oldest first. Many are free to read through the DOI links.</p>
+      <ol class="reflist">
+        <li><b>Nowak L, Bregestovski P, Ascher P, Herbet A, Prochiantz A (1984).</b> Magnesium gates glutamate-activated channels in mouse central neurones. <i>Nature</i> 307:462–465. <a href="https://doi.org/10.1038/307462a0">doi:10.1038/307462a0</a><span class="why">Mg²⁺ plugs the NMDA receptor's channel, and voltage pushes it out.</span></li>
+        <li><b>Mayer ML, Westbrook GL, Guthrie PB (1984).</b> Voltage-dependent block by Mg²⁺ of NMDA responses in spinal cord neurones. <i>Nature</i> 309:261–263. <a href="https://doi.org/10.1038/309261a0">doi:10.1038/309261a0</a><span class="why">The same discovery, made at the same time: without Mg²⁺, NMDA responses lose their voltage dependence.</span></li>
+        <li><b>Jahr CE, Stevens CF (1990).</b> Voltage dependence of NMDA-activated macroscopic conductances predicted by single-channel kinetics. <i>Journal of Neuroscience</i> 10:3178–3182. <a href="https://doi.org/10.1523/JNEUROSCI.10-09-03178.1990">doi:10.1523/JNEUROSCI.10-09-03178.1990</a><span class="why">The equation for the Mg²⁺ block used here.</span></li>
+        <li><b>Stuart GJ, Sakmann B (1994).</b> Active propagation of somatic action potentials into neocortical pyramidal cell dendrites. <i>Nature</i> 367:69–72. <a href="https://doi.org/10.1038/367069a0">doi:10.1038/367069a0</a><span class="why">The back-propagating spike, recorded from the cell body and the dendrite of the same neuron.</span></li>
+        <li><b>Magee JC (1998).</b> Dendritic hyperpolarization-activated currents modify the integrative properties of hippocampal CA1 pyramidal neurons. <i>Journal of Neuroscience</i> 18:7613–7624. <a href="https://doi.org/10.1523/JNEUROSCI.18-19-07613.1998">doi:10.1523/JNEUROSCI.18-19-07613.1998</a><span class="why">I<sub>h</sub> rises more than sixfold from the cell body out along the dendrite, and shortens EPSPs.</span></li>
+        <li><b>Magee JC (1999).</b> Dendritic I<sub>h</sub> normalizes temporal summation in hippocampal CA1 neurons. <i>Nature Neuroscience</i> 2:508–514. <a href="https://doi.org/10.1038/9158">doi:10.1038/9158</a><span class="why">With I<sub>h</sub>, near and far inputs pile up alike in time; blocking it makes far inputs pile up more.</span></li>
+        <li><b>Schiller J, Major G, Koester HJ, Schiller Y (2000).</b> NMDA spikes in basal dendrites of cortical pyramidal neurons. <i>Nature</i> 404:285–289. <a href="https://doi.org/10.1038/35005094">doi:10.1038/35005094</a><span class="why">Clustered inputs on a thin basal dendrite set off local spikes carried mainly by NMDA receptors.</span></li>
+        <li><b>Häusser M, Spruston N, Stuart GJ (2000).</b> Diversity and dynamics of dendritic signaling. <i>Science</i> 290:739–744. <a href="https://doi.org/10.1126/science.290.5492.739">doi:10.1126/science.290.5492.739</a><span class="why">Review: the channels in dendrites and what they do.</span></li>
+        <li><b>Polsky A, Mel BW, Schiller J (2004).</b> Computational subunits in thin dendrites of pyramidal cells. <i>Nature Neuroscience</i> 7:621–627. <a href="https://doi.org/10.1038/nn1253">doi:10.1038/nn1253</a><span class="why">Inputs on one branch combine in an S-shaped way; inputs on different branches add linearly.</span></li>
+        <li><b>Pospischil M, Toledo-Rodriguez M, Monier C, Piwkowska Z, Bal T, Frégnac Y, Markram H, Destexhe A (2008).</b> Minimal Hodgkin–Huxley type models for different classes of cortical and thalamic neurons. <i>Biological Cybernetics</i> 99:427–441. <a href="https://doi.org/10.1007/s00422-008-0263-8">doi:10.1007/s00422-008-0263-8</a><span class="why">The Na⁺ and K⁺ channels' rates used in this model (Traub and Miles' kinetics).</span></li>
+        <li><b>Major G, Larkum ME, Schiller J (2013).</b> Active properties of neocortical pyramidal neuron dendrites. <i>Annual Review of Neuroscience</i> 36:1–24. <a href="https://doi.org/10.1146/annurev-neuro-062111-150343">doi:10.1146/annurev-neuro-062111-150343</a><span class="why">Review: back-propagating spikes, NMDA spikes and other dendritic spikes in cortical neurons.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="nmda-calc">
+  <div class="calc-head"><span class="sect-title">NMDA receptor calculator</span></div>
+  <p class="caption">Set the voltage, the Mg²⁺ outside and how many NMDA receptors have glutamate bound, and see how many are free of Mg²⁺ and the current they pass. The curves redraw as you drag.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh">The membrane</div>
+        <div class="gr"><label for="kV">V</label><input type="range" id="kV" min="-100" max="40" step="1" value="-70"><output id="kVo" for="kV"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">Outside the cell</div>
+        <div class="gr"><label for="kMg">[Mg²⁺]</label><input type="range" id="kMg" min="0" max="4" step="0.1" value="1"><output id="kMgo" for="kMg"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">The receptors</div>
+        <div class="gr"><label for="kG">ḡ<sub>NMDA</sub></label><input type="range" id="kG" min="0.5" max="30" step="0.5" value="15"><output id="kGo" for="kG"></output></div>
+        <p class="caption">15 nS: the ten clustered inputs of part 2, at their peak.</p>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kB">—</span><span class="caption">of the receptors free of Mg²⁺</span></div>
+      <div class="es"><span>g<sub>NMDA</sub> <b id="kGn">—</b></span><span>driving force <b id="kDf">—</b></span><span>I<sub>NMDA</sub> <b id="kI">—</b></span></div>
+      <div class="tabs" role="tablist" aria-label="Calculator charts">
+        <button type="button" role="tab" id="tab-kb" aria-controls="pane-kb" aria-selected="true">Free of Mg²⁺</button>
+        <button type="button" role="tab" id="tab-ki" aria-controls="pane-ki" aria-selected="false" tabindex="-1">Current (I–V)</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kb" aria-labelledby="tab-kb"><canvas id="kBc" aria-label="Share of NMDA receptors free of Mg²⁺ against voltage"></canvas></div>
+      <div class="stage" role="tabpanel" id="pane-ki" aria-labelledby="tab-ki" hidden><canvas id="kIc" aria-label="NMDA current against voltage, with the negative-slope part shaded"></canvas></div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li><b>Free of Mg²⁺:</b> the share of NMDA receptors not plugged by Mg²⁺, B(V), against the voltage, for the [Mg²⁺] set (solid) and for 1 mM, the body's own (dashed, when another is set). The dot is the voltage set.</li>
+          <li><b>Current (I–V):</b> the current through the receptors, I = ḡ B(V) (V − 0), inward negative, against the voltage. Dashed: the same receptors with no Mg²⁺, a straight line through their battery at 0 mV (Ohm's law). Shaded: where the curve slopes downward, so that a rise in voltage brings <i>more</i> inward current: the range in which inputs can set off an NMDA spike.</li>
+          <li>Both charts have the same voltage axis, so the voltage set can be followed from one to the other.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="caption">Builds on Passive Properties: Space, The Hodgkin–Huxley Model, The Chemical Synapse and Summation and the Spike Trigger Zone; leads into Spines and Plasticity.</footer>
+</div>
+
+<script>
+// ---------- shared: colours, number formats, canvases, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg', 'surface', 'ink', 'muted', 'line', 'accent', 'k', 'na', 'cl', 'syn', 'a', 'pos', 'neg', 'ca', 'warm', 'cyto', 'bath', 'mem', 'memdark']
+    .forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };   // t of a, 1 − t of b
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const minus = s => String(s).replace('-', '−');
+const fmtSigned = (v, d = 1, u = ' mV') => isFinite(v) ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d) + u : '—';
+const fmtV = (v, d = 1) => isFinite(v) ? minus(v.toFixed(d)) + ' mV' : '—';
+const pct = (v, d = 0) => isFinite(v) ? (100 * v).toFixed(d) + '%' : '—';
+function setupCanvas(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; }
+function bindRange(id, fmt, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmt(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+const setRange = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+// Canvas text with subscripts: "I_Na" draws I with a subscript Na (the letters and digits after the underscore),
+// in the current font, size and alignment.
+function fillSub(c, text, x, y) {
+  if (!text.includes('_')) { c.fillText(text, x, y); return; }
+  const parts = [], re = /_([A-Za-z0-9∞]+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { parts.push([text.slice(last, m.index), false], [m[1], true]); last = re.lastIndex; }
+  parts.push([text.slice(last), false]);
+  const font = c.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]);
+  const subFont = font.replace(/[\d.]+px/, (size * 0.72).toFixed(1) + 'px');
+  const w = parts.map(([t, sub]) => { c.font = sub ? subFont : font; return c.measureText(t).width; });
+  const total = w.reduce((a, b) => a + b, 0), align = c.textAlign;
+  let px = align === 'center' ? x - total / 2 : align === 'right' || align === 'end' ? x - total : x;
+  c.textAlign = 'left';
+  parts.forEach(([t, sub], i) => { c.font = sub ? subFont : font; c.fillText(t, px, y + (sub ? size * 0.28 : 0)); px += w[i]; });
+  c.font = font; c.textAlign = align;
+}
+function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+const num = v => (v < 0 ? '−' : '') + Math.abs(+v.toPrecision(4));
+
+// Axes for a chart: background, grid, tick labels, axis labels and frame; returns the scales.
+// m: margins; xr, yr: the ranges (the zoom arrows of chartzoom.js stretch or squeeze them).
+const MW = { L: 58, R: 112, T: 12, B: 40 };   // charts over time or distance: room at the right for the lines' labels
+const MS = { L: 58, R: 116, T: 12, B: 40 };   // square charts (one quantity against another)
+const squareH = W => W - MS.L - MS.R + MS.T + MS.B;
+function axes(c, W, H, m, xr, yr, o) {
+  const [x0, x1] = ChartZoom.x(c.canvas, xr[0], xr[1], o.xpin), [y0, y1] = ChartZoom.y(c.canvas, yr[0], yr[1], o.ypin);
+  const pw = W - m.L - m.R, ph = H - m.T - m.B;
+  const sx = x => m.L + (x - x0) / (x1 - x0) * pw, sy = y => m.T + (y1 - y) / (y1 - y0) * ph;
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  c.font = '11px "IBM Plex Mono", monospace'; c.lineWidth = 0.8;
+  const ys = niceStep((y1 - y0) / 5), xs = niceStep((x1 - x0) / (o.xn || 6));
+  c.textBaseline = 'middle'; c.textAlign = 'right';
+  for (let v = Math.ceil(y0 / ys - 1e-9) * ys; v <= y1 + 1e-9; v += ys) {
+    const z = Math.abs(v) < ys / 1e3; c.strokeStyle = z ? C.muted : C.line; c.lineWidth = z ? 1.1 : 0.8;
+    c.beginPath(); c.moveTo(m.L, sy(v)); c.lineTo(m.L + pw, sy(v)); c.stroke();
+    c.fillStyle = C.muted; c.fillText(z ? '0' : num(v), m.L - 6, sy(v));
+  }
+  c.textBaseline = 'top'; c.textAlign = 'center';
+  for (let v = Math.ceil(x0 / xs - 1e-9) * xs; v <= x1 + 1e-9; v += xs) {
+    const z = Math.abs(v) < xs / 1e3; c.strokeStyle = z && o.xzero ? C.muted : C.line; c.lineWidth = 0.8;
+    c.beginPath(); c.moveTo(sx(v), m.T); c.lineTo(sx(v), m.T + ph); c.stroke();
+    c.fillStyle = C.muted; c.fillText(z ? '0' : num(v), sx(v), m.T + ph + 5);
+  }
+  c.font = '12px "IBM Plex Sans", sans-serif'; c.fillStyle = C.muted; c.textBaseline = 'alphabetic'; c.textAlign = 'center';
+  fillSub(c, o.xlab, m.L + pw / 2, H - 5);
+  c.save(); c.translate(14, m.T + ph / 2); c.rotate(-Math.PI / 2); fillSub(c, o.ylab, 0, 0); c.restore();
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(m.L + 0.5, m.T + 0.5, pw - 1, ph - 1);
+  const yc = v => Math.max(y0 - (y1 - y0), Math.min(y1 + (y1 - y0), v));   // keep far-off values near the box
+  return { c, sx, sy, yc, x0, x1, y0, y1, pw, ph, m, W, H };
+}
+// Line labels in the right margin, by each line's last point, pushed apart so they do not overlap
+function rightLabels(a, labels, size = 11) {
+  const { c, m, pw, ph } = a;
+  labels.forEach(l => l.y = Math.max(m.T + 5, Math.min(m.T + ph - 4, l.y)));
+  labels.sort((p, q) => p.y - q.y);
+  for (let k = 1; k < labels.length; k++) if (labels[k].y - labels[k - 1].y < size + 2) labels[k].y = labels[k - 1].y + size + 2;
+  for (let k = labels.length - 1; k >= 0; k--) labels[k].y = Math.min(labels[k].y, k === labels.length - 1 ? a.H - 6 : labels[k + 1].y - size - 2);
+  c.font = `600 ${size}px "IBM Plex Sans", sans-serif`; c.textAlign = 'left'; c.textBaseline = 'middle';
+  labels.forEach(l => { c.globalAlpha = l.alpha ?? 1; c.fillStyle = l.c; fillSub(c, l.t, m.L + pw + 6, l.y); });
+  c.globalAlpha = 1; c.textBaseline = 'alphabetic';
+}
+// series: [{ xs, ys, n (points to draw), color, width, dash, alpha, label }]
+function drawLines(a, series) {
+  const { c, m, pw, ph } = a, labels = [];
+  c.save(); c.beginPath(); c.rect(m.L, m.T, pw, ph); c.clip();
+  for (const s of series) {
+    const n = Math.min(s.n ?? s.ys.length, s.ys.length); if (n < 1) continue;
+    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.globalAlpha = s.alpha ?? 1; c.setLineDash(s.dash || []); c.lineJoin = 'round';
+    c.beginPath();
+    for (let i = 0; i < n; i++) { const x = a.sx(s.xs[i]), y = a.sy(a.yc(s.ys[i])); i ? c.lineTo(x, y) : c.moveTo(x, y); }
+    c.stroke(); c.globalAlpha = 1; c.setLineDash([]);
+    if (s.label) labels.push({ y: a.sy(a.yc(s.ys[n - 1])), t: s.label, c: s.color, alpha: s.alpha });
+  }
+  c.restore();
+  rightLabels(a, labels);
+}
+
+// =====================================================================================
+// The model: a cell body and 20 identical dendrites, each 600 µm long and 1.2 µm thick, cut into 60 pieces of
+// 10 µm. Every piece obeys
+//   C dV/dt = (current from its neighbours along the cytoplasm) − Σ g_x (V − E_x)
+// with a leak, HCN channels, and Na⁺ and K⁺ channels with Traub and Miles' rates (as in Pospischil et al. 2008),
+// plus AMPA and NMDA receptors at the inputs (NMDA with Jahr and Stevens' Mg²⁺ block, 1 mM). Each step is implicit:
+// a dendrite's pieces make a chain of equations solved exactly from the tip in (the Thomas algorithm), and the
+// cell body joins the chains. Dendrites with the same inputs behave identically, so the cell is given as kinds of
+// dendrite, each with how many of it there are (mult): one solve per kind, its current into the cell body counted
+// mult times. This is exact. Units: cm, ms, mV, µF, mS, µA (so nS × 1e-6 = mS).
+// =====================================================================================
+const NB = 20, LD = 600, SEG = 10, ND = LD / SEG;
+const nodeAt = um => Math.max(0, Math.min(ND - 1, Math.floor(um / SEG)));   // the piece covering [um, um + 10)
+const distOf = j => (j + 0.5) * SEG;
+const ghAt = d => 0.02 + 0.25 * d / 400;                                    // HCN density (mS/cm²) at d µm
+const mgFree = (V, mg = 1) => 1 / (1 + mg / 3.57 * Math.exp(-0.062 * V)); // Jahr and Stevens
+function alpha2(d, tr, td) {   // a double exponential rising with tr and falling with td (ms), peak 1, d ms after it starts
+  if (d <= 0) return 0;
+  const tp = tr * td / (td - tr) * Math.log(td / tr);
+  return (Math.exp(-d / td) - Math.exp(-d / tr)) / (Math.exp(-tp / td) - Math.exp(-tp / tr));
+}
+const Model = (() => {
+  const vtrap = (x, k) => Math.abs(x / k) < 1e-6 ? k * (1 - x / k / 2) : x / (Math.exp(x / k) - 1);
+  function traub(V) {   // the gates' opening and closing rates (per ms), threshold offset −55 mV
+    const u = V + 55;
+    return { am: 0.32 * vtrap(13 - u, 4), bm: 0.28 * vtrap(u - 40, 5), ah: 0.128 * Math.exp(-(u - 17) / 18),
+             bh: 4 / (1 + Math.exp(-(u - 40) / 5)), an: 0.032 * vtrap(15 - u, 5), bn: 0.5 * Math.exp(-(u - 10) / 40) };
+  }
+  // tables every 0.05 mV from −150 to +150 mV: each gate's resting value and rate, HCN's resting value, the Mg²⁺ block
+  const TV0 = -150, TDV = 0.05, TN = Math.round(300 / TDV) + 1;
+  const MI = new Float64Array(TN), MS_ = new Float64Array(TN), HI = new Float64Array(TN), HS = new Float64Array(TN),
+        NI = new Float64Array(TN), NS = new Float64Array(TN), QI = new Float64Array(TN), MG = new Float64Array(TN);
+  for (let k = 0; k < TN; k++) {
+    const V = TV0 + k * TDV, r = traub(V);
+    MS_[k] = r.am + r.bm; MI[k] = r.am / MS_[k]; HS[k] = r.ah + r.bh; HI[k] = r.ah / HS[k]; NS[k] = r.an + r.bn; NI[k] = r.an / NS[k];
+    QI[k] = 1 / (1 + Math.exp((V + 82) / 8)); MG[k] = mgFree(V);
+  }
+  const idx = V => { const k = Math.round((V - TV0) / TDV); return k < 0 ? 0 : k >= TN ? TN - 1 : k; };
+  const facCache = new Map();   // each gate's step factor 1 − e^(−dt·rate), per step size
+  function facs(dt) {
+    let f = facCache.get(dt); if (f) return f;
+    f = { m: MS_.map(s => 1 - Math.exp(-dt * s)), h: HS.map(s => 1 - Math.exp(-dt * s)), n: NS.map(s => 1 - Math.exp(-dt * s)), q: 1 - Math.exp(-dt / 40) };
+    facCache.set(dt, f); return f;
+  }
+  // o: { gNaS, gKS, gNaD, hcn, classes: [{ mult, syn: [{ j, t0, gA (nS), gN (nS) }] }] }
+  function Cell(o) {
+    const P = Object.assign({ d: 1.2, somaD: 20, Ri: 0.15, gNaS: 50, gKS: 10, gNaD: 7, GL: 0.05, EL: -70, ENa: 50, EK: -90, EH: -30, hcn: true }, o);
+    const gKD = Math.max(1, 0.4 * P.gNaD);
+    const r = P.d / 2 * 1e-4, sg = SEG * 1e-4, Ad = 2 * Math.PI * r * sg, As = Math.PI * (P.somaD * 1e-4) ** 2;
+    const GAX = Math.PI * r * r / (P.Ri * sg), G0 = 2 * GAX;   // between neighbouring pieces; first piece to the cell body (half a piece)
+    const gH = Float64Array.from({ length: ND }, (_, j) => P.hcn ? ghAt(distOf(j)) : 0), gHs = P.hcn ? ghAt(0) : 0;
+    const k0 = idx(P.EL);
+    const mk = () => new Float64Array(ND);
+    const cls = (P.classes || [{ mult: NB }]).map(c => {
+      const o = { mult: c.mult, syn: c.syn || [], V: mk().fill(P.EL), m: mk().fill(MI[k0]), h: mk().fill(HI[k0]), n: mk().fill(NI[k0]), q: mk().fill(QI[k0]),
+        gr: mk(), b: mk(), d: mk(), gs: mk() };
+      return o;
+    });
+    const S = { V: P.EL, m: MI[k0], h: HI[k0], n: NI[k0], q: QI[k0] };
+    const cell = { P, cls, S, t: 0 };
+    cell.step = (dt, Is, live) => {
+      const F = facs(dt), t1 = cell.t + dt;
+      let bs = As / dt, ds = As / dt * S.V;
+      { const k = idx(S.V);
+        S.m += F.m[k] * (MI[k] - S.m); S.h += F.h[k] * (HI[k] - S.h); S.n += F.n[k] * (NI[k] - S.n); S.q += F.q * (QI[k] - S.q);
+        const n2 = S.n * S.n, gna = As * P.gNaS * S.m * S.m * S.m * S.h, gk = As * P.gKS * n2 * n2, gl = As * P.GL, gh = As * gHs * S.q;
+        bs += gna + gk + gl + gh; ds += gna * P.ENa + gk * P.EK + gl * P.EL + gh * P.EH + Is; }
+      for (const c of cls) {
+        const V = c.V, gr = c.gr, b = c.b, d = c.d, gs = c.gs;
+        if (live && c.syn.length) {
+          gs.fill(0);
+          for (const s of c.syn) { const x = t1 - s.t0; if (x <= 0) continue;
+            gs[s.j] += (s.gA * alpha2(x, 0.2, 2) + (s.gN ? s.gN * alpha2(x, 2, 50) * MG[idx(V[s.j])] : 0)) * 1e-6; }   // both reverse at 0 mV
+        }
+        for (let j = 0; j < ND; j++) {
+          const v = V[j], k = idx(v);
+          c.m[j] += F.m[k] * (MI[k] - c.m[j]); c.h[j] += F.h[k] * (HI[k] - c.h[j]); c.n[j] += F.n[k] * (NI[k] - c.n[j]); c.q[j] += F.q * (QI[k] - c.q[j]);
+          const mm = c.m[j], n2 = c.n[j] * c.n[j];
+          const gna = Ad * P.gNaD * mm * mm * mm * c.h[j], gk = Ad * gKD * n2 * n2, gl = Ad * P.GL, gh = Ad * gH[j] * c.q[j];
+          const Gl = j === 0 ? G0 : GAX, Gr = j < ND - 1 ? GAX : 0;
+          gr[j] = Gr;
+          b[j] = Ad / dt + gna + gk + gl + gh + (live ? gs[j] : 0) + Gl + Gr;
+          d[j] = Ad / dt * v + gna * P.ENa + gk * P.EK + gl * P.EL + gh * P.EH;
+        }
+        // piece j: −Gl V[j−1] + b V[j] − Gr V[j+1] = d. Eliminate from the tip in.
+        for (let j = ND - 2; j >= 0; j--) { const w = gr[j] / b[j + 1]; b[j] -= w * GAX; d[j] += w * d[j + 1]; }
+        // now the first piece: b0 V0 − G0 Vs = d0; put it into the cell body's equation, mult times
+        bs += c.mult * (G0 - G0 * G0 / b[0]); ds += c.mult * G0 * d[0] / b[0];
+      }
+      S.V = ds / bs;
+      for (const c of cls) { const V = c.V, b = c.b, d = c.d;
+        V[0] = (d[0] + G0 * S.V) / b[0];
+        for (let j = 1; j < ND; j++) V[j] = (d[j] + GAX * V[j - 1]) / b[j];
+      }
+      cell.t = t1;
+    };
+    // settle to rest (HCN channels move it) with big steps and no inputs
+    cell.settle = () => { for (let s = 0; s < 400; s++) cell.step(0.5, 0, false); cell.t = 0; };
+    return cell;
+  }
+  return { Cell };
+})();
+// One whole run, worked out at once: o has the cell (as Model.Cell), T, dt, every (keep every n-th step), and
+// Isoma(t) (µA into the cell body). Keeps the voltage of every piece of every kind of dendrite, and the highest each
+// has reached so far, every `every` steps.
+function simulate(o) {
+  const cell = Model.Cell(o); cell.settle();
+  const steps = Math.round(o.T / o.dt), every = o.every, n = Math.floor(steps / every) + 1, nc = cell.cls.length;
+  const r = { T: o.T, n, dtSnap: o.dt * every, t: new Float32Array(n), soma: new Float32Array(n), somaCum: new Float32Array(n), V: [], cum: [],
+    rest: { S: cell.S.V, D: cell.cls.map(c => Float64Array.from(c.V)) } };
+  const mx = cell.cls.map(c => Float64Array.from(c.V));
+  let smx = cell.S.V, k = 0;
+  for (let c = 0; c < nc; c++) { r.V.push(new Float32Array(n * ND)); r.cum.push(new Float32Array(n * ND)); }
+  const snap = () => {
+    r.t[k] = cell.t; r.soma[k] = cell.S.V; r.somaCum[k] = smx;
+    for (let c = 0; c < nc; c++) { r.V[c].set(cell.cls[c].V, k * ND); r.cum[c].set(mx[c], k * ND); }
+    k++;
+  };
+  snap();
+  for (let s = 1; s <= steps; s++) {
+    cell.step(o.dt, o.Isoma ? o.Isoma(cell.t + o.dt) : 0, true);
+    if (cell.S.V > smx) smx = cell.S.V;
+    for (let c = 0; c < nc; c++) { const V = cell.cls[c].V, M = mx[c]; for (let j = 0; j < ND; j++) if (V[j] > M[j]) M[j] = V[j]; }
+    if (s % every === 0) snap();
+  }
+  r.n = k;
+  return r;
+}
+const trace = (r, c, j) => Float32Array.from({ length: r.n }, (_, i) => r.V[c][i * ND + j]);   // one piece over time
+
+// =====================================================================================
+// The picture of the cell: the cell body on the right, the 20 dendrites fanning out of it to the left and running
+// side by side, each piece coloured by its voltage. Logical size 1000 × 344.
+// =====================================================================================
+function NeuronPic(id) {
+  const W = 1000, H = 344, cv = $(id), c = setupCanvas(cv, W, H);
+  const XT = 34, SX = 905, SR = 28, YC = 170, SP = 10.4, FAN = 100, HW = 2.6, X0 = SX - SR + 6;
+  const bx = d => X0 - d / LD * (X0 - XT);
+  const boff = b => (b - (NB - 1) / 2) * SP;
+  const sm = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
+  const by = (b, d) => YC + boff(b) * sm(d / FAN);
+  const segs = [];   // segs[b][j]: piece j of dendrite b, [x0, y0, x1, y1]
+  for (let b = 0; b < NB; b++) segs.push(Array.from({ length: ND }, (_, j) => [bx(j * SEG), by(b, j * SEG), bx((j + 1) * SEG), by(b, (j + 1) * SEG)]));
+  const outline = new Path2D();
+  for (let b = 0; b < NB; b++) { outline.moveTo(bx(0), by(b, 0)); for (let j = 0; j < ND; j++) outline.lineTo(segs[b][j][2], segs[b][j][3]); }
+  // channels, as dots along every dendrite, in six bands of 100 µm
+  const dots = Array.from({ length: 6 }, () => new Path2D());
+  for (let b = 0; b < NB; b++) for (let d = 26 + (b % 2) * 7; d < LD - 3; d += 14) {
+    const x = bx(d), y = by(b, d), p = dots[Math.min(5, Math.floor(d / 100))]; p.moveTo(x + 1.5, y); p.arc(x, y, 1.5, 0, 6.283);
+  }
+  let pc = rgb(C.pos), nc = rgb(C.neg);
+  colorHooks.push(() => { pc = rgb(C.pos); nc = rgb(C.neg); });
+  const vrgb = (V, lo, hi) => { const t = Math.max(0, Math.min(1, (V - lo) / (hi - lo))); return [0, 1, 2].map(i => nc[i] + (pc[i] - nc[i]) * t); };
+  const css = (a, k = 0) => `rgb(${a.map(v => Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k))).join(',')})`;
+  function pipette(tx, ty, ux, uy, len, w, tint) {
+    c.save(); c.translate(tx, ty); c.rotate(Math.atan2(uy, ux));
+    c.beginPath(); c.moveTo(0, -0.6); c.lineTo(len * 0.4, -w * 0.4); c.lineTo(len, -w); c.lineTo(len, w); c.lineTo(len * 0.4, w * 0.4); c.lineTo(0, 0.6); c.closePath();
+    c.globalAlpha = 0.85; c.fillStyle = mixc(C.surface, C.accent, 0.82); c.fill(); c.globalAlpha = 1;
+    c.strokeStyle = C.muted; c.lineWidth = 1; c.stroke();
+    c.strokeStyle = C.muted; c.lineWidth = 1.2; c.beginPath(); c.moveTo(len * 0.3, 0); c.lineTo(len + 12, 0); c.stroke();
+    c.fillStyle = tint; c.fillRect(len, -w - 1.5, 12, 2 * w + 3);
+    c.restore();
+    const L = Math.hypot(ux, uy); return [tx + ux / L * (len + 12), ty + uy / L * (len + 12)];
+  }
+  // s: { V(k, j) voltage of piece j of kind k, kinds, kindOf(b), soma, lo, hi (colour scale, mV), t (ms or null),
+  //      dens: { col, alpha(band) } or null, syn: [{ b, d, lit, dx, row }], rec: [{ b, d, col, label }], somaRec: { col, label }, note }
+  function draw(s) {
+    c.fillStyle = C.bath; c.fillRect(0, 0, W, H);
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    c.strokeStyle = C.memdark; c.lineWidth = 2 * HW + 2.4; c.stroke(outline);
+    // each piece in its voltage's colour: one path per kind of dendrite and piece
+    const groups = Array.from({ length: s.kinds }, () => []);
+    for (let b = 0; b < NB; b++) groups[s.kindOf(b)].push(b);
+    c.lineWidth = 2 * HW;
+    for (let k = 0; k < s.kinds; k++) {
+      const bs = groups[k]; if (!bs.length) continue;
+      for (let j = 0; j < ND; j++) {
+        c.strokeStyle = css(vrgb(s.V(k, j), s.lo, s.hi)); c.beginPath();
+        for (const b of bs) { const q = segs[b][j]; c.moveTo(q[0], q[1]); c.lineTo(q[2], q[3]); }
+        c.stroke();
+      }
+    }
+    if (s.dens) { c.fillStyle = s.dens.col; for (let k = 0; k < 6; k++) { const a = s.dens.alpha(k); if (a > 0) { c.globalAlpha = a; c.fill(dots[k]); } } c.globalAlpha = 1; }
+    // the cell body: irregular, lit from the top left, with its nucleus
+    const sv = vrgb(s.soma, s.lo, s.hi);
+    const blob = () => { c.beginPath(); for (let k = 0; k <= 48; k++) { const th = k / 48 * 6.283, r = SR * (1 + 0.05 * Math.sin(3 * th + 0.6) + 0.03 * Math.sin(5 * th + 1.3)); k ? c.lineTo(SX + r * Math.cos(th), YC + r * Math.sin(th)) : c.moveTo(SX + r * Math.cos(th), YC + r * Math.sin(th)); } c.closePath(); };
+    const g = c.createRadialGradient(SX - SR * 0.35, YC - SR * 0.4, SR * 0.1, SX, YC, SR * 1.05);
+    g.addColorStop(0, css(sv, 0.35)); g.addColorStop(0.6, css(sv)); g.addColorStop(1, css(sv, -0.25));
+    blob(); c.fillStyle = g; c.fill(); c.strokeStyle = C.memdark; c.lineWidth = 2; c.stroke();
+    c.fillStyle = css(sv, -0.3); c.globalAlpha = 0.55; c.beginPath(); c.ellipse(SX - SR * 0.12, YC + SR * 0.06, SR * 0.4, SR * 0.34, -0.3, 0, 6.283); c.fill(); c.globalAlpha = 1;
+    // inputs: synapses on the dendrites, filled while open
+    for (const q of s.syn || []) {
+      const x = bx(q.d) + (q.dx || 0), y = by(q.b, q.d) - HW - 2.8 - (q.row || 0) * 6.2;
+      if (q.b === 0 && !q.row) { c.strokeStyle = C.syn; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 2, y - 7 - 6.2 * (q.rows ? q.rows - 1 : 0)); c.stroke(); }
+      c.fillStyle = mixc(C.syn, C.surface, 0.2 + 0.8 * Math.min(1, q.lit)); c.strokeStyle = C.syn; c.lineWidth = 1;
+      c.beginPath(); c.arc(x, y, 2.7, 0, 6.283); c.fill(); c.stroke();
+    }
+    // electrodes
+    c.font = '600 11.5px "IBM Plex Sans", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    for (const q of s.rec || []) {
+      const [ex, ey] = pipette(bx(q.d), by(q.b, q.d) - HW + 0.6, 0.3, -1, 44, 3.2, q.col);
+      c.fillStyle = q.col; c.fillText(q.label, ex, ey - 4);
+    }
+    if (s.somaRec) { const [ex, ey] = pipette(SX + SR * 0.4, YC - SR * 0.8, 0.35, -1, 70, 3.6, s.somaRec.col); c.fillStyle = s.somaRec.col; c.fillText(s.somaRec.label, ex, ey - 4); }
+    if (s.note) { c.fillStyle = C.na; c.textAlign = 'left'; c.fillText(s.note, SX + 34, YC - 2); }
+    c.fillStyle = C.muted; c.textAlign = 'left'; c.fillText('20 dendrites, all alike, drawn side by side', XT, 290);
+    // distance scale
+    c.font = '11px "IBM Plex Mono", monospace'; c.strokeStyle = C.line; c.lineWidth = 1; c.textAlign = 'center';
+    c.beginPath(); c.moveTo(bx(LD), 304); c.lineTo(bx(0), 304); c.stroke();
+    for (let d = 0; d <= LD; d += 100) { c.beginPath(); c.moveTo(bx(d), 304); c.lineTo(bx(d), 309); c.stroke(); c.fillText(String(d), bx(d), 321); }
+    c.fillText('µm from the cell body', bx(LD / 2), 338);
+    // colour scale and clock, under the cell body
+    const gx0 = 902, gx1 = 992, gr = c.createLinearGradient(gx0, 0, gx1, 0);
+    gr.addColorStop(0, css(vrgb(s.lo, s.lo, s.hi))); gr.addColorStop(1, css(vrgb(s.hi, s.lo, s.hi)));
+    c.fillStyle = gr; c.fillRect(gx0, 268, gx1 - gx0, 7); c.strokeStyle = C.line; c.strokeRect(gx0 + 0.5, 268.5, gx1 - gx0 - 1, 6);
+    c.fillStyle = C.muted; c.font = '10.5px "IBM Plex Mono", monospace';
+    c.textAlign = 'left'; c.fillText(minus(s.lo), gx0, 288); c.textAlign = 'right'; c.fillText(minus(s.hi) + ' mV', gx1, 288);
+    c.fillStyle = C.ink; c.font = '500 12px "IBM Plex Mono", monospace'; c.textAlign = 'right';
+    c.fillText(s.t == null ? 'at rest' : 't = ' + s.t.toFixed(s.t < 100 ? 2 : 1) + ' ms', 992, 258);
+    c.lineCap = 'butt';
+  }
+  // which distance a click on the picture points at (null off the dendrites)
+  const distAt = e => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+    if (x < XT - 8 || x > X0 - 30 || y < YC - 115 || y > YC + 115) return null; return (X0 - x) / (X0 - XT) * LD; };
+  return { draw, distAt };
+}
+const speedFrom = (v, s0) => s0 * Math.pow(10, (v - 50) / 50);   // ms of the cell's time per second; v = 50 gives s0
+const fmtSpeed = s => (s < 1 ? s.toFixed(2) : s < 10 ? s.toFixed(1) : s.toFixed(0)) + ' ms/s';
+
+// =====================================================================================
+// Part 1: the back-propagating spike. 4 nA for 1 ms into the cell body (from 1 ms) fires it; the dendrites have
+// the Na⁺ density set (K⁺ 0.4 times it, at least 1 mS/cm²). Every dendrite is the same, so one kind of 20.
+// =====================================================================================
+(() => {
+  const pic = NeuronPic('bPic');
+  const T = 12, DT = 0.025, EVERY = 2, I_SOMA = 4e-3;
+  const SITES = [0, 100, 200, 300, 400], sCol = () => [C.ink, C.accent, C.k, C.na, C.ca];
+  const P = { gNa: 7 };
+  let idle = null, run = null, runs = [], tv = 0, running = false, speed = 2, dirty = true;
+  const cfg = () => ({ gNaS: 50, gNaD: P.gNa, hcn: true, classes: [{ mult: NB }] });
+  const rest = () => (idle = idle || simulate({ ...cfg(), T: 0, dt: DT, every: 1 }));
+  const at = () => run ? Math.min(run.n - 1, Math.floor(tv / run.dtSnap + 1e-6)) : 0;
+  const gCol = g => mixc(C.pos, C.neg, g / 20);
+  const xsProf = [0, ...Array.from({ length: ND }, (_, j) => distOf(j))];
+  const prof = (r, i, peak) => { const A = peak ? r.cum[0] : r.V[0], out = [(peak ? r.somaCum[i] : r.soma[i]) - r.rest.S];
+    for (let j = 0; j < ND; j++) out.push(A[i * ND + j] - r.rest.D[0][j]); return out; };
+  const height = (r, i, d) => d ? r.cum[0][i * ND + nodeAt(d)] - r.rest.D[0][nodeAt(d)] : r.somaCum[i] - r.rest.S;
+  function fire() {
+    run = simulate({ ...cfg(), T, dt: DT, every: EVERY, Isoma: t => (t > 1 && t <= 2 ? I_SOMA : 0) });
+    run.gNa = P.gNa; run.traces = SITES.map(d => d ? trace(run, 0, nodeAt(d)) : run.soma);
+    runs = runs.filter(r => r.gNa !== P.gNa).concat([run]).slice(-6);
+    tv = reduced ? T : 0; setRunning(!reduced); dirty = true;
+  }
+  function drawPic() {
+    const r = run || rest(), i = at(), t = run ? r.t[i] : null;
+    pic.draw({ V: (k, j) => r.V[k][i * ND + j], kinds: 1, kindOf: () => 0, soma: r.soma[i], lo: -75, hi: 40, t,
+      dens: P.gNa > 0 ? { col: C.na, alpha: () => 0.3 + 0.7 * P.gNa / 20 } : null,
+      rec: SITES.slice(1).map((d, k) => ({ b: 0, d, col: sCol()[k + 1], label: d + ' µm' })), somaRec: { col: C.ink, label: 'cell body' },
+      note: run && t > 1 && t <= 2 ? '← 4 nA pulse' : '' });
+  }
+  const CW = 560, CH = 330, tc = setupCanvas($('bTime'), CW, CH), pcv = setupCanvas($('bProf'), CW, CH);
+  function drawCharts() {
+    const i = at();
+    const a = axes(tc, CW, CH, MW, [0, T], [-80, 40], { xlab: 'time (ms); the pulse into the cell body from 1 to 2 ms', ylab: 'V (mV)' });
+    if (run) drawLines(a, SITES.map((d, k) => ({ xs: run.t, ys: run.traces[k], n: i + 1, color: sCol()[k], width: k ? 1.8 : 2.4, label: d ? d + ' µm' : 'cell body' })));
+    const b = axes(pcv, CW, CH, MW, [0, LD], [-15, 125], { xlab: 'distance from the cell body (µm)', ylab: 'change from rest (mV)', xzero: true });
+    const ser = runs.filter(r => r !== run).map(r => ({ xs: xsProf, ys: prof(r, r.n - 1, true), color: gCol(r.gNa), width: 1.6, alpha: 0.55, label: 'ḡ_Na ' + r.gNa }));
+    if (run) ser.push({ xs: xsProf, ys: prof(run, i, true), color: gCol(run.gNa), width: 2.8, label: 'ḡ_Na ' + run.gNa },
+                      { xs: xsProf, ys: prof(run, i, false), color: C.ink, width: 1.2, label: 'now' });
+    drawLines(b, ser);
+  }
+  ChartZoom.bind(tc.canvas, () => drawCharts()); ChartZoom.bind(pcv.canvas, () => drawCharts());
+  function readouts() {
+    const r = run || rest(), i = at();
+    $('bRest').textContent = fmtV(r.rest.S);
+    if (!run) { ['bBig', 'bSoma', 'b200', 'bFrac'].forEach(id => $(id).textContent = '—'); $('bCap').innerHTML = 'Press <b>Fire the cell body</b>: a brief current pulse fires a spike there, and the run plays in slow motion.'; return; }
+    const hs = height(r, i, 0), h2 = height(r, i, 200), h4 = height(r, i, 400);
+    $('bBig').textContent = fmtSigned(h4, 0); $('bSoma').textContent = fmtSigned(hs, 0); $('b200').textContent = fmtSigned(h2, 0);
+    $('bFrac').textContent = hs > 20 ? (100 * h4 / hs).toFixed(0) + '%' : '—';
+    const done = tv >= T - 1e-9, g = run.gNa;
+    $('bCap').innerHTML = !done ? `Playing: t = ${r.t[i].toFixed(2)} ms. The spike starts in the cell body and spreads out along every dendrite.`
+      : `With ḡ<sub>Na</sub> = ${g} mS/cm² in the dendrites, the spike was ${hs.toFixed(0)} mV tall at the cell body and ${h4.toFixed(0)} mV (${(100 * h4 / hs).toFixed(0)}%) at 400 µm. ` +
+        (g === 0 ? 'With no Na⁺ channels of their own, the dendrites are only charged passively, and a 1 ms spike fades fast.'
+         : g >= 15 ? 'With this many Na⁺ channels each stretch of dendrite fires in turn: the spike is rebuilt as it goes, as in an axon.'
+         : 'The dendrites\' Na⁺ channels boost the spike as it passes, so it shrinks far less than a passive spread would allow.');
+  }
+  const playBtn = $('bPlay');
+  function setRunning(r) { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; dirty = true; }
+  playBtn.addEventListener('click', () => {
+    if (running) { setRunning(false); return; }
+    if (!run) { fire(); return; }
+    if (tv >= run.T - 1e-9) tv = 0;
+    setRunning(true);
+  });
+  $('bFire').addEventListener('click', fire);
+  $('bClear').addEventListener('click', () => { run = null; runs = []; tv = 0; setRunning(false); });
+  bindRange('bNa', v => v.toFixed(1) + ' mS/cm²', v => { P.gNa = v; idle = null; dirty = true; });
+  bindRange('bSpeed', v => fmtSpeed(speedFrom(v, 2)), v => { speed = speedFrom(v, 2); });
+  window.AD_BAP = { fire, P, get run() { return run; }, get runs() { return runs; }, height, finish: () => { tv = T; setRunning(false); }, seek: t => { tv = t; setRunning(false); } };
+  let last = performance.now();
+  function loop(now) {
+    const dtw = Math.min(0.05, (now - last) / 1000); last = now;
+    if (running && run) { tv += dtw * speed; if (tv >= run.T) { tv = run.T; setRunning(false); } dirty = true; }
+    if (dirty) { dirty = false; drawPic(); drawCharts(); readouts(); }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; drawPic(); drawCharts(); });
+  Frames.sim(() => running, 'bPlay', ['bFire']);
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// Part 2: inputs all on one dendrite, or one on each of several, at the same distance. TTX: no Na⁺ channels
+// anywhere. Each input 0.2 nS AMPA (0.2 ms rise, 2 ms fall) and 1.5 nS NMDA (2 ms rise, 50 ms fall, Mg²⁺ block),
+// all at 5 ms. Two kinds of dendrite: with the inputs (one dendrite with k of them, or k dendrites with one each)
+// and without.
+// =====================================================================================
+(() => {
+  const pic = NeuronPic('sPic');
+  const GA = 0.2, GN = 1.5, T = 80, T0 = 5, DT = 0.025, EVERY = 8;
+  const P = { lay: 'cluster', k: 10, pos: 300, nmda: true };
+  let idle = null, run = null, traces = [], pts = [], tv = 0, running = false, speed = 20, dirty = true, queue = null, sweepTop = 0, pending = null;
+  const ones = new Map();   // one input alone: its EPSP at the cell body, by distance and NMDA receptors
+  const branches = (lay, k) => lay === 'cluster' ? [0] : Array.from({ length: k }, (_, i) => Math.round(i * NB / k));
+  const classesFor = (lay, k, pos, nmda) => {
+    const j = nodeAt(pos), gN = nmda ? GN : 0;
+    return lay === 'cluster' ? [{ mult: 1, syn: [{ j, t0: T0, gA: GA * k, gN: gN * k }] }, { mult: NB - 1 }]
+                             : [{ mult: k, syn: [{ j, t0: T0, gA: GA, gN }] }, { mult: NB - k }];
+  };
+  const condCol = (lay, nmda) => lay === 'cluster' ? (nmda ? C.ca : C.na) : (nmda ? C.k : C.cl);
+  const condName = (lay, nmda) => (lay === 'cluster' ? 'one branch' : 'spread') + (nmda ? '' : ', APV');
+  function compute(lay, k, pos, nmda) {
+    const r = simulate({ gNaS: 0, gNaD: 0, hcn: true, classes: classesFor(lay, k, pos, nmda), T, dt: DT, every: EVERY });
+    const j = nodeAt(pos);
+    Object.assign(r, { lay, k, pos, nmda, j, inB: new Set(branches(lay, k)) });
+    r.dend = Float32Array.from({ length: r.n }, (_, i) => r.V[0][i * ND + j] - r.rest.D[0][j]);
+    r.somaD = Float32Array.from(r.soma, v => v - r.rest.S);
+    r.pk = Math.max(...r.somaD); r.pkD = Math.max(...r.dend);
+    if (k === 1) ones.set(pos + '|' + nmda, r.pk);
+    return r;
+  }
+  const one = (pos, nmda) => { const key = pos + '|' + nmda; if (!ones.has(key)) compute('cluster', 1, pos, nmda); return ones.get(key); };
+  const same = r => r.lay === P.lay && r.pos === P.pos && r.nmda === P.nmda && r.k === P.k;
+  // the run the picture and readouts show: the last one, if the settings still match it (a sweep's runs match
+  // whatever their number of inputs)
+  const shownRun = () => run && run.lay === P.lay && run.pos === P.pos && run.nmda === P.nmda && (run.sweep || run.k === P.k) ? run : null;
+  const rest = () => (idle = idle || simulate({ gNaS: 0, gNaD: 0, hcn: true, classes: [{ mult: NB }], T: 0, dt: DT, every: 1 }));
+  const at = () => run ? Math.min(run.n - 1, Math.floor(tv / run.dtSnap + 1e-6)) : 0;
+  function addPoint(r) {
+    pts = pts.filter(q => !(q.lay === r.lay && q.nmda === r.nmda && q.pos === r.pos && q.k === r.k)).concat([{ lay: r.lay, nmda: r.nmda, pos: r.pos, k: r.k, y: r.pk }]);
+  }
+  const settle = () => { if (pending) { addPoint(pending); pending = null; } };
+  function start(r) { run = r; pending = r; tv = reduced ? T : 0; dirty = true; }
+  function fire() {
+    settle(); queue = null;
+    const r = compute(P.lay, P.k, P.pos, P.nmda); one(P.pos, P.nmda);
+    r.col = condCol(r.lay, r.nmda); r.lab = `${r.k} ${r.lay === 'cluster' ? 'on one' : 'spread'}${r.nmda ? '' : ', APV'}`;
+    traces = traces.filter(q => !q.sweep && !(q.lay === r.lay && q.nmda === r.nmda && q.pos === r.pos && q.k === r.k)).concat([r]).slice(-4);
+    start(r); if (reduced) settle(); setRunning(!reduced);
+  }
+  function sweepNext() {
+    const k = queue.shift();
+    const r = compute(P.lay, k, P.pos, P.nmda); r.sweep = true;
+    r.col = sweepTop > 1 ? mixc(C.pos, C.neg, (k - 1) / (sweepTop - 1)) : C.ink;
+    r.lab = k === 1 ? '1 input' : k === sweepTop ? `${k} ${r.lay === 'cluster' ? 'on one' : 'spread'}` : '';
+    traces.push(r); start(r);
+  }
+  function sweep() {
+    settle(); one(P.pos, P.nmda);
+    sweepTop = P.k; queue = Array.from({ length: P.k }, (_, i) => i + 1); traces = [];
+    if (reduced) { while (queue.length) { sweepNext(); settle(); } queue = null; tv = T; setRunning(false); return; }
+    sweepNext(); setRunning(true);
+  }
+  // ---------- the picture ----------
+  function drawPic() {
+    const shown = shownRun(), r = shown || rest(), i = shown ? at() : 0, t = shown ? r.t[i] : null, S = shown || P;
+    const bs = new Set(branches(S.lay, S.k)), kinds = r.V.length;
+    const lit = t == null ? 0 : Math.max(alpha2(t - T0, 0.2, 2), S.nmda ? alpha2(t - T0, 2, 50) : 0);
+    let syn;
+    if (S.lay === 'cluster') { const cols = Math.ceil(S.k / 2), rows = S.k > 1 ? 2 : 1;
+      syn = Array.from({ length: S.k }, (_, q) => ({ b: 0, d: S.pos, dx: (Math.floor(q / rows) - (cols - 1) / 2) * 6, row: q % rows, rows, lit })); }
+    else syn = [...bs].map(b => ({ b, d: S.pos, lit }));
+    pic.draw({ V: (k, j) => r.V[k][i * ND + j], kinds, kindOf: b => kinds === 1 ? 0 : bs.has(b) ? 0 : 1, soma: r.soma[i], lo: -65, hi: -15, t,
+      dens: null, syn, rec: [{ b: 0, d: P.pos, col: C.ca, label: 'inputs' }], somaRec: { col: C.ink, label: 'cell body' } });
+  }
+  // ---------- charts ----------
+  const CW = 500, CH = 330, dc = setupCanvas($('sDend'), CW, CH), sc = setupCanvas($('sSoma'), CW, CH);
+  const IW = 520, IH = squareH(IW), ic = setupCanvas($('sIO'), IW, IH);
+  function drawCharts() {
+    const i = at(), cur = q => q === run, nOf = q => cur(q) ? i + 1 : q.n;
+    const ser = (key) => traces.map(q => ({ xs: q.t, ys: q[key], n: nOf(q), color: q.col, width: cur(q) ? 2.4 : 1.6, alpha: cur(q) || q.sweep ? 1 : 0.55, label: q.lab }));
+    const topD = Math.max(4, ...traces.map(q => q.pkD)) * 1.12, topS = Math.max(0.3, ...traces.map(q => q.pk)) * 1.15;
+    drawLines(axes(dc, CW, CH, MW, [0, T], [-topD * 0.06, topD], { xlab: 'time (ms); the inputs fire at 5 ms', ylab: 'change from rest (mV)' }), ser('dend'));
+    drawLines(axes(sc, CW, CH, MW, [0, T], [-topS * 0.06, topS], { xlab: 'time (ms)', ylab: 'change from rest (mV)' }), ser('somaD'));
+    drawIO();
+  }
+  function drawIO() {
+    const all = pts;
+    const kmax = Math.max(4, ...all.map(q => q.k)), ymax = Math.max(0.3, ...all.map(q => q.y));
+    const a = axes(ic, IW, IH, MS, [0, kmax + 1], [0, ymax * 1.15], { xlab: 'number of inputs', ylab: 'EPSP at the cell body (mV)', xn: 5 });
+    const { c } = a, labels = [];
+    const many = new Set(all.map(q => q.pos)).size > 1;
+    c.save(); c.beginPath(); c.rect(a.m.L, a.m.T, a.pw, a.ph); c.clip();
+    const latest = all.at(-1);
+    if (latest) {   // the simple sum for the latest point's arrangement: inputs × one input alone
+      const o1 = ones.get(latest.pos + '|' + latest.nmda);
+      if (o1 != null) { c.strokeStyle = C.muted; c.lineWidth = 1.4; c.setLineDash([6, 4]); c.beginPath(); c.moveTo(a.sx(0), a.sy(0)); c.lineTo(a.sx(kmax + 1), a.sy(a.yc(o1 * (kmax + 1)))); c.stroke(); c.setLineDash([]);
+        labels.push({ y: a.sy(a.yc(o1 * (kmax + 1))), t: 'simple sum', c: C.muted }); }
+    }
+    const keys = [...new Set(all.map(q => q.lay + '|' + q.nmda + '|' + q.pos))];
+    for (const key of keys) {
+      const g = all.filter(q => q.lay + '|' + q.nmda + '|' + q.pos === key).sort((p, q) => p.k - q.k), col = condCol(g[0].lay, g[0].nmda);
+      const isLatest = latest && key === latest.lay + '|' + latest.nmda + '|' + latest.pos;
+      c.globalAlpha = isLatest ? 1 : 0.6;
+      if (g.length > 1) { c.strokeStyle = col; c.lineWidth = 1.8; c.beginPath(); g.forEach((q, k) => k ? c.lineTo(a.sx(q.k), a.sy(q.y)) : c.moveTo(a.sx(q.k), a.sy(q.y))); c.stroke(); }
+      c.fillStyle = col; for (const q of g) { c.beginPath(); c.arc(a.sx(q.k), a.sy(q.y), 4, 0, 6.283); c.fill(); }
+      c.globalAlpha = 1;
+      labels.push({ y: a.sy(g.at(-1).y), t: condName(g[0].lay, g[0].nmda) + (many ? ', ' + g[0].pos + ' µm' : ''), c: col, alpha: isLatest ? 1 : 0.6 });
+    }
+    if (latest) { c.strokeStyle = C.ink; c.lineWidth = 1.5; c.beginPath(); c.arc(a.sx(latest.k), a.sy(latest.y), 8, 0, 6.283); c.stroke(); }
+    c.restore();
+    rightLabels(a, labels);
+    // the caption: how the latest arrangement adds up
+    let cap = 'Each run adds a point: the EPSP\'s peak at the cell body for that many inputs. Fire a few, or Sweep to fire 1, 2, 3 … in turn.';
+    if (latest) {
+      const g = all.filter(q => q.lay === latest.lay && q.nmda === latest.nmda && q.pos === latest.pos), big = g.reduce((p, q) => q.k > p.k ? q : p);
+      const o1 = ones.get(latest.pos + '|' + latest.nmda), ratio = big.y / (big.k * o1);
+      cap = big.k === 1 ? `One input at ${latest.pos} µm gives ${big.y.toFixed(2)} mV at the cell body. Fire more to see how they add.`
+        : `${condName(latest.lay, latest.nmda).replace(/^./, s => s.toUpperCase())}, ${latest.pos} µm: ${big.k} inputs gave ${big.y.toFixed(2)} mV at the cell body, ${ratio.toFixed(2)} times the simple sum (${big.k} × ${o1.toFixed(2)} mV). ` +
+          (ratio > 1.15 ? 'More than the sum: the inputs set off an NMDA spike on their branch.' : ratio < 0.95 ? 'A little less than the sum: as the branch depolarizes, each input\'s driving force shrinks.' : 'About the simple sum: the inputs did not interact.');
+    }
+    $('sIOcap').innerHTML = cap;
+  }
+  function readouts() {
+    const show = shownRun();
+    if (!show) { ['sBig', 'sSum', 'sRatio', 'sLoc', 'sMg'].forEach(id => $(id).textContent = '—'); return; }
+    const i = at(), r = show, pk = Math.max(...r.somaD.subarray(0, i + 1)), pkD = Math.max(...r.dend.subarray(0, i + 1));
+    const o1 = ones.get(r.pos + '|' + r.nmda), done = tv >= T - 1e-9;
+    $('sBig').textContent = fmtSigned(pk, 2); $('sSum').textContent = o1 != null ? fmtSigned(r.k * o1, 2) : '—';
+    $('sRatio').textContent = o1 != null && done ? (pk / (r.k * o1)).toFixed(2) + '×' : '…';
+    $('sLoc').textContent = fmtSigned(pkD, 1);
+    const vr = r.rest.D[0][r.j];
+    $('sMg').textContent = r.nmda ? `${pct(mgFree(vr))} → ${pct(mgFree(vr + pkD))}` : 'blocked (APV)';
+  }
+  // ---------- controls ----------
+  const playBtn = $('sPlay');
+  function setRunning(r) { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; dirty = true; }
+  playBtn.addEventListener('click', () => {
+    if (running) { setRunning(false); return; }
+    if (!run || !same(run) && !queue) { fire(); return; }
+    if (tv >= T - 1e-9) tv = 0;
+    setRunning(true);
+  });
+  $('sFire').addEventListener('click', fire);
+  $('sSweep').addEventListener('click', sweep);
+  $('sClear').addEventListener('click', () => { queue = null; pending = null; run = null; traces = []; pts = []; tv = 0; setRunning(false); });
+  const nText = () => P.lay === 'cluster' ? (P.k === 1 ? 'one input' : `${P.k} inputs, all on the top dendrite`) : (P.k === 1 ? 'one input, on one dendrite' : `one on each of ${P.k} dendrites`);
+  const changed = () => { if (queue) { queue = null; settle(); setRunning(false); } $('sNhint').textContent = nText(); dirty = true; };
+  bindRange('sN', v => v + (v === 1 ? ' input' : ' inputs'), v => { P.k = v; changed(); });
+  bindRange('sPos', v => v + ' µm', v => { P.pos = v; changed(); });
+  $('sNmda').addEventListener('change', e => { P.nmda = e.target.checked; changed(); });
+  const setLay = lay => { P.lay = lay; document.querySelectorAll('[data-slay]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.slay === lay))); changed(); };
+  document.querySelectorAll('[data-slay]').forEach(b => b.addEventListener('click', () => setLay(b.dataset.slay)));
+  $('sPic').addEventListener('click', e => { const d = pic.distAt(e); if (d != null) setRange('sPos', Math.max(50, Math.min(550, Math.round(d / 10) * 10))); });
+  bindRange('sSpeed', v => fmtSpeed(speedFrom(v, 20)), v => { speed = speedFrom(v, 20); });
+  window.AD_SYN = { P, fire, sweep, setLay, compute, one, get pts() { return pts; }, get run() { return run; }, get queue() { return queue; },
+    clear: () => $('sClear').click(), seek: t => { tv = t; setRunning(false); }, finish: () => { while (queue && queue.length) { settle(); sweepNext(); } settle(); queue = null; tv = T; setRunning(false); } };
+  let last = performance.now();
+  function loop(now) {
+    const dtw = Math.min(0.05, (now - last) / 1000); last = now;
+    if (running && run) {
+      tv += dtw * (queue ? T / 0.4 : speed);   // a sweep plays each run in 0.4 s
+      if (tv >= T) {
+        tv = T; settle();
+        if (queue && queue.length) sweepNext(); else { queue = null; setRunning(false); }
+      }
+      dirty = true;
+    }
+    if (dirty) { dirty = false; drawPic(); drawCharts(); readouts(); }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; drawPic(); drawCharts(); });
+  ChartZoom.bind(dc.canvas, () => drawCharts()); ChartZoom.bind(sc.canvas, () => drawCharts()); ChartZoom.bind(ic.canvas, () => drawIO());
+  Frames.sim(() => running, 'sPlay', ['sFire', 'sSweep']);
+  changed();
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// Part 3: HCN channels. Five inputs (2 nS of AMPA receptors each) on the top dendrite at the distance set, the first
+// at 10 ms and the rest at the interval set. TTX: no Na⁺ channels. HCN channels on, or blocked (ZD7288).
+// =====================================================================================
+(() => {
+  const pic = NeuronPic('hPic');
+  const GA = 2, DT = 0.05, EVERY = 10, T0 = 10;
+  const P = { hcn: true, isi: 25, pos: 350 };
+  let run = null, traces = [], tv = 0, running = false, speed = 100, dirty = true;
+  const idle = {}, singles = new Map();
+  const Tof = isi => T0 + 4 * isi + 100;
+  const somaHalfWidth = (t, v) => { let p = 0; for (let i = 1; i < v.length; i++) if (v[i] > v[p]) p = i;
+    const h = v[p] / 2; let a = p, b = p; while (a > 0 && v[a] > h) a--; while (b < v.length - 1 && v[b] > h) b++;
+    const ta = t[a] + (h - v[a]) / (v[a + 1] - v[a]) * (t[a + 1] - t[a]), tb = t[b - 1] + (v[b - 1] - h) / (v[b - 1] - v[b]) * (t[b] - t[b - 1]);
+    return { pk: v[p], hw: tb - ta }; };
+  function compute(hcn, isi, pos, n = 5) {
+    const j = nodeAt(pos), syn = Array.from({ length: n }, (_, q) => ({ j, t0: T0 + q * isi, gA: GA, gN: 0 }));
+    const r = simulate({ gNaS: 0, gNaD: 0, hcn, classes: [{ mult: 1, syn }, { mult: NB - 1 }], T: n === 1 ? 100 : Tof(isi), dt: DT, every: EVERY });
+    Object.assign(r, { hcn, isi, pos, j, nIn: n });
+    r.dend = Float32Array.from({ length: r.n }, (_, i) => r.V[0][i * ND + j] - r.rest.D[0][j]);
+    r.somaD = Float32Array.from(r.soma, v => v - r.rest.S);
+    const i2 = Math.min(r.n, Math.round((T0 + isi) / r.dtSnap));
+    r.first = Math.max(...r.somaD.subarray(0, i2)); r.big = Math.max(...r.somaD);
+    return r;
+  }
+  const single = (hcn, pos) => { const key = hcn + '|' + pos; if (!singles.has(key)) { const r = compute(hcn, 0, pos, 1); singles.set(key, somaHalfWidth(r.t, r.somaD)); } return singles.get(key); };
+  const rest = () => { const key = String(P.hcn); return idle[key] = idle[key] || simulate({ gNaS: 0, gNaD: 0, hcn: P.hcn, classes: [{ mult: NB }], T: 0, dt: DT, every: 1 }); };
+  const same = r => r.hcn === P.hcn && r.isi === P.isi && r.pos === P.pos;
+  const at = () => run ? Math.min(run.n - 1, Math.floor(tv / run.dtSnap + 1e-6)) : 0;
+  function fire() {
+    const r = compute(P.hcn, P.isi, P.pos); single(P.hcn, P.pos);
+    traces = traces.filter(q => !(q.hcn === r.hcn && q.isi === r.isi && q.pos === r.pos)).concat([r]).slice(-4);
+    run = r; tv = reduced ? r.T : 0; setRunning(!reduced); dirty = true;
+  }
+  function drawPic() {
+    const shown = run && same(run) ? run : null, r = shown || rest(), i = shown ? at() : 0, t = shown ? r.t[i] : null, kinds = r.V.length;
+    const syn = Array.from({ length: 5 }, (_, q) => ({ b: 0, d: P.pos, dx: (q - 2) * 6, lit: t == null ? 0 : alpha2(t - T0 - q * P.isi, 0.2, 2) }));
+    const gmax = ghAt(LD);
+    pic.draw({ V: (k, j) => r.V[k][i * ND + j], kinds, kindOf: b => kinds === 1 || b === 0 ? 0 : 1, soma: r.soma[i], lo: -72, hi: -47, t,
+      dens: { col: P.hcn ? C.cl : C.a, alpha: band => P.hcn ? 0.2 + 0.8 * ghAt(band * 100 + 50) / gmax : 0.45 },
+      syn, rec: [{ b: 0, d: P.pos, col: C.ca, label: 'inputs' }], somaRec: { col: C.ink, label: 'cell body' } });
+  }
+  const CW = 560, CH = 330, sc = setupCanvas($('hSoma'), CW, CH), dc = setupCanvas($('hDend'), CW, CH);
+  const lab = q => (q.hcn ? 'I_h' : 'ZD7288') + ', ' + q.isi + ' ms' + (new Set(traces.map(r => r.pos)).size > 1 ? ', ' + q.pos + ' µm' : '');
+  function drawCharts() {
+    const i = at(), x1 = Math.max(Tof(P.isi), ...traces.map(q => q.T));
+    const ser = key => traces.map(q => ({ xs: q.t, ys: q[key], n: q === run ? i + 1 : q.n, color: q.hcn ? C.cl : C.k, width: q === run ? 2.4 : 1.5, alpha: q === run ? 1 : 0.5, label: lab(q) }));
+    const topS = Math.max(0.3, ...traces.map(q => q.big)) * 1.15, topD = Math.max(3, ...traces.map(q => Math.max(...q.dend))) * 1.12;
+    drawLines(axes(sc, CW, CH, MW, [0, x1], [-topS * 0.08, topS], { xlab: 'time (ms); the first input at 10 ms', ylab: 'change from rest (mV)' }), ser('somaD'));
+    drawLines(axes(dc, CW, CH, MW, [0, x1], [-topD * 0.08, topD], { xlab: 'time (ms)', ylab: 'change from rest (mV)' }), ser('dend'));
+  }
+  function readouts() {
+    const show = run && same(run) ? run : null, r0 = rest();
+    const sg = singles.get(P.hcn + '|' + P.pos);
+    $('hWidth').textContent = sg ? sg.hw.toFixed(1) + ' ms' : '—';
+    if (!show) {
+      ['hBig', 'hFirst', 'hBiggest'].forEach(id => $(id).textContent = '—');
+      $('hRest').textContent = `${fmtV(r0.rest.S)} / ${fmtV(r0.rest.D[0][nodeAt(P.pos)])}`;
+      $('hCap').innerHTML = 'Press <b>Fire five inputs</b>. Then untick HCN channels and fire again to compare.';
+      return;
+    }
+    const i = at(), r = show, big = Math.max(...r.somaD.subarray(0, i + 1)), firstDone = r.t[i] >= T0 + r.isi;
+    $('hBig').textContent = firstDone ? (big / r.first).toFixed(2) + '×' : '…';
+    $('hFirst').textContent = firstDone ? fmtSigned(r.first, 2) : '…'; $('hBiggest').textContent = fmtSigned(big, 2);
+    $('hRest').textContent = `${fmtV(r.rest.S)} / ${fmtV(r.rest.D[0][r.j])}`;
+    const other = traces.find(q => q !== r && q.isi === r.isi && q.pos === r.pos && q.hcn !== r.hcn);
+    const done = tv >= r.T - 1e-9;
+    $('hCap').innerHTML = !done ? `Playing: t = ${r.t[i].toFixed(0)} ms.`
+      : `${r.hcn ? 'With' : 'Without'} I<sub>h</sub>, five inputs ${r.isi} ms apart at ${r.pos} µm piled up to ${(r.big / r.first).toFixed(2)} times the first EPSP at the cell body.` +
+        (other ? ` ${other.hcn ? 'With' : 'Without'} it: ${(other.big / other.first).toFixed(2)} times.` : ` Now ${r.hcn ? 'untick HCN channels (ZD7288)' : 'tick HCN channels'} and fire again to compare.`);
+  }
+  const playBtn = $('hPlay');
+  function setRunning(r) { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; dirty = true; }
+  playBtn.addEventListener('click', () => {
+    if (running) { setRunning(false); return; }
+    if (!run || !same(run)) { fire(); return; }
+    if (tv >= run.T - 1e-9) tv = 0;
+    setRunning(true);
+  });
+  $('hFire').addEventListener('click', fire);
+  $('hClear').addEventListener('click', () => { run = null; traces = []; tv = 0; setRunning(false); });
+  $('hHcn').addEventListener('change', e => { P.hcn = e.target.checked; dirty = true; });
+  bindRange('hIsi', v => v + ' ms', v => { P.isi = v; dirty = true; });
+  bindRange('hPos', v => v + ' µm', v => { P.pos = v; dirty = true; });
+  $('hPic').addEventListener('click', e => { const d = pic.distAt(e); if (d != null) setRange('hPos', Math.max(20, Math.min(550, Math.round(d / 10) * 10))); });
+  bindRange('hSpeed', v => fmtSpeed(speedFrom(v, 100)), v => { speed = speedFrom(v, 100); });
+  window.AD_HCN = { P, fire, compute, get run() { return run; }, get traces() { return traces; }, finish: () => { if (run) { tv = run.T; setRunning(false); } }, seek: t => { tv = t; setRunning(false); } };
+  let last = performance.now();
+  function loop(now) {
+    const dtw = Math.min(0.05, (now - last) / 1000); last = now;
+    if (running && run) { tv += dtw * speed; if (tv >= run.T) { tv = run.T; setRunning(false); } dirty = true; }
+    if (dirty) { dirty = false; drawPic(); drawCharts(); readouts(); }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; drawPic(); drawCharts(); });
+  ChartZoom.bind(sc.canvas, () => drawCharts()); ChartZoom.bind(dc.canvas, () => drawCharts());
+  Frames.sim(() => running, 'hPlay', ['hFire']);
+  requestAnimationFrame(loop);
+})();
+
+// =====================================================================================
+// NMDA receptor calculator: B(V) = 1 / (1 + [Mg²⁺]/3.57 mM · e^(−0.062 V)), I = ḡ B(V) (V − 0).
+// Units: mV, mM, nS, pA (nS × mV).
+// =====================================================================================
+(() => {
+  const K = { V: -70, mg: 1, g: 15 };
+  const W = 560, H = squareH(W), cb = setupCanvas($('kBc'), W, H), ci = setupCanvas($('kIc'), W, H);
+  const Vs = Array.from({ length: 281 }, (_, i) => -100 + i * 0.5);
+  function draw() {
+    const B = mgFree(K.V, K.mg), g = K.g * B, I = g * K.V;
+    $('kB').textContent = (100 * B).toFixed(B < 0.1 ? 1 : 0) + '%';
+    $('kGn').textContent = g.toFixed(2) + ' nS'; $('kDf').textContent = fmtSigned(K.V, 0);
+    $('kI').textContent = (I < 0 ? '−' : '') + Math.abs(I).toFixed(0) + ' pA' + (I < -0.5 ? ' (inward)' : I > 0.5 ? ' (outward)' : '');
+    // the share free of Mg²⁺
+    const a = axes(cb, W, H, MS, [-100, 40], [0, 100], { xlab: 'V (mV)', ylab: 'free of Mg²⁺ (%)', xn: 7, xzero: true });
+    const ser = [{ xs: Vs, ys: Vs.map(v => 100 * mgFree(v, K.mg)), color: C.accent, width: 2.6, label: K.mg.toFixed(1) + ' mM' }];
+    if (Math.abs(K.mg - 1) > 1e-6) ser.push({ xs: Vs, ys: Vs.map(v => 100 * mgFree(v, 1)), color: C.muted, width: 1.4, dash: [6, 4], label: '1 mM' });
+    drawLines(a, ser);
+    a.c.fillStyle = C.ink; a.c.beginPath(); a.c.arc(a.sx(K.V), a.sy(100 * B), 5, 0, 6.283); a.c.fill();
+    // the current: I–V, with its negative-slope part shaded
+    const Is = Vs.map(v => K.g * mgFree(v, K.mg) * v), lo = Math.min(...Is), hi = Math.max(...Is), span = Math.max(1, hi - lo);
+    const b = axes(ci, W, H, MS, [-100, 40], [lo - span * 0.12, hi + span * 0.12], { xlab: 'V (mV)', ylab: 'I_NMDA (pA), inward negative', xn: 7, xzero: true });
+    const c = b.c; c.save(); c.beginPath(); c.rect(b.m.L, b.m.T, b.pw, b.ph); c.clip();
+    c.fillStyle = C.ca; c.globalAlpha = 0.1;
+    let s0 = null;
+    for (let i = 1; i <= Vs.length; i++) {
+      const neg = i < Vs.length && Is[i] < Is[i - 1];
+      if (neg && s0 == null) s0 = Vs[i - 1];
+      if (!neg && s0 != null) { c.fillRect(b.sx(s0), b.m.T, b.sx(Vs[i - 1]) - b.sx(s0), b.ph); s0 = null; }
+    }
+    c.globalAlpha = 1; c.restore();
+    drawLines(b, [{ xs: Vs, ys: Vs.map(v => K.g * v), color: C.muted, width: 1.4, dash: [6, 4], label: 'no Mg²⁺' },
+                  { xs: Vs, ys: Is, color: C.accent, width: 2.6, label: K.mg.toFixed(1) + ' mM' }]);
+    c.fillStyle = C.ink; c.beginPath(); c.arc(b.sx(K.V), b.sy(b.yc(I)), 5, 0, 6.283); c.fill();
+  }
+  bindRange('kV', v => fmtSigned(v, 0), v => { K.V = v; draw(); });
+  bindRange('kMg', v => v.toFixed(1) + ' mM', v => { K.mg = v; draw(); });
+  bindRange('kG', v => v.toFixed(1) + ' nS', v => { K.g = v; draw(); });
+  ChartZoom.bind(cb.canvas, draw); ChartZoom.bind(ci.canvas, draw);
+  colorHooks.push(draw);
+  Frames.onRestore(draw);
+  draw();
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  // The buttons work through the page's own controls, so they behave exactly like using them.
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const tick = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
+  const bap = g => { showTab($('tab-bap')); into('bap-card'); set('bNa', g); $('bFire').click(); };
+  const syn = (lay, nmda, pos, clear) => { showTab($('tab-syn')); into('syn-card');
+    document.querySelector(`[data-slay="${lay}"]`).click(); tick('sNmda', nmda); set('sPos', pos); set('sN', 12);
+    if (clear) $('sClear').click(); $('sSweep').click(); };
+  const hcn = (on, pos) => { showTab($('tab-h')); into('h-card'); tick('hHcn', on); set('hIsi', 25); set('hPos', pos); $('hFire').click(); };
+  const TRY = {
+    bap: () => bap(7), ttx: () => bap(0), axonlike: () => bap(20),
+    cluster: () => syn('cluster', true, 300, true), spread: () => syn('spread', true, 300, false), apv: () => syn('cluster', false, 300, false),
+    near: () => syn('cluster', true, 100, false),
+    hcn: () => hcn(true, 350), zd: () => hcn(false, 350), hnear: () => hcn(true, 50),
+  };
+  document.querySelectorAll('[data-adtry]').forEach(b => b.addEventListener('click', () => TRY[b.dataset.adtry]()));
+})();
+</script>
+<!-- Fill-in boxes for every slider -->
+<script src="sliders.js"></script>
+</body>
+</html>

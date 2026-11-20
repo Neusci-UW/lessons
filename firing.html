@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firing Rate and Firing Patterns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<script src="chartzoom.js"></script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* The same look as hodgkin_huxley.html */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --ea:#c0287a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8; --warm:#b4582a;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2; --warm:#e0915e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2; --warm:#e0915e;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help h4{margin:0 0 4px;font-size:13.5px;font-weight:600}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* calculator, styled like the calculators in hodgkin_huxley.html */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:64px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.top.stacked{grid-template-columns:1fr}
+.cgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.runbar .swline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:var(--muted)}
+.runbar input[type=number]{width:68px;font:13px var(--font-mono);padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.k{background:var(--k)}.dot.na{background:var(--na)}.dot.ea{background:var(--ea)}.dot.a{background:var(--a)}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 28px;align-items:start}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.sgroup{display:flex;flex-direction:column;gap:10px}.sgroup[hidden]{display:none}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:92px minmax(0,1fr) 104px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+.row[hidden]{display:none}
+.hint{font-size:12px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:flex-start;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;flex:none;margin-top:3px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.charthead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+
+/* this page */
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:90ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.fi{width:100%;max-width:560px;justify-self:center}
+.legend i.ln{display:inline-block;width:18px;height:0;border-top:2.5px solid currentColor;flex:none}
+.legend i.ln.dash{border-top-style:dashed}
+.legend i.fill{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.legend i.ring{width:9px;height:9px;border-radius:50%;border:2px solid currentColor;flex:none}
+.legend i.bar{width:7px;height:14px;border:1px solid var(--line);background:linear-gradient(to top,var(--na) 55%,transparent 55%);flex:none}
+.legend i.tick{width:14px;height:0;border-top:2px solid var(--ink);flex:none}
+</style>
+</head>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbStep" data-copy="fStep" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="fPlay"></button>
+  <label for="fSpeedFloat" class="runlab">Speed</label><input type="range" id="fSpeedFloat" data-copy="fSpeed"><output for="fSpeedFloat"></output>
+</div>
+<div class="wrap">
+<p class="draftnote"><b>DRAFT</b> · Not yet in the course. Still to check before students see it: the bursting cell (the model's burst was checked here, not against recordings), the circuit picture (new on this page), retigabine modelled as a 20 mV shift of the M channels, and the wording throughout.</p>
+<header>
+  <h1>Firing rate and firing patterns: how a neuron says “how much”</h1>
+  <p>In the Hodgkin–Huxley lesson one brief pulse fired one spike. Hold the current on and a neuron fires again and again. Every spike is the same size, so a neuron can’t report a bigger input with a bigger spike. It reports it with more spikes per second. This lesson is about that rate: what sets it, what caps it, why some cells slow down while the input is still on, and why others fire in bursts.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>explain why a steady current gives a train of spikes: after each spike the membrane recharges like an RC circuit until it reaches threshold again</li>
+        <li>build and read an f–I curve: the threshold current (rheobase), the rise in rate with current, and the ceiling set by the refractory period</li>
+        <li>explain adaptation: a slow K⁺ current (the M current) that builds up spike by spike and stretches the intervals</li>
+        <li>tell a regular-spiking cell (pyramidal, adapts) from a fast-spiking one (interneuron, doesn’t) and a bursting one (T-type Ca²⁺ channels)</li>
+        <li>predict what drugs that act on these channels do to firing: muscarinic agonists, retigabine, ethosuximide, phenytoin</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-try="edge">1 · Just above threshold</button> A step barely above the threshold current: a few spikes, far apart, slowing down.</li>
+    <li><button class="chip" data-try="twice">2 · Push harder</button> More current recharges the membrane faster after each spike, so the spikes come closer together.</li>
+    <li><button class="chip" data-try="max">3 · As hard as it goes</button> The rate stops rising much, and the spikes shrink: the Na⁺ channels don’t have time to recover between them.</li>
+    <li><button class="chip" data-try="sweep">4 · Build the f–I curve</button> Steps from 0 to 25 µA/cm², one after another. Each adds two points to the f–I chart: the rate at the start of the step and at its end.</li>
+    <li><button class="chip" data-try="adapt">5 · Watch it slow down</button> A regular-spiking cell starts fast and settles to a slower rate while the current stays on. Watch the M bar in the circuit creep up spike by spike.</li>
+    <li><button class="chip" data-try="fs">6 · A fast-spiking cell</button> An interneuron without the slow K⁺ current: the same step, a steady rate, no slowing.</li>
+    <li><button class="chip" data-try="musc">7 · Close the M channels</button> Acetylcholine acting on muscarinic receptors closes the M channels: the regular-spiking cell stops adapting.</li>
+    <li><button class="chip" data-try="burst">8 · A burst</button> A cell with T-type Ca²⁺ channels, resting at −84 mV: a small step sets off a slow Ca²⁺ hump with a quick burst of spikes on top.</li>
+    <li><button class="chip" data-try="tonic">9 · Same step, held higher</button> The same cell held near −67 mV: its T channels are inactivated, and the same step gives single spikes, some 50–90 ms apart, and no burst.</li>
+  </ol>
+</section>
+
+<div class="top stacked">
+  <section class="card stage" id="fire-card">
+    <div class="tabs" role="tablist" aria-label="Cell">
+      <button type="button" role="tab" id="tab-cell" aria-controls="pane-cell" aria-selected="true">Cell</button>
+      <button type="button" role="tab" id="tab-cellhelp" aria-controls="pane-cellhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-celllook" aria-controls="pane-celllook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-cell" aria-labelledby="tab-cell">
+      <div class="btns" role="group" aria-label="Cell type">
+        <button class="chip" data-cell="rs" aria-pressed="true">Regular-spiking (pyramidal)</button>
+        <button class="chip" data-cell="fs" aria-pressed="false">Fast-spiking (interneuron)</button>
+        <button class="chip" data-cell="lts" aria-pressed="false">Bursting (T-type Ca²⁺)</button>
+      </div>
+      <canvas id="fCirc" aria-label="The cell's membrane as a circuit: the electrode, the Na⁺, K⁺, slow K⁺ (M) and, in the bursting cell, T-type Ca²⁺ branches, the leak and the capacitor, each gated branch with a bar showing how many of its channels are open"></canvas>
+      <div class="legend">
+        <span><i class="bar"></i>bar beside a branch: the fraction of its channels open (Na⁺, K⁺ and Ca²⁺: the most in the last moment shown)</span>
+        <span><i class="tick"></i>line on the M bar: how open the M channels were when the step began</span>
+      </div>
+      <div class="runbar">
+        <button id="fStep" class="primary" title="Run one current step from rest, with the settings below">Step</button>
+        <button id="fPlay">Play</button>
+        <button id="fReset" title="Back to rest; the f–I chart keeps its points">Reset</button>
+        <button id="fSweep" title="Steps from small to large, one after another, each from rest; each adds its points to the f–I chart">Sweep</button>
+        <button id="fClear" title="Remove every point from the f–I chart">Clear f–I</button>
+        <label for="fSpeed" class="runlab">Speed</label>
+        <input type="range" id="fSpeed" min="0" max="100" value="59">
+        <output id="fSpeedo" for="fSpeed"></output>
+        <span class="swline">Sweep steps from <input type="number" id="fSwA" min="-5" max="25" step="any" value="0" aria-label="Smallest step, µA/cm²"> to <input type="number" id="fSwB" min="-5" max="25" step="any" value="25" aria-label="Largest step, µA/cm²"> µA/cm² in <input type="number" id="fSwN" min="2" max="26" step="1" value="11" aria-label="Number of steps"> steps</span>
+      </div>
+      <div class="cgrid">
+        <div class="ccol">
+          <p class="sect-title">Membrane potential, and the current you inject</p>
+          <canvas id="fV" aria-label="Membrane voltage over the step, with the injected current below it"></canvas>
+          <p class="sect-title">Rate, spike by spike</p>
+          <canvas id="fR" aria-label="One dot per interval between two spikes: 1 ÷ the interval, in spikes per second, against time"></canvas>
+        </div>
+        <div class="ccol fi">
+          <div class="charthead"><p class="sect-title">f–I curve: rate against current</p></div>
+          <canvas id="fFI" aria-label="One pair of points per step you run: the rate from the first interval and from the last, against the current during the step"></canvas>
+          <div class="legend" id="fFILeg">
+            <span style="color:var(--accent)"><i class="fill"></i><i class="ln"></i>first interval</span>
+            <span style="color:var(--warm)"><i class="ring"></i><i class="ln dash"></i>last interval</span>
+            <span style="color:var(--a)"><i class="fill"></i>earlier settings</span>
+          </div>
+        </div>
+      </div>
+      <p class="caption" id="fCap" aria-live="polite"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-cellhelp" aria-labelledby="tab-cellhelp" hidden>
+      <ul>
+        <li><b>The circuit:</b> one patch of cell body, drawn as in the Hodgkin–Huxley lesson. The top wire is the outside of the cell (ground), the bottom wire the inside. Each kind of channel is a branch: a resistor (its conductance) in series with a battery (its ion’s Nernst potential). Na⁺ and K⁺ make each spike. <b>M</b> is a second, slow kind of K⁺ channel. The bursting cell has a <b>T</b> branch: T-type Ca²⁺ channels. The capacitor is the lipid bilayer. The electrode on the left injects your current.</li>
+        <li><b>The bars:</b> how many of that branch’s channels are open, from none (empty) to all (full). Na⁺, K⁺ and T channels open and close within a spike, too fast to see at most speeds, so their bars show the most that were open in the moment just drawn: they flash with each spike. The M bar shows how many are open now; the dark line across it is where it stood when the step began.</li>
+        <li><b>Step</b> runs one trial: 100 ms at the holding current, the step for the length you set, then 200 ms more. Each trial starts from rest. <b>Sweep</b> runs a series of steps, from the smallest to the largest you type in, quickly one after another. <b>Speed</b> is how many milliseconds of the cell’s time pass in each second of yours.</li>
+        <li><b>Membrane potential:</b> the voltage of the patch. Each upstroke to about +48 mV is one action potential. The shaded band is the step; the panel underneath draws the current you inject (holding current plus step). Dashed: E<sub>K</sub>, the lowest the K⁺ channels can pull V.</li>
+        <li><b>Rate, spike by spike:</b> each dot is 1 ÷ the interval between two spikes, in spikes per second, placed halfway between them. A flat row of dots means a steady rate; a falling row means adaptation.</li>
+        <li><b>f–I curve:</b> every step you run adds two points, at the current during the step: filled, the rate from its first interval; ringed, the rate from its last. A step with fewer than two spikes gives 0. Points from the settings you have now are joined by lines; points from other settings (another cell, a drug, another step length) stay, in grey, so you can compare. <b>Clear f–I</b> removes them all.</li>
+        <li><b>Zoom:</b> the small arrows at a chart’s corners stretch or squeeze its axes. The two time charts zoom together.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-celllook" aria-labelledby="tab-celllook" hidden>
+      <ul>
+        <li><b>Between the spikes:</b> slow the speed down and watch V after each spike. It drops, then climbs back like a charging capacitor until it reaches threshold, and the next spike goes. More current, steeper climb, shorter gap.</li>
+        <li><b>The threshold current:</b> step the regular-spiking cell to 2.0, then 2.2, then 2.4 µA/cm². Below about 2.3 it fires once or twice and stops; above it, it keeps going, slowly at first.</li>
+        <li><b>The ceiling:</b> at 25 µA/cm² the spikes are only about 3 ms apart, and smaller than at 6. Try 15 and 25: about 240 and 320 spikes/s, two-thirds more current for a third more spikes.</li>
+        <li><b>Adaptation:</b> at 4 µA/cm² the regular-spiking cell starts at about 90 spikes/s and settles near 50, while the M bar fills to about 0.6. With muscarine, or ḡ<sub>M</sub> at 0, the dots stay level. The fast-spiking cell has no M channels: its dots are level from the start.</li>
+        <li><b>On the f–I chart:</b> sweep the regular-spiking cell. The ringed points (last interval) sit below the filled ones (first interval): the gap between them is adaptation. Then sweep with muscarine, or the fast-spiking cell, and compare the curves.</li>
+        <li><b>Bursts:</b> in the bursting cell, the first spikes of a step come only 7–15 ms apart, riding on a slower hump: the Ca²⁺ that came in through the T channels. Hold the cell higher (holding current 0.15 µA/cm²) and the same step gives no burst. Ethosuximide, which blocks T channels, removes it too.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Membrane potential</span>
+      <span class="vnum" id="fVnum">—</span>
+      <div class="vrow"><span>at rest (before the step)</span><b id="fRest">—</b></div>
+      <div class="vrow"><span>spikes during the step</span><b id="fNsp">—</b></div>
+      <div class="vrow"><span>rate from the first interval</span><b id="fF1">—</b></div>
+      <div class="vrow"><span>rate from the last interval</span><b id="fFl">—</b></div>
+      <div class="vrow"><span>last ÷ first</span><b id="fRatio">—</b></div>
+      <div class="vrow"><span>M channels open (p)</span><b id="fPm">—</b></div>
+      <p class="caption" id="fCellNote"></p>
+    </div>
+    <fieldset>
+      <legend class="sect-title">Settings</legend>
+      <div class="sgroup">
+        <span class="gtitle">Electrode</span>
+        <div class="row"><label for="fI">Step</label><input type="range" id="fI" min="-5" max="25" step="0.05" value="6"><output id="fIo" for="fI"></output>
+          <span class="hint">the current during the step, on top of the holding current</span></div>
+        <div class="row"><label for="fLen">Length</label><input type="range" id="fLen" min="100" max="1500" step="10" value="800"><output id="fLeno" for="fLen"></output></div>
+        <div class="row"><label for="fHold">Holding</label><input type="range" id="fHold" min="-1" max="3" step="0.01" value="0"><output id="fHoldo" for="fHold"></output>
+          <span class="hint">a steady current all the time, before, during and after the step: it sets where the cell rests</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Channels (ḡ: conductance with every channel open)</span>
+        <div class="row"><label for="fGNa"><i class="dot na"></i>ḡ<sub>Na</sub></label><input type="range" id="fGNa" min="0" max="100" step="1" value="50"><output id="fGNao" for="fGNa"></output></div>
+        <div class="row"><label for="fGK"><i class="dot k"></i>ḡ<sub>K</sub></label><input type="range" id="fGK" min="0" max="20" step="0.5" value="5"><output id="fGKo" for="fGK"></output>
+          <span class="hint">the fast K⁺ channels that end each spike</span></div>
+        <div class="row"><label for="fGM"><i class="dot k"></i>ḡ<sub>M</sub></label><input type="range" id="fGM" min="0" max="0.3" step="0.005" value="0.07"><output id="fGMo" for="fGM"></output>
+          <span class="hint">the slow K⁺ (M) channels that make a cell adapt</span></div>
+        <div class="row" data-for="lts"><label for="fGT"><i class="dot ea"></i>ḡ<sub>T</sub></label><input type="range" id="fGT" min="0" max="2" step="0.05" value="0.4"><output id="fGTo" for="fGT"></output>
+          <span class="hint">T-type Ca²⁺ channels, which open just above rest</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Drugs</span>
+        <label class="check" for="fMusc"><input type="checkbox" id="fMusc"><span>Muscarine: like acetylcholine on muscarinic receptors, closes the M channels</span></label>
+        <label class="check" for="fRetig"><input type="checkbox" id="fRetig"><span>Retigabine: an anticonvulsant that opens M channels at lower voltages (here, 20 mV lower)</span></label>
+        <label class="check" for="fEthos" data-for="lts"><input type="checkbox" id="fEthos"><span>Ethosuximide: blocks T-type Ca²⁺ channels (here, all of them; the real drug blocks part)</span></label>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <dl class="unitlist">
+    <dt>mV</dt><dd>millivolts, for voltage: the inside measured relative to the outside.</dd>
+    <dt>ms</dt><dd>milliseconds, for time. A spike here lasts about a millisecond; the gaps between spikes are a few to a few hundred.</dd>
+    <dt>spikes/s</dt><dd>spikes per second, the firing rate. The same as hertz (Hz). A gap of 10 ms between spikes is a rate of 1 ÷ 0.010 s = 100 spikes/s.</dd>
+    <dt>µA/cm²</dt><dd>microamps per cm² of membrane, for current, positive when it flows out of the cell (the electrode’s current is counted positive going in). The regular-spiking model cell has 2.9 × 10⁻⁴ cm² of membrane, so for it 1 µA/cm² is 0.29 nA from an electrode, and its threshold current of about 2.3 µA/cm² is about 0.67 nA.</dd>
+    <dt>mS/cm²</dt><dd>millisiemens per cm², for conductance. The leak is 0.1 in the regular-spiking cell; open Na⁺ channels reach tens.</dd>
+    <dt>µF/cm²</dt><dd>microfarads per cm², for capacitance. Real membranes are about 1, as here.</dd>
+    <dt>p, m, h, n</dt><dd>gates: the fraction of each kind of gate that is open, from 0 to 1. No units.</dd>
+  </dl>
+  <p class="caption">As in Passive Properties: Time, µA/cm² divided by µF/cm² is mV/ms: 4 µA/cm² into 1 µF/cm² would move V at 4 mV/ms if no current leaked out.</p>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="ftheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Spike after spike</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">The f–I curve</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">The ceiling</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Adaptation</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Bursts</button>
+    <button type="button" role="tab" id="tab-th6" aria-controls="pane-th6" aria-selected="false" tabindex="-1">Why it matters</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> After a spike the voltage is back below threshold. The current you are still putting in charges the membrane back up, the same charging as the RC circuit in Passive Properties: Time. When it reaches threshold, the next spike fires, and the cycle starts again. The time that recharging takes is the gap between spikes. More current charges faster, so the gaps shrink and the rate goes up.</p>
+      <h3>Rate, not size</h3>
+      <p>Past threshold every spike is the same full size (the Hodgkin–Huxley lesson’s all-or-none). So a neuron can’t say “a stronger input” with a bigger spike. What it can change is how many spikes it fires per second: its <b>firing rate</b>.</p>
+      <h3>Recharging, by Ohm’s law</h3>
+      <p>Between spikes, the Na⁺ and fast K⁺ channels are mostly shut, and the membrane is a resistor (the leak, R = 1/g<sub>L</sub>) and a capacitor (C), with your current I flowing in. The current pushes V toward a new level, Ohm’s law’s V = I·R above rest:</p>
+      <div class="eq">\[ V_\infty = V_\text{rest} + I R = V_\text{rest} + \frac{I}{g_L} \]</div>
+      <p>and V climbs toward it along the same curve as the capacitor in Passive Properties: Time, fast at first and then more slowly, with time constant τ = RC = C/g<sub>L</sub>. If V<sub>∞</sub> is above threshold, V gets there and fires; after the spike it starts again from below. If V<sub>∞</sub> is below threshold, V just settles there and the cell stays silent.</p>
+      <h3>A worked number: the threshold current</h3>
+      <p>So the smallest current that keeps a cell firing, its <b>rheobase</b>, is the one that just lifts V<sub>∞</sub> to threshold: the voltage gap divided by R. In the regular-spiking cell, g<sub>L</sub> = 0.1 mS/cm² (R = 10 kΩ·cm²), rest is −70 mV and steady firing needs V to reach about −50 mV, 20 mV higher:</p>
+      <div class="eq">\[ I_\text{rh} \approx (V_\text{th} - V_\text{rest})\,g_L = 20\ \text{mV} \times 0.1\ \text{mS/cm}^2 = 2.0\ \mu\text{A/cm}^2 \]</div>
+      <p>The simulation needs about 2.3 µA/cm². The difference: near threshold some M channels (a slow K⁺ channel, see Adaptation) are open too, adding their conductance to the leak’s, so it takes a little more current to hold V up there. The time constant is τ = C/g<sub>L</sub> = 1 µF/cm² ÷ 0.1 mS/cm² = 10 ms, so each recharge takes a few milliseconds at large currents and tens of milliseconds near rheobase.</p>
+      <details class="fullderiv"><summary>Show the derivation (a leaky integrate-and-fire cell)</summary>
+        <p>Keep only the RC circuit and a rule: when V reaches V<sub>th</sub>, count a spike, hold V at V<sub>reset</sub> for a refractory time t<sub>ref</sub>, then let it charge again. With a steady current I, between spikes</p>
+        <div class="eq">\[ V(t) = V_\infty + (V_\text{reset} - V_\infty)\,e^{-t/\tau}, \qquad V_\infty = V_\text{rest} + \frac{I}{g_L}, \qquad \tau = \frac{C}{g_L} \]</div>
+        <p>The interval T is the time to climb from V<sub>reset</sub> to V<sub>th</sub>. Set V(T) = V<sub>th</sub> and solve for T:</p>
+        <div class="eq">\[ e^{-T/\tau} = \frac{V_\infty - V_\text{th}}{V_\infty - V_\text{reset}} \quad\Rightarrow\quad T = \tau \ln\frac{V_\infty - V_\text{reset}}{V_\infty - V_\text{th}}, \qquad f = \frac{1}{t_\text{ref} + T} \]</div>
+        <p>When V<sub>∞</sub> is only just above V<sub>th</sub>, the bottom of the fraction is tiny, the logarithm is large, and the cell fires slowly. As I grows, the fraction approaches 1, the logarithm approaches 0, and f approaches 1/t<sub>ref</sub>. The integrate-and-fire calculator at the bottom of the page works this out for any numbers you choose.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="slow">Watch one gap</button> Slowed right down: after each spike V dips, then climbs back to threshold like a charging capacitor.</p>
+      <p><button class="chip" data-try="below">Just below</button> 2.0 µA/cm²: one spike, then V settles below threshold and stays.</p>
+      <p><button class="chip" data-try="edge">Just above</button> 2.4 µA/cm²: the cell keeps firing, slowly.</p>
+      <p><button class="chip" data-try="calc">The calculator</button> The integrate-and-fire cell: change the current and see the gap and the rate.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Run steps of different sizes and plot each one’s rate against its current: that is the cell’s f–I curve. Below the rheobase it is flat at zero. Above it the rate climbs, steeply at first, then more slowly, and it flattens out at a ceiling of a few hundred spikes per second. The slope tells you how many extra spikes per second each extra bit of current buys.</p>
+      <h3>Reading the curve</h3>
+      <ul>
+        <li><b>Where it leaves zero:</b> the rheobase, the smallest current that keeps the cell firing. A cell with more leak (bigger g<sub>L</sub>, smaller R) needs more current: Ohm’s law again.</li>
+        <li><b>The slope:</b> the cell’s <b>gain</b>. In the regular-spiking cell the rate from the first interval goes from about 91 spikes/s at 4 µA/cm² to about 139 at 6: some 24 spikes/s for each extra µA/cm².</li>
+        <li><b>The top:</b> the ceiling set by the refractory period (next tab). Near it, more current buys almost nothing.</li>
+      </ul>
+      <h3>First interval and last interval</h3>
+      <p>A cell that adapts has two f–I curves. The first interval, at the start of a step, gives the higher one; the last interval, after the slow K⁺ current has built up, the lower one. In a fast-spiking cell the two are the same. The gap between them is a measure of how much the cell adapts.</p>
+      <h3>Two ways to start firing</h3>
+      <p>In 1948 Hodgkin stepped the current into single crab nerve fibres and found that they started firing in different ways. Some could fire very slowly just above threshold, with the rate rising smoothly from almost zero, like this page’s regular-spiking cell (2.4 µA/cm² gives gaps of some 30 ms and longer). Others jumped straight to a rate of tens of spikes per second, or fired only once however long the step. The squid axon of the Hodgkin–Huxley lesson is of that second kind. Which kind a cell is depends on the mix of its channels.</p>
+      <details class="fullderiv"><summary>Show the derivation: why the curve bends</summary>
+        <p>From the integrate-and-fire interval (Spike after spike), with V<sub>∞</sub> = V<sub>rest</sub> + I/g<sub>L</sub>:</p>
+        <div class="eq">\[ f = \frac{1}{t_\text{ref} + \tau \ln\dfrac{V_\infty - V_\text{reset}}{V_\infty - V_\text{th}}} \]</div>
+        <p>Just above rheobase the logarithm blows up, so f rises from 0 very steeply. For large I the fraction is close to 1, and ln(1 + x) ≈ x gives</p>
+        <div class="eq">\[ T \approx \tau\,\frac{V_\text{th} - V_\text{reset}}{V_\infty - V_\text{th}} \approx \frac{C\,(V_\text{th} - V_\text{reset})}{I} \]</div>
+        <p>which is just the capacitor’s rule from Passive Properties: Time: charging C by ΔV = V<sub>th</sub> − V<sub>reset</sub> with a current I takes C·ΔV/I. Then the rate rises in a straight line, f ≈ I/(C·ΔV): with C = 1 µF/cm² and ΔV = 15 mV, about 67 spikes/s per µA/cm². Last, t<sub>ref</sub> takes over and bends the line flat, toward 1/t<sub>ref</sub>.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="sweep">Sweep the regular-spiking cell</button> Steps from 0 to 25 µA/cm²: two curves, first interval above last.</p>
+      <p><button class="chip" data-try="sweepfs">Sweep the fast-spiking cell</button> Its two curves lie on top of each other. The regular-spiking points stay, in grey, to compare.</p>
+      <p><button class="chip" data-try="sweepnear">Close to threshold</button> The regular-spiking cell from 2 to 4 µA/cm² in fine steps: the rate rises smoothly from almost 0.</p>
+      <p><button class="chip" data-try="sweepmusc">Sweep with muscarine</button> No M current: the last-interval curve rises to meet the first.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Right after a spike the cell can’t fire again straight away: its Na⁺ channels are still plugged by inactivation and its K⁺ channels are still open. It takes a few milliseconds to recover. However hard you push, the spikes can’t come closer than that, so the rate tops out at a few hundred spikes per second.</p>
+      <h3>The refractory period</h3>
+      <p>As in the Hodgkin–Huxley lesson: during a spike the Na⁺ channels’ h gates close (inactivation) and the K⁺ channels’ n gates open. Until h has reopened and n has closed again, fewer Na⁺ channels are available and extra K⁺ current flows out. For about a millisecond no current can fire another spike (the <b>absolute</b> refractory period); for a few milliseconds more only a larger current can (the <b>relative</b> refractory period).</p>
+      <p>A worked number: in the regular-spiking cell at 25 µA/cm² the spikes come about 3.1 ms apart, 1 ÷ 3.1 ms ≈ 320 spikes/s. Ten times the threshold current, and the rate has nearly stopped rising.</p>
+      <h3>Why the spikes shrink</h3>
+      <p>At the highest rates each spike starts before the last one’s h gates have fully reopened. With fewer Na⁺ channels available, less Na⁺ comes in, and the spike peaks lower. In the simulation the peaks reach about +48 mV at 6 µA/cm², but only about +31 mV once a train at 25 µA/cm² is under way.</p>
+      <h3>A drug that works here</h3>
+      <p>Phenytoin and carbamazepine, two common drugs for epilepsy, bind most tightly to Na⁺ channels that are inactivated, and slow their recovery. A cell firing slowly has time to recover between spikes and barely notices. A cell firing in a fast, seizure-like barrage gets no such time, so its channels pile up in the blocked state. The drugs cut the highest firing rates much more than normal ones (they are called <b>use-dependent</b>).</p>
+      <details class="fullderiv"><summary>Show why no current can pass the ceiling</summary>
+        <p>Each cycle is a refractory time plus a recharge time, and the recharge can shrink toward zero but never below it:</p>
+        <div class="eq">\[ f = \frac{1}{t_\text{ref} + T} \;<\; \frac{1}{t_\text{ref}} \]</div>
+        <p>With t<sub>ref</sub> = 3 ms the ceiling is 1/0.003 s ≈ 330 spikes/s. In a real cell (and in the model) t<sub>ref</sub> isn’t a fixed number: a bigger current can fire the cell earlier in the relative refractory period, which is why the rate keeps creeping up a little.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="max">25 µA/cm²</button> Spikes about 3 ms apart, and smaller than usual.</p>
+      <p><button class="chip" data-try="fifteen">15 µA/cm²</button> About 240 spikes/s. At 25 it is about 320: two-thirds more current for a third more spikes.</p>
+      <p><button class="chip" data-try="sweep">The whole curve</button> See it flatten at the top of the f–I chart.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Some K⁺ channels open so slowly that one spike barely moves them, but each spike opens a few more, and between spikes they close only slowly. Over a train of spikes they build up. The K⁺ current they let out works against your current, so each recharge takes longer and the cell slows down, though the input hasn’t changed. That is <b>adaptation</b>.</p>
+      <h3>The M current</h3>
+      <p>In the model the slow channels are <b>M channels</b>, made of K<sub>V</sub>7 (KCNQ2 and KCNQ3) proteins. They open with depolarization, over tens to hundreds of milliseconds. Their current is Ohm’s law with a battery, like every channel since the Membrane Potential lesson:</p>
+      <div class="eq">\[ I_M = \bar g_M\, p\,(V - E_K) \]</div>
+      <p>where p, the fraction open, creeps up with every spike. Watch the M bar in the circuit during a long step: it starts near 0.03 and climbs.</p>
+      <h3>A worked number</h3>
+      <p>In the regular-spiking cell at 4 µA/cm², by the end of a 1.2 s step about 60% of the M channels are open (p ≈ 0.6). Over the train V averages about −50 mV, 40 mV above E<sub>K</sub>:</p>
+      <div class="eq">\[ I_M \approx 0.07\ \text{mS/cm}^2 \times 0.6 \times 40\ \text{mV} \approx 1.7\ \mu\text{A/cm}^2 \ \text{(outward)} \]</div>
+      <p>So of the 4 µA/cm² you put in, nearly half now leaks straight back out through M channels instead of charging the membrane. The recharge is slower, the gaps longer: the rate falls from about 91 to about 49 spikes/s.</p>
+      <h3>Switching it off</h3>
+      <p>Acetylcholine, acting through muscarinic receptors and a G protein, closes M channels: that is how they were found, and why they are called M. With them closed, a pyramidal cell keeps firing at its first rate for as long as the input lasts. It is one of the clearest examples of a neuromodulator changing what a neuron does with the same input (more in Slow Signals: Metabotropic Receptors and Neuromodulation). Ca²⁺-activated K⁺ channels slow many cells in a similar way: Ca²⁺ enters with each spike and builds up, opening them.</p>
+      <h3>When it goes wrong, and a drug</h3>
+      <p>Mutations that weaken KCNQ2 or KCNQ3 channels cause an inherited epilepsy of newborns (benign familial neonatal seizures): too little M current, too little brake on firing. Retigabine (ezogabine) does the opposite: it makes M channels open at lower voltages, about 20 mV lower, so more are open at rest and during firing. It was approved for epilepsy and later withdrawn because of side effects, but it shows the idea: more M current, fewer spikes for the same input.</p>
+      <details class="fullderiv"><summary>Show the derivation: how the M current builds up</summary>
+        <p>The M gate follows the voltage slowly:</p>
+        <div class="eq">\[ \frac{dp}{dt} = \frac{p_\infty(V) - p}{\tau_p(V)} \]</div>
+        <p>During a spike V is high, p<sub>∞</sub> is near 1, and p rises a little: say each spike opens a fraction δ of the channels still shut, p → p + δ(1 − p). Between spikes V is low, and p decays back with τ<sub>p</sub>, hundreds of milliseconds. If spikes come every T milliseconds and T is much shorter than τ<sub>p</sub>, the gain per spike balances the loss between spikes when</p>
+        <div class="eq">\[ \delta\,(1 - p) \approx p\,\frac{T}{\tau_p} \quad\Rightarrow\quad p \approx \frac{f\,\delta\,\tau_p}{1 + f\,\delta\,\tau_p}, \qquad f = \frac{1}{T} \]</div>
+        <p>So the faster the cell fires, the more M channels end up open, and the more it is slowed: adaptation pushes back hardest on high rates. Because τ<sub>p</sub> is long, the build-up takes many spikes, which is why the slowing is gradual.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="adapt">Adaptation</button> 4 µA/cm² for 1.2 s: from about 91 to 49 spikes/s, and the M bar climbs.</p>
+      <p><button class="chip" data-try="musc">Muscarine</button> The M channels shut: a steady rate.</p>
+      <p><button class="chip" data-try="retig">Retigabine</button> More M channels open: the cell rests a little lower, fires fewer spikes and slows more.</p>
+      <p><button class="chip" data-try="fs">Fast-spiking</button> No M channels at all.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Some cells fire in groups of spikes: bursts. In the bursting cell here, T-type Ca²⁺ channels open at voltages just above rest and let Ca²⁺ in. That gives a slow hump of depolarization, and a few fast Na⁺ spikes ride on top of it. But T channels inactivate if the cell sits depolarized, and only recover when it is held more negative. So the same cell bursts when it rests low and fires single spikes when it rests high.</p>
+      <h3>The T channel</h3>
+      <p>Its current is Ohm’s law with a Ca²⁺ battery, E<sub>Ca</sub> ≈ +120 mV:</p>
+      <div class="eq">\[ I_T = \bar g_T\, m^2 h\,(V - E_\mathrm{Ca}) \]</div>
+      <p>It works like the Na⁺ channel of the Hodgkin–Huxley lesson, with a fast activation gate (m) and a slower inactivation gate (h), but at lower voltages, and more slowly. The m gates open from about −70 mV up. The h gates are open only below about −75 mV, and take tens of milliseconds to move. At −84 mV about 56% of the T channels are ready to open; at −67 mV, fewer than 2%.</p>
+      <h3>Two modes</h3>
+      <p>Thalamic relay cells, which pass sensory signals on to the cortex, are the classic example. When you are awake they sit depolarized, their T channels are inactivated, and they fire single spikes at a rate that follows their input: <b>tonic mode</b>, a faithful relay. In drowsiness and sleep they are held more negative, their T channels recover, and an input sets off a burst instead: <b>burst mode</b>. Inhibition can do the same: a pause of inhibition lets the T channels recover, and when it ends the cell fires a <b>rebound burst</b>.</p>
+      <h3>Absence seizures</h3>
+      <p>In absence epilepsy (“petit mal”), common in children, the thalamus and cortex lock into rhythmic bursting about three times a second, and the child briefly stops responding. Ethosuximide, a first choice for these seizures, reduces the T-type Ca²⁺ current in thalamic cells.</p>
+      <details class="fullderiv"><summary>Show the T channel’s gates</summary>
+        <p>The m gates follow V almost at once; the h gates relax with a time constant τ<sub>h</sub>(V), tens of milliseconds at body temperature. With V in mV (Huguenard and McCormick’s fits, 2 mV more negative, as in the model this page uses):</p>
+        <div class="eq">\[ m_\infty = \frac{1}{1 + e^{-(V + 59)/6.2}}, \qquad h_\infty = \frac{1}{1 + e^{(V + 83)/4}}, \qquad \frac{dh}{dt} = \frac{h_\infty(V) - h}{\tau_h(V)} \]</div>
+        <p>At −84 mV, h<sub>∞</sub> = 1/(1 + e<sup>−0.25</sup>) ≈ 0.56; at −67 mV, h<sub>∞</sub> = 1/(1 + e<sup>4</sup>) ≈ 0.02. The channel conducts only when both are open, m²h, so it opens in a window: V must first sit low (to open h) and then rise (to open m). A burst closes its own window: the hump of depolarization closes h again, and the cell needs another spell at low voltage before it can burst again.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="burst">Burst mode</button> Resting at −84 mV: a small step gives a burst on a Ca²⁺ hump.</p>
+      <p><button class="chip" data-try="tonic">Tonic mode</button> The same step from −67 mV: single spikes.</p>
+      <p><button class="chip" data-try="rebound">Rebound burst</button> From −67 mV, a negative step holds the cell low; when it ends, a burst.</p>
+      <p><button class="chip" data-try="ethos">Ethosuximide</button> Burst mode again, with the T channels blocked: no burst.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th6" aria-labelledby="tab-th6" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The firing rate is how much of the nervous system reports “how much”: how strong a touch is, how hard a muscle should pull. The shape of a cell’s f–I curve, and whether and how it adapts or bursts, decides what it does with its input. Many drugs work by changing exactly these channels.</p>
+      <h3>Rate codes</h3>
+      <p>A sensory neuron fires faster for a stronger stimulus (Sensory Receptors: from Stimulus to Spikes). A motor neuron fires faster to make its muscle fibres pull harder (The Neuromuscular Junction). In each case the message is in the rate, read off by the next cell, which adds up the synaptic potentials the spikes cause (Summation and the Spike Trigger Zone).</p>
+      <h3>Different cells for different jobs</h3>
+      <p>Adaptation lets a cell report change rather than a steady state: it fires hard when its input starts and then calms down. Fast-spiking interneurons do the opposite job. They have little or no slow K⁺ current, and fast K<sub>V</sub>3 channels that end each spike quickly, so they can fire hundreds of narrow spikes per second without slowing, and keep inhibition in step with excitation. Bursting cells such as thalamic relay cells switch between passing their input on faithfully and signalling with bursts.</p>
+      <h3>Drugs that change firing</h3>
+      <table class="map">
+        <thead><tr><th>Drug</th><th>Acts on</th><th>What it does to firing</th></tr></thead>
+        <tbody>
+          <tr><td>Phenytoin, carbamazepine</td><td>Na⁺ channels, mostly inactivated ones</td><td>Cut the highest rates (seizure barrages) much more than normal firing</td></tr>
+          <tr><td>Muscarinic agonists (acetylcholine)</td><td>M channels, closed through a G protein</td><td>Less adaptation: the cell keeps firing at its first rate</td></tr>
+          <tr><td>Retigabine (ezogabine)</td><td>M channels, opened at lower voltages</td><td>A higher threshold, fewer spikes, more adaptation (withdrawn because of side effects)</td></tr>
+          <tr><td>Ethosuximide</td><td>T-type Ca²⁺ channels, blocked</td><td>Fewer bursts in thalamic cells; used for absence seizures</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="musc">Muscarine</button> The same step, no adaptation.</p>
+      <p><button class="chip" data-try="retig">Retigabine</button> The same step, fewer spikes.</p>
+      <p><button class="chip" data-try="ethos">Ethosuximide</button> The same step, no burst.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Hodgkin AL (1948).</b> The local electric changes associated with repetitive action in a non-medullated axon. <i>Journal of Physiology</i> 107:165–181. <a href="https://doi.org/10.1113/jphysiol.1948.sp004260" target="_blank" rel="noopener">doi:10.1113/jphysiol.1948.sp004260</a><br><span class="why">A steady current gives repetitive firing, and nerve fibres differ in how their rate starts and rises with current.</span></li>
+        <li><b>Brown DA, Adams PR (1980).</b> Muscarinic suppression of a novel voltage-sensitive K⁺ current in a vertebrate neurone. <i>Nature</i> 283:673–676. <a href="https://doi.org/10.1038/283673a0" target="_blank" rel="noopener">doi:10.1038/283673a0</a><br><span class="why">The M current, and acetylcholine closing it through muscarinic receptors.</span></li>
+        <li><b>Jahnsen H, Llinás R (1984).</b> Electrophysiological properties of guinea-pig thalamic neurones: an <i>in vitro</i> study. <i>Journal of Physiology</i> 349:205–226. <a href="https://doi.org/10.1113/jphysiol.1984.sp015153" target="_blank" rel="noopener">doi:10.1113/jphysiol.1984.sp015153</a><br><span class="why">Thalamic cells fire a burst on a low-threshold Ca²⁺ spike from negative voltages, and single spikes from depolarized ones.</span></li>
+        <li><b>McCormick DA, Connors BW, Lighthall JW, Prince DA (1985).</b> Comparative electrophysiology of pyramidal and sparsely spiny stellate neurons of the neocortex. <i>Journal of Neurophysiology</i> 54:782–806. <a href="https://doi.org/10.1152/jn.1985.54.4.782" target="_blank" rel="noopener">doi:10.1152/jn.1985.54.4.782</a><br><span class="why">Regular-spiking, bursting and fast-spiking cells in the cortex.</span></li>
+        <li><b>Coulter DA, Huguenard JR, Prince DA (1989).</b> Characterization of ethosuximide reduction of low-threshold calcium current in thalamic neurons. <i>Annals of Neurology</i> 25:582–593. <a href="https://doi.org/10.1002/ana.410250610" target="_blank" rel="noopener">doi:10.1002/ana.410250610</a><br><span class="why">Ethosuximide, a drug for absence seizures, reduces the T-type Ca²⁺ current.</span></li>
+        <li><b>Traub RD, Miles R (1991).</b> <i>Neuronal Networks of the Hippocampus.</i> Cambridge University Press. <a href="https://doi.org/10.1017/CBO9780511895401" target="_blank" rel="noopener">doi:10.1017/CBO9780511895401</a><br><span class="why">The Na⁺ and K⁺ channel kinetics in this page’s model.</span></li>
+        <li><b>Huguenard JR, McCormick DA (1992).</b> Simulation of the currents involved in rhythmic oscillations in thalamic relay neurons. <i>Journal of Neurophysiology</i> 68:1373–1383. <a href="https://doi.org/10.1152/jn.1992.68.4.1373" target="_blank" rel="noopener">doi:10.1152/jn.1992.68.4.1373</a><br><span class="why">The T-type Ca²⁺ channel’s gates, used in the bursting cell.</span></li>
+        <li><b>Biervert C, Schroeder BC, Kubisch C, et al. (1998).</b> A potassium channel mutation in neonatal human epilepsy. <i>Science</i> 279:403–406. <a href="https://doi.org/10.1126/science.279.5349.403" target="_blank" rel="noopener">doi:10.1126/science.279.5349.403</a><br><span class="why">A KCNQ2 mutation causes benign familial neonatal seizures.</span></li>
+        <li><b>Wang HS, Pan Z, Shi W, et al. (1998).</b> KCNQ2 and KCNQ3 potassium channel subunits: molecular correlates of the M-channel. <i>Science</i> 282:1890–1893. <a href="https://doi.org/10.1126/science.282.5395.1890" target="_blank" rel="noopener">doi:10.1126/science.282.5395.1890</a><br><span class="why">The M channel is made of KCNQ2 and KCNQ3.</span></li>
+        <li><b>Main MJ, Cryan JE, Dupere JRB, et al. (2000).</b> Modulation of KCNQ2/3 potassium channels by the novel anticonvulsant retigabine. <i>Molecular Pharmacology</i> 58:253–262. <a href="https://doi.org/10.1124/mol.58.2.253" target="_blank" rel="noopener">doi:10.1124/mol.58.2.253</a><br><span class="why">Retigabine shifts the M channels’ opening about 20 mV more negative.</span></li>
+        <li><b>Pospischil M, Toledo-Rodriguez M, Monier C, et al. (2008).</b> Minimal Hodgkin–Huxley type models for different classes of cortical and thalamic neurons. <i>Biological Cybernetics</i> 99:427–441. <a href="https://doi.org/10.1007/s00422-008-0263-8" target="_blank" rel="noopener">doi:10.1007/s00422-008-0263-8</a><br><span class="why">The three model cells: Traub–Miles channels plus a slow M current (regular- and fast-spiking), and their low-threshold spiking cell with T channels (bursting). The values are theirs, from their published model code.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="lif-calc">
+  <div class="calc-head">
+    <span class="sect-title">Integrate-and-fire calculator</span>
+  </div>
+  <p class="caption">The simplest cell that fires repeatedly: the RC membrane of Passive Properties: Time plus one rule. When V reaches threshold, count a spike, hold V at a reset value for the refractory period, then let it charge again. Change the numbers and see the gap between spikes and the rate.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh">The current</div>
+        <div class="gr"><label for="cI">I</label><input type="range" id="cI" min="0" max="25" step="0.1" value="4"><output id="cIo" for="cI"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">The membrane (RC)</div>
+        <div class="gr"><label for="cG">g<sub>L</sub></label><input type="range" id="cG" min="0.02" max="0.5" step="0.01" value="0.1"><output id="cGo" for="cG"></output></div>
+        <div class="gr"><label for="cC">C</label><input type="range" id="cC" min="0.5" max="3" step="0.1" value="1"><output id="cCo" for="cC"></output></div>
+        <div class="gr"><label for="cVr">V<sub>rest</sub></label><input type="range" id="cVr" min="-90" max="-50" step="1" value="-70"><output id="cVro" for="cVr"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">The firing rule</div>
+        <div class="gr"><label for="cVt">V<sub>th</sub></label><input type="range" id="cVt" min="-65" max="-30" step="1" value="-55"><output id="cVto" for="cVt"></output></div>
+        <div class="gr"><label for="cVs">V<sub>reset</sub></label><input type="range" id="cVs" min="-90" max="-50" step="1" value="-70"><output id="cVso" for="cVs"></output></div>
+        <div class="gr"><label for="cTr">t<sub>ref</sub></label><input type="range" id="cTr" min="0" max="10" step="0.1" value="2"><output id="cTro" for="cTr"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="cF">—</span><span class="caption">spikes per second</span></div>
+      <div class="es"><span>gap between spikes <b id="cT">—</b></span><span>τ = C/g<sub>L</sub> <b id="cTau">—</b></span><span>V<sub>∞</sub> <b id="cVinf">—</b></span><span>rheobase <b id="cRh">—</b></span><span>ceiling 1/t<sub>ref</sub> <b id="cMax">—</b></span></div>
+      <div class="gformula" id="cFormula" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator charts">
+        <button type="button" role="tab" id="tab-cv" aria-controls="pane-cv" aria-selected="true">Voltage over time</button>
+        <button type="button" role="tab" id="tab-cfi" aria-controls="pane-cfi" aria-selected="false" tabindex="-1">f–I curve</button>
+        <button type="button" role="tab" id="tab-chelp" aria-controls="pane-chelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-cv" aria-labelledby="tab-cv"><canvas id="cVChart" aria-label="The integrate-and-fire cell's voltage over time, with threshold, reset and V∞ marked"></canvas></div>
+      <div class="stage" role="tabpanel" id="pane-cfi" aria-labelledby="tab-cfi" hidden><div class="fi"><canvas id="cFIChart" aria-label="The integrate-and-fire cell's rate against current, with the rheobase and the ceiling marked"></canvas></div></div>
+      <div class="help" role="tabpanel" id="pane-chelp" aria-labelledby="tab-chelp" hidden>
+        <ul>
+          <li><b>Voltage over time:</b> the current is on from the start. V climbs from V<sub>reset</sub> toward V<sub>∞</sub> (dotted) like a charging capacitor; where it meets V<sub>th</sub> (teal dashed) a spike is counted (drawn as a thin line up), and V is held at V<sub>reset</sub> for t<sub>ref</sub> before it charges again. If V<sub>∞</sub> is below V<sub>th</sub>, V just settles there.</li>
+          <li><b>f–I curve:</b> the rate at every current from 0 to 25 µA/cm², worked out with the formula. Dashed: the ceiling, 1/t<sub>ref</sub>. Dotted: the rheobase. The dot is the current set above.</li>
+          <li>The simulated cells above have no fixed threshold or reset: their Na⁺ and K⁺ channels make those. That is why the calculator’s numbers come out a little different from theirs.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+// ---------- shared: colours, number formats, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','ea','a','pos','neg','warm'].forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+readColors();
+const minus = s => String(s).replace('-', '−');
+const fmtSigned = (v, d = 1, u = ' mV') => isFinite(v) ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d) + u : '—';
+const fmtRate = f => isFinite(f) ? (f >= 100 ? f.toFixed(0) : f >= 10 ? f.toFixed(0) : f.toFixed(1)) + ' /s' : '—';
+function setupCanvas(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c; }
+function bindRange(id, fmt, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = fmt(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+function bindNum(id, onv) {
+  const el = $(id), go = () => { const v = parseFloat(el.value); if (isFinite(v)) onv(Math.min(+el.max, Math.max(+el.min, v))); };
+  el.addEventListener('input', go); el.addEventListener('change', () => { go(); const v = parseFloat(el.value); if (isFinite(v)) el.value = Math.min(+el.max, Math.max(+el.min, v)); }); go();
+}
+// Canvas text with subscripts: "E_Na" draws E with a subscript Na (the letters and digits after the underscore).
+function fillSub(c, text, x, y) {
+  if (!text.includes('_')) { c.fillText(text, x, y); return; }
+  const parts = [], re = /_([A-Za-z0-9∞]+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { parts.push([text.slice(last, m.index), false], [m[1], true]); last = re.lastIndex; }
+  parts.push([text.slice(last), false]);
+  const font = c.font, size = parseFloat(/([\d.]+)px/.exec(font)[1]);
+  const subFont = font.replace(/[\d.]+px/, (size * 0.72).toFixed(1) + 'px');
+  const w = parts.map(([t, sub]) => { c.font = sub ? subFont : font; return c.measureText(t).width; });
+  const total = w.reduce((a, b) => a + b, 0), align = c.textAlign;
+  let px = align === 'center' ? x - total / 2 : align === 'right' || align === 'end' ? x - total : x;
+  c.textAlign = 'left';
+  parts.forEach(([t, sub], i) => { c.font = sub ? subFont : font; c.fillText(t, px, y + (sub ? size * 0.28 : 0)); px += w[i]; });
+  c.font = font; c.textAlign = align;
+}
+function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))), f = span / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+const niceUp = v => { const s = niceStep(v / 4); return Math.ceil(v / s - 1e-9) * s; };
+
+/* A chart, drawn at a fixed logical size (o.w × o.h) and scaled by the page.
+   o: { w, h, x: [x0, x1], y: [y0, y1], xlabel, ylabel, zoom (true: zoom arrows, chartzoom.js), redraw,
+        shade: [a, b], refs: [{ v, color, label, dash, vertical }],
+        dense: [{ arr, n, dt, color, width }]   a long trace, one point every dt from x = 0, drawn as its
+                                                 highest and lowest point in each pixel column, so no peak is lost
+        lines: [{ pts: [[x, y], ...], color, width, dash, alpha }], dots: [{ x, y, color, r, ring }],
+        strip: { h, y: [lo, hi], pts, color, label }   a small panel under the plot sharing its x axis
+        empty: text in the middle when there is nothing to draw } */
+function drawChart(cv, c, o) {
+  const W = o.w, H = o.h, L = 58, R = 16, T = 12, B = 40, SH = o.strip ? o.strip.h + 12 : 0;
+  const pw = W - L - R, ph = H - T - B - SH;
+  c.fillStyle = C.surface; c.fillRect(0, 0, W, H);
+  let [x0, x1] = o.x, [y0, y1] = o.y;
+  if (o.zoom) { [x0, x1] = ChartZoom.x(cv, x0, x1); [y0, y1] = ChartZoom.y(cv, y0, y1); ChartZoom.bind(cv, o.redraw); }
+  const sx = x => L + (x - x0) / (x1 - x0) * pw, sy = v => T + (y1 - v) / (y1 - y0) * ph;
+  c.font = '11px "IBM Plex Mono", monospace';
+  if (o.shade) { c.fillStyle = C.accent; c.globalAlpha = 0.08; const a = Math.max(L, sx(o.shade[0])), b = Math.min(L + pw, sx(o.shade[1])); if (b > a) c.fillRect(a, T, b - a, ph + SH); c.globalAlpha = 1; }
+  // y grid and values
+  const ys = o.zoom ? ChartZoom.step(cv, 'y', niceStep((o.y[1] - o.y[0]) / Math.max(3, Math.round(ph / 50)))) : niceStep((y1 - y0) / Math.max(3, Math.round(ph / 50)));
+  c.textAlign = 'right'; c.textBaseline = 'middle';
+  for (let v = Math.ceil(y0 / ys - 1e-9) * ys; v <= y1 + 1e-9; v += ys) {
+    const y = sy(v); c.strokeStyle = C.line; c.lineWidth = Math.abs(v) < ys / 1e3 ? 1.4 : 0.8;
+    c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke();
+    c.fillStyle = C.muted; c.fillText(minus(Math.abs(v) < ys / 1e3 ? 0 : +v.toPrecision(4)), L - 6, y);
+  }
+  c.save(); c.translate(13, T + ph / 2); c.rotate(-Math.PI / 2); c.textAlign = 'center'; c.font = '12px "IBM Plex Sans", sans-serif'; fillSub(c, o.ylabel, 0, 0); c.restore();
+  // x values, at the bottom of the whole chart
+  const xs = o.zoom ? ChartZoom.step(cv, 'x', niceStep((o.x[1] - o.x[0]) / 6)) : niceStep((x1 - x0) / Math.max(3, Math.round(pw / 90)));
+  const yb = T + ph + SH;
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let v = Math.ceil(x0 / xs - 1e-9) * xs; v <= x1 + 1e-9; v += xs) {
+    const x = sx(v); c.strokeStyle = C.line; c.lineWidth = 0.8;
+    c.beginPath(); c.moveTo(x, T); c.lineTo(x, yb + 4); c.stroke();
+    c.fillStyle = C.muted; c.fillText(minus(Math.abs(v) < xs / 1e3 ? 0 : +v.toPrecision(4)), x, yb + 6);
+  }
+  c.textBaseline = 'middle'; c.textAlign = 'right'; c.font = '12px "IBM Plex Sans", sans-serif'; fillSub(c, o.xlabel, L + pw, H - 8);
+  // reference lines
+  for (const r of o.refs || []) {
+    if (!isFinite(r.v)) continue;
+    c.strokeStyle = r.color; c.lineWidth = r.width || 1.2; c.setLineDash(r.dash || [6, 4]); c.beginPath();
+    if (r.vertical) { const x = sx(r.v); c.moveTo(x, T); c.lineTo(x, T + ph); } else { const y = sy(r.v); c.moveTo(L, y); c.lineTo(L + pw, y); }
+    c.stroke(); c.setLineDash([]);
+    if (r.label) {
+      c.font = '600 11.5px "IBM Plex Sans", sans-serif'; c.fillStyle = r.color; c.textBaseline = 'bottom';
+      if (r.vertical) { c.textAlign = 'left'; fillSub(c, r.label, sx(r.v) + 4, T + 14); }
+      else { c.textAlign = 'right'; fillSub(c, r.label, L + pw - 4, sy(r.v) - 2); }
+    }
+  }
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  for (const d of o.dense || []) {
+    if (d.n < 2) continue;
+    c.strokeStyle = d.color; c.lineWidth = d.width || 1.5; c.lineJoin = 'round'; c.beginPath();
+    const i0 = Math.max(0, Math.floor(x0 / d.dt) - 1), i1 = Math.min(d.n, Math.ceil(x1 / d.dt) + 2);
+    let col = null, lo = 0, hi = 0, first = true;
+    const flush = () => { if (col === null) return; const a = sy(lo), b = sy(hi); if (first) { c.moveTo(col, a); first = false; } else c.lineTo(col, a); if (b !== a) c.lineTo(col, b); };
+    for (let i = i0; i < i1; i++) {
+      const v = d.arr[i], px = Math.round(sx(i * d.dt) * 2) / 2;
+      if (px !== col) { flush(); col = px; lo = hi = v; } else { if (v < lo) lo = v; if (v > hi) hi = v; }
+    }
+    flush(); c.stroke();
+  }
+  for (const l of o.lines || []) {
+    if (l.pts.length < 2) continue;
+    c.strokeStyle = l.color; c.lineWidth = l.width || 2; c.globalAlpha = l.alpha ?? 1; c.setLineDash(l.dash || []); c.lineJoin = 'round';
+    c.beginPath(); l.pts.forEach(([x, y], i) => i ? c.lineTo(sx(x), sy(y)) : c.moveTo(sx(x), sy(y))); c.stroke();
+    c.globalAlpha = 1; c.setLineDash([]);
+  }
+  for (const d of o.dots || []) {
+    const x = sx(d.x), y = sy(d.y), r = d.r || 4;
+    c.globalAlpha = d.alpha ?? 1; c.beginPath(); c.arc(x, y, r, 0, 6.283);
+    if (d.ring) { c.fillStyle = C.surface; c.fill(); c.strokeStyle = d.color; c.lineWidth = 2; c.stroke(); } else { c.fillStyle = d.color; c.fill(); }
+    c.globalAlpha = 1;
+  }
+  c.restore();
+  if (o.empty) {
+    c.fillStyle = C.muted; c.font = '13px "IBM Plex Sans", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    o.empty.split('\n').forEach((t, i, a) => c.fillText(t, L + pw / 2, T + ph / 2 + (i - (a.length - 1) / 2) * 18));
+  }
+  c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, T + 0.5, pw - 1, ph - 1);
+  if (o.strip) {   // the strip under the plot, on the same x scale
+    const s = o.strip, t0 = T + ph + 12, [lo, hi] = s.y, syS = v => t0 + (hi - v) / (hi - lo) * s.h;
+    c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(L + 0.5, t0 + 0.5, pw - 1, s.h - 1);
+    c.save(); c.beginPath(); c.rect(L, t0, pw, s.h); c.clip();
+    if (lo < 0 && hi > 0) { c.strokeStyle = C.line; c.beginPath(); c.moveTo(L, syS(0)); c.lineTo(L + pw, syS(0)); c.stroke(); }
+    c.strokeStyle = s.color; c.lineWidth = 2; c.beginPath(); s.pts.forEach(([x, y], i) => i ? c.lineTo(sx(x), syS(y)) : c.moveTo(sx(x), syS(y))); c.stroke();
+    c.restore();
+    c.font = '11px "IBM Plex Mono", monospace'; c.fillStyle = C.muted; c.textAlign = 'right'; c.textBaseline = 'middle';
+    c.fillText(minus(+hi.toPrecision(3)), L - 6, syS(hi) + 5); c.fillText(minus(+lo.toPrecision(3)), L - 6, syS(lo) - 5);
+    c.font = '600 11.5px "IBM Plex Sans", sans-serif'; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = s.color; c.fillText(s.label, L + 6, t0 + 3);
+  }
+  c.textBaseline = 'alphabetic';
+}
+function chipGroup(attr, onPick) {
+  const bs = document.querySelectorAll(`[data-${attr}]`);
+  bs.forEach(b => b.addEventListener('click', () => { bs.forEach(x => x.setAttribute('aria-pressed', String(x === b))); onPick(b.dataset[attr]); }));
+  return v => bs.forEach(x => x.setAttribute('aria-pressed', String(x.dataset[attr] === v)));
+}
+
+// ---------- the model cell ----------
+/* One patch of cell body, with the channels of Pospischil et al. (2008): Na⁺ and K⁺ with Traub and Miles' kinetics,
+   a slow K⁺ (M) current, and, in the bursting (low-threshold spiking) cell, a T-type Ca²⁺ current with Huguenard and
+   McCormick's gates, as in their published NEURON code (36 °C). Units: mV, ms, µF/cm² (C = 1), mS/cm², µA/cm². */
+const FIRE = (() => {
+  const DT = 0.025, REC = 4, RDT = DT * REC;   // integrate every 0.025 ms; keep every 4th point (0.1 ms)
+  const PRE = 100, POST = 200;                  // ms of holding current before and after the step
+  const ENa = 50, EK = -90, ECa = 120, TAU_M = 1000, PHI_T = Math.pow(3, 1.2), SHIFT_T = 2, VT = -55;
+  const CELLS = {
+    rs:  { gL: 0.1,  EL: -70, gNa: 50, gK: 5,  gM: 0.07, gT: 0,   step: 6,   hold: 0, sw: [0, 25, 11],
+           note: 'A pyramidal cell of the cortex: Na⁺ and K⁺ channels for its spikes, and slow M channels that make it adapt.' },
+    fs:  { gL: 0.15, EL: -70, gNa: 50, gK: 10, gM: 0,    gT: 0,   step: 6,   hold: 0, sw: [0, 25, 11],
+           note: 'An inhibitory interneuron: more fast K⁺ channels, which end each spike quickly, and no M channels.' },
+    lts: { gL: 0.01, EL: -85, gNa: 50, gK: 5,  gM: 0.03, gT: 0.4, step: 0.5, hold: 0, sw: [0, 1, 11],
+           note: 'A low-threshold spiking cell: T-type Ca²⁺ channels as in thalamic relay cells, and so little leak that a fraction of a µA/cm² moves it a lot.' },
+  };
+  const vtrap = (x, k) => Math.abs(x / k) < 1e-6 ? k * (1 - x / k / 2) : x / (Math.exp(x / k) - 1);
+  const minfT = V => 1 / (1 + Math.exp(-(V + SHIFT_T + 57) / 6.2));
+  const hinfT = V => 1 / (1 + Math.exp((V + SHIFT_T + 81) / 4));
+  const tauhT = V => { const x = V + SHIFT_T; return (30.8 + (211.4 + Math.exp((x + 113.2) / 5)) / (1 + Math.exp((x + 84) / 3.2))) / PHI_T; };
+  // every gate at its resting value for voltage v
+  function restState(v, q) {
+    const u = v - VT;
+    const am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5), ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5));
+    const an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+    return { v, m: am / (am + bm), h: ah / (ah + bh), n: an / (an + bn), p: 1 / (1 + Math.exp(-(v + 35 - q.mShift) / 10)), hT: hinfT(v) };
+  }
+  // one time step (exponential Euler for the gates, Euler for V); returns nothing, changes s
+  function step(s, I, q) {
+    const v = s.v, u = v - VT;
+    const am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5);
+    const ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5));
+    const an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+    const x = v + 35 - q.mShift, pinf = 1 / (1 + Math.exp(-x / 10)), taup = TAU_M / (3.3 * Math.exp(x / 20) + Math.exp(-x / 20));
+    s.m += (1 - Math.exp(-DT * (am + bm))) * (am / (am + bm) - s.m);
+    s.h += (1 - Math.exp(-DT * (ah + bh))) * (ah / (ah + bh) - s.h);
+    s.n += (1 - Math.exp(-DT * (an + bn))) * (an / (an + bn) - s.n);
+    s.p += (1 - Math.exp(-DT / taup)) * (pinf - s.p);
+    let iT = 0;
+    if (q.gT > 0) { s.hT += (1 - Math.exp(-DT / tauhT(v))) * (hinfT(v) - s.hT); const mT = minfT(v); s.mT2h = mT * mT * s.hT; iT = q.gT * s.mT2h * (v - ECa); }
+    else s.mT2h = 0;
+    const n2 = s.n * s.n;
+    s.v = v + DT * (I - q.gNa * s.m * s.m * s.m * s.h * (v - ENa) - q.gK * n2 * n2 * (v - EK) - q.gM * s.p * (v - EK) - q.gL * (v - q.EL) - iT);
+  }
+  // the cell at rest with its holding current: 1.2 s of it (several of its slowest time constants), from every gate
+  // at its resting value (kept for reuse)
+  const cache = new Map();
+  function settled(q, hold) {
+    const key = JSON.stringify([q, hold]);
+    if (!cache.has(key)) {
+      const s = restState(q.EL, q);
+      for (let i = 0; i < 1200 / DT; i++) step(s, hold, q);
+      if (cache.size > 30) cache.delete(cache.keys().next().value);
+      cache.set(key, s);
+    }
+    return Object.assign({}, cache.get(key));
+  }
+  return { DT, REC, RDT, PRE, POST, ENa, EK, ECa, CELLS, step, settled, minfT };
+})();
+
+// ---------- the simulation: settings, trials, drawing ----------
+(() => {
+  const { DT, REC, RDT, PRE, POST, ENa, EK, ECa, CELLS } = FIRE;
+  const P = { cell: 'rs', I: 6, len: 800, hold: 0, gNa: 50, gK: 5, gM: 0.07, gT: 0.4, musc: false, retig: false, ethos: false };
+  let quiet = true;    // while a preset sets several controls at once: one new trial at the end, not one per control
+  let cv, cr, cf, cc, dirty = true;   // the charts' drawing contexts; dirty: something to draw again
+  const params = () => { const c = CELLS[P.cell]; return { gL: c.gL, EL: c.EL, gNa: P.gNa, gK: P.gK, gM: P.musc ? 0 : P.gM, gT: P.cell === 'lts' && !P.ethos ? P.gT : 0, mShift: P.retig ? -20 : 0 }; };
+  const setKey = () => JSON.stringify([P.cell, params(), P.hold, P.len]);
+
+  // ---- a trial: PRE ms at the holding current, the step, POST ms more ----
+  let tr = null, running = false, speed = 300, carry = 0;
+  const fmax = { na: 0, k: 0, t: 0 };   // the most channels open since the circuit was last drawn
+  function newTrial(I = P.I) {
+    const q = params(), s = FIRE.settled(q, P.hold), T = PRE + P.len + POST;
+    tr = { q, s, I, hold: P.hold, len: P.len, T, i: 0, n: 0, V: new Float32Array(Math.ceil(T / RDT) + 2), spikes: [], above: false,
+           done: false, key: setKey(), cell: P.cell, rest: s.v, hT0: s.hT, p0: null, p1: null };
+    carry = 0; fmax.na = fmax.k = fmax.t = 0;
+    dirty = true; caption(); readouts();
+  }
+  const Inow = (t, r = tr) => r.hold + (t >= PRE && t < PRE + r.len ? r.I : 0);
+  function advance(ms) {
+    const want = ms / DT + carry, nst = Math.min(6000, Math.floor(want)), s = tr.s, q = tr.q;
+    carry = want - nst;
+    for (let k = 0; k < nst; k++) {
+      const t = tr.i * DT;
+      if (t >= tr.T) { finish(); return; }
+      if (tr.i % REC === 0) tr.V[tr.n++] = s.v;
+      if (tr.p0 === null && t >= PRE) tr.p0 = s.p;
+      if (tr.p1 === null && t >= PRE + tr.len) tr.p1 = s.p;
+      FIRE.step(s, Inow(t), q);
+      tr.i++;
+      const na = s.m * s.m * s.m * s.h, kk = s.n * s.n * s.n * s.n;
+      if (na > fmax.na) fmax.na = na; if (kk > fmax.k) fmax.k = kk; if (s.mT2h > fmax.t) fmax.t = s.mT2h;
+      if (!tr.above && s.v > 0) { tr.above = true; tr.spikes.push(tr.i * DT); }
+      else if (tr.above && s.v < -20) tr.above = false;
+    }
+  }
+  // the rates from the spikes during the step
+  function rates(r) {
+    const sp = r.spikes.filter(t => t >= PRE && t < PRE + r.len), out = [];
+    for (let i = 1; i < sp.length; i++) out.push({ t: (sp[i] + sp[i - 1]) / 2, f: 1000 / (sp[i] - sp[i - 1]), gap: sp[i] - sp[i - 1] });
+    const after = r.spikes.filter(t => t >= PRE + r.len);
+    return { n: sp.length, isi: out, f1: out.length ? out[0].f : 0, fl: out.length ? out[out.length - 1].f : 0, after: after.length };
+  }
+
+  // ---- the f–I chart's points: one pair per finished step, kept per set of settings ----
+  const FI = new Map();   // key → [{ I, f1, fl }]
+  function addFI(r) {
+    const R = rates(r), x = +(r.hold + r.I).toFixed(3);
+    if (!FI.has(r.key)) FI.set(r.key, []);
+    const pts = FI.get(r.key).filter(p => p.I !== x);
+    pts.push({ I: x, f1: R.f1, fl: R.fl }); pts.sort((a, b) => a.I - b.I);
+    FI.set(r.key, pts);
+  }
+
+  // ---- sweeps: steps from a to b in n, each from rest ----
+  const SW = { on: false, amps: [], a: 0, b: 25, n: 11 };
+  function finish() {
+    tr.done = true; addFI(tr); caption(); readouts();
+    if (SW.on && SW.amps.length) { newTrial(SW.amps.shift()); return; }
+    SW.on = false; setRunning(false);
+  }
+  function startSweep() {
+    const n = Math.max(2, Math.round(SW.n));
+    SW.amps = Array.from({ length: n }, (_, k) => +(SW.a + (SW.b - SW.a) * k / (n - 1)).toPrecision(4));
+    SW.on = true; newTrial(SW.amps.shift()); setRunning(true);
+  }
+  bindNum('fSwA', v => SW.a = v); bindNum('fSwB', v => SW.b = v); bindNum('fSwN', v => SW.n = v);
+  const setSweep = ([a, b, n]) => { $('fSwA').value = a; $('fSwB').value = b; $('fSwN').value = n; SW.a = a; SW.b = b; SW.n = n; };
+
+  // ---- the controls ----
+  // A changed setting starts a new step from rest, once per frame however fast a slider is dragged.
+  let pending = false;
+  const onSet = () => { if (quiet) return; SW.on = false; pending = true; dirty = true; };
+  function startPending() { if (!pending) return; pending = false; newTrial(); setRunning(true); }
+  const fmtI = v => (Math.abs(v) < 1 && v !== 0 ? fmtSigned(v, 2, '') : fmtSigned(v, 1, '')).replace(/^\+/, '') + ' µA/cm²';
+  bindRange('fI', fmtI, v => { P.I = v; onSet(); });
+  bindRange('fLen', v => v.toFixed(0) + ' ms', v => { P.len = v; onSet(); });
+  bindRange('fHold', v => fmtSigned(v, 2, '').replace(/^\+/, '') + ' µA/cm²', v => { P.hold = v; onSet(); });
+  bindRange('fGNa', v => v.toFixed(0) + ' mS/cm²', v => { P.gNa = v; onSet(); });
+  bindRange('fGK', v => v.toFixed(1) + ' mS/cm²', v => { P.gK = v; onSet(); });
+  bindRange('fGM', v => v.toFixed(3) + ' mS/cm²', v => { P.gM = v; onSet(); });
+  bindRange('fGT', v => v.toFixed(2) + ' mS/cm²', v => { P.gT = v; onSet(); });
+  for (const [id, k] of [['fMusc', 'musc'], ['fRetig', 'retig'], ['fEthos', 'ethos']])
+    $(id).addEventListener('change', e => { P[k] = e.target.checked; onSet(); });
+  const setRange = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const setCheck = (id, v) => { const el = $(id); if (el.checked !== v) { el.checked = v; el.dispatchEvent(new Event('change')); } };
+  const pressCell = chipGroup('cell', v => setCell(v, true));
+  function setCell(cell, defaults) {
+    const was = quiet; quiet = true;
+    P.cell = cell; pressCell(cell);
+    const c = CELLS[cell];
+    setRange('fGNa', c.gNa); setRange('fGK', c.gK); setRange('fGM', c.gM); setRange('fGT', c.gT || 0.4);
+    if (defaults) { setRange('fI', c.step); setRange('fHold', c.hold); setSweep(c.sw); }
+    document.querySelectorAll('[data-for]').forEach(el => { el.hidden = !el.dataset.for.split(' ').includes(cell); });
+    $('fCellNote').textContent = c.note;
+    quiet = was; onSet();
+  }
+
+  const speedFrom = v => Math.pow(10, 1 + v * 0.025);
+  bindRange('fSpeed', v => { const x = speedFrom(v); return (x < 100 ? x.toFixed(0) : (Math.round(x / 10) * 10).toFixed(0)) + ' ms/s'; }, v => speed = speedFrom(v));
+  const playBtn = $('fPlay');
+  function setRunning(r) { running = r; playBtn.textContent = r ? 'Pause' : 'Play'; dirty = true; }
+  playBtn.addEventListener('click', () => {
+    if (running) { setRunning(false); return; }
+    if (tr.done) newTrial(tr.I);
+    setRunning(true);
+  });
+  $('fStep').addEventListener('click', () => { SW.on = false; pending = false; newTrial(); setRunning(true); });
+  $('fReset').addEventListener('click', () => { SW.on = false; pending = false; newTrial(); setRunning(false); });
+  $('fSweep').addEventListener('click', startSweep);
+  $('fClear').addEventListener('click', () => { FI.clear(); dirty = true; });
+
+  // ---- drawing ----
+  const VW = 900, VH = 380, RW = 900, RH = 230, FW = 460, FH = 438, CW = 920, CH = 286;
+  function sizeCanvases() { cv = setupCanvas($('fV'), VW, VH); cr = setupCanvas($('fR'), RW, RH); cf = setupCanvas($('fFI'), FW, FH); cc = setupCanvas($('fCirc'), CW, CH); dirty = true; }
+  function drawV() {
+    const r = tr, lo = Math.min(0, r.hold, r.hold + r.I), hi = Math.max(0, r.hold, r.hold + r.I), pad = Math.max(0.1, (hi - lo) * 0.15);
+    drawChart($('fV'), cv, {
+      w: VW, h: VH, x: [0, r.T], y: [-100, 60], xlabel: 'time (ms)', ylabel: 'V (mV)', zoom: true, redraw: () => { dirty = true; },
+      shade: [PRE, PRE + r.len], refs: [{ v: EK, color: C.k, label: 'E_K', dash: [6, 4] }],
+      dense: [{ arr: r.V, n: r.n, dt: RDT, color: C.accent, width: 1.5 }],
+      strip: { h: 64, y: [lo - pad, hi + pad], color: C.ink, label: 'injected current (µA/cm²)',
+               pts: [[0, r.hold], [PRE, r.hold], [PRE, r.hold + r.I], [PRE + r.len, r.hold + r.I], [PRE + r.len, r.hold], [r.T, r.hold]] },
+      empty: r.n ? '' : 'Press Step (or Play) to run this step',
+    });
+  }
+  function drawR() {
+    const R = rates(tr), all = tr.spikes, pts = [];
+    for (let i = 1; i < all.length; i++) pts.push([(all[i] + all[i - 1]) / 2, 1000 / (all[i] - all[i - 1])]);
+    const top = niceUp(Math.max(50, ...pts.map(p => p[1])) * 1.1);
+    drawChart($('fR'), cr, {
+      w: RW, h: RH, x: [0, tr.T], y: [0, top], xlabel: 'time (ms)', ylabel: 'spikes/s', zoom: true, redraw: () => { dirty = true; },
+      shade: [PRE, PRE + tr.len],
+      lines: [{ pts, color: C.accent, width: 1.2, alpha: 0.45 }],
+      dots: pts.map(([x, y]) => ({ x, y, color: C.accent, r: 3.2 })),
+      empty: pts.length ? '' : tr.n ? (tr.done ? 'Fewer than two spikes: no interval to measure' : '') : 'Each gap between two spikes will add a dot here',
+    });
+    return R;
+  }
+  function drawFI() {
+    const cur = setKey(), sets = [...FI.entries()], allPts = sets.flatMap(([, p]) => p);
+    let x0 = 0, x1 = 25, top = 100;
+    if (allPts.length) {
+      const xmin = Math.min(...allPts.map(p => p.I)), xmax = Math.max(...allPts.map(p => p.I));
+      x1 = niceUp(Math.max(xmax, 0.1) * 1.05); x0 = xmin < 0 ? -niceUp(-xmin * 1.05) : 0;
+      top = niceUp(Math.max(20, ...allPts.map(p => Math.max(p.f1, p.fl))) * 1.1);
+    }
+    const lines = [], dots = [];
+    for (const [k, pts] of sets) {
+      const mine = k === cur, a = mine ? 1 : 0.55, c1 = mine ? C.accent : C.a, c2 = mine ? C.warm : C.a;
+      lines.push({ pts: pts.map(p => [p.I, p.f1]), color: c1, width: mine ? 2 : 1.4, alpha: a });
+      lines.push({ pts: pts.map(p => [p.I, p.fl]), color: c2, width: mine ? 2 : 1.4, alpha: a, dash: [6, 4] });
+      pts.forEach(p => { dots.push({ x: p.I, y: p.f1, color: c1, r: mine ? 4.5 : 3.5, alpha: a }); dots.push({ x: p.I, y: p.fl, color: c2, r: mine ? 4 : 3, ring: true, alpha: a }); });
+    }
+    drawChart($('fFI'), cf, {
+      w: FW, h: FH, x: [x0, x1], y: [0, top], xlabel: 'current during the step (µA/cm²)', ylabel: 'spikes/s', zoom: true, redraw: () => { dirty = true; },
+      lines, dots, empty: allPts.length ? '' : 'Each step you run adds its two rates here:\nthe first interval and the last.\nRun a few steps, or press Sweep.',
+    });
+  }
+  // the circuit, drawn as in the Hodgkin–Huxley lesson: outside (ground) on top, inside at the bottom
+  const TOP = 44, BOT = 228, MID = 136;
+  function drawCirc() {
+    const c = cc, s = tr.s, q = tr.q;
+    c.fillStyle = C.surface; c.fillRect(0, 0, CW, CH);
+    const keys = ['stim', 'na', 'k', 'm'].concat(tr.cell === 'lts' ? ['t'] : [], ['leak', 'cap']);
+    const xa = 130, xb = CW - 150, XS = keys.map((_, i) => xa + i * (xb - xa) / (keys.length - 1)), XV = CW - 52;
+    const wire = (x0, y0, x1, y1) => { c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); };
+    const label = (t, x, y, col, align = 'left', font = '500 12.5px "IBM Plex Sans", sans-serif') => { c.font = font; c.fillStyle = col || C.ink; c.textAlign = align; fillSub(c, t, x, y); };
+    const blank = (x, y0, y1) => { c.fillStyle = C.surface; c.fillRect(x - 3, y0, 6, y1 - y0); };
+    c.strokeStyle = C.ink; c.lineWidth = 2.2;
+    wire(xa, TOP, xb, TOP); wire(xa, BOT, xb, BOT); XS.forEach(x => wire(x, TOP, x, BOT));
+    c.fillStyle = C.ink; XS.forEach(x => { c.beginPath(); c.arc(x, TOP, 3.5, 0, 6.283); c.arc(x, BOT, 3.5, 0, 6.283); c.fill(); });
+    label('OUTSIDE', 12, TOP + 4, C.muted, 'left', '600 12px "IBM Plex Sans", sans-serif');
+    label('ground', 12, TOP + 20, C.muted, 'left', '500 11.5px "IBM Plex Sans", sans-serif');
+    label('INSIDE', 12, BOT + 4, C.muted, 'left', '600 12px "IBM Plex Sans", sans-serif');
+    // voltmeter
+    c.strokeStyle = C.muted; c.lineWidth = 1.2; c.setLineDash([3, 4]);
+    wire(xb, TOP, XV, TOP); wire(xb, BOT, XV, BOT); wire(XV, TOP, XV, MID - 22); wire(XV, MID + 22, XV, BOT); c.setLineDash([]);
+    c.beginPath(); c.arc(XV, MID, 22, 0, 6.283); c.fillStyle = C.surface; c.fill(); c.stroke();
+    label('V', XV, MID + 5, C.muted, 'center', '600 15px "IBM Plex Sans", sans-serif');
+    label(fmtSigned(s.v, 0), XV, MID - 30, C.ink, 'center', '600 13px "IBM Plex Mono", monospace');
+    const resistor = (x, yc, col, vari) => {
+      blank(x, yc - 30, yc + 30);
+      c.strokeStyle = col; c.lineWidth = 2.2; c.lineJoin = 'round'; c.beginPath(); c.moveTo(x, yc - 30);
+      for (let k = 0; k < 6; k++) c.lineTo(x + (k % 2 ? -10 : 10), yc - 25 + k * 10);
+      c.lineTo(x, yc + 30); c.stroke();
+      if (vari) { c.lineWidth = 1.8; wire(x - 18, yc + 22, x + 16, yc - 20); c.beginPath(); c.moveTo(x + 16, yc - 20); c.lineTo(x + 7, yc - 17); c.moveTo(x + 16, yc - 20); c.lineTo(x + 14, yc - 11); c.stroke(); }
+    };
+    const battery = (x, yc, E, col) => {
+      blank(x, yc - 8, yc + 8);
+      const up = E < 0;   // the long (+) plate faces the side it makes positive: the inside is below
+      c.strokeStyle = col; c.lineCap = 'round';
+      c.lineWidth = 2.4; wire(x - 16, up ? yc - 6 : yc + 6, x + 16, up ? yc - 6 : yc + 6);
+      c.lineWidth = 4.5; wire(x - 8, up ? yc + 6 : yc - 6, x + 8, up ? yc + 6 : yc - 6);
+      c.lineCap = 'butt';
+    };
+    const gbar = (x, frac, col, tick) => {
+      const x0 = x - 40, y0 = MID - 6, h = 60, f = Math.max(0, Math.min(1, frac));
+      c.strokeStyle = C.line; c.lineWidth = 1; c.strokeRect(x0 + 0.5, y0 + 0.5, 8, h);
+      c.fillStyle = col; c.fillRect(x0 + 1, y0 + 1 + (h - 1) * (1 - f), 7, (h - 1) * f);
+      if (tick != null) { const y = y0 + 1 + (h - 1) * (1 - Math.max(0, Math.min(1, tick))); c.strokeStyle = C.ink; c.lineWidth = 2; wire(x0 - 3, y, x0 + 11, y); }
+    };
+    const fmt2 = v => v < 0.005 && v > 0 ? v.toFixed(3) : v.toFixed(2);
+    const Ion = Inow(Math.min(tr.i * DT, tr.T - DT));
+    keys.forEach((key, i) => {
+      const x = XS[i];
+      const name = (t, col) => label(t, x, BOT + 22, col, 'center', '600 13px "IBM Plex Sans", sans-serif');
+      const detail = (t, col) => label(t, x, BOT + 40, col, 'center', '500 11.5px "IBM Plex Mono", monospace');
+      if (key === 'stim') {
+        blank(x, MID - 24, MID + 24);
+        const on = Math.abs(Ion) > 1e-9, col = on ? C.accent : C.muted;
+        c.strokeStyle = col; c.lineWidth = 2; c.beginPath(); c.arc(x, MID, 22, 0, 6.283); c.stroke();
+        const down = Ion >= 0;   // positive current goes into the cell, which is below
+        c.beginPath(); c.moveTo(x, MID + (down ? -12 : 12)); c.lineTo(x, MID + (down ? 12 : -12)); c.stroke();
+        c.beginPath(); c.moveTo(x - 6, MID + (down ? 6 : -6)); c.lineTo(x, MID + (down ? 12 : -12)); c.lineTo(x + 6, MID + (down ? 6 : -6)); c.stroke();
+        name('electrode', C.ink); detail(fmtI(Ion), on ? C.accent : C.muted);
+        return;
+      }
+      if (key === 'cap') {
+        blank(x, MID - 8, MID + 8); c.strokeStyle = C.ink; c.lineWidth = 3;
+        wire(x - 26, MID - 6, x + 26, MID - 6); wire(x - 26, MID + 6, x + 26, MID + 6);
+        name('capacitor', C.ink); detail('C 1 µF/cm²', C.muted);
+        return;
+      }
+      const spec = {
+        na:   { col: C.na, E: ENa, El: 'E_Na', nm: 'Na⁺', g: q.gNa, f: fmax.na, gate: 'm³h' },
+        k:    { col: C.k,  E: EK,  El: 'E_K',  nm: 'K⁺',  g: q.gK,  f: fmax.k,  gate: 'n⁴' },
+        m:    { col: C.k,  E: EK,  El: 'E_K',  nm: 'M: slow K⁺', g: q.gM, f: s.p, gate: 'p', tick: tr.p0 },
+        t:    { col: C.ea, E: ECa, El: 'E_Ca', nm: 'T: Ca²⁺', g: q.gT, f: fmax.t, gate: 'm²h' },
+        leak: { col: C.muted, E: q.EL, El: 'E_L', nm: 'leak', g: q.gL },
+      }[key];
+      const vari = key !== 'leak', col = spec.g > 0 || !vari ? spec.col : C.line;
+      battery(x, MID - 52, spec.E, col);
+      label(`${spec.El} ${fmtSigned(spec.E, 0, '')}`, x + 20, MID - 47, col, 'left', '500 11.5px "IBM Plex Sans", sans-serif');
+      resistor(x, MID + 24, col, vari);
+      if (vari) gbar(x, spec.g > 0 ? spec.f : 0, col, spec.g > 0 ? spec.tick : null);
+      name(spec.nm, col);
+      detail(vari ? (spec.g > 0 ? `${spec.gate} ${fmt2(spec.f)}` : 'none') : `g ${q.gL}`, col);
+    });
+    fmax.na = fmax.k = fmax.t = 0;
+  }
+  function draw() { drawCirc(); drawV(); drawR(); drawFI(); }
+
+  // ---- numbers and the caption ----
+  function readouts() {
+    const R = rates(tr), started = tr.n > 0;
+    $('fVnum').textContent = fmtSigned(tr.s.v, 1);
+    $('fRest').textContent = fmtSigned(tr.rest, 1);
+    $('fNsp').textContent = started ? String(R.n) : '—';
+    $('fF1').textContent = R.isi.length ? fmtRate(R.f1) : '—';
+    $('fFl').textContent = R.isi.length ? fmtRate(R.fl) : '—';
+    $('fRatio').textContent = R.isi.length > 1 ? (R.fl / R.f1).toFixed(2) : '—';
+    $('fPm').textContent = tr.q.gM > 0 ? tr.s.p.toFixed(2) : P.musc && P.gM > 0 ? 'closed' : 'none';
+  }
+  function caption() {
+    const r = tr, R = rates(r), I = fmtI(r.I);
+    let t;
+    if (!r.done) t = r.n ? `Running: a step of ${I} for ${r.len} ms.` : `Ready: a step of ${I} for ${r.len} ms${r.hold ? `, from a holding current of ${fmtI(r.hold)}` : ''}. Press Step or Play.`;
+    else if (r.I < 0 && R.after > 0) t = `A rebound: the negative step held the cell low and let its T channels recover, and when it ended the cell fired ${R.after} spike${R.after > 1 ? 's' : ''}.`;
+    else if (R.n === 0) t = r.I <= 0 ? `No spikes during the step: ${I} pushes the voltage down, away from threshold.` : `No spikes: ${I} charges the membrane, but V settles below threshold. Try a larger step.`;
+    else if (R.n === 1) t = 'One spike, then none: enough current to reach threshold once, but after the spike the membrane settles below threshold.';
+    else if (r.q.gT > 0 && R.isi[0].gap < 20 && R.n > 2 && (R.isi.length < 3 || R.isi[R.isi.length - 1].gap > 2 * R.isi[0].gap))
+      t = `A burst: the first spikes come only ${R.isi[0].gap.toFixed(0)}–${R.isi[Math.min(1, R.isi.length - 1)].gap.toFixed(0)} ms apart, riding on a slow hump of Ca²⁺ current through the T channels; after it, ${R.isi.length > 2 ? `the cell fires slowly (${fmtRate(R.fl)})` : 'it stops'}.`;
+    else if (R.n === 2 || R.isi.length < 2) t = `${R.n} spikes, ${R.isi[0].gap.toFixed(0)} ms apart (${fmtRate(R.f1)}), then the cell stops: it is only just above threshold.`;
+    else {
+      if (r.q.gM > 0 && R.fl / R.f1 < 0.8) t = `Adaptation: the rate falls from ${fmtRate(R.f1)} to ${fmtRate(R.fl)} while the current stays the same. The slow K⁺ (M) current is building up: by the end of the step p had gone from ${r.p0.toFixed(2)} to ${r.p1.toFixed(2)}.`;
+      else if (R.fl / R.f1 < 0.8) t = `The rate falls from ${fmtRate(R.f1)} to ${fmtRate(R.fl)} while the current stays the same.`;
+      else t = `A steady train of ${R.n} spikes at about ${fmtRate(R.fl)}${R.fl > 250 ? ', near the ceiling: the spikes are only ' + R.isi[R.isi.length - 1].gap.toFixed(1) + ' ms apart, and smaller than usual' : ''}.`;
+      if (r.cell === 'lts') t = (r.q.gT === 0 ? 'No burst: the T channels are blocked. ' : r.hT0 < 0.1 ? `No burst: at ${fmtSigned(r.rest, 0)} only ${(100 * r.hT0).toFixed(0)}% of the T channels are ready to open; the rest are inactivated. ` : 'No burst. ') + t;
+    }
+    $('fCap').textContent = t;
+  }
+
+  // ---- the loop: only what changed is drawn again ----
+  let lastT = performance.now(), frame = 0;
+  function loop(now) {
+    const dtw = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+    startPending();
+    if (running && !tr.done) { advance(dtw * (SW.on ? Math.max(speed, tr.T / 1.5) : speed)); dirty = true; }   // a sweep runs each step in about 1.5 s
+    if (dirty) {
+      draw(); dirty = false;
+      if (frame++ % 6 === 0 || tr.done) { readouts(); if (!tr.done) caption(); }
+    }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; });
+  window.addEventListener('resize', () => { dirty = true; });
+
+  // ---- presets for the Start-here and Try-it buttons ----
+  function preset(o) {
+    quiet = true;
+    setCell(o.cell || 'rs', false);
+    const c = CELLS[o.cell || 'rs'];
+    setRange('fGNa', o.gNa ?? c.gNa); setRange('fGK', o.gK ?? c.gK); setRange('fGM', o.gM ?? c.gM); setRange('fGT', o.gT ?? (c.gT || 0.4));
+    setRange('fI', o.I ?? c.step); setRange('fLen', o.len ?? 800); setRange('fHold', o.hold ?? 0);
+    setCheck('fMusc', !!o.musc); setCheck('fRetig', !!o.retig); setCheck('fEthos', !!o.ethos);
+    if (o.speed) { $('fSpeed').value = o.speed; $('fSpeed').dispatchEvent(new Event('input')); }
+    setSweep(o.sw || c.sw);
+    quiet = false; pending = false;
+    if (o.sweep) startSweep(); else { SW.on = false; newTrial(); setRunning(true); }
+  }
+  const keepSpeed = () => { if (+$('fSpeed').value < 45) { $('fSpeed').value = 59; $('fSpeed').dispatchEvent(new Event('input')); } };
+  const TRY = {
+    edge:  () => { keepSpeed(); preset({ I: 2.4 }); },
+    below: () => { keepSpeed(); preset({ I: 2.0 }); },
+    twice: () => { keepSpeed(); preset({ I: 6 }); },
+    slow:  () => preset({ I: 6, len: 300, speed: 12 }),
+    max:   () => { keepSpeed(); preset({ I: 25, len: 300 }); },
+    fifteen: () => { keepSpeed(); preset({ I: 15, len: 300 }); },
+    sweep: () => preset({ len: 500, sweep: true, sw: [0, 25, 11] }),
+    sweepfs: () => preset({ cell: 'fs', len: 500, sweep: true, sw: [0, 25, 11] }),
+    sweepnear: () => preset({ len: 500, sweep: true, sw: [2, 4, 11] }),
+    sweepmusc: () => preset({ len: 500, musc: true, sweep: true, sw: [0, 25, 11] }),
+    adapt: () => { keepSpeed(); preset({ I: 4, len: 1200 }); },
+    fs:    () => { keepSpeed(); preset({ cell: 'fs', I: 4, len: 1200 }); },
+    musc:  () => { keepSpeed(); preset({ I: 4, len: 1200, musc: true }); },
+    retig: () => { keepSpeed(); preset({ I: 4, len: 1200, retig: true }); },
+    burst: () => { keepSpeed(); preset({ cell: 'lts', I: 0.5, len: 500, hold: 0 }); },
+    tonic: () => { keepSpeed(); preset({ cell: 'lts', I: 0.5, len: 500, hold: 0.15 }); },
+    rebound: () => { keepSpeed(); preset({ cell: 'lts', I: -0.3, len: 300, hold: 0.15 }); },
+    ethos: () => { keepSpeed(); preset({ cell: 'lts', I: 0.5, len: 500, hold: 0, ethos: true }); },
+  };
+  // FIRE_UI.runNow(): finish the current step (or sweep) at once, for checking the page from the console
+  const runNow = () => { startPending(); let guard = 0; while (running && !tr.done && guard++ < 1e5) advance(150); dirty = true; };
+  window.FIRE_UI = { TRY, get tr() { return tr; }, get FI() { return FI; }, rates, get running() { return running; }, runNow, drawNow: () => draw() };
+
+  sizeCanvases();
+  setCell('rs', true);
+  newTrial(); quiet = false; setRunning(false);
+  caption(); readouts();
+  Frames.sim(() => running, 'fPlay', ['fStep']);   // frames.js: starts paused, pauses itself when left alone
+  requestAnimationFrame(loop);
+})();
+
+// ---------- the integrate-and-fire calculator ----------
+(() => {
+  const Q = {};
+  const W = 640, H = 340, FW = 460, FH = 438;
+  const cvV = setupCanvas($('cVChart'), W, H), cvF = setupCanvas($('cFIChart'), FW, FH);
+  // the gap between spikes (ms) and the rate (spikes/s) for current I
+  function lif(I) {
+    const tau = Q.C / Q.g, Vinf = Q.Vr + I / Q.g;
+    if (Vinf <= Q.Vt) return { tau, Vinf, T: Infinity, f: 0 };
+    const T = Q.Vs >= Q.Vt ? 0 : tau * Math.log((Vinf - Q.Vs) / (Vinf - Q.Vt));
+    return { tau, Vinf, T, f: 1000 / (Q.tr + T) };
+  }
+  function calc() {
+    if (Object.keys(Q).length < 7) return;
+    const r = lif(Q.I), rh = Q.g * (Q.Vt - Q.Vr);
+    $('cF').textContent = r.f > 0 ? (r.f >= 10 ? r.f.toFixed(0) : r.f.toFixed(1)) : '0';
+    $('cT').textContent = isFinite(r.T) ? (Q.tr + r.T).toFixed(2) + ' ms' : 'none';
+    $('cTau').textContent = r.tau.toFixed(1) + ' ms';
+    $('cVinf').textContent = fmtSigned(r.Vinf, 1);
+    $('cRh').textContent = Math.max(0, rh).toFixed(2) + ' µA/cm²';
+    $('cMax').textContent = Q.tr > 0 ? (1000 / Q.tr).toFixed(0) + ' /s' : 'none';
+    const f = v => minus(v.toFixed(1)), f2 = v => minus(v.toFixed(2));
+    let html = `V<sub>∞</sub> = V<sub>rest</sub> + I/g<sub>L</sub> = ${f(Q.Vr)} + ${f(Q.I)}/${f2(Q.g)} = <b>${f(r.Vinf)} mV</b><br>`;
+    if (!isFinite(r.T)) html += `V<sub>∞</sub> is below V<sub>th</sub> = ${f(Q.Vt)} mV: V settles there and never fires.<br><span class="res">rheobase = g<sub>L</sub>(V<sub>th</sub> − V<sub>rest</sub>) = ${f2(Q.g)} × ${f(Q.Vt - Q.Vr)} = ${f2(Math.max(0, rh))} µA/cm²</span>`;
+    else {
+      html += `T = τ ln[(V<sub>∞</sub> − V<sub>reset</sub>)/(V<sub>∞</sub> − V<sub>th</sub>)] = ${f(r.tau)} ms × ln(${f(r.Vinf - Q.Vs)}/${f(r.Vinf - Q.Vt)}) = <b>${f2(r.T)} ms</b><br>`;
+      html += `<span class="res">f = 1/(t<sub>ref</sub> + T) = 1/(${f(Q.tr)} + ${f2(r.T)} ms) = ${r.f.toFixed(r.f >= 10 ? 0 : 1)} spikes/s</span>`;
+    }
+    $('cFormula').innerHTML = html;
+    draw();
+  }
+  function draw() {
+    const r = lif(Q.I), win = isFinite(r.T) ? Math.min(400, Math.max(40, 5 * (Q.tr + r.T))) : Math.max(40, 5 * r.tau), pts = [];
+    // the voltage, from V_reset with the current on, sampled every win/2000 ms; spikes drawn as a thin line up to +30 mV
+    let v = Q.Vs, hold = 0; const dt = win / 2000;
+    for (let t = 0; t <= win; t += dt) {
+      if (hold > 0) { hold -= dt; pts.push([t, Q.Vs]); continue; }
+      v = r.Vinf + (v - r.Vinf) * Math.exp(-dt / r.tau);
+      if (v >= Q.Vt && isFinite(r.T)) { pts.push([t, Q.Vt], [t, 30], [t, Q.Vs]); v = Q.Vs; hold = Q.tr; continue; }
+      pts.push([t, v]);
+    }
+    const lo = Math.min(-90, Q.Vs - 5, Q.Vr - 5);
+    drawChart($('cVChart'), cvV, {
+      w: W, h: H, x: [0, win], y: [lo, 40], xlabel: 'time (ms)', ylabel: 'V (mV)',
+      refs: [{ v: Q.Vt, color: C.accent, label: 'V_th', dash: [6, 4] }, { v: r.Vinf, color: C.muted, label: 'V_∞', dash: [2, 3] }],
+      lines: [{ pts, color: C.ink, width: 1.8 }],
+    });
+    const fi = [], Imax = 25;
+    for (let I = 0; I <= Imax + 1e-9; I += 0.05) fi.push([I, lif(I).f]);
+    const top = niceUp(Math.max(50, Q.tr > 0 ? Math.min(1000 / Q.tr, 2 * Math.max(...fi.map(p => p[1]))) : Math.max(...fi.map(p => p[1]))) * 1.1);
+    drawChart($('cFIChart'), cvF, {
+      w: FW, h: FH, x: [0, Imax], y: [0, top], xlabel: 'current (µA/cm²)', ylabel: 'spikes/s',
+      refs: [{ v: Q.tr > 0 ? 1000 / Q.tr : NaN, color: C.muted, label: 'ceiling 1/t_ref', dash: [6, 4] },
+             { v: Q.g * (Q.Vt - Q.Vr), color: C.muted, label: 'rheobase', dash: [2, 3], vertical: true }],
+      lines: [{ pts: fi, color: C.accent, width: 2 }],
+      dots: [{ x: Q.I, y: r.f, color: C.accent, r: 5 }],
+    });
+  }
+  bindRange('cI', v => v.toFixed(1) + ' µA/cm²', v => { Q.I = v; calc(); });
+  bindRange('cG', v => v.toFixed(2) + ' mS/cm²', v => { Q.g = v; calc(); });
+  bindRange('cC', v => v.toFixed(1) + ' µF/cm²', v => { Q.C = v; calc(); });
+  bindRange('cVr', v => fmtSigned(v, 0), v => { Q.Vr = v; calc(); });
+  bindRange('cVt', v => fmtSigned(v, 0), v => { Q.Vt = v; calc(); });
+  bindRange('cVs', v => fmtSigned(v, 0), v => { Q.Vs = v; calc(); });
+  bindRange('cTr', v => v.toFixed(1) + ' ms', v => { Q.tr = v; calc(); });
+  colorHooks.push(draw);
+  Frames.onRestore(draw);
+  window.FIRE_CALC = { draw };
+})();
+
+// ---------- tabs, and the Start-here and Try-it buttons ----------
+(() => {
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (tab.id === 'tab-cfi' || tab.id === 'tab-cv') FIRE_CALC.draw();
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.try;
+    if (k === 'calc') { $('lif-calc').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    FIRE_UI.TRY[k]();
+    showTab($('tab-cell'));
+    if (b.closest('.try')) $('fire-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

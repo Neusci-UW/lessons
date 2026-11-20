@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensory Receptors: from Stimulus to Spikes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as the other lessons: a touch ending up close on top, the stimulus–response curve below. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --ea:#c0287a; --pos:#d1373f; --neg:#2861c8;
+  --mem:#cdbd92; --memdark:#a8946a; --warm:#b4582a; --chan:#9c7a12;
+  --skin:#efdcc8; --dermis:#f8efe6; --merkel:#cfd9ee; --lam:#b39f7c; --probe:#8b9590; --myelin:#ece3c0;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --ea:#f477b7; --pos:#f0646b; --neg:#6b9cf2;
+    --mem:#6c6046; --memdark:#8d7d58; --warm:#e0915e; --chan:#e0bb5c;
+    --skin:#3b3027; --dermis:#251f1b; --merkel:#3a4763; --lam:#8f7f61; --probe:#6f7974; --myelin:#55503c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --ea:#f477b7; --pos:#f0646b; --neg:#6b9cf2;
+  --mem:#6c6046; --memdark:#8d7d58; --warm:#e0915e; --chan:#e0bb5c;
+  --skin:#3b3027; --dermis:#251f1b; --merkel:#3a4763; --lam:#8f7f61; --probe:#6f7974; --myelin:#55503c;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:110ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.draftnote ul{margin:4px 0 0;padding-left:18px}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+/* calculator, styled like the synaptic current calculator */
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:64px minmax(0,1fr) 112px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:999px;overflow:hidden;align-self:flex-start}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.top.stacked{grid-template-columns:1fr}
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 200px;min-width:140px;max-width:380px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.runbar input[type=number]{width:68px;font:13px var(--font-mono);padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.na{background:var(--na)}.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg)}.dot.chan{background:var(--chan)}
+.dot.acc{background:var(--accent)}.dot.ea{background:var(--ea)}.dot.k{background:var(--k)}
+.swatch{width:16px;height:3px;border-radius:2px;display:inline-block;flex:none}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 28px;align-items:start}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.sgroup{display:flex;flex-direction:column;gap:10px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+.vrow[hidden]{display:none}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:104px minmax(0,1fr) 92px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+.row.dim{opacity:.5}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.check.dim{opacity:.5}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;flex:none}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+button:disabled{opacity:.45;cursor:default}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{font:inherit;font-size:13.5px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);min-width:0;max-width:100%}
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv ul{padding-left:20px}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+table.map{width:100%;border-collapse:collapse;font-size:14px}
+table.map th,table.map td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:500;color:var(--muted);font-size:12.5px}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+.chartcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+/* this page */
+.srgrid{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:16px 32px;align-items:start}
+@media (max-width:900px){.srgrid{grid-template-columns:1fr}}
+.srside{display:flex;flex-direction:column;gap:12px}
+.axrow{display:grid;grid-template-columns:56px minmax(0,1fr);align-items:center;gap:10px;font-size:14px}
+.calcchart{max-width:480px}
+</style>
+</head>
+<body>
+<div class="floatbar" role="group" aria-label="Simulation">
+  <button type="button" id="fbPress" data-copy="pPress" class="primary"></button>
+  <button type="button" id="fbPlay" data-copy="pPlay"></button>
+  <label for="fbSpeed" class="runlab">Speed</label><input type="range" id="fbSpeed" data-copy="pSpeed"><output for="fbSpeed"></output>
+</div>
+<div class="wrap">
+<div class="draftnote"><b>DRAFT</b> · Not yet in the course. Still to check before students see it:
+  <ul>
+    <li>The model is a cartoon: the ending and its first node share one compartment, and the Merkel ending’s adaptation and the Pacinian capsule are simple filters with numbers chosen by hand, not fitted to recordings.</li>
+    <li>The Pacinian capsule here only passes fast changes; it does not reproduce the fall in sensitivity above about 300 Hz. With the capsule removed, a strong press holds the model’s node depolarized and silent after a short burst; this has not been compared with Loewenstein and Mendelson’s records.</li>
+    <li>The two tables in the theory (the four touch endings, and other senses) need checking against a current textbook.</li>
+    <li>The picture of the endings is new and has not had a mock-up review.</li>
+  </ul>
+  The references and their DOIs have been checked.</div>
+<header>
+  <h1>Sensory receptors: from stimulus to spikes</h1>
+  <p>In most of the other lessons the first current comes from an electrode. In your body it comes from the world: a touch, a stretch, light, a chemical. A sensory ending turns the stimulus into a <b>receptor potential</b>, a graded depolarization like an EPSP, and the first node of Ranvier on its axon turns that into a train of spikes whose rate tells the brain how strong the stimulus is. Endings also adapt differently, so the same press is reported as “something is touching you” by one kind and as “something just changed” by another.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>trace the chain from stimulus to spikes: force opens mechanically gated channels (Piezo2) → receptor current → receptor potential → spikes at the first node</li>
+        <li>calculate a receptor potential with Ohm’s law, from the fraction of channels open and their battery near 0 mV</li>
+        <li>explain why the receptor potential is graded and the spikes are not, and how firing rate carries the stimulus strength</li>
+        <li>explain why the response is compressed, growing roughly with the logarithm of the stimulus</li>
+        <li>contrast slowly adapting endings (Merkel: steady pressure) with rapidly adapting ones (Pacinian: change and vibration), and say what the Pacinian capsule does</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-try="sa">1 · A steady press, slowly adapting</button> A Merkel ending under a probe pressed 30 µm into the skin: a receptor potential that sags a little, and spikes for as long as the press lasts.</li>
+    <li><button class="chip" data-try="hard">2 · Press harder</button> Ten times deeper, 300 µm: a bigger receptor potential and a faster rate, but only about three times the rate. The channels are running out.</li>
+    <li><button class="chip" data-try="ra">3 · The same press, rapidly adapting</button> A Pacinian corpuscle: a burst when the press starts and another when it ends, nothing in between.</li>
+    <li><button class="chip" data-try="vib">4 · Vibration</button> A 250 Hz vibration only 5 µm deep: the Pacinian corpuscle fires once a cycle. Then try it on the Merkel ending: silence. This is how you feel a phone buzz.</li>
+    <li><button class="chip" data-try="ttx">5 · Block the spikes</button> With TTX on the first node the receptor potential is still there. Turning force into current doesn’t need voltage-gated Na⁺ channels; only the spikes do.</li>
+    <li><button class="chip" data-try="sweep">6 · Measure the stimulus–response curve</button> Press at a range of depths in one go, then choose what to plot against what.</li>
+  </ol>
+</section>
+
+<!-- =================== Part 1: the ending, run in time =================== -->
+<h3 class="part">1 · A touch ending up close: probe, channels, receptor potential, spikes</h3>
+<div class="top stacked">
+  <section class="card stage" id="end-card">
+    <div class="tabs" role="tablist" aria-label="Ending">
+      <button type="button" role="tab" id="tab-end" aria-controls="pane-end" aria-selected="true">Ending</button>
+      <button type="button" role="tab" id="tab-endhelp" aria-controls="pane-endhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-endlook" aria-controls="pane-endlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-end" aria-labelledby="tab-end">
+      <canvas id="pic" aria-label="A probe pressing on the skin above a sensory ending, its mechanically gated channels, and its axon with the first node of Ranvier where spikes start"></canvas>
+      <div class="runbar">
+        <button id="pPress" class="primary">Press</button>
+        <button id="pPlay" class="primary">Pause</button>
+        <button id="pReset">Reset</button>
+        <label for="pSpeed" class="runlab">Speed</label>
+        <input type="range" id="pSpeed" min="0" max="1000" step="1" value="651">
+        <output id="pSpeedo" for="pSpeed"></output>
+      </div>
+      <div class="legend">
+        <span><i class="dot chan"></i>mechanically gated channel, opening with the press</span>
+        <span><i class="dot na"></i>Na⁺ and other cations coming in</span>
+        <span><i class="dot neg"></i>at rest</span><span><i class="dot pos"></i>depolarized</span>
+        <span><i class="dot pos"></i>red pulse on the axon: a spike on its way to the spinal cord</span>
+      </div>
+      <div class="cgrid">
+        <div class="chartcol"><p class="sect-title">Stimulus: how deep the probe presses</p><canvas id="cS" aria-label="Indentation of the skin over time"></canvas></div>
+        <div class="chartcol"><p class="sect-title">Mechanically gated channels open</p><canvas id="cP" aria-label="Fraction of the ending's mechanically gated channels open over time"></canvas></div>
+        <div class="chartcol"><p class="sect-title">Receptor potential (Na⁺ channels blocked)</p><canvas id="cR" aria-label="Receptor potential over time, recorded with the node's sodium channels blocked"></canvas></div>
+        <div class="chartcol"><p class="sect-title">At the first node: the spikes sent to the brain</p><canvas id="cV" aria-label="Voltage at the first node of Ranvier over time"></canvas></div>
+      </div>
+      <p class="caption" id="pCap"></p>
+    </div>
+    <div class="help" role="tabpanel" id="pane-endhelp" aria-labelledby="tab-endhelp" hidden>
+      <ul>
+        <li><b>The picture:</b> a slice through the skin. The grey rod is a probe pushed into the skin by the depth you set; the deepest presses are drawn smaller than they are, so a 500 µm press fits. Under it is the ending you chose, and its axon running off to the right toward the spinal cord.</li>
+        <li><b>Merkel ending:</b> a Merkel cell (blue, with dots of granules) at the bottom of the epidermis sits on a flattened disc of nerve ending. <b>Pacinian corpuscle:</b> deeper, in the dermis, a bare nerve ending wrapped in thirty or more thin layers of capsule like an onion (fewer are drawn). Watch the layers: the outer ones squash for as long as the probe presses, but the inner ones spring back.</li>
+        <li><b>Channels:</b> the small marks on the nerve ending are mechanically gated channels. One that splits open, gold, lets cations in (orange dots). The share open is the second chart.</li>
+        <li><b>Colour:</b> the ending is tinted by its receptor potential, blue at rest and red when depolarized. The first node, where myelin starts, is tinted by its own voltage and flashes red at each spike. A red pulse runs from it along the axon for each spike, slowed down so you can see it: a real one would cross this stretch in a fraction of a millisecond.</li>
+        <li><b>Charts:</b> one press lasts 800 ms: 100 ms of rest, a 500 ms press (shaded), and 200 ms after release. The traces grow from left to right as the simulation runs; the faint lines are the press before, for comparing. The receptor potential chart is what you would record with the node’s Na⁺ channels blocked, as with TTX; the last chart is the node with its Na⁺ channels working.</li>
+        <li><b>Timing:</b> the speed is in milliseconds of the ending’s time per second of yours. At high speed a vibration is drawn as a blur, because it moves faster than the screen redraws.</li>
+        <li><b>Controls:</b> any change presses again with the new setting. Every steady press is also measured and kept for the stimulus–response curve below.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-endlook" aria-labelledby="tab-endlook" hidden>
+      <ul>
+        <li>Press the Merkel ending at 10 µm: a receptor potential of about 15 mV, but no spikes. It is graded, like an EPSP, and too small to bring the node to threshold. At 30 µm the node fires through the whole press.</li>
+        <li>Watch the Merkel ending’s channels during a steady press: some close again over a few hundred milliseconds. The receptor potential sags a little and the firing slows: slow adaptation.</li>
+        <li>Press the Pacinian corpuscle: its inner layers squash only while the probe is moving in or out. The channels open twice, at the start and at the end, and the node fires a burst each time.</li>
+        <li>Give the Pacinian corpuscle a 5 µm vibration and slow the speed right down: one spike for each push of the probe. Lower the frequency to 20 or 50 Hz and it fires several spikes per cycle.</li>
+        <li>Remove the Pacinian capsule and press lightly (1 µm): the bare ending now has a lasting receptor potential and keeps firing. Most of the corpuscle’s fast adaptation is in its capsule.</li>
+        <li>Add TTX: the spikes go, the receptor potential stays.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">First node: firing rate now</span>
+      <span class="vnum" id="vRate">—</span>
+      <div class="vrow"><span>receptor potential now</span><b id="vRec">—</b></div>
+      <div class="vrow"><span>channels open now</span><b id="vOpen">—</b></div>
+      <div class="vrow"><span>spikes in the first 100 ms of the press</span><b id="vEarly">—</b></div>
+      <div class="vrow"><span>rate late in the press (300–600 ms)</span><b id="vLate">—</b></div>
+      <div class="vrow"><span>spikes after release</span><b id="vAfter">—</b></div>
+      <div class="vrow" id="vCycRow" hidden><span>spikes per vibration cycle</span><b id="vCyc">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The ending and the stimulus</legend>
+      <div class="sgroup">
+        <span class="gtitle">Ending</span>
+        <div class="btns" role="group" aria-label="Ending">
+          <button type="button" class="chip" data-end="sa" aria-pressed="true">Merkel (slowly adapting)</button><button type="button" class="chip" data-end="ra" aria-pressed="false">Pacinian (rapidly adapting)</button>
+        </div>
+        <label class="check" for="pCapsule" id="pCapsuleLab"><input type="checkbox" id="pCapsule" checked>Capsule around the Pacinian ending</label>
+        <span class="caption" id="pEndCap"></span>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Stimulus</span>
+        <div class="btns" role="group" aria-label="Stimulus">
+          <button type="button" class="chip" data-how="step" aria-pressed="true">Steady press</button><button type="button" class="chip" data-how="vib" aria-pressed="false">Vibration</button>
+        </div>
+        <div class="row"><label for="pAmp">Depth</label><input type="range" id="pAmp" min="0" max="1000" step="1" value="547"><output id="pAmpo" for="pAmp"></output>
+          <span class="hint">how far the probe pushes into the skin (the deepest point of each push, for vibration)</span></div>
+        <div class="row" id="pFRow"><label for="pF">Vibration</label><input type="range" id="pF" min="0" max="1000" step="1" value="900"><output id="pFo" for="pF"></output>
+          <span class="hint">cycles per second, for the vibration stimulus</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">Drugs</span>
+        <label class="check" for="pTTX"><input type="checkbox" id="pTTX">TTX (tetrodotoxin) at the first node: blocks its voltage-gated Na⁺ channels</label>
+        <span class="caption">the mechanically gated channels are not affected</span>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 2: stimulus–response curve =================== -->
+<h3 class="part">2 · Strength into rate: the stimulus–response curve</h3>
+<section class="card stage" id="sr-card">
+  <div class="tabs" role="tablist" aria-label="Stimulus–response">
+    <button type="button" role="tab" id="tab-sr" aria-controls="pane-sr" aria-selected="true">Curve</button>
+    <button type="button" role="tab" id="tab-srhelp" aria-controls="pane-srhelp" aria-selected="false" tabindex="-1">How to read</button>
+  </div>
+  <div role="tabpanel" id="pane-sr" aria-labelledby="tab-sr">
+    <div class="srgrid">
+      <div class="chartcol"><canvas id="srC" aria-label="The measure you chose against the depth of each press"></canvas><div class="legend" id="srLeg"></div></div>
+      <div class="srside">
+        <p class="caption">Each steady press in Part 1 is measured and kept here. Choose what goes on each axis.</p>
+        <div class="axrow"><label for="srY">Y axis</label><select id="srY">
+          <option value="">Choose…</option>
+          <option value="late">firing rate late in the press (spikes/s)</option>
+          <option value="early">spikes in the first 100 ms of the press</option>
+          <option value="after">spikes after release</option>
+          <option value="rpPeak">receptor potential, peak (mV above rest)</option>
+          <option value="rpLate">receptor potential, late in the press (mV above rest)</option>
+        </select></div>
+        <div class="axrow"><label for="srX">X axis</label><select id="srX">
+          <option value="">Choose…</option>
+          <option value="lin">depth of the press (µm)</option>
+          <option value="log">depth of the press (µm), log scale</option>
+        </select></div>
+        <div class="runbar">
+          <button id="srSweep">Sweep</button>
+          <span class="caption">steady presses from <input type="number" id="srA" min="1" max="500" step="any" value="3" aria-label="Shallowest press, µm"> to <input type="number" id="srB" min="1" max="500" step="any" value="500" aria-label="Deepest press, µm"> µm in <input type="number" id="srN" min="2" max="24" step="1" value="12" aria-label="Number of presses"> steps, on the ending set in Part 1</span>
+          <button id="srClear">Clear</button>
+        </div>
+        <p class="caption" id="srCount"></p>
+      </div>
+    </div>
+  </div>
+  <div class="help" role="tabpanel" id="pane-srhelp" aria-labelledby="tab-srhelp" hidden>
+    <ul>
+      <li><b>Points:</b> one per steady press, coloured by the ending (and, for the Pacinian, whether its capsule was on). Hollow points were pressed with TTX. A ring marks the latest press. Pressing again at the same depth replaces the old point.</li>
+      <li><b>Sweep</b> makes a series of steady presses on the ending set in Part 1, spaced evenly on a log scale between the two depths, and works them out at once instead of playing them.</li>
+      <li><b>The measures:</b> the rate late in the press counts spikes from 300 to 600 ms (after the first 200 ms of the press) and divides by 0.3 s. The receptor potential is measured with the node’s Na⁺ channels blocked, as millivolts above rest: its highest point, or its average over the last 100 ms of the press.</li>
+      <li><b>Log scale:</b> each step along the axis multiplies the depth by the same factor (1, 10, 100 µm), as the decibel scale does for loudness. A response that grows with the logarithm of the stimulus is a straight line on it.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">The stimulus and the response</p>
+      <dl class="unitlist">
+        <dt>µm</dt><dd>micrometres, for how far the skin is pushed in. A hair is about 70 µm thick; at 250 Hz your fingertip can feel a vibration well under 1 µm deep.</dd>
+        <dt>Hz</dt><dd>hertz, cycles per second, for vibration.</dd>
+        <dt>spikes/s</dt><dd>firing rate: spikes per second. A touch fibre can fire a few hundred spikes a second at most.</dd>
+        <dt>ms</dt><dd>milliseconds, for time. One spike lasts about 1 ms.</dd>
+        <dt>mV</dt><dd>millivolts, for voltage: inside relative to outside. The receptor potential is given as millivolts above rest.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">For a patch of membrane, as in the Hodgkin–Huxley lesson</p>
+      <dl class="unitlist">
+        <dt>P<sub>open</sub></dt><dd>the fraction of the mechanically gated channels open, from 0 (none) to 1 (all).</dd>
+        <dt>mS/cm²</dt><dd>millisiemens per square centimetre of membrane, for conductance (1/resistance). g<sub>mech</sub> is the conductance if every mechanically gated channel were open.</dd>
+        <dt>µA/cm²</dt><dd>microamps per square centimetre, for current. 0.1 mS/cm² × 70 mV = 7 µA/cm². Negative when positive charge flows into the cell.</dd>
+        <dt>µF/cm²</dt><dd>the membrane’s capacitance, 1 µF/cm². 1 µA/cm² into it changes V by 1 mV every ms.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="sentheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">Transduction</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">Receptor potential to spikes</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Coding strength</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Adaptation</button>
+    <button type="button" role="tab" id="tab-th5" aria-controls="pane-th5" aria-selected="false" tabindex="-1">Other senses</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Pressing the skin stretches the membrane of a nerve ending, and stretch opens channels in it. They let positive ions in, mostly Na⁺, so the ending depolarizes. Press harder and more channels open: this depolarization, the receptor potential, grows with the press, the way an EPSP grows with the transmitter released.</p>
+      <h3>A channel opened by force</h3>
+      <p>The membrane of a touch ending holds <em>mechanically gated</em> channels. The main one in touch, and in the stretch receptors of muscle, is <b>Piezo2</b>: a large protein shaped like a three-bladed propeller that sits in the membrane and opens when the membrane around it is stretched. Mice without Piezo2 in their touch endings can hardly feel light touch at all.</p>
+      <p>Piezo2 is a <em>cation</em> channel: it lets through Na⁺, K⁺ and some Ca²⁺. Like the AMPA channel in The Chemical Synapse, a channel that passes both Na⁺ (battery +60 mV) and K⁺ (battery −90 mV) has a battery in between, near 0 mV. We call it E<sub>rec</sub>, the receptor channels’ reversal potential.</p>
+      <h3>Ohm’s law, once more</h3>
+      <p>Once open, the channels are one more conductance with its own battery. The current through them is their conductance times the driving force:</p>
+      <div class="eq">\[ I_\mathrm{rec} = g_\mathrm{rec}\,(V - E_\mathrm{rec}), \qquad g_\mathrm{rec} = g_\mathrm{mech}\,P_\mathrm{open}, \qquad E_\mathrm{rec} \approx 0\ \mathrm{mV} \]</div>
+      <p>g<sub>mech</sub> is the conductance if every channel were open and P<sub>open</sub> the fraction open, which the press sets. At rest V is far below 0 mV, so the current is inward and depolarizes the ending. The resting conductance pulls back toward rest, and V settles where the two currents cancel: a weighted average of the two batteries, the same formula as for the resting voltage in Membrane Potential.</p>
+      <div class="eq">\[ V = \frac{g_\mathrm{rest}\,E_\mathrm{rest} + g_\mathrm{rec}\,E_\mathrm{rec}}{g_\mathrm{rest} + g_\mathrm{rec}} \]</div>
+      <p><b>A worked number</b> (the Merkel ending of the simulation, pressed 30 µm): 37.5% of the channels open, so g<sub>rec</sub> = 0.25 × 0.375 ≈ 0.094 mS/cm². With g<sub>rest</sub> = 0.15 mS/cm² and E<sub>rest</sub> = −70 mV,</p>
+      <div class="eq">\[ V = \frac{0.15 \times (-70) + 0.094 \times 0}{0.15 + 0.094} \approx -43\ \mathrm{mV}, \]</div>
+      <p>a receptor potential of about 27 mV. The simulation gives about 25 mV at its peak: a little less, because the depolarization also opens a few of the node’s K⁺ channels, which pull back toward rest. The calculator below does this sum for any press.</p>
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>When V has stopped changing, no current charges the capacitor, so the receptor current in and the resting current out add to zero:</p>
+        <div class="eq">\[ g_\mathrm{rest}(V - E_\mathrm{rest}) + g_\mathrm{rec}(V - E_\mathrm{rec}) = 0 \]</div>
+        <p>Collect the terms with V:</p>
+        <div class="eq">\[ V\,(g_\mathrm{rest} + g_\mathrm{rec}) = g_\mathrm{rest}E_\mathrm{rest} + g_\mathrm{rec}E_\mathrm{rec} \]</div>
+        <p>and divide. Subtracting E<sub>rest</sub> from both sides gives the receptor potential itself:</p>
+        <div class="eq">\[ V - E_\mathrm{rest} = \frac{g_\mathrm{rec}}{g_\mathrm{rest} + g_\mathrm{rec}}\,\bigl(E_\mathrm{rec} - E_\mathrm{rest}\bigr) \]</div>
+        <p>The fraction in front is never more than 1, so the receptor potential can never be more than E<sub>rec</sub> − E<sub>rest</sub>, about 70 mV, however many channels open.</p>
+      </details>
+      <h3>Graded, not all-or-none</h3>
+      <p>The ending itself has few voltage-gated Na⁺ channels, so it does not fire: its voltage just follows the press, bigger for a bigger press and lasting as long as the channels stay open. That is why it is called a receptor (or generator) potential, and why it survives TTX, which blocks only the voltage-gated Na⁺ channels.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="small">A light press, 10 µm</button> A receptor potential of about 15 mV, and no spikes at all.</p>
+      <p><button class="chip" data-try="sa">A 30 µm press</button> About 25 mV: enough for the node to fire.</p>
+      <p><button class="chip" data-try="ttx">Add TTX</button> No spikes; the receptor potential is unchanged.</p>
+      <p><button class="chip" data-try="calc:s:30">The calculator at 30 µm</button> The worked number: about 27 mV.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The ending doesn’t fire. Its receptor current spreads to the first node of Ranvier on its axon, where there are plenty of voltage-gated Na⁺ channels, and the node fires whenever it is pushed past threshold. The harder it is pushed, the sooner it gets back to threshold after each spike, so a bigger receptor potential means a higher firing rate.</p>
+      <h3>Where the spike starts</h3>
+      <p>The receptor current flows into the ending and spreads along the axon passively, as in Passive Properties: Space, shrinking with distance. The first node of Ranvier, where the myelin starts, is close enough to feel it, and it is packed with voltage-gated Na⁺ channels. It plays the part the axon initial segment plays in Summation and the Spike Trigger Zone: the place where the graded signal becomes spikes. In the simulation the ending and the node are lumped together as one patch of membrane, which is why the receptor potential chart is the node’s voltage with its Na⁺ channels blocked.</p>
+      <h3>Threshold</h3>
+      <p>The node fires once the receptor potential lifts it about 20 mV above rest (in the model, a press of about 16 µm on the Merkel ending). A light press gives a smaller receptor potential and no spikes at all: the brain hears nothing, however long it lasts.</p>
+      <h3>More current, more spikes per second</h3>
+      <p>After each spike the node’s voltage falls back below threshold, and the receptor current has to charge the membrane up again before the next spike. A bigger current charges it faster, so the spikes come closer together. This is the f–I relation of Firing Rate and Firing Patterns, with the current coming from the stimulus instead of an electrode. The spike train is the code: each spike is the same size, and the stimulus strength is in how often they come.</p>
+      <details class="fullderiv">
+        <summary>Show why a bigger current fires faster</summary>
+        <p>Treat the node between spikes as the RC circuit of Passive Properties: Time. After a spike V starts again near rest, and the receptor current charges the membrane toward its steady value, rest plus the receptor potential ΔV<sub>rec</sub>, with time constant τ:</p>
+        <div class="eq">\[ V(t) - E_\mathrm{rest} = \Delta V_\mathrm{rec}\,\bigl(1 - e^{-t/\tau}\bigr) \]</div>
+        <p>It reaches threshold, ΔV<sub>th</sub> above rest, when</p>
+        <div class="eq">\[ t_\mathrm{th} = \tau \ln\frac{\Delta V_\mathrm{rec}}{\Delta V_\mathrm{rec} - \Delta V_\mathrm{th}} \]</div>
+        <p>so the rate is about 1/(t<sub>ref</sub> + t<sub>th</sub>), with t<sub>ref</sub> the refractory time after each spike. If ΔV<sub>rec</sub> is less than ΔV<sub>th</sub> the node never fires. Just above threshold t<sub>th</sub> is long and the rate low; the bigger ΔV<sub>rec</sub>, the shorter t<sub>th</sub> and the higher the rate. A real node also has K⁺ channels that stay open for a while after each spike and push V below rest, so it fires more slowly than this simple sum says, but the shape is the same.</p>
+      </details>
+      <h3>Recording it</h3>
+      <p>Adrian and Zotterman (1926) recorded from a single stretch receptor in a frog muscle: the spikes were all the same size, and pulling harder made them come faster. Katz (1950) then recorded the receptor potential itself, from a muscle spindle, and found it graded with the stretch and still there when the spikes were blocked.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="small">10 µm: below threshold</button> A receptor potential, no spikes.</p>
+      <p><button class="chip" data-try="sa">30 µm</button> About 53 spikes/s late in the press.</p>
+      <p><button class="chip" data-try="hard">300 µm</button> About 160 spikes/s.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Doubling a light touch nearly doubles the response, but doubling a firm press adds only a little: most of the channels are already open, and the ending is already close to the channels’ battery. The response is compressed: over much of its range it grows roughly with the logarithm of the stimulus, so one axon can report presses from barely felt to firm.</p>
+      <h3>Two things run out</h3>
+      <p><b>The channels.</b> The fraction open can’t go past 1. In the model it rises with the depth s of the press as</p>
+      <div class="eq">\[ P_\mathrm{open} = \frac{s}{s + s_{1/2}} \]</div>
+      <p>where s<sub>1/2</sub> is the depth that opens half of them (50 µm for the Merkel ending). Ten times the press, from 30 to 300 µm, raises P<sub>open</sub> from 0.375 to 0.857: not even 2.3 times.</p>
+      <p><b>The driving force.</b> As the ending depolarizes, V gets closer to E<sub>rec</sub>, so each open channel passes less current. The receptor potential can never reach E<sub>rec</sub> − E<sub>rest</sub>, about 70 mV. In the simulation the receptor potential goes from about 25 to 33 mV for that tenfold press, and the late firing rate from about 53 to 160 spikes/s: three times, for ten times the press.</p>
+      <details class="fullderiv">
+        <summary>Show why the channel curve looks logarithmic</summary>
+        <p>How steeply P<sub>open</sub> rises for each step along a log axis is its slope against ln s:</p>
+        <div class="eq">\[ \frac{dP_\mathrm{open}}{d\ln s} = s\,\frac{dP_\mathrm{open}}{ds} = \frac{s\,s_{1/2}}{(s + s_{1/2})^2} \]</div>
+        <p>This is largest, 1/4, at s = s<sub>1/2</sub>, and changes slowly around it: from s<sub>1/2</sub>/3 to 3s<sub>1/2</sub> it stays above 3/16, and P<sub>open</sub> climbs from 0.25 to 0.75, nearly a straight line on a log axis. Far below s<sub>1/2</sub>, P<sub>open</sub> ≈ s/s<sub>1/2</sub> grows in proportion to s; far above, it hardly grows at all.</p>
+      </details>
+      <h3>Why it helps</h3>
+      <p>An axon can’t fire faster than a few hundred spikes a second, yet you can feel presses that differ a hundredfold or more. Compressing the scale, so that each tenfold step in the press adds a similar amount to the rate instead of multiplying it by ten, fits that range into the rates one axon can fire. (The model’s Merkel ending compresses even more than that above about 100 µm, where nearly all its channels are open.) It is the same compression as the decibel scale for sound, and it is why you notice a change in a stimulus by its ratio, not its size: adding one candle to a dark room is obvious, adding one to a lit stadium is not. A stronger stimulus also recruits more endings, and their axons together extend the range further.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="sweep">Sweep the depth</button> Then plot the late rate against depth, on a linear and then on a log scale.</p>
+      <p><button class="chip" data-try="calc:s:300">The calculator at 300 µm</button> Ten times the worked number’s press: the receptor potential is only about 1.5 times bigger.</p>
+      <p><button class="chip" data-try="calc:g:5">g<sub>mech</sub> 20 times bigger</button> The receptor potential creeps toward its ceiling, E<sub>rec</sub> − E<sub>rest</sub>, and never reaches it.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Some endings keep firing for as long as a stimulus lasts and report how strong it is (slowly adapting); others fire only when it changes (rapidly adapting) and report movement and vibration. A Pacinian corpuscle does its adapting mechanically: its onion of capsule layers passes on quick changes and soaks up steady pressure.</p>
+      <h3>Four touch endings in the skin of your hand</h3>
+      <table class="map">
+        <tr><th>Ending</th><th>Adapts</th><th>Reports best</th></tr>
+        <tr><td>Merkel cell and its nerve disc</td><td>slowly</td><td>steady pressure, edges and fine shapes (reading Braille)</td></tr>
+        <tr><td>Ruffini ending</td><td>slowly</td><td>skin stretch, as when the fingers or hand move</td></tr>
+        <tr><td>Meissner corpuscle</td><td>rapidly</td><td>light flutter, about 5–50 Hz, and slip of an object in the grip</td></tr>
+        <tr><td>Pacinian corpuscle</td><td>rapidly</td><td>vibration, about 50–500 Hz, most sensitive near 250 Hz</td></tr>
+      </table>
+      <p>Muscle spindles, which report how stretched a muscle is (they start the knee-jerk in Simple Circuits), adapt slowly too, with a burst while the stretch is changing.</p>
+      <h3>Slowly adapting: the Merkel ending</h3>
+      <p>The firing rate is highest at the start of the press and then settles to a lower, steady rate that lasts as long as the press. In a real Merkel ending two cells share the work: the nerve ending’s own Piezo2 channels give the burst at the start, and the Merkel cell, which has Piezo2 too, keeps the ending firing through the press. The model lumps both into one set of channels, some of which close again over a few hundred milliseconds.</p>
+      <h3>Rapidly adapting: the Pacinian capsule</h3>
+      <p>The Pacinian corpuscle’s ending sits inside dozens of thin layers of capsule with fluid between them. Squeeze it slowly and the fluid has time to flow, the layers slide and settle, and the steady pressure is taken up by the outer layers; the core, with the ending, springs back almost to its rest shape. Only a quick change gets through to the core before the layers can settle. So the ending is squeezed when the press starts, again when it ends, and on every push of a vibration.</p>
+      <p>Peel the capsule away and the bare ending’s receptor potential lasts through a steady press: the capsule does most of the adapting (Loewenstein and Mendelson, 1965). The node adds some adaptation of its own, which this model leaves out.</p>
+      <details class="fullderiv">
+        <summary>Show the model’s capsule</summary>
+        <p>The capsule is modelled as a slow copy of the press, x<sub>slow</sub>, that follows the actual depth x with a time constant τ<sub>cap</sub> = 4 ms, like the voltage of the RC circuit following a step:</p>
+        <div class="eq">\[ \tau_\mathrm{cap}\,\frac{dx_\mathrm{slow}}{dt} = x - x_\mathrm{slow} \]</div>
+        <p>The ending feels only the part the capsule has not yet taken up, |x − x<sub>slow</sub>|. For a steady press this dies away within a few τ<sub>cap</sub>; for a vibration much faster than 1/(2πτ<sub>cap</sub>) ≈ 40 Hz, x<sub>slow</sub> can’t keep up and stays near the average depth, so nearly the whole vibration gets through. That is a high-pass filter, the same circuit as a capacitor in series with a resistor. Loewenstein and Skalak (1966) modelled the real capsule with springs and dashpots (shock absorbers) and found it acts as just such a filter.</p>
+        <p>The Pacinian ending in the model also has more sensitive channels (s<sub>1/2</sub> = 5 µm instead of 50 µm) and a small, leaky first node (resting conductance 1 mS/cm², time constant about 1 ms), so it can fire again within each 4 ms cycle of a 250 Hz vibration.</p>
+      </details>
+      <h3>Why have both?</h3>
+      <p>Each kind reports something the other leaves out. Merkel endings tell you that a pen is still in your hand and how hard you hold it; Pacinian corpuscles tell you that it has just touched the paper and feel the vibration of the nib running over it. Mountcastle and his colleagues showed that the vibration a person can just feel at about 250 Hz matches what a Pacinian fibre can just detect.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="sa">Merkel, steady press</button> Firing through the whole press, a little slower at the end.</p>
+      <p><button class="chip" data-try="ra">Pacinian, steady press</button> A burst at the start and another at the end.</p>
+      <p><button class="chip" data-try="vib">Pacinian, 250 Hz</button> One spike per cycle.</p>
+      <p><button class="chip" data-try="vib50">Pacinian, 50 Hz</button> Several spikes per cycle.</p>
+      <p><button class="chip" data-try="vibsa">Merkel, 250 Hz</button> The same 5 µm vibration: silence.</p>
+      <p><button class="chip" data-try="cap1">Pacinian, 1 µm press</button> No spikes at all: the capsule lets only a brief squeeze through.</p>
+      <p><button class="chip" data-try="nocap">Now remove the capsule</button> The same 1 µm press: a lasting receptor potential and steady firing.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th5" aria-labelledby="tab-th5" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Every sense uses the same plan. The stimulus opens or closes channels in a receptor cell, the change in current makes a graded receptor potential, and spikes, somewhere along the way, carry the message to the brain. What differs is what opens the channels.</p>
+      <table class="map">
+        <tr><th>Sense</th><th>Receptor cell</th><th>What the stimulus does</th><th>Receptor potential</th></tr>
+        <tr><td>Touch, muscle stretch</td><td>nerve endings in skin and muscle</td><td>stretch opens Piezo2 channels</td><td>depolarizing</td></tr>
+        <tr><td>Hearing, balance</td><td>hair cells</td><td>bending the hair bundle pulls on tip links, which open channels</td><td>depolarizing one way, hyperpolarizing the other</td></tr>
+        <tr><td>Heat, pain</td><td>nociceptor endings</td><td>heat above about 43 °C, or capsaicin from chilli, opens TRPV1 channels</td><td>depolarizing</td></tr>
+        <tr><td>Smell</td><td>olfactory neurons</td><td>odorant receptor → G protein → cAMP opens cation channels</td><td>depolarizing</td></tr>
+        <tr><td>Sight</td><td>rods and cones</td><td>light → G protein → less cGMP, so cation channels close</td><td>hyperpolarizing</td></tr>
+      </table>
+      <h3>Direct and indirect</h3>
+      <p>Touch, hearing and heat open their channels directly, within a fraction of a millisecond, which suits stimuli that change fast. Smell, sweet and bitter taste, and sight go through a receptor and a G protein first, the machinery of Slow Signals: Metabotropic Receptors and Neuromodulation. That is slower but amplifies enormously: one photon can close hundreds of channels in a rod.</p>
+      <h3>Not every receptor cell fires</h3>
+      <p>Hair cells, rods, cones and taste cells have no axon of their own. Their receptor potential changes how much transmitter they release onto a nerve fibre, as in The Chemical Synapse, and that fibre fires the spikes. Photoreceptors even run backwards: in the dark their channels are open and they release transmitter steadily; light closes the channels, hyperpolarizes them, and cuts the release.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="ttx">The receptor potential alone</button> With TTX, what a hair cell or a rod does: a graded voltage and no spikes.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Adrian ED, Zotterman Y (1926).</b> The impulses produced by sensory nerve-endings. Part 2. The response of a single end-organ. <i>Journal of Physiology</i> 61:151–171. <a href="https://doi.org/10.1113/jphysiol.1926.sp002281" target="_blank" rel="noopener">doi:10.1113/jphysiol.1926.sp002281</a><br><span class="why">Recording from one stretch receptor: the stimulus strength is coded by how often the spikes come, and the ending adapts.</span></li>
+        <li><b>Katz B (1950).</b> Depolarization of sensory terminals and the initiation of impulses in the muscle spindle. <i>Journal of Physiology</i> 111:261–282. <a href="https://doi.org/10.1113/jphysiol.1950.sp004479" target="_blank" rel="noopener">doi:10.1113/jphysiol.1950.sp004479</a><br><span class="why">The receptor potential itself: graded with stretch, and the spikes it sets off.</span></li>
+        <li><b>Loewenstein WR, Mendelson M (1965).</b> Components of receptor adaptation in a Pacinian corpuscle. <i>Journal of Physiology</i> 177:377–397. <a href="https://doi.org/10.1113/jphysiol.1965.sp007598" target="_blank" rel="noopener">doi:10.1113/jphysiol.1965.sp007598</a><br><span class="why">With the capsule removed the receptor potential lasts through a steady press: the capsule makes the corpuscle rapidly adapting.</span></li>
+        <li><b>Loewenstein WR, Skalak R (1966).</b> Mechanical transmission in a Pacinian corpuscle. An analysis and a theory. <i>Journal of Physiology</i> 182:346–378. <a href="https://doi.org/10.1113/jphysiol.1966.sp007827" target="_blank" rel="noopener">doi:10.1113/jphysiol.1966.sp007827</a><br><span class="why">The layers and fluid of the capsule as springs and dashpots: a filter that passes fast changes and holds back slow ones.</span></li>
+        <li><b>Talbot WH, Darian-Smith I, Kornhuber HH, Mountcastle VB (1968).</b> The sense of flutter-vibration: comparison of the human capacity with response patterns of mechanoreceptive afferents from the monkey hand. <i>Journal of Neurophysiology</i> 31:301–334. <a href="https://doi.org/10.1152/jn.1968.31.2.301" target="_blank" rel="noopener">doi:10.1152/jn.1968.31.2.301</a><br><span class="why">Flutter is felt through rapidly adapting endings near the surface, vibration through Pacinian corpuscles, which follow it one spike per cycle.</span></li>
+        <li><b>Johansson RS, Vallbo ÅB (1979).</b> Tactile sensibility in the human hand: relative and absolute densities of four types of mechanoreceptive units in glabrous skin. <i>Journal of Physiology</i> 286:283–300. <a href="https://doi.org/10.1113/jphysiol.1979.sp012619" target="_blank" rel="noopener">doi:10.1113/jphysiol.1979.sp012619</a><br><span class="why">Recording from single touch fibres in people: the four kinds of ending, slowly and rapidly adapting, and how densely they pack the fingertips.</span></li>
+        <li><b>Pospischil M, Toledo-Rodriguez M, Monier C, et al. (2008).</b> Minimal Hodgkin–Huxley type models for different classes of cortical and thalamic neurons. <i>Biological Cybernetics</i> 99:427–441. <a href="https://doi.org/10.1007/s00422-008-0263-8" target="_blank" rel="noopener">doi:10.1007/s00422-008-0263-8</a><br><span class="why">The Na⁺ and K⁺ channels used for the simulation’s first node (Traub and Miles’ kinetics, in their fast-spiking form).</span></li>
+        <li><b>Coste B, Mathur J, Schmidt M, et al. (2010).</b> Piezo1 and Piezo2 are essential components of distinct mechanically activated cation channels. <i>Science</i> 330:55–60. <a href="https://doi.org/10.1126/science.1193270" target="_blank" rel="noopener">doi:10.1126/science.1193270</a><br><span class="why">The discovery of the mechanically gated channels themselves.</span></li>
+        <li><b>Maksimovic S, Nakatani M, Baba Y, et al. (2014).</b> Epidermal Merkel cells are mechanosensory cells that tune mammalian touch receptors. <i>Nature</i> 509:617–621. <a href="https://doi.org/10.1038/nature13250" target="_blank" rel="noopener">doi:10.1038/nature13250</a><br><span class="why">The Merkel cell senses touch itself and keeps its nerve ending firing through a steady press.</span></li>
+        <li><b>Woo SH, Ranade S, Weyer AD, et al. (2014).</b> Piezo2 is required for Merkel-cell mechanotransduction. <i>Nature</i> 509:622–626. <a href="https://doi.org/10.1038/nature13251" target="_blank" rel="noopener">doi:10.1038/nature13251</a><br><span class="why">Piezo2 in Merkel cells: they and the nerve ending they touch both sense the press.</span></li>
+        <li><b>Ranade SS, Woo SH, Dubin AE, et al. (2014).</b> Piezo2 is the major transducer of mechanical forces for touch sensation in mice. <i>Nature</i> 516:121–125. <a href="https://doi.org/10.1038/nature13980" target="_blank" rel="noopener">doi:10.1038/nature13980</a><br><span class="why">Without Piezo2 in touch endings and Merkel cells, mice can hardly feel light touch.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="rp-calc">
+  <div class="calc-head">
+    <span class="sect-title">Receptor potential calculator</span>
+  </div>
+  <p class="caption">An ending with no voltage-gated channels: the open mechanically gated channels pull V toward their battery E<sub>rec</sub>, the resting channels pull it back toward E<sub>rest</sub>, and V settles where the two currents cancel.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh">The press</div>
+        <div class="gr"><label for="kS">s</label><input type="range" id="kS" min="0" max="1000" step="1" value="547"><output id="kSo" for="kS"></output></div>
+        <div class="gr"><label for="kH">s<sub>1/2</sub></label><input type="range" id="kH" min="0" max="1000" step="1" value="849"><output id="kHo" for="kH"></output></div>
+        <span class="caption">the depth that opens half the channels: 50 µm for the model’s Merkel ending, 5 µm for its Pacinian one</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot chan"></i> Mechanically gated channels</div>
+        <div class="gr"><label for="kG">g<sub>mech</sub></label><input type="range" id="kG" min="0" max="1000" step="1" value="457"><output id="kGo" for="kG"></output></div>
+        <div class="gr"><label for="kEr">E<sub>rec</sub></label><input type="range" id="kEr" min="-20" max="20" step="1" value="0"><output id="kEro" for="kEr"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">The rest of the ending</div>
+        <div class="gr"><label for="kGr">g<sub>rest</sub></label><input type="range" id="kGr" min="0.05" max="2" step="0.01" value="0.15"><output id="kGro" for="kGr"></output></div>
+        <div class="gr"><label for="kE0">E<sub>rest</sub></label><input type="range" id="kE0" min="-90" max="-50" step="1" value="-70"><output id="kE0o" for="kE0"></output></div>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kRP">—</span><span class="caption">receptor potential, V − E<sub>rest</sub></span></div>
+      <div class="es"><span>P<sub>open</sub> <b id="kP">—</b></span><span>g<sub>rec</sub> <b id="kGrec">—</b></span><span>V <b id="kV">—</b></span><span>receptor current at rest <b id="kI">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <div class="tabs" role="tablist" aria-label="Calculator chart">
+        <button type="button" role="tab" id="tab-kc" aria-controls="pane-kc" aria-selected="true">Receptor potential vs depth</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kc" aria-labelledby="tab-kc">
+        <div class="calcchart"><canvas id="kC" aria-label="Receptor potential against the depth of the press, on a log scale, levelling off below its ceiling"></canvas></div>
+      </div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li><b>The curve:</b> the receptor potential for every depth from 1 to 500 µm, with the settings at left; the dot is the depth set above. The depth axis is a log scale.</li>
+          <li><b>The dashed lines:</b> the receptor potential with every channel open, and above it E<sub>rec</sub> − E<sub>rest</sub>, which it can never reach.</li>
+          <li>This ending has no voltage-gated channels, so the numbers are a little bigger than the simulation’s, whose node has K⁺ channels too.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<script>
+// ---------- shared: colours, numbers, canvas text with subscripts, charts ----------
+const $ = id => document.getElementById(id);
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','ea','pos','neg','mem','memdark','chan','skin','dermis','merkel','lam','probe','myelin']
+    .forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  C.fontBody = cs.getPropertyValue('--font-body').trim() || 'sans-serif';
+  C.fontMono = cs.getPropertyValue('--font-mono').trim() || 'monospace';
+  colorHooks.forEach(f => f());
+}
+readColors();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+if (document.fonts) document.fonts.ready.then(readColors);
+
+const fmt = (v, d = 1) => isFinite(v) ? (+v.toFixed(d)).toString().replace('-', '−') : '—';
+const fmtSigned = (v, d = 1) => isFinite(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(+v.toFixed(d)) : '—';
+const fmtDepth = v => (v < 10 ? fmt(v, 1) : fmt(v, 0)) + ' µm';
+// a slider position 0–1000 ↔ a value on a log scale from lo to hi
+// (values rounded to two significant figures, so the slider lands on 30 µm, not 29.946)
+const logMap = (lo, hi) => ({ v: p => +(lo * Math.pow(hi / lo, p / 1000)).toPrecision(2), p: v => Math.round(1000 * Math.log(v / lo) / Math.log(hi / lo)) });
+function hexMix(a, b, f) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16), m = (s) => Math.round(((pa >> s) & 255) * (1 - f) + ((pb >> s) & 255) * f);
+  return `rgb(${m(16)},${m(8)},${m(0)})`;
+}
+const clamp01 = x => Math.max(0, Math.min(1, x));
+
+// canvas text with real subscripts: "P_open" and "g_{rec}" draw open and rec lowered and smaller
+function fillSub(g, text, x, y, align = 'left') {
+  const parts = String(text).split(/_(\{[^}]*\}|[^\s_,;:)(]+)/);
+  const size = parseFloat(g.font) || 12, family = g.font.replace(/^.*?[\d.]+px\s*/, '');
+  const base = g.font, small = `${Math.round(size * 0.75)}px ${family}`;
+  const w = parts.reduce((a, p, i) => { g.font = i % 2 ? small : base; return a + g.measureText(p.replace(/[{}]/g, '')).width; }, 0);
+  let cx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  const saveAlign = g.textAlign; g.textAlign = 'left';
+  parts.forEach((p, i) => {
+    const t = p.replace(/[{}]/g, ''); if (!t) return;
+    g.font = i % 2 ? small : base;
+    g.fillText(t, cx, y + (i % 2 ? size * 0.28 : 0));
+    cx += g.measureText(t).width;
+  });
+  g.font = base; g.textAlign = saveAlign;
+}
+
+function niceTicks(a, b, n) {
+  const span = Math.abs(b - a) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(Math.min(a, b) / step) * step; v <= Math.max(a, b) + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(a, b) {
+  const out = [];
+  for (let e = Math.floor(Math.log10(a)); e <= Math.ceil(Math.log10(b)); e++)
+    for (const k of [1, 2, 5]) { const v = k * Math.pow(10, e); if (v >= a * 0.999 && v <= b * 1.001) out.push(v); }
+  return out;
+}
+const niceMax = v => { const m = Math.pow(10, Math.floor(Math.log10(v))); return [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].map(k => k * m).find(x => x >= v * 0.999) || 10 * m; };
+const fmtTick = v => Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('en-US') : fmt(v, 3);
+
+/* one chart, drawn now. s: { h, square, x:[a,b], y:[lo,hi], xlog, xlab, ylab, bands:[{x0,x1}], hlines:[{y,label,color,dash}],
+   lines:[{x,y,n,color,w,alpha,dash}], dots:[{x,y,color,r,hollow,ring}], prompt } */
+function plot(cv, s) {
+  const W = cv.clientWidth || (cv.parentElement && cv.parentElement.clientWidth) || 600;
+  const L = s.left ?? 52, R = 14, T = 16, B = s.xlab ? 36 : 22;
+  const H = s.square ? Math.round(W - L - R + T + B) : (s.h || 160);
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + 'px'; }
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const [x0, x1] = s.x, [y0, y1] = s.y;
+  const X = s.xlog ? v => L + Math.log(v / x0) / Math.log(x1 / x0) * (W - L - R) : v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = v => T + (y1 - v) / (y1 - y0) * (H - T - B);
+  g.font = '11px ' + C.fontMono; g.lineWidth = 1;
+  if (!s.prompt) {
+    const xt = s.xlog ? logTicks(x0, x1) : niceTicks(x0, x1, Math.max(3, Math.round((W - L - R) / 90)));
+    const yt = niceTicks(y0, y1, Math.max(3, Math.round((H - T - B) / 40)));
+    g.strokeStyle = C.line; g.fillStyle = C.muted;
+    g.textAlign = 'center'; g.textBaseline = 'top';
+    for (const v of xt) { const x = Math.round(X(v)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.fillText(fmtTick(v), x, H - B + 5); }
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (const v of yt) { const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke(); g.fillText(fmtTick(v), L - 6, y); }
+  }
+  g.strokeStyle = C.muted; g.beginPath(); g.moveTo(L, H - B + .5); g.lineTo(W - R, H - B + .5); g.moveTo(L - .5, T); g.lineTo(L - .5, H - B); g.stroke();
+  g.fillStyle = C.muted; g.font = '12px ' + C.fontBody;
+  if (s.xlab) { g.textBaseline = 'bottom'; fillSub(g, s.xlab, W - R, H - 1, 'right'); }
+  if (s.ylab) { g.textBaseline = 'top'; fillSub(g, s.ylab, 4, 0, 'left'); }
+  if (s.prompt) {
+    g.textBaseline = 'middle'; g.font = '13px ' + C.fontBody;
+    String(s.prompt).split('\n').forEach((line, i, all) => fillSub(g, line, (L + W - R) / 2, (T + H - B) / 2 + (i - (all.length - 1) / 2) * 18, 'center'));
+    return { X, Y };
+  }
+  g.save(); g.beginPath(); g.rect(L, T - 2, W - L - R, H - T - B + 4); g.clip();
+  for (const b of s.bands || []) { g.fillStyle = C.line; g.globalAlpha = 0.45; g.fillRect(X(b.x0), T, X(b.x1) - X(b.x0), H - T - B); g.globalAlpha = 1; }
+  for (const h of s.hlines || []) {
+    g.strokeStyle = h.color || C.muted; g.setLineDash(h.dash === false ? [] : [5, 4]); g.lineWidth = 1;
+    const y = Math.round(Y(h.y)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke();
+    if (h.label) { g.setLineDash([]); g.fillStyle = h.color || C.muted; g.textBaseline = 'bottom'; g.font = '12px ' + C.fontBody; fillSub(g, h.label, W - R - 4, y - 3, 'right'); }
+  }
+  g.setLineDash([]);
+  for (const l of s.lines || []) {
+    const n = Math.min(l.n ?? l.y.length, l.y.length); if (n < 2) continue;
+    g.strokeStyle = l.color; g.lineWidth = l.w || 1.8; g.lineJoin = 'round'; g.globalAlpha = l.alpha ?? 1; g.setLineDash(l.dash ? [6, 4] : []);
+    g.beginPath();
+    const step = Math.max(1, Math.floor(l.y.length / (W * 2)));   // at most two points per pixel
+    for (let i = 0; i < n; i += step) {
+      const xv = l.x[i], yv = Math.max(Math.min(l.y[i], y1 + (y1 - y0)), y0 - (y1 - y0));
+      i ? g.lineTo(X(xv), Y(yv)) : g.moveTo(X(xv), Y(yv));
+    }
+    g.stroke(); g.globalAlpha = 1;
+  }
+  g.setLineDash([]);
+  for (const d of s.dots || []) {
+    const x = X(d.x), y = Y(d.y), r = d.r || 4;
+    g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI);
+    if (d.hollow) { g.fillStyle = C.surface; g.fill(); g.strokeStyle = d.color; g.lineWidth = 1.6; g.stroke(); }
+    else { g.fillStyle = d.color; g.fill(); }
+    if (d.ring) { g.beginPath(); g.arc(x, y, r + 4, 0, 2 * Math.PI); g.strokeStyle = C.ink; g.lineWidth = 1.2; g.stroke(); }
+  }
+  g.restore();
+  return { X, Y };
+}
+
+/* ---------- the model ----------
+   A touch ending and the first node of its axon, lumped into one patch of membrane (units: mV, ms, µF/cm²,
+   mS/cm², µA/cm²). The press opens mechanically gated cation channels, battery E_rec = 0 mV, fraction open
+   P = s/(s + s½) of the depth s the ending feels. The Merkel ending's channels partly close during a steady
+   press (40%, time constant 300 ms); the Pacinian ending feels only what its capsule passes on, |x − x_slow|
+   with x_slow following the depth with τ 4 ms. The node has Na⁺ and K⁺ channels with Traub and Miles'
+   kinetics, as Pospischil et al. (2008) used for fast-spiking cortical cells. Each press is worked out twice,
+   once as it is (or with TTX) and once with the Na⁺ channels blocked: the receptor potential. */
+const Model = (() => {
+  const T = 800, ON = 100, OFF = 600, RAMP = 10, DT = 0.025, EVERY = 4;
+  const END = {
+    sa: { sHalf: 50, gMech: 0.25, gL: 0.15 },   // Merkel
+    ra: { sHalf: 5, gMech: 3, gL: 1 },          // Pacinian: more sensitive channels; a small, leaky (fast) first node
+  };
+  const NODE = { EL: -70, ENa: 50, EK: -90, gNa: 50, gK: 10, VT: -55, Erec: 0 };
+  const vtrap = (x, k) => Math.abs(x / k) < 1e-6 ? k * (1 - x / k / 2) : x / (Math.exp(x / k) - 1);
+  // depth of the press (µm) at time t: a 10 ms ramp in and out; a vibration pushes from 0 to amp and back f times a second
+  function stim(amp, how, f, t) {
+    if (t < ON || t >= OFF + RAMP) return 0;
+    const env = Math.min(1, (t - ON) / RAMP, (OFF + RAMP - t) / RAMP);
+    return how === 'step' ? amp * env : amp * env * 0.5 * (1 - Math.cos(2 * Math.PI * f * (t - ON) / 1000));
+  }
+  function run(o) {
+    const e = END[o.kind], capsule = o.capsule !== false, n = Math.round(T / DT), keep = Math.floor(n / EVERY) + 1;
+    const out = { t: new Float32Array(keep), s: new Float32Array(keep), P: new Float32Array(keep), drive: new Float32Array(keep),
+      V: new Float32Array(keep), R: new Float32Array(keep), spikes: [] };
+    const cells = [{ gNa: o.ttx ? 0 : NODE.gNa, spikes: out.spikes }, { gNa: 0, spikes: [] }];
+    for (const c of cells) {
+      c.v = NODE.EL; const u = c.v - NODE.VT;
+      const am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5), ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5));
+      const an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+      c.m = am / (am + bm); c.h = ah / (ah + bh); c.n = an / (an + bn); c.above = false;
+    }
+    let lp = 0, ad = 0, k = 0;
+    for (let i = 0; i <= n; i++) {
+      const t = i * DT, x = stim(o.amp, o.how, o.f, t);
+      let drive;
+      if (o.kind === 'ra' && capsule) { lp += DT / 4 * (x - lp); drive = Math.abs(x - lp); }   // the capsule passes on only changes
+      else drive = x;
+      let p = drive / (drive + e.sHalf);
+      if (o.kind === 'sa') { ad += DT / 300 * (p - ad); p = Math.max(0, p - 0.4 * ad); }       // some channels close during a steady press
+      const g = e.gMech * p;
+      if (i % EVERY === 0 && k < keep) { out.t[k] = t; out.s[k] = x; out.P[k] = p; out.drive[k] = drive; out.V[k] = cells[0].v; out.R[k] = cells[1].v; k++; }
+      for (const c of cells) {
+        const v = c.v, u = v - NODE.VT;
+        const am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5), ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5));
+        const an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+        c.m += (1 - Math.exp(-DT * (am + bm))) * (am / (am + bm) - c.m);
+        c.h += (1 - Math.exp(-DT * (ah + bh))) * (ah / (ah + bh) - c.h);
+        c.n += (1 - Math.exp(-DT * (an + bn))) * (an / (an + bn) - c.n);
+        const I = c.gNa * c.m ** 3 * c.h * (v - NODE.ENa) + NODE.gK * c.n ** 4 * (v - NODE.EK) + e.gL * (v - NODE.EL) + g * (v - NODE.Erec);
+        c.v = v - DT * I;
+        if (!c.above && c.v > 0) { c.above = true; c.spikes.push(t); }
+        if (c.above && c.v < -20) c.above = false;
+      }
+    }
+    return out;
+  }
+  // what a press did: the numbers in the readouts and on the stimulus–response curve
+  function measure(r, o) {
+    const sp = r.spikes, cnt = (a, b) => sp.filter(t => t >= a && t < b).length;
+    let rpPeak = -Infinity, rpLate = 0, nl = 0;
+    for (let i = 0; i < r.t.length; i++) {
+      const t = r.t[i];
+      if (t >= ON && t < OFF + 50) rpPeak = Math.max(rpPeak, r.R[i]);
+      if (t >= OFF - 100 && t < OFF) { rpLate += r.R[i]; nl++; }
+    }
+    return { early: cnt(ON, ON + 100), late: cnt(ON + 200, OFF) / 0.3, after: cnt(OFF, T), total: sp.length,
+      rpPeak: rpPeak - NODE.EL, rpLate: rpLate / nl - NODE.EL, perCycle: o.how === 'vib' ? sp.length / (o.f * (OFF - ON) / 1000) : NaN };
+  }
+  return { run, measure, stim, END, NODE, T, ON, OFF, RAMP, DT, SAMPLE: DT * EVERY };
+})();
+
+// ---------- Part 2: the stimulus–response curve, from the presses made ----------
+const Curve = (() => {
+  const recs = [];
+  let lastKey = '';
+  const GROUP = {
+    sa: { name: 'Merkel', color: () => C.accent },
+    ra: { name: 'Pacinian', color: () => C.ea },
+    rax: { name: 'Pacinian, capsule removed', color: () => C.k },
+  };
+  const MEAS = {
+    late: ['spikes/s, late in the press'], early: ['spikes in the first 100 ms'], after: ['spikes after release'],
+    rpPeak: ['receptor potential, peak (mV above rest)'], rpLate: ['receptor potential, late (mV above rest)'],
+  };
+  const groupOf = o => o.kind === 'sa' ? 'sa' : (o.capsule ? 'ra' : 'rax');
+  function add(o, m, quiet) {
+    if (o.how !== 'step') return;
+    const g = groupOf(o), key = `${g}|${o.ttx ? 1 : 0}|${o.amp.toPrecision(3)}`;
+    const i = recs.findIndex(r => r.key === key); if (i >= 0) recs.splice(i, 1);
+    recs.push({ key, g, ttx: !!o.ttx, amp: o.amp, m });
+    lastKey = key;
+    if (!quiet) draw();
+  }
+  function clear() { recs.length = 0; lastKey = ''; draw(); }
+  function draw() {
+    const xs = $('srX').value, ys = $('srY').value, cv = $('srC');
+    const n = recs.length;
+    $('srCount').textContent = n ? `${n} ${n === 1 ? 'press' : 'presses'} measured.` : 'No presses measured yet: make a steady press in Part 1, or Sweep.';
+    const xlab = xs === 'log' ? 'depth (µm, log scale)' : xs === 'lin' ? 'depth (µm)' : '';
+    const ylab = ys ? MEAS[ys][0] : '';
+    if (!xs || !ys) { plot(cv, { square: true, x: [0, 1], y: [0, 1], xlab, ylab, prompt: 'Choose what to plot on each axis\n(the X and Y menus)' }); $('srLeg').innerHTML = ''; return; }
+    if (!n) { plot(cv, { square: true, x: [0, 1], y: [0, 1], xlab, ylab, prompt: 'No presses yet:\nmake a steady press, or Sweep' }); $('srLeg').innerHTML = ''; return; }
+    const amps = recs.map(r => r.amp), vals = recs.map(r => r.m[ys]);
+    const lo = Math.min(...amps), hi = Math.max(...amps);
+    const x = xs === 'log' ? [Math.pow(10, Math.floor(Math.log10(lo) * 2) / 2), Math.pow(10, Math.ceil(Math.log10(hi) * 2) / 2)] : [0, niceMax(hi * 1.05)];
+    if (xs === 'log' && x[1] / x[0] < 10) { x[0] /= 3; x[1] *= 3; }
+    const y = [0, niceMax(Math.max(1, ...vals) * 1.08)];
+    const lines = [], dots = [], seen = [];
+    for (const g of ['sa', 'ra', 'rax']) for (const ttx of [false, true]) {
+      const rs = recs.filter(r => r.g === g && r.ttx === ttx).sort((a, b) => a.amp - b.amp);
+      if (!rs.length) continue;
+      const col = GROUP[g].color();
+      seen.push([col, GROUP[g].name + (ttx ? ', with TTX' : ''), ttx]);
+      if (rs.length > 1) lines.push({ x: rs.map(r => r.amp), y: rs.map(r => r.m[ys]), color: col, w: 1.4, alpha: 0.7, dash: ttx });
+      rs.forEach(r => dots.push({ x: r.amp, y: r.m[ys], color: col, r: 4, hollow: ttx, ring: r.key === lastKey }));
+    }
+    plot(cv, { square: true, x, y, xlog: xs === 'log', xlab, ylab, lines, dots });
+    $('srLeg').innerHTML = seen.map(([c, name, ttx]) => `<span><i class="dot" style="${ttx ? `border:1.6px solid ${c};background:transparent` : `background:${c}`}"></i>${name}</span>`).join('');
+  }
+  $('srX').addEventListener('change', draw);
+  $('srY').addEventListener('change', draw);
+  $('srClear').addEventListener('click', clear);
+  colorHooks.push(() => draw());
+  addEventListener('resize', () => requestAnimationFrame(draw));
+  Frames.onRestore(draw);
+  draw();
+  return { add, draw, clear };
+})();
+
+// ---------- Part 1: the ending, run in time ----------
+const Sensory = (() => {
+  const S = { kind: 'sa', how: 'step', amp: 30, f: 250, ttx: false, capsule: true };
+  const ampMap = logMap(0.5, 500), fMap = logMap(5, 400), speedMap = logMap(5, 500);
+  let speed = speedMap.v(+$('pSpeed').value);
+  let trial = null, ghost = null, t = 0, playing = true, dirty = true, autoTimer = 0;
+  const TRAVEL = 20;   // ms of the ending's time a drawn spike takes to cross the picture (a real one: a fraction of a ms)
+
+  // ----- controls -----
+  const showSpeed = () => { $('pSpeedo').textContent = (speed < 10 ? fmt(speed, 1) : fmt(speed, 0)) + ' ms per s'; };
+  function sync() {
+    document.querySelectorAll('[data-end]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.end === S.kind)));
+    document.querySelectorAll('[data-how]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.how === S.how)));
+    $('pAmp').value = ampMap.p(S.amp); $('pAmpo').textContent = fmtDepth(S.amp);
+    $('pF').value = fMap.p(S.f); $('pFo').textContent = fmt(S.f, 0) + ' Hz';
+    $('pFRow').classList.toggle('dim', S.how !== 'vib');
+    $('pTTX').checked = S.ttx;
+    $('pCapsule').checked = S.capsule; $('pCapsule').disabled = S.kind !== 'ra'; $('pCapsuleLab').classList.toggle('dim', S.kind !== 'ra');
+    $('pEndCap').textContent = S.kind === 'sa'
+      ? 'Channels open half way at 50 µm; some close again during a steady press.'
+      : S.capsule ? 'Channels open half way at 5 µm; the capsule passes on only changes in the press.' : 'Capsule removed: the bare ending feels the press itself.';
+  }
+  const autoPress = (delay = 0) => { clearTimeout(autoTimer); autoTimer = setTimeout(() => $('pPress').click(), delay); };
+  document.querySelectorAll('[data-end]').forEach(b => b.addEventListener('click', () => { S.kind = b.dataset.end; sync(); autoPress(); }));
+  document.querySelectorAll('[data-how]').forEach(b => b.addEventListener('click', () => { S.how = b.dataset.how; sync(); autoPress(); }));
+  $('pAmp').addEventListener('input', () => { S.amp = ampMap.v(+$('pAmp').value); $('pAmpo').textContent = fmtDepth(S.amp); autoPress(350); });
+  $('pF').addEventListener('input', () => { S.f = fMap.v(+$('pF').value); $('pFo').textContent = fmt(S.f, 0) + ' Hz'; if (S.how === 'vib') autoPress(350); });
+  $('pTTX').addEventListener('change', () => { S.ttx = $('pTTX').checked; autoPress(); });
+  $('pCapsule').addEventListener('change', () => { S.capsule = $('pCapsule').checked; sync(); autoPress(); });
+  $('pSpeed').addEventListener('input', () => { speed = speedMap.v(+$('pSpeed').value); showSpeed(); });
+  $('pPlay').addEventListener('click', () => { playing = !playing; $('pPlay').textContent = playing ? 'Pause' : 'Play'; });
+  $('pReset').addEventListener('click', () => { trial = null; ghost = null; t = 0; dirty = true; caption(); });
+  $('pPress').addEventListener('click', press);
+
+  function press() {
+    clearTimeout(autoTimer);
+    const o = Object.assign({}, S), r = Model.run(o);
+    let maxR = -Infinity; for (let i = 0; i < r.R.length; i++) if (r.R[i] > maxR) maxR = r.R[i];
+    if (trial) ghost = trial;
+    trial = { o, r, m: Model.measure(r, o), maxR, done: false };
+    t = 0; dirty = true; caption();
+  }
+  function finish() {
+    trial.done = true;
+    Curve.add(trial.o, trial.m);
+    caption();
+  }
+  const idx = r => Math.min(r.t.length - 1, Math.floor(t / Model.SAMPLE));
+
+  // ----- the picture -----
+  const pic = $('pic'), pg = pic.getContext('2d');
+  const CH = 8, chanOrder = [3, 6, 1, 4, 7, 0, 5, 2];   // which channels open first
+  function drawPic() {
+    const W = pic.clientWidth || 900, H = 270;
+    if (pic.width !== Math.round(W * dpr) || pic.height !== Math.round(H * dpr)) { pic.width = Math.round(W * dpr); pic.height = Math.round(H * dpr); pic.style.height = H + 'px'; }
+    const g = pg; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    const o = trial ? trial.o : S, r = trial && trial.r, k = r ? idx(r) : 0;
+    let x = r ? r.s[k] : 0, drive = r ? r.drive[k] : 0;
+    const P = r ? r.P[k] : 0, Rv = r ? r.R[k] : -70, Vn = r ? r.V[k] : -70;
+    // a vibration faster than the screen can show is drawn as a blur around its middle
+    const buzz = r && o.how === 'vib' && o.f * speed / 1000 > 4;
+    const env = r ? Model.stim(1, 'step', 0, t) : 0;
+    if (buzz) { x = o.amp * env / 2; if (o.kind === 'ra' && o.capsule) drive = o.amp * env / 2; }
+    const dpx = s => 34 * Math.log10(1 + s) / Math.log10(501);   // depth drawn in px: compressed, so 500 µm fits
+    const skinW = W, cx = Math.max(150, Math.min(W * 0.24, 300));
+    const ySurf = 64, epi = 46, dip = dpx(x);
+    const bump = (xx, w = 48) => Math.exp(-(((xx - cx) / w) ** 2));
+    const font = (px, mono) => `${px}px ${mono ? C.fontMono : C.fontBody}`;
+    g.font = font(12); g.textBaseline = 'alphabetic';
+
+    // skin: epidermis on top of dermis, both dented by the probe
+    g.fillStyle = C.dermis; g.beginPath(); g.moveTo(0, H);
+    for (let xx = 0; xx <= skinW; xx += 6) g.lineTo(xx, ySurf + dip * bump(xx)); g.lineTo(skinW, H); g.closePath(); g.fill();
+    g.fillStyle = C.skin; g.beginPath();
+    for (let xx = 0; xx <= skinW; xx += 6) g.lineTo(xx, ySurf + dip * bump(xx));
+    for (let xx = skinW; xx >= 0; xx -= 6) g.lineTo(xx, ySurf + epi + 0.8 * dip * bump(xx, 60));
+    g.closePath(); g.fill();
+    g.strokeStyle = C.memdark; g.lineWidth = 1; g.beginPath();
+    for (let xx = 0; xx <= skinW; xx += 6) xx ? g.lineTo(xx, ySurf + dip * bump(xx)) : g.moveTo(xx, ySurf + dip * bump(xx)); g.stroke();
+    g.fillStyle = C.muted; g.textAlign = 'left';
+    g.fillText('epidermis', 8, ySurf + 18); g.fillText('dermis', 8, ySurf + epi + 22);
+
+    // the probe
+    const drawProbe = (d, alpha) => {
+      g.globalAlpha = alpha; g.fillStyle = C.probe;
+      const pw = 24, tip = ySurf + d;
+      g.beginPath(); g.moveTo(cx - pw / 2, -4); g.lineTo(cx - pw / 2, tip - pw / 2); g.arc(cx, tip - pw / 2, pw / 2, Math.PI, 0, true); g.lineTo(cx + pw / 2, -4); g.closePath(); g.fill();
+      g.globalAlpha = 1;
+    };
+    if (buzz) { drawProbe(dpx(o.amp * env), 0.35); drawProbe(0, 0.35); drawProbe(dip, 0.6); }
+    else drawProbe(dip, 1);
+    g.fillStyle = C.muted; g.textAlign = 'left';
+    g.fillText(r ? (buzz ? `probe, buzzing at ${fmt(o.f, 0)} Hz` : `probe: ${fmtDepth(r.s[k])}`) : 'probe', cx + 18, 20);
+
+    const tint = clamp01((Rv + 70) / 40), endCol = hexMix(C.neg, C.pos, tint);
+    const nodeCol = hexMix(C.neg, C.pos, clamp01((Vn + 70) / 60));
+    const nOpen = Math.round(clamp01(P) * CH);
+    const phase = t * 0.02;
+    // one channel at (px, py), pore along the direction (ux, uy) pointing into the ending
+    const chan = (px, py, ux, uy, open, i) => {
+      const vx = -uy, vy = ux, gap = open ? 3 : 0.7, len = 9, wid = 3.4;
+      g.fillStyle = open ? C.chan : C.muted;
+      for (const sgn of [-1, 1]) {
+        const ox = px + vx * sgn * (gap + wid / 2), oy = py + vy * sgn * (gap + wid / 2);
+        g.beginPath(); g.moveTo(ox - ux * len / 2 - vx * wid / 2, oy - uy * len / 2 - vy * wid / 2); g.lineTo(ox + ux * len / 2 - vx * wid / 2, oy + uy * len / 2 - vy * wid / 2);
+        g.lineTo(ox + ux * len / 2 + vx * wid / 2, oy + uy * len / 2 + vy * wid / 2); g.lineTo(ox - ux * len / 2 + vx * wid / 2, oy - uy * len / 2 + vy * wid / 2); g.closePath(); g.fill();
+      }
+      if (open) { const f = (phase + i * 0.29) % 1, d = -9 + f * 16; g.fillStyle = C.na; g.beginPath(); g.arc(px + ux * d, py + uy * d, 2.2, 0, 2 * Math.PI); g.fill(); }
+    };
+    let nodeX, yAx, fiber, front = () => {};
+    if (o.kind === 'sa') {
+      // Merkel cell sitting on its nerve disc at the bottom of the epidermis
+      const sh = 0.75 * dip * bump(cx, 60), my = ySurf + epi - 18 + sh;
+      g.fillStyle = C.merkel; g.strokeStyle = C.line;
+      g.beginPath(); g.ellipse(cx, my, 28, Math.max(7, 13 - dip * 0.08), 0, 0, 2 * Math.PI); g.fill(); g.stroke();
+      g.fillStyle = C.muted; for (const [a, b] of [[-14, 3], [-5, 5], [6, 4], [15, 1], [1, -3], [-9, -3], [11, -4]]) { g.beginPath(); g.arc(cx + a, my + b, 1.6, 0, 2 * Math.PI); g.fill(); }
+      const dy = my + 15;
+      g.fillStyle = endCol; g.beginPath();
+      g.moveTo(cx - 36, dy - 3); g.quadraticCurveTo(cx, dy + 6, cx + 36, dy - 3); g.quadraticCurveTo(cx + 39, dy + 7, cx + 27, dy + 12);
+      g.quadraticCurveTo(cx, dy + 19, cx - 27, dy + 12); g.quadraticCurveTo(cx - 39, dy + 7, cx - 36, dy - 3); g.closePath(); g.fill();
+      for (let i = 0; i < CH; i++) { const px = cx - 29 + i * 58 / (CH - 1); chan(px, dy + 1.5 + 4.5 * (1 - ((px - cx) / 36) ** 2), 0, 1, chanOrder.indexOf(i) < nOpen, i); }
+      yAx = H - 46; nodeX = cx + 84;
+      fiber = () => { g.beginPath(); g.moveTo(cx, dy + 15); g.bezierCurveTo(cx, yAx - 20, cx + 20, yAx, cx + 56, yAx); g.lineTo(nodeX, yAx); };
+      g.fillStyle = C.muted; g.textAlign = 'right';
+      g.fillText('Merkel cell', cx - 36, my + 4);
+      g.fillText('nerve ending (disc)', cx - 40, dy + 16);
+    } else {
+      // Pacinian corpuscle: a bare ending inside layers of capsule, deeper in the dermis. The axon is drawn first
+      // and the layers over it: its first node is inside the corpuscle.
+      const cy = Math.min(H - 84, ySurf + epi + 70) + 0.5 * dip, NL = 8, rx0 = 104, ry0 = 40;
+      const outer = 0.6 * dip, inner = o.capsule ? 0.6 * dpx(drive) : outer, ey = cy + inner * 0.25;
+      yAx = ey; nodeX = cx + 40;
+      fiber = () => { g.beginPath(); g.moveTo(cx + 22, ey); g.lineTo(nodeX, ey); };
+      front = () => {
+        for (let i = 0; i < NL; i++) {
+          const f = i / (NL - 1), sq = outer + (inner - outer) * f;
+          const rx = rx0 - f * 76, ry = Math.max(4, (ry0 - f * 30) - sq * (0.5 - 0.2 * f));
+          if (!o.capsule && i < NL - 1) continue;
+          g.globalAlpha = i === NL - 1 ? 0.9 : 0.5;
+          g.fillStyle = hexMix(C.dermis, C.merkel, 0.15 + 0.15 * f); g.beginPath(); g.ellipse(cx, cy + sq * 0.25, rx, ry, 0, 0, 2 * Math.PI); g.fill();
+          g.globalAlpha = 1; g.strokeStyle = C.lam; g.lineWidth = 1.2; g.stroke();
+        }
+        g.fillStyle = endCol; g.beginPath(); g.ellipse(cx - 1, ey, 25, 5.5, 0, 0, 2 * Math.PI); g.fill();
+        g.strokeStyle = endCol; g.lineWidth = 3; g.lineCap = 'round'; fiber(); g.stroke(); g.lineCap = 'butt';
+        for (let i = 0; i < CH; i++) { const top = i % 2 === 0, px = cx - 20 + Math.floor(i / 2) * 13; chan(px, ey + (top ? -5.5 : 5.5), 0, top ? 1 : -1, chanOrder.indexOf(i) < nOpen, i); }
+        g.fillStyle = C.muted; g.textAlign = 'center';
+        g.fillText(o.capsule ? 'Pacinian corpuscle: layers of capsule around a bare ending' : 'capsule removed: the bare ending', cx, cy - ry0 - 8);
+      };
+    }
+    // the unmyelinated stretch from the ending to the first node, tinted by the receptor potential
+    g.strokeStyle = endCol; g.lineWidth = 3; g.lineCap = 'round'; fiber(); g.stroke(); g.lineCap = 'butt';
+    // the axon: myelin with nodes of Ranvier, the first node tinted by its own voltage
+    g.strokeStyle = C.memdark; g.lineWidth = 3; g.beginPath(); g.moveTo(nodeX, yAx); g.lineTo(W, yAx); g.stroke();
+    g.fillStyle = C.myelin; g.strokeStyle = C.memdark; g.lineWidth = 1;
+    for (let mx = nodeX + 7; mx < W; mx += 92) { g.beginPath(); g.roundRect ? g.roundRect(mx, yAx - 7, Math.min(84, W - mx + 10), 14, 6) : g.rect(mx, yAx - 7, Math.min(84, W - mx + 10), 14); g.fill(); g.stroke(); }
+    front();
+    g.fillStyle = nodeCol; g.beginPath(); g.arc(nodeX + 1, yAx, 5.5, 0, 2 * Math.PI); g.fill();
+    g.fillStyle = C.na; for (const a of [-1, 1]) for (const b of [-1, 1]) { g.beginPath(); g.arc(nodeX + 1 + a * 3, yAx + b * 7.5, 1.6, 0, 2 * Math.PI); g.fill(); }
+    if (o.ttx) {
+      g.strokeStyle = C.pos; g.lineWidth = 1.6; g.beginPath(); g.moveTo(nodeX - 6, yAx - 14); g.lineTo(nodeX + 8, yAx + 14); g.moveTo(nodeX + 8, yAx - 14); g.lineTo(nodeX - 6, yAx + 14); g.stroke();
+    }
+    // label the first node: above the axon, or below the capsule for the Pacinian corpuscle, whose first node is inside it
+    g.fillStyle = C.muted; g.textAlign = 'left';
+    const nodeLab = o.ttx ? 'first node: Na⁺ channels blocked (TTX)' : 'first node of Ranvier: spikes start here';
+    if (o.kind === 'ra') {
+      const ly = H - 8;
+      g.strokeStyle = C.muted; g.lineWidth = 1; g.beginPath(); g.moveTo(nodeX + 1, yAx + 9); g.lineTo(nodeX + 1, ly - 13); g.stroke();
+      g.fillText(nodeLab, nodeX - 4, ly);
+    } else g.fillText(nodeLab, nodeX - 4, yAx - 16);
+    g.textAlign = 'right'; g.fillText('myelinated axon, to the spinal cord →', W - 8, yAx + 26);
+    // spikes on their way
+    if (r) {
+      g.fillStyle = C.pos;
+      for (const ts of r.spikes) {
+        if (ts > t) break;
+        const a = (t - ts) / TRAVEL; if (a >= 1) continue;
+        const px = nodeX + a * (W - nodeX + 12);
+        g.globalAlpha = 0.9; g.beginPath(); g.ellipse(px, yAx, 9, 6.5, 0, 0, 2 * Math.PI); g.fill(); g.globalAlpha = 1;
+      }
+    }
+  }
+
+  // ----- charts and readouts -----
+  function drawCharts() {
+    const r = trial && trial.r, gr = ghost && ghost.r, k = r ? idx(r) + 1 : 0, T = Model.T;
+    const bands = [{ x0: Model.ON, x1: Model.OFF + Model.RAMP }];
+    const lines = (key, color, w) => [...(gr ? [{ x: gr.t, y: gr[key], color, w, alpha: 0.3 }] : []), ...(r ? [{ x: r.t, y: r[key], n: k, color, w }] : [])];
+    const ampMax = Math.max(trial ? trial.o.amp : 10, ghost ? ghost.o.amp : 0);
+    const maxR = Math.max(trial ? trial.maxR : -60, ghost ? ghost.maxR : -60);
+    plot($('cS'), { h: 150, x: [0, T], y: [0, niceMax(ampMax * 1.1)], ylab: 'µm', bands, lines: lines('s', C.ink, 1.3) });
+    plot($('cP'), { h: 150, x: [0, T], y: [0, 1], ylab: 'P_open', bands, lines: lines('P', C.chan, 1.8) });
+    plot($('cR'), { h: 150, x: [0, T], y: [-75, Math.max(-30, Math.ceil((maxR + 4) / 5) * 5)], ylab: 'mV', xlab: 'time (ms)', bands,
+      hlines: [{ y: -70, label: 'rest', dash: true }], lines: lines('R', C.na, 1.8) });
+    plot($('cV'), { h: 150, x: [0, T], y: [-90, 50], ylab: 'mV', xlab: 'time (ms)', bands, lines: lines('V', C.accent, 1.2) });
+  }
+  const put = (id, s) => { const el = $(id); if (el.textContent !== s) el.textContent = s; };
+  function readouts() {
+    const r = trial && trial.r, o = trial ? trial.o : S;
+    $('vCycRow').hidden = o.how !== 'vib';
+    if (!r) { ['vRate', 'vRec', 'vOpen', 'vEarly', 'vLate', 'vAfter', 'vCyc'].forEach(id => put(id, '—')); return; }
+    const k = idx(r), sp = r.spikes;
+    let j = 0; while (j < sp.length && sp[j] <= t) j++;
+    let rate = 0;
+    if (j >= 2) { const isi = sp[j - 1] - sp[j - 2]; if (t - sp[j - 1] < Math.max(isi * 1.5, 5)) rate = 1000 / isi; }
+    else if (j === 1 && t - sp[0] < 30) rate = NaN;
+    put('vRate', isFinite(rate) ? fmt(rate, 0) + ' spikes/s' : '1 spike');
+    put('vRec', fmtSigned(r.R[k] + 70, 1) + ' mV');
+    put('vOpen', fmt(100 * r.P[k], 0) + '%');
+    const m = trial.m, ON = Model.ON, OFF = Model.OFF;
+    put('vEarly', t >= ON + 100 ? String(m.early) : '—');
+    put('vLate', t >= OFF ? fmt(m.late, 0) + ' spikes/s' : '—');
+    put('vAfter', trial.done ? String(m.after) : '—');
+    put('vCyc', o.how === 'vib' && t >= OFF ? fmt(m.perCycle, 2) : '—');
+  }
+  function caption() {
+    let s;
+    if (!trial) s = 'Press to push the probe into the skin. Each press lasts 800 ms of the ending’s time: rest, a 500 ms press (shaded on the charts), then release.';
+    else {
+      const o = trial.o, m = trial.m;
+      const who = o.kind === 'sa' ? 'Merkel ending' : o.capsule ? 'Pacinian corpuscle' : 'Pacinian ending without its capsule';
+      const what = o.how === 'step' ? `a steady press ${fmtDepth(o.amp)} deep` : `a ${fmtDepth(o.amp)} vibration at ${fmt(o.f, 0)} Hz`;
+      if (!trial.done) s = `Running: ${who}, ${what}${o.ttx ? ', with TTX' : ''}.`;
+      else if (o.ttx) s = `${who}, ${what}, with TTX: no spikes, but the receptor potential still reached ${fmtSigned(m.rpPeak, 0)} mV.`;
+      else if (o.how === 'vib') s = `${who}, ${what}: ${m.total} spikes in the 500 ms, ${fmt(m.perCycle, 2)} per cycle. Receptor potential up to ${fmtSigned(m.rpPeak, 0)} mV.`;
+      else s = `${who}, ${what}: ${m.early} spikes in the first 100 ms, ${fmt(m.late, 0)} spikes/s late in the press, ${m.after} after release. Receptor potential up to ${fmtSigned(m.rpPeak, 0)} mV.` +
+        (m.total === 0 ? ' Below threshold: the brain hears nothing.' : '');
+    }
+    $('pCap').textContent = s;
+  }
+
+  // ----- run -----
+  let last = performance.now();
+  function loop(now) {
+    const real = Math.min(0.05, (now - last) / 1000); last = now;
+    if (playing && trial && t < Model.T) {
+      t = Math.min(Model.T, t + speed * real); dirty = true;
+      if (t >= Model.T) finish();
+    }
+    if (dirty) { drawPic(); drawCharts(); readouts(); dirty = false; }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; });
+  addEventListener('resize', () => { dirty = true; });
+  Frames.onRestore(() => { dirty = true; });
+  sync(); showSpeed(); caption();
+  Frames.sim(() => playing, 'pPlay', ['pPress']);   // frames.js: starts paused, pauses itself when left alone
+  requestAnimationFrame(loop);
+
+  // used by the Start here and Try it buttons, and by the sweep
+  function set(o) {
+    Object.assign(S, { ttx: false, capsule: true }, o);
+    if (o.speed) { $('pSpeed').value = speedMap.p(o.speed); speed = speedMap.v(+$('pSpeed').value); showSpeed(); $('pSpeed').dispatchEvent(new Event('input')); }
+    sync();
+  }
+  return { set, get: () => Object.assign({}, S) };
+})();
+
+// ---------- the sweep: a series of steady presses, worked out at once ----------
+(() => {
+  let busy = false;
+  $('srSweep').addEventListener('click', () => {
+    if (busy) return;
+    const A = Math.max(0.5, Math.min(500, +$('srA').value || 3)), B = Math.max(0.5, Math.min(500, +$('srB').value || 500)), N = Math.max(2, Math.min(24, Math.round(+$('srN').value || 12)));
+    const base = Sensory.get(), amps = Array.from({ length: N }, (_, i) => A * Math.pow(B / A, i / (N - 1)));
+    busy = true; $('srSweep').disabled = true;
+    let i = 0;
+    const next = () => {
+      const o = Object.assign({}, base, { how: 'step', amp: amps[i] });
+      Curve.add(o, Model.measure(Model.run(o), o), i < N - 1);
+      if (++i < N) setTimeout(next, 0); else { busy = false; $('srSweep').disabled = false; Curve.draw(); }
+    };
+    next();
+  });
+})();
+
+// ---------- the receptor potential calculator ----------
+const Calc = (() => {
+  const sMap = logMap(1, 500), hMap = logMap(1, 100), gMap = logMap(0.02, 5);
+  const val = { s: () => sMap.v(+$('kS').value), h: () => hMap.v(+$('kH').value), g: () => gMap.v(+$('kG').value),
+    Er: () => +$('kEr').value, gr: () => +$('kGr').value, E0: () => +$('kE0').value };
+  const sub = s => s.replace(/_\{?([A-Za-z0-9/]+)\}?/g, '<sub>$1</sub>');
+  const rp = (s, h, g, gr, Er, E0) => { const P = s / (s + h), gg = g * P; return (gr * E0 + gg * Er) / (gr + gg) - E0; };
+  function update() {
+    const s = val.s(), h = val.h(), g = val.g(), Er = val.Er(), gr = val.gr(), E0 = val.E0();
+    $('kSo').textContent = fmtDepth(s); $('kHo').textContent = fmtDepth(h);
+    $('kGo').textContent = fmt(g, g < 0.1 ? 3 : 2) + ' mS/cm²'; $('kEro').textContent = fmtSigned(Er, 0) + ' mV';
+    $('kGro').textContent = fmt(gr, 2) + ' mS/cm²'; $('kE0o').textContent = fmt(E0, 0) + ' mV';
+    const P = s / (s + h), grec = g * P, V = (gr * E0 + grec * Er) / (gr + grec), dV = V - E0, I = grec * (E0 - Er);
+    $('kRP').textContent = fmtSigned(dV, 1) + ' mV';
+    $('kP').textContent = fmt(P, 3); $('kGrec').textContent = fmt(grec, 3) + ' mS/cm²'; $('kV').textContent = fmt(V, 1) + ' mV';
+    $('kI').textContent = fmt(I, 2) + ' µA/cm²';
+    const n = v => fmt(v, 3), m = v => fmt(v, 1);
+    $('kFormula').innerHTML =
+      `${sub('P_open')} = s / (s + ${sub('s_{1/2}')}) = ${n(s)} / (${n(s)} + ${n(h)}) = <b>${n(P)}</b><br>` +
+      `${sub('g_rec')} = ${sub('g_mech')} × ${sub('P_open')} = ${n(g)} × ${n(P)} = <b>${n(grec)}</b> mS/cm²<br>` +
+      `V = (${sub('g_rest E_rest')} + ${sub('g_rec E_rec')}) / (${sub('g_rest')} + ${sub('g_rec')}) = (${n(gr)} × ${m(E0)} + ${n(grec)} × ${m(Er)}) / ${n(gr + grec)} = <b>${m(V)}</b> mV<br>` +
+      `<span class="res">V − ${sub('E_rest')} = ${fmtSigned(dV, 1)} mV</span>`;
+    const xs = [], ys = [];
+    for (let i = 0; i <= 160; i++) { const sv = Math.pow(500, i / 160); xs.push(sv); ys.push(rp(sv, h, g, gr, Er, E0)); }
+    const allOpen = g * (Er - E0) / (g + gr), ceil = Er - E0;
+    plot($('kC'), { square: true, x: [1, 500], xlog: true, y: [0, niceMax(Math.max(1, ceil) * 1.08)], xlab: 'depth s (µm, log scale)', ylab: 'mV above rest',
+      hlines: [{ y: ceil, label: 'E_rec − E_rest' }, { y: allOpen, label: 'every channel open', color: C.chan }],
+      lines: [{ x: xs, y: ys, color: C.na, w: 2 }], dots: [{ x: s, y: dV, color: C.na, r: 5 }] });
+  }
+  ['kS', 'kH', 'kG', 'kEr', 'kGr', 'kE0'].forEach(id => $(id).addEventListener('input', update));
+  colorHooks.push(() => setTimeout(update, 0));
+  addEventListener('resize', () => requestAnimationFrame(update));
+  Frames.onRestore(update);
+  update();
+  function set(name, v) {
+    const el = { s: 'kS', h: 'kH', g: 'kG', Er: 'kEr', gr: 'kGr', E0: 'kE0' }[name];
+    $(el).value = name === 's' ? sMap.p(v) : name === 'h' ? hMap.p(v) : name === 'g' ? gMap.p(v) : v;
+    $(el).dispatchEvent(new Event('input'));
+  }
+  return { set };
+})();
+</script>
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    dispatchEvent(new Event('resize'));   // a chart drawn while its pane was hidden needs its width again
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // set the ending and stimulus, show the picture, and press
+  const go = o => { Sensory.set(o); showTab($('tab-end')); into('end-card'); $('pPress').click(); };
+  const TRY = {
+    sa: () => go({ kind: 'sa', how: 'step', amp: 30 }),
+    hard: () => go({ kind: 'sa', how: 'step', amp: 300 }),
+    small: () => go({ kind: 'sa', how: 'step', amp: 10 }),
+    ra: () => go({ kind: 'ra', how: 'step', amp: 30 }),
+    vib: () => go({ kind: 'ra', how: 'vib', amp: 5, f: 250 }),
+    vib50: () => go({ kind: 'ra', how: 'vib', amp: 5, f: 50 }),
+    vibsa: () => go({ kind: 'sa', how: 'vib', amp: 5, f: 250 }),
+    ttx: () => { const s = Sensory.get(); go({ kind: s.kind, capsule: s.capsule, how: 'step', amp: 30, ttx: true }); },
+    cap1: () => go({ kind: 'ra', how: 'step', amp: 1 }),
+    nocap: () => go({ kind: 'ra', how: 'step', amp: 1, capsule: false }),
+    sweep: () => {
+      showTab($('tab-sr')); into('sr-card'); $('srSweep').click();
+      const pick = ['srY', 'srX'].find(id => !$(id).value); if (pick) setTimeout(() => $(pick).focus({ preventScroll: true }), 400);
+    },
+  };
+  document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => {
+    const [what, name, v] = b.dataset.try.split(':');
+    if (what === 'calc') { Calc.set(name, +v); showTab($('tab-kc')); into('rp-calc'); }
+    else TRY[what]();
+  }));
+})();
+</script>
+<!-- The floating bar of main controls, and fill-in boxes for every slider -->
+<script src="floatbar.js"></script>
+<script src="sliders.js"></script>
+</body>
+</html>

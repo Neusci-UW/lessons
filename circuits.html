@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="frames.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simple Circuits: Reflexes and Lateral Inhibition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };</script>
+<!-- MathJax: a local copy next to this page if there is one (for offline use), otherwise the online copy -->
+<script async src="vendor/mathjax/tex-svg.js" onerror="var s=document.createElement('script');s.async=true;s.src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js';s.onerror=function(){document.documentElement.classList.add('no-mathjax')};document.head.appendChild(s);"></script>
+<style>
+/* Same look as the other lessons (hodgkin_huxley.html, summation.html). */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2220; --muted:#5b6662; --line:#d6dcd8; --accent:#0d6b7c;
+  --k:#6b3fb8; --na:#d07a1f; --cl:#23845a; --syn:#0d6b7c; --ea:#c0287a; --a:#9aa29e;
+  --pos:#d1373f; --neg:#2861c8;
+  --cyto:#edf0f6; --bath:#e8f2ef; --mem:#cdbd92; --memdark:#a8946a;
+  --warm:#b4582a; --skin:#f4e7dc; --musc:#d9998c; --bone:#ece6d6; --grey:#c9cdd6;
+  --font-body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+    --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+    --pos:#f0646b; --neg:#6b9cf2;
+    --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+    --warm:#e0915e; --skin:#2c2522; --musc:#7a4740; --bone:#4a463c; --grey:#3a3f4a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#191f1d; --ink:#e4eae7; --muted:#97a39e; --line:#2b3431; --accent:#4cb2c4;
+  --k:#a88cf2; --na:#f0a350; --cl:#5bc98b; --syn:#4cb2c4; --ea:#f477b7; --a:#69726e;
+  --pos:#f0646b; --neg:#6b9cf2;
+  --cyto:#161d27; --bath:#13211d; --mem:#6c6046; --memdark:#8d7d58;
+  --warm:#e0915e; --skin:#2c2522; --musc:#7a4740; --bone:#4a463c; --grey:#3a3f4a;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding:24px 20px 48px}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-weight:600;font-size:26px;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:90ch}
+.part{font-size:18px;font-weight:600;margin:4px 0 0;text-wrap:balance}
+.pagesec{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:8px 0 -6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.draftnote{border:1px dashed var(--warm);color:var(--warm);border-radius:8px;padding:7px 12px;font-size:13.5px;background:var(--surface);max-width:110ch;margin:0}
+.draftnote b{font-family:var(--font-mono);font-weight:500;letter-spacing:.05em}
+.draftnote ul{margin:4px 0 0;padding-left:20px}
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px 16px;margin-top:12px;max-width:1500px}
+.introbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.introbox ul{margin:0;padding-left:18px;font-size:13.5px}
+.introbox li::marker{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.steps .chip{margin-right:6px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);font-weight:500;padding:8px 14px;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+[role=tabpanel][hidden]{display:none}
+.tabpane{display:grid;grid-template-columns:minmax(0,72ch) minmax(240px,320px);gap:32px;align-items:start;padding-top:4px}
+@media (max-width:1000px){.tabpane{grid-template-columns:minmax(0,1fr)}}
+.tabpane .deriv h3:first-child{margin-top:4px}
+.deriv.wide{max-width:none;grid-column:1 / -1}
+.theory{display:flex;flex-direction:column;gap:16px}
+.try{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;position:sticky;top:16px}
+.try p{margin:0}
+.try .chip{display:block;margin-bottom:4px;text-align:left}
+.help h4{margin:0 0 4px;font-size:13.5px;font-weight:600}
+.help ul{margin:0 0 10px;padding-left:18px;font-size:13.5px;max-width:90ch}
+.help li{margin-bottom:8px}
+.help li::marker{color:var(--muted)}
+.fullderiv{margin:10px 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
+.fullderiv summary{cursor:pointer;font-weight:500;color:var(--accent)}
+.fullderiv[open] summary{margin-bottom:6px}
+.units{display:flex;flex-direction:column;gap:8px}
+.unitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px 32px}
+.unithead{margin:0 0 4px;font-size:13px;font-weight:600}
+.unitlist{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.unitlist dt{font-family:var(--font-mono);font-weight:500}
+.unitlist dd{margin:0;color:var(--muted)}
+.gsliders{display:flex;flex-direction:column}
+.gion{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.gion:first-child{border-top:0;padding-top:0}
+.gh{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
+.gr{display:grid;grid-template-columns:52px minmax(0,1fr) 104px;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.gr input[type=range]{width:100%;accent-color:var(--accent)}
+.gr output{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.calc{display:flex;flex-direction:column;gap:12px}
+.calc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.calc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:start}
+@media (max-width:1000px){.calc-body{grid-template-columns:1fr}}
+.calc-out{display:flex;flex-direction:column;gap:12px;min-width:0}
+.calc .out{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.calc .big{font-family:var(--font-mono);font-size:34px;font-weight:500;font-variant-numeric:tabular-nums}
+.calc .es{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calc .es b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.gformula{font-family:var(--font-mono);font-size:12.5px;line-height:1.85;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow-x:auto;white-space:nowrap}
+.gformula .res{font-size:14px;font-weight:600}
+.budget{display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.budget span{display:flex;align-items:center;justify-content:center;font:12px var(--font-mono);color:var(--surface);white-space:nowrap;overflow:hidden;min-width:0}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.top.stacked{grid-template-columns:1fr}
+@media (max-width:1100px){.top{grid-template-columns:1fr}}
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.cgrid{grid-template-columns:1fr}}
+.ccol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stage{display:flex;flex-direction:column;gap:12px}
+canvas{display:block;width:100%;height:auto;border-radius:6px}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.runbar input[type=range]{flex:1 1 160px;min-width:120px;max-width:320px}
+.runbar output{font-family:var(--font-mono);font-size:13px;min-width:96px;font-variant-numeric:tabular-nums}
+.runlab{font-size:14px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i.ln{display:inline-block;width:16px;height:3px;border-radius:2px;flex:none}
+.legend i.ln.dash{background:none!important;border-top:2px dashed currentColor;height:0}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.dot.cl{background:var(--cl)}.dot.k{background:var(--k)}.dot.na{background:var(--na)}.dot.acc{background:var(--accent)}
+.dot.pos{background:var(--pos)}.dot.neg{background:var(--neg)}
+.sect-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.caption{font-size:13px;color:var(--muted);margin:0;max-width:90ch}
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px 32px;align-items:start}
+.panel.wide fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 28px;align-items:start}
+.panel.wide legend{grid-column:1/-1}
+@media (max-width:820px){.panel.wide{grid-template-columns:1fr}}
+.sgroup{display:flex;flex-direction:column;gap:10px}
+.sgroup .gtitle{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px}
+.vbox{display:flex;flex-direction:column;gap:2px}
+.vnum{font-family:var(--font-mono);font-size:40px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.vrow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow b{color:var(--ink);font-family:var(--font-mono);font-weight:500;white-space:nowrap}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.row{display:grid;grid-template-columns:128px minmax(0,1fr) 112px;align-items:center;gap:10px;font-size:14px}
+.row label{display:inline-flex;align-items:center;gap:7px}
+.row output{font-family:var(--font-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .hint{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-6px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+select{font:inherit;font-size:14px;padding:5px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;font-size:13px;padding:5px 12px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.segrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.theory h2{font-size:20px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.theory h3{font-size:15px;font-weight:600;margin:18px 0 4px}
+.deriv{max-width:72ch}
+.deriv ul{padding-left:20px}
+.deriv li{margin-bottom:6px}
+.gist{margin:0 0 14px;padding:9px 13px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.55}
+.gist b{color:var(--accent);font-weight:600}
+.deriv p{margin:6px 0}
+.deriv .eq{overflow-x:auto;margin:8px 0;padding:4px 0}
+table.sum{border-collapse:collapse;font-size:14px;margin:8px 0}
+table.sum td{padding:3px 12px 3px 0;border-bottom:1px solid var(--line)}
+table.sum td.n{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums}
+table.sum tr.tot td{font-weight:600;border-bottom:0}
+.mj-fail{display:none}
+.no-mathjax .mj-fail{display:block;color:var(--pos)}
+.reflist{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.reflist .why{color:var(--muted);font-size:13.5px}
+.reflist a{color:var(--accent)}
+#liPic{cursor:crosshair;touch-action:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="draftnote"><b>DRAFT</b> · Not yet in the course. Still to check before students see it:
+  <ul>
+    <li>the reflex’s timing against measured human values: the delays at the spindle (3 ms), in the cord (about 2 ms) and at the junction (2 ms), and the 25 ms total, are round numbers chosen to be reasonable, not taken from one study;</li>
+    <li>the neurons are general-purpose model neurons (Traub and Miles’s channels) standing in for spinal motor neurons and interneurons, and “a slow nerve also blocks some fibres” uses a made-up rule (the share that conducts falls as (speed ÷ 70 m/s)²);</li>
+    <li>the reflex-loop picture and the brightness strips are new drawings nobody has reviewed yet.</li>
+  </ul>
+</div>
+<header>
+  <h1>Simple circuits: reflexes and lateral inhibition</h1>
+  <p>Most lessons follow one neuron or one synapse. Here a few neurons are wired together, and the wiring itself does something no single cell does. In the knee-jerk reflex a single synapse turns a stretch into a kick, while one extra inhibitory neuron relaxes the muscle that would fight it. In lateral inhibition, each cell in a row holding down its neighbours makes edges stand out: the reason a step in brightness looks like a bright band beside a dark one.</p>
+  <div class="intro">
+    <section class="introbox" aria-labelledby="goalsTitle">
+      <span class="sect-title" id="goalsTitle">You'll be able to</span>
+      <ul>
+        <li>trace the stretch reflex: muscle spindle → Ia fibre → one synapse → α motor neuron → muscle, and add up its latency from distances, speeds and delays</li>
+        <li>explain reciprocal inhibition: the Ia inhibitory interneuron relaxes the opposing muscle, and why strychnine stops it</li>
+        <li>predict what a cut dorsal root, a slow (demyelinated) nerve and an upper motor neuron lesion do to the reflex</li>
+        <li>explain how lateral inhibition exaggerates edges, and why we see Mach bands</li>
+      </ul>
+    </section>
+  </div>
+</header>
+
+<h2 class="pagesec" id="simulation">Simulation</h2>
+<section class="introbox" aria-labelledby="startTitle">
+  <span class="sect-title" id="startTitle">Start here</span>
+  <ol class="steps">
+    <li><button class="chip" data-try="tap">1 · Tap the tendon</button> Watch the volley go round the loop: the spindle’s Ia fibres carry it to the spinal cord in about 10 ms, the quadriceps motor neuron fires, and about 25 ms after the tap the muscle’s electrical response begins. The kick itself comes later still.</li>
+    <li><button class="chip" data-try="recip">2 · Watch the hamstrings</button> Their motor neuron was firing steadily (orange dots streaming down its axon). The Ia interneuron silences it for about 100 ms, just as the quadriceps fires: reciprocal inhibition.</li>
+    <li><button class="chip" data-try="gly">3 · Block glycine</button> Strychnine blocks the interneuron’s glycine receptors: the hamstring motor neuron no longer pauses, so both muscles pull at once.</li>
+    <li><button class="chip" data-try="slow">4 · A slow nerve</button> Halve the Ia speed, as in a demyelinating neuropathy: some fibres stop conducting and the rest arrive late and spread out. Only 1 spike in 4 gets through, so the reflex comes late (about 32 ms) and weak.</li>
+    <li><button class="chip" data-try="umn">5 · Hyperreflexia</button> A light tap, with the motor neuron’s excitability raised as after an upper motor neuron lesion (it has lost the brain’s steadying control). It rests closer to threshold, so the same light tap fires it seven times instead of four.</li>
+    <li><button class="chip" data-try="cut">6 · Cut the dorsal root</button> The volley stops at the cut and never reaches the cord: no reflex at all.</li>
+    <li><button class="chip" data-try="edge">7 · Lateral inhibition</button> A step in light along a row of receptors. With neighbours inhibiting each other, the firing overshoots on the bright side of the edge and undershoots on the dark side.</li>
+    <li><button class="chip" data-try="mach">8 · Mach bands</button> A ramp of light between two flat regions, with strong, far-reaching inhibition. Look closely at the bottom strip and the chart: a slightly brighter band at the top of the ramp and a darker one at its foot, though the light has neither.</li>
+  </ol>
+</section>
+
+<!-- =================== Part 1: the stretch reflex =================== -->
+<h3 class="part">1 · The knee-jerk: a stretch reflex</h3>
+<div class="top stacked">
+  <section class="card stage" id="rx-card">
+    <div class="tabs" role="tablist" aria-label="Reflex">
+      <button type="button" role="tab" id="tab-rx" aria-controls="pane-rx" aria-selected="true">Reflex</button>
+      <button type="button" role="tab" id="tab-rxhelp" aria-controls="pane-rxhelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-rxlook" aria-controls="pane-rxlook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-rx" aria-labelledby="tab-rx">
+      <div class="cgrid">
+        <div class="ccol">
+          <canvas id="rxPic" aria-label="The stretch reflex loop: a seated leg with the quadriceps on top of the thigh and the hamstrings underneath, a reflex hammer at the patellar tendon, a muscle spindle in the quadriceps whose Ia fibre runs through the dorsal root ganglion into a cross-section of the spinal cord, where it excites the quadriceps motor neuron and an Ia inhibitory interneuron that inhibits the hamstring motor neuron; the motor axons run back out to the two muscles"></canvas>
+          <div class="runbar">
+            <button id="rxTap" class="primary">Tap the tendon</button>
+            <button id="rxPlay" class="primary">Play</button>
+            <label for="rxSpeed" class="runlab">Speed</label>
+            <input type="range" id="rxSpeed" min="0" max="100" step="1" value="50">
+            <output id="rxSpeedo" for="rxSpeed"></output>
+          </div>
+          <div class="legend">
+            <span><i class="dot cl"></i>Ia afferent (sensory)</span>
+            <span><i class="dot acc"></i>quadriceps motor neuron</span>
+            <span><i class="dot na"></i>hamstring motor neuron</span>
+            <span><i class="dot k"></i>Ia inhibitory interneuron</span>
+            <span>cells coloured by voltage: <i class="dot neg"></i>rest <i class="dot pos"></i>firing</span>
+          </div>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">In the cord: quadriceps motor neuron and Ia inhibitory interneuron</p>
+          <canvas id="cvAg" aria-label="Voltage against time of the quadriceps motor neuron and the Ia inhibitory interneuron"></canvas>
+          <div class="legend"><span><i class="ln" style="background:var(--accent)"></i>quadriceps motor neuron</span><span><i class="ln" style="background:var(--k)"></i>Ia inhibitory interneuron</span><span><i class="ln dash" style="color:var(--cl)"></i>Ia volley arrives</span></div>
+          <p class="sect-title">In the cord: hamstring motor neuron</p>
+          <canvas id="cvAn" aria-label="Voltage against time of the hamstring motor neuron"></canvas>
+          <p class="sect-title">Muscle force</p>
+          <canvas id="cvF" aria-label="Force of the quadriceps and hamstrings against time"></canvas>
+          <div class="legend"><span><i class="ln" style="background:var(--accent)"></i>quadriceps (straightens the knee)</span><span><i class="ln" style="background:var(--na)"></i>hamstrings (bend it)</span></div>
+          <p class="caption" id="rxCap"></p>
+        </div>
+      </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-rxhelp" aria-labelledby="tab-rxhelp" hidden>
+      <ul>
+        <li><b>The picture:</b> a seated leg, seen from the side. The quadriceps runs along the top of the thigh and pulls on the kneecap and, through the patellar tendon, on the shin: it straightens the knee. The hamstrings run underneath and bend it. Inside the quadriceps is a muscle spindle, a stretch sensor, wrapped by the ending of an Ia fibre (green). The fibre’s cell body sits in the dorsal root ganglion, just outside the spinal cord; its axon enters the cord through the dorsal root. The cord is drawn in cross-section, back (dorsal) side up: grey matter in the butterfly shape, white matter around it.</li>
+        <li><b>In the cord:</b> the Ia fibre ends on the quadriceps motor neuron (teal) and on an Ia inhibitory interneuron (purple), which ends on the hamstring motor neuron (orange). The motor neurons’ axons leave through the ventral root and run back down to their muscles. Each cell is coloured by its voltage, blue at rest and red when it fires.</li>
+        <li><b>Dots</b> are spikes on their way, each moving at its fibre’s speed. Real reflexes use hundreds of Ia fibres and motor neurons at once; one of each is drawn, and the dots on the Ia fibre are the volley’s spikes, one after another.</li>
+        <li><b>Time</b> runs from 20 ms before the tap to 200 ms after, slowed down (the Speed slider: 20 ms per s means 20 ms of the reflex take one second). <b>Tap the tendon</b> starts a new tap. Changing a slider recomputes the same tap at once, so you can compare settings while paused.</li>
+        <li><b>The charts</b> are recordings in the cord, drawn as time runs. Time 0 is the tap. The dashed green line marks the first Ia spike reaching the cord. The force chart is in units of one twitch, the force of one motor neuron spike; it includes the trip back down the motor axon and the delay at the neuromuscular junction.</li>
+        <li><b>The model:</b> each neuron is a one-compartment Hodgkin–Huxley-type cell (Traub and Miles’s Na⁺ and K⁺ channels), standing in for real spinal neurons. The hamstring motor neuron gets a steady current that keeps it firing, as if the muscle were holding a little tone. Each Ia spike opens excitatory channels (reversal 0 mV) on the motor neuron and the interneuron 1 ms after it reaches the cord; each interneuron spike opens glycine (Cl⁻) channels on the hamstring motor neuron, reversal −75 mV. Motor axons conduct at 60 m/s.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-rxlook" aria-labelledby="tab-rxlook" hidden>
+      <ul>
+        <li>Follow one tap from start to finish and add up the times: spindle (3 ms), the Ia trip up (the readout), the cord (about 2 ms), the motor trip down (10 ms at 0.6 m) and the junction (2 ms). The latency readout is that sum. The calculator below does the same sum with any numbers.</li>
+        <li>Make the nerve longer, as in a taller person: both trips get longer and the reflex comes later. Make the Ia fibres slower: only the trip up is slower, and below about 70 m/s fewer spikes get through.</li>
+        <li>Lower the tap strength one step at a time: fewer Ia spikes, fewer motor neuron spikes and a weaker kick. Even one Ia spike fires the motor neuron here, because the volley of hundreds of fibres is drawn as one input. Slow the Ia fibres to 20 m/s instead and no spike gets through at all.</li>
+        <li>Watch the hamstring chart for the gap: the interneuron fires about a millisecond after the volley arrives, and the hamstring neuron’s next spike is postponed. Block glycine and the gap disappears.</li>
+        <li>Raise the excitability with a weak tap: the motor neuron rests higher before the tap (look at the start of the top chart), so the same volley fires it more. Too high and it fires on its own, with no tap at all.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Reflex latency</span>
+      <span class="vnum" id="rxLat">—</span>
+      <div class="vrow"><span>from the tap to the quadriceps’ electrical response</span></div>
+      <div class="vrow"><span>Ia trip to the cord</span><b id="rxAff">—</b></div>
+      <div class="vrow"><span>Ia spikes reaching the cord</span><b id="rxNIa">—</b></div>
+      <div class="vrow"><span>quadriceps motor neuron spikes</span><b id="rxNMN">—</b></div>
+      <div class="vrow"><span>its voltage just before the tap</span><b id="rxVr">—</b></div>
+      <div class="vrow"><span>hamstring pause (usual interval)</span><b id="rxPause">—</b></div>
+      <div class="vrow"><span>peak quadriceps force</span><b id="rxF">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The reflex</legend>
+      <div class="sgroup">
+        <span class="gtitle">The tap and the nerve</span>
+        <div class="row"><label for="rxN">Tap strength</label><input type="range" id="rxN" min="1" max="8" step="1" value="4"><output id="rxNo" for="rxN"></output>
+          <span class="hint">how many spikes the spindle sends up each Ia fibre</span></div>
+        <div class="row"><label for="rxL">Nerve length</label><input type="range" id="rxL" min="0.3" max="1" step="0.01" value="0.6"><output id="rxLo" for="rxL"></output>
+          <span class="hint">each way, between the muscle and the spinal cord</span></div>
+        <div class="row"><label for="rxV">Ia speed</label><input type="range" id="rxV" min="10" max="100" step="1" value="80"><output id="rxVo" for="rxV"></output>
+          <span class="hint">slower when the nerve loses its myelin</span></div>
+      </div>
+      <div class="sgroup">
+        <span class="gtitle">The spinal cord</span>
+        <div class="row"><label for="rxB">Excitability</label><input type="range" id="rxB" min="0" max="2.4" step="0.05" value="0"><output id="rxBo" for="rxB"></output>
+          <span class="hint">steady extra current into the quadriceps motor neuron: reinforcement, or lost control from the brain</span></div>
+        <label class="check" for="rxCut"><input type="checkbox" id="rxCut">Dorsal root cut</label>
+        <label class="check" for="rxGly"><input type="checkbox" id="rxGly">Glycine receptors blocked (strychnine)</label>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<!-- =================== Part 2: lateral inhibition =================== -->
+<h3 class="part">2 · Lateral inhibition in a row of receptors</h3>
+<div class="top stacked">
+  <section class="card stage" id="li-card">
+    <div class="tabs" role="tablist" aria-label="Lateral inhibition">
+      <button type="button" role="tab" id="tab-li" aria-controls="pane-li" aria-selected="true">A row of receptors</button>
+      <button type="button" role="tab" id="tab-lihelp" aria-controls="pane-lihelp" aria-selected="false" tabindex="-1">How to read</button>
+      <button type="button" role="tab" id="tab-lilook" aria-controls="pane-lilook" aria-selected="false" tabindex="-1">What to look for</button>
+    </div>
+    <div class="stage" role="tabpanel" id="pane-li" aria-labelledby="tab-li">
+      <div class="segrow">
+        <span class="sect-title">Light</span>
+        <div class="seg" role="group" aria-label="Pattern of light">
+          <button type="button" data-li="edge" aria-pressed="true">A step</button><button type="button" data-li="bar" aria-pressed="false">A bright bar</button><button type="button" data-li="ramp" aria-pressed="false">A ramp</button>
+        </div>
+      </div>
+      <div class="cgrid">
+        <div class="ccol">
+          <canvas id="liPic" aria-label="Eighty receptors in a row: a strip shaded by the light on each, the receptors with arcs to the neighbours one of them inhibits, and a strip shaded by each receptor's firing rate"></canvas>
+          <p class="caption">Point at a receptor to see whom it inhibits. The bottom strip shades each cell by its firing rate, scaled so that a wide even field looks the same as the light above it: any band that is not in the light comes from the inhibition.</p>
+        </div>
+        <div class="ccol">
+          <p class="sect-title">Each receptor’s firing rate</p>
+          <canvas id="cvL" aria-label="Firing rate of each receptor along the row, with and without inhibition"></canvas>
+          <div class="legend"><span><i class="ln dash" style="color:var(--muted)"></i>without inhibition (set by the light)</span><span><i class="ln" style="background:var(--accent)"></i>with lateral inhibition</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="help" role="tabpanel" id="pane-lihelp" aria-labelledby="tab-lihelp" hidden>
+      <ul>
+        <li><b>Top strip:</b> the light falling on a row of 80 receptors, darker to brighter. <b>Middle:</b> the receptors themselves, filled more strongly the faster they fire. The purple arcs go from the receptor you point at to the neighbours it inhibits, thicker for stronger inhibition. Every receptor inhibits its neighbours in the same way.</li>
+        <li><b>Bottom strip:</b> what the row reports: each receptor’s firing rate as a shade of grey. The shades are scaled so that a wide, even field of light gives the same grey as in the top strip. Without inhibition the two strips are identical.</li>
+        <li><b>Chart:</b> dashed, the rate each receptor would fire on its own, set by its light; solid, the rate with lateral inhibition. Rates are in spikes per second.</li>
+        <li><b>The model</b> is Hartline and Ratliff’s, from the horseshoe crab (<i>Limulus</i>) eye: each receptor’s rate is its own excitation minus inhibition from its neighbours’ rates, more from near ones than far ones. <b>Inhibition</b> is the total weight of the neighbours’ inhibition; <b>Reach</b> how far it spreads (the inhibition falls to about a third every that many cells). The rates shown are the steady state the row settles to.</li>
+      </ul>
+    </div>
+    <div class="help" role="tabpanel" id="pane-lilook" aria-labelledby="tab-lilook" hidden>
+      <ul>
+        <li>Deep in the dark and deep in the bright, every cell fires less than it would alone, by the same factor (1 + inhibition): the ratio between bright and dark is kept.</li>
+        <li>At the step, the cell just on the bright side fires most of all, and the cell just on the dark side least of all. Turn Inhibition to 0: the overshoot and undershoot vanish.</li>
+        <li>Make the Reach longer: the bands get wider and shallower. Make it shorter: narrower.</li>
+        <li>A bright bar narrower than the reach: its middle is inhibited by its own bright neighbours on both sides, so a narrow bar is reported dimmer in the middle than at its edges.</li>
+        <li>On the ramp, the bands appear where the slope changes, at the top and the foot of the ramp, not along it: a light Mach band at the top, a dark one at the foot. They are small here; strong, far-reaching inhibition makes them clearer.</li>
+      </ul>
+    </div>
+  </section>
+  <aside class="card panel wide">
+    <div class="vbox">
+      <span class="sect-title">Firing rates (spikes/s)</span>
+      <div class="vrow"><span>deep in the dark</span><b id="liDark">—</b></div>
+      <div class="vrow"><span>lowest, beside the edge</span><b id="liMin">—</b></div>
+      <div class="vrow"><span>middle of the bright region</span><b id="liBright">—</b></div>
+      <div class="vrow"><span>highest, beside the edge</span><b id="liMax">—</b></div>
+      <div class="vrow"><span>a wide even field, e ÷ (1 + inhibition)</span><b id="liUni">—</b></div>
+    </div>
+    <fieldset>
+      <legend class="sect-title">The row</legend>
+      <div class="sgroup">
+        <div class="row"><label for="liK">Inhibition</label><input type="range" id="liK" min="0" max="0.9" step="0.01" value="0.6"><output id="liKo" for="liK"></output>
+          <span class="hint">total weight of the neighbours’ inhibition</span></div>
+        <div class="row"><label for="liS">Reach</label><input type="range" id="liS" min="1" max="12" step="0.5" value="3"><output id="liSo" for="liS"></output>
+          <span class="hint">how far the inhibition spreads</span></div>
+      </div>
+    </fieldset>
+  </aside>
+</div>
+
+<section class="card units" id="units" aria-labelledby="unitsTitle">
+  <span class="sect-title" id="unitsTitle">Units</span>
+  <div class="unitcols">
+    <div>
+      <p class="unithead">Distance, speed and time</p>
+      <dl class="unitlist">
+        <dt>m</dt><dd>metres, for the length of the nerve between the muscle and the spinal cord, one way.</dd>
+        <dt>m/s</dt><dd>metres per second, for conduction speed (θ). Handy: 1 m/s is the same as 1 mm per ms, so 80 m/s covers 600 mm in 600 ÷ 80 = 7.5 ms.</dd>
+        <dt>ms</dt><dd>milliseconds, for time. The whole knee jerk, tap to the start of the muscle’s response, takes about 25.</dd>
+        <dt>spikes/s</dt><dd>spikes per second (Hz), for firing rate.</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="unithead">Inside the cells</p>
+      <dl class="unitlist">
+        <dt>mV</dt><dd>millivolts, for voltage, inside relative to outside.</dd>
+        <dt>µA/cm²</dt><dd>microamps per cm² of membrane, for current: the extra excitability current.</dd>
+        <dt>mS/cm²</dt><dd>millisiemens per cm², for conductance (1/resistance) of the leak and the synapses. mS/cm² × mV = µA/cm², Ohm’s law.</dd>
+        <dt>twitches</dt><dd>force, in units of one twitch: the force that follows one motor neuron spike.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<h2 class="pagesec" id="theory-section">Theory</h2>
+<section class="card theory" id="cxtheory">
+  <p class="caption mj-fail">The equation renderer (MathJax) could not load, so equations appear as TeX source. Without internet, add a local copy: run tools/fetch_mathjax.py in the lessons folder once.</p>
+  <div class="tabs" role="tablist" aria-label="Theory">
+    <button type="button" role="tab" id="tab-th1" aria-controls="pane-th1" aria-selected="true">The stretch reflex</button>
+    <button type="button" role="tab" id="tab-th2" aria-controls="pane-th2" aria-selected="false" tabindex="-1">Reciprocal inhibition</button>
+    <button type="button" role="tab" id="tab-th3" aria-controls="pane-th3" aria-selected="false" tabindex="-1">Reflexes in the clinic</button>
+    <button type="button" role="tab" id="tab-th4" aria-controls="pane-th4" aria-selected="false" tabindex="-1">Lateral inhibition</button>
+    <button type="button" role="tab" id="tab-refs" aria-controls="pane-refs" aria-selected="false" tabindex="-1">References</button>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th1" aria-labelledby="tab-th1">
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Tapping the tendon below the kneecap stretches the quadriceps a little. Stretch sensors inside the muscle, the muscle spindles, fire their Ia fibres, the fastest sensory fibres in the body. In the spinal cord each Ia fibre makes an excitatory synapse straight onto the motor neurons of the same muscle: one synapse, so the reflex is called monosynaptic. The motor neurons fire, the quadriceps contracts, and the knee straightens.</p>
+      <h3>The loop</h3>
+      <ul>
+        <li><b>Sensor:</b> the muscle spindle, a bundle of small muscle fibres lying alongside the ordinary ones, wrapped by the ending of an Ia fibre. Stretching it opens stretch-gated channels in the ending, and it fires.</li>
+        <li><b>Into the cord:</b> the Ia fibre’s cell body sits in the dorsal root ganglion; its axon enters the cord through the dorsal root and runs to the ventral horn.</li>
+        <li><b>One synapse:</b> it releases glutamate onto the α motor neurons of the same muscle.</li>
+        <li><b>Out again:</b> the motor neurons’ axons leave through the ventral root and run back to the muscle, where each spike crosses the neuromuscular junction and makes the muscle fibres twitch.</li>
+      </ul>
+      <h3>How long it takes</h3>
+      <p>Each leg of the trip is a distance divided by a speed, as for a car: time = distance ÷ speed. Add the delays at each stop and you have the reflex’s latency:</p>
+      <div class="eq">\[ t_\text{reflex} = t_\text{spindle} + \frac{L}{\theta_\text{Ia}} + t_\text{cord} + \frac{L}{\theta_\alpha} + t_\text{NMJ} \]</div>
+      <p>L is the length of the nerve, one way; θ<sub>Ia</sub> and θ<sub>α</sub> are the conduction speeds of the Ia fibres and the motor axons (both large and myelinated, as in <i>The Action Potential Travels</i>). A handy trick: 1 m/s is 1 mm per ms. For a leg with 0.6 m between the thigh and the cord:</p>
+      <table class="sum">
+        <tr><td>the tap stretches the spindle, which fires</td><td class="n">≈ 3 ms</td></tr>
+        <tr><td>up the Ia fibre: 600 mm ÷ 80 mm/ms</td><td class="n">7.5 ms</td></tr>
+        <tr><td>in the cord: the synapse (about 1 ms) and the motor neuron reaching threshold</td><td class="n">≈ 2 ms</td></tr>
+        <tr><td>down the motor axon: 600 mm ÷ 60 mm/ms</td><td class="n">10 ms</td></tr>
+        <tr><td>the neuromuscular junction, and the muscle’s own spike</td><td class="n">≈ 2 ms</td></tr>
+        <tr class="tot"><td>tap to the muscle’s electrical response</td><td class="n">≈ 25 ms</td></tr>
+      </table>
+      <p>Most of the time is travel. The cord adds only a millisecond or two, and that is what told physiologists how many synapses are in the path: Lloyd timed the volley’s arrival in the cord and the motor neurons’ discharge, and the gap was only long enough for one synapse. The kick you see comes later still: a muscle takes tens of milliseconds to build up force. Taller people, with longer nerves, have later reflexes, which is why clinics compare latencies with height.</p>
+      <h3>How one synapse fires the motor neuron</h3>
+      <p>The Ia synapse is Ohm’s law at work. Glutamate opens channels that let Na⁺ in and K⁺ out, with a reversal potential near 0 mV, so the synaptic current is</p>
+      <div class="eq">\[ I_\text{syn} = g_\text{syn}\,(V - E_\text{syn}), \qquad E_\text{syn} \approx 0~\text{mV} \]</div>
+      <p>At rest, V ≈ −70 mV, so the driving force V − E<sub>syn</sub> is −70 mV: a large inward current, which depolarizes the cell. One Ia fibre on its own moves a motor neuron by only a fraction of a millivolt. A tap fires hundreds of Ia fibres together, and their inputs add up on the same membrane (as in <i>Summation and the Spike Trigger Zone</i>). If the sum reaches threshold, the motor neuron fires. The simulation draws the volley of all those fibres as one input, strong enough that a single Ia spike fires the motor neuron; more spikes in the volley make it fire more times, and the muscle pull harder.</p>
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>Each step’s time is its distance over its speed. With L in metres and θ in metres per second, L/θ is in seconds; multiply by 1000 for milliseconds. Equivalently, θ in m/s is θ mm per ms, and L in m is 1000·L mm, so</p>
+        <div class="eq">\[ \frac{L}{\theta} = \frac{1000\,L~\text{mm}}{\theta~\text{mm/ms}} = \frac{1000 \times 0.6}{80}~\text{ms} = 7.5~\text{ms} \]</div>
+        <p>Adding the steps gives the latency. Two of them grow with the nerve’s length, so for a person whose nerve is ΔL longer, the reflex is later by</p>
+        <div class="eq">\[ \Delta t = \Delta L \left( \frac{1}{\theta_\text{Ia}} + \frac{1}{\theta_\alpha} \right) \]</div>
+        <p>For 0.1 m more, that is 100/80 + 100/60 ≈ 2.9 ms more. In the clinic the same sum is used for the H-reflex: the Ia fibres are stimulated electrically, so t<sub>spindle</sub> drops out and L is the distance from the stimulating electrode to the cord.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="tap">Tap the tendon</button> 0.6 m each way, Ia at 80 m/s: about 25 ms.</p>
+      <p><button class="chip" data-try="tall">A longer leg</button> 0.9 m each way: both trips are longer.</p>
+      <p><button class="chip" data-try="weak">A weak tap</button> One Ia spike: the motor neuron fires twice instead of six times, and the kick is weaker.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th2" aria-labelledby="tab-th2" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> The same Ia fibres also excite a small inhibitory neuron in the cord, the Ia inhibitory interneuron. It releases glycine onto the motor neurons of the opposing muscle, the hamstrings, and silences them. So while the quadriceps straightens the knee, the hamstrings, which would bend it, let go. Two synapses: one excites, the next inhibits.</p>
+      <h3>Why glycine holds a neuron down</h3>
+      <p>Glycine opens Cl⁻ channels. By Ohm’s law their current is</p>
+      <div class="eq">\[ I_\text{gly} = g_\text{gly}\,(V - E_\text{Cl}), \qquad E_\text{Cl} \approx -75~\text{mV} \]</div>
+      <p>Between spikes the hamstring motor neuron climbs from about −70 toward threshold, about −55 mV. At −60 mV the driving force V − E<sub>Cl</sub> is +15 mV: an outward current, which pulls the voltage back toward −75 mV, away from threshold. Even near rest, where the current is small, the open channels add conductance, so excitatory current leaks out through them before it can charge the membrane (shunting, as in <i>Summation and the Spike Trigger Zone</i>).</p>
+      <p><b>A worked number.</b> In the simulation the hamstring motor neuron has a leak of g<sub>L</sub> = 0.1 mS/cm² (E<sub>L</sub> = −70 mV) and a steady current of 2.6 µA/cm² that keeps it firing. On its own that current would push the voltage to −70 + 2.6 ÷ 0.1 = −44 mV, well past threshold, so the cell fires again and again. Open 0.5 mS/cm² of glycine channels and the voltage settles instead at</p>
+      <div class="eq">\[ V = \frac{g_\text{L} E_\text{L} + g_\text{gly} E_\text{Cl} + I}{g_\text{L} + g_\text{gly}} = \frac{0.1(-70) + 0.5(-75) + 2.6}{0.1 + 0.5} \approx -70~\text{mV} \]</div>
+      <p>far below threshold: silent until the glycine channels close again, over the next 10 ms or so after each interneuron spike.</p>
+      <h3>Strychnine and tetanus</h3>
+      <p>Strychnine blocks glycine receptors, and tetanus toxin stops inhibitory interneurons releasing glycine (and GABA). Either way, opposing muscles are no longer relaxed when their partners contract. In the simulation, blocking glycine just stops the hamstring motor neuron’s pause. In a body it is worse: as the knee straightens, the stretched hamstrings fire their own stretch reflex, so both muscles pull at once. The result is the spasms and rigidity of strychnine poisoning and of tetanus.</p>
+      <h3>One more synapse, a little later</h3>
+      <p>The inhibition takes one more synapse than the excitation, so it is a little later: in the simulation the interneuron fires about a millisecond after the volley reaches the cord, and the hamstring motor neuron’s next spike is postponed by about 100 ms.</p>
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>With a steady injected current I, the voltage stops changing when the currents through the leak and the glycine channels carry it all away:</p>
+        <div class="eq">\[ I = g_\text{L}(V - E_\text{L}) + g_\text{gly}(V - E_\text{Cl}) \]</div>
+        <p>Collect the terms in V:</p>
+        <div class="eq">\[ V\,(g_\text{L} + g_\text{gly}) = g_\text{L}E_\text{L} + g_\text{gly}E_\text{Cl} + I \quad\Rightarrow\quad V = \frac{g_\text{L}E_\text{L} + g_\text{gly}E_\text{Cl} + I}{g_\text{L} + g_\text{gly}} \]</div>
+        <p>A conductance-weighted average of the batteries, plus the current divided by the total conductance (I·R<sub>in</sub>). The more glycine channels open, the more weight goes on E<sub>Cl</sub> and the smaller I·R<sub>in</sub> becomes: both keep V down. (The real cell’s Na⁺ and K⁺ channels change this a little near threshold; the conclusion stands.)</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="recip">Watch the hamstrings</button> The interneuron fires, and the hamstring motor neuron pauses.</p>
+      <p><button class="chip" data-try="gly">Block glycine</button> Strychnine: no pause.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th3" aria-labelledby="tab-th3" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> Doctors tap tendons because the reflex tests a whole loop: the sensory nerve, the dorsal root, a few segments of spinal cord, the motor neurons, the motor nerve, the neuromuscular junction and the muscle. A missing reflex says the loop is broken somewhere. An exaggerated one says the brain’s control from above has been lost.</p>
+      <h3>An absent or weak reflex</h3>
+      <ul>
+        <li><b>A cut or damaged dorsal root, or sensory nerve:</b> the volley never reaches the cord.</li>
+        <li><b>A demyelinating neuropathy</b> (such as Guillain–Barré syndrome): conduction slows, as in <i>The Action Potential Travels</i>, and some fibres fail to conduct at all (conduction block). Fibres slow by different amounts, so the volley that does arrive is late and spread out in time; its inputs no longer add up together on the motor neuron, and the motor neuron may not reach threshold. Reflexes are often lost early. In the simulation, at 40 m/s the Ia trip doubles from 7.5 to 15 ms and only 1 spike in 4 gets through: the reflex comes at about 32 ms, with a single motor neuron spike.</li>
+        <li><b>Damage further on:</b> to the motor neurons or their axons, a failing neuromuscular junction (<i>The Neuromuscular Junction</i>), or the muscle itself.</li>
+      </ul>
+      <h3>A brisk reflex</h3>
+      <p>Motor neurons are not left to the reflex alone: pathways from the brain hold their excitability in check. After an upper motor neuron lesion (a stroke, a spinal cord injury, multiple sclerosis) that control is lost: reflexes become brisk, spread to neighbouring muscles, and may repeat on their own (clonus). Here this is drawn as one steady extra current into the motor neuron, so it rests closer to threshold. By Ohm’s law, a steady current I raises the voltage by about I·R<sub>in</sub>: with a leak of 0.1 mS/cm² (R<sub>in</sub> = 10 kΩ·cm²), 1.8 µA/cm² raises it 18 mV, to −52 mV. In the simulation the motor neuron rests at about −50 mV instead of −70: close to Ohm’s law, with a little extra from Na⁺ channels starting to open. It does not fire on its own, but a light tap now fires it many times.</p>
+      <p>Real hyperreflexia has several causes at once (less inhibition from above, less inhibition of the Ia terminals themselves, and motor neurons whose own channels hold them depolarized); the single extra current lumps them together.</p>
+      <p><b>Reinforcement</b> works the same way in reverse: asking a patient to clench their hands (the Jendrassik manoeuvre) briefly raises the motor neurons’ excitability, which can bring out a reflex that seemed absent.</p>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="slow">A slow nerve</button> 40 m/s: late, and weak.</p>
+      <p><button class="chip" data-try="cut">Cut the dorsal root</button> No reflex.</p>
+      <p><button class="chip" data-try="weak">A weak tap</button> One Ia spike: a small reflex, two motor neuron spikes…</p>
+      <p><button class="chip" data-try="jend">…reinforced</button> The same weak tap with the excitability raised a little: three.</p>
+      <p><button class="chip" data-try="umn">Hyperreflexia</button> A light tap (two Ia spikes) after an upper motor neuron lesion: seven motor neuron spikes instead of four.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane" role="tabpanel" id="pane-th4" aria-labelledby="tab-th4" hidden>
+    <div class="deriv">
+      <p class="gist"><b>In plain words:</b> If every cell in a row inhibits its neighbours, a cell just on the bright side of an edge has dim neighbours on one side, so it is inhibited less than cells deep in the bright region: it fires more. A cell just on the dark side has bright neighbours, so it is inhibited more than cells deep in the dark: it fires less. The edge is exaggerated.</p>
+      <h3>Hartline and Ratliff’s equation</h3>
+      <p>Hartline and Ratliff recorded from single receptors in the horseshoe crab’s eye and found that each one’s firing rate r<sub>i</sub> is its own excitation e<sub>i</sub> (the rate it would fire alone, set by its light) minus inhibition from the other receptors’ rates:</p>
+      <div class="eq">\[ r_i = e_i - \sum_{j \ne i} k_{ij}\,r_j \]</div>
+      <p>k<sub>ij</sub> says how strongly receptor j inhibits receptor i, larger for near neighbours. The inhibition is <i>recurrent</i>: it depends on the neighbours’ output, which is itself inhibited. In the simulation k<sub>ij</sub> falls off with distance, \(k_{ij} \propto e^{-|i-j|/s}\), with s the Reach, and the k<sub>ij</sub> of each receptor add up to K, the Inhibition slider. (Hartline and Ratliff also found each inhibition has a threshold, left out here.)</p>
+      <h3>A worked number</h3>
+      <p>Deep inside an even field every receptor has the same light, so all fire at the same rate r, and the equation becomes r = e − K·r, so</p>
+      <div class="eq">\[ r = \frac{e}{1 + K} \]</div>
+      <p>With K = 0.6, a bright region (e = 60 spikes/s) fires at 60 ÷ 1.6 = 37.5 spikes/s, and a dark one (e = 20) at 12.5. Both are lower than without inhibition, but by the same factor, so the 3 : 1 ratio is kept. Near the edge the balance changes: the cell on the bright side gets less inhibition (some of its neighbours are dark) and fires more than 37.5; the cell on the dark side gets more and fires less than 12.5. With the defaults the simulation gives 45.5 and 4.5 spikes/s.</p>
+      <h3>Mach bands, and elsewhere</h3>
+      <p>Look at a ramp of brightness between two flat regions and you see a light stripe at the top of the ramp and a dark one at its foot, though the light has neither. Ernst Mach described these bands in 1865; lateral inhibition is the classic explanation. In this simple model the bands are small, a few spikes per second at most (try the Mach bands button): the ones we see look stronger, a sign that the visual system does more than one row of receptors can. The same sharpening happens in the retina, where horizontal cells give retinal cells their centre–surround receptive fields, and in touch, where it helps tell two nearby points apart.</p>
+      <details class="fullderiv">
+        <summary>Show the derivation</summary>
+        <p>In an even field e<sub>i</sub> = e and, far from any edge, r<sub>j</sub> = r for every j. The sum is then r times the total weight:</p>
+        <div class="eq">\[ r = e - r\sum_{j \ne i} k_{ij} = e - K\,r \quad\Rightarrow\quad r\,(1 + K) = e \quad\Rightarrow\quad r = \frac{e}{1+K} \]</div>
+        <p>For the edge, a first guess replaces the neighbours’ rates by what they would be in an even field. The cell just on the bright side has about half its inhibition from the dark side (rates near 12.5) and half from the bright side (near 37.5):</p>
+        <div class="eq">\[ r_\text{edge} \approx 60 - 0.6\left(\tfrac12 \cdot 12.5 + \tfrac12 \cdot 37.5\right) = 60 - 15 = 45~\text{spikes/s} \]</div>
+        <p>more than the 37.5 deep in the bright region. The same guess for the cell just on the dark side gives 20 − 15 = 5 spikes/s, less than 12.5. The simulation solves the equations exactly, by repeating the update until the rates stop changing.</p>
+      </details>
+    </div>
+    <aside class="try">
+      <span class="sect-title">Try it</span>
+      <p><button class="chip" data-try="edge">A step</button> Overshoot on the bright side, undershoot on the dark.</p>
+      <p><button class="chip" data-try="noinh">No inhibition</button> The rates follow the light exactly.</p>
+      <p><button class="chip" data-try="reach">A long reach</button> Wider, shallower bands.</p>
+      <p><button class="chip" data-try="bar">A narrow bar</button> Brighter at its edges than in its middle.</p>
+      <p><button class="chip" data-try="mach">Mach bands</button> The ramp.</p>
+    </aside>
+  </div>
+
+  <div class="tabpane refs" role="tabpanel" id="pane-refs" aria-labelledby="tab-refs" hidden>
+    <div class="deriv wide">
+      <h3>Where these ideas come from</h3>
+      <p>The original papers and books behind this lesson, oldest first.</p>
+      <ol class="reflist">
+        <li><b>Sherrington CS (1906).</b> <i>The Integrative Action of the Nervous System.</i> New Haven: Yale University Press. (A book; no DOI.)<br><span class="why">Reflexes as the nervous system’s units of action, reciprocal innervation of opposing muscles, and the synapse as an idea.</span></li>
+        <li><b>Lloyd DPC (1943).</b> Conduction and synaptic transmission of the reflex response to stretch in spinal cats. <i>Journal of Neurophysiology</i> 6:317–326. <a href="https://doi.org/10.1152/jn.1943.6.4.317" target="_blank" rel="noopener">doi:10.1152/jn.1943.6.4.317</a><br><span class="why">The delay in the cord is only long enough for one synapse: the stretch reflex is monosynaptic.</span></li>
+        <li><b>Eccles JC, Fatt P, Landgren S (1956).</b> Central pathway for direct inhibitory action of impulses in largest afferent nerve fibres to muscle. <i>Journal of Neurophysiology</i> 19:75–98. <a href="https://doi.org/10.1152/jn.1956.19.1.75" target="_blank" rel="noopener">doi:10.1152/jn.1956.19.1.75</a><br><span class="why">Ia fibres inhibit the opposing muscle’s motor neurons through one interneuron.</span></li>
+        <li><b>Hartline HK, Wagner HG, Ratliff F (1956).</b> Inhibition in the eye of <i>Limulus</i>. <i>Journal of General Physiology</i> 39:651–673. <a href="https://doi.org/10.1085/jgp.39.5.651" target="_blank" rel="noopener">doi:10.1085/jgp.39.5.651</a><br><span class="why">Lighting one receptor slows its neighbours: lateral inhibition measured cell by cell.</span></li>
+        <li><b>Hartline HK, Ratliff F (1957).</b> Inhibitory interaction of receptor units in the eye of <i>Limulus</i>. <i>Journal of General Physiology</i> 40:357–376. <a href="https://doi.org/10.1085/jgp.40.3.357" target="_blank" rel="noopener">doi:10.1085/jgp.40.3.357</a><br><span class="why">The inhibition is mutual and depends on the neighbours’ firing: the equation used here.</span></li>
+        <li><b>Ratliff F, Hartline HK (1959).</b> The responses of <i>Limulus</i> optic nerve fibers to patterns of illumination on the receptor mosaic. <i>Journal of General Physiology</i> 42:1241–1255. <a href="https://doi.org/10.1085/jgp.42.6.1241" target="_blank" rel="noopener">doi:10.1085/jgp.42.6.1241</a><br><span class="why">A step of light gives an overshoot and an undershoot at the edge, as in the simulation.</span></li>
+        <li><b>Ratliff F (1965).</b> <i>Mach Bands: Quantitative Studies on Neural Networks in the Retina.</i> San Francisco: Holden-Day. (A book; no DOI.)<br><span class="why">Mach’s bands, and lateral inhibition as their explanation.</span></li>
+        <li><b>Werman R, Davidoff RA, Aprison MH (1968).</b> Inhibitory action of glycine on spinal neurons in the cat. <i>Journal of Neurophysiology</i> 31:81–95. <a href="https://doi.org/10.1152/jn.1968.31.1.81" target="_blank" rel="noopener">doi:10.1152/jn.1968.31.1.81</a><br><span class="why">Glycine as the spinal cord’s inhibitory transmitter.</span></li>
+        <li><b>Curtis DR, Duggan AW, Johnston GAR (1971).</b> The specificity of strychnine as a glycine antagonist in the mammalian spinal cord. <i>Experimental Brain Research</i> 12:547–565. <a href="https://doi.org/10.1007/BF00234248" target="_blank" rel="noopener">doi:10.1007/BF00234248</a><br><span class="why">Strychnine blocks glycine’s inhibition.</span></li>
+        <li><b>Jankowska E, Roberts WJ (1972).</b> Synaptic actions of single interneurones mediating reciprocal Ia inhibition of motoneurones. <i>Journal of Physiology</i> 222:623–642. <a href="https://doi.org/10.1113/jphysiol.1972.sp009818" target="_blank" rel="noopener">doi:10.1113/jphysiol.1972.sp009818</a><br><span class="why">Recording from single Ia inhibitory interneurons and the motor neurons they inhibit.</span></li>
+        <li><b>Traub RD, Miles R (1991).</b> <i>Neuronal Networks of the Hippocampus.</i> Cambridge University Press. <a href="https://doi.org/10.1017/CBO9780511895401" target="_blank" rel="noopener">doi:10.1017/CBO9780511895401</a><br><span class="why">The Na⁺ and K⁺ channel kinetics of the model neurons.</span></li>
+        <li><b>Frijns CJM, Laman DM, van Duijn MAJ, van Duijn H (1997).</b> Normal values of patellar and ankle tendon reflex latencies. <i>Clinical Neurology and Neurosurgery</i> 99:31–36. <a href="https://doi.org/10.1016/S0303-8467(96)00593-8" target="_blank" rel="noopener">doi:10.1016/S0303-8467(96)00593-8</a><br><span class="why">Tendon reflex latencies measured in 102 healthy people: they grow with height.</span></li>
+        <li><b>Pospischil M, Toledo-Rodriguez M, Monier C, Piwkowska Z, Bal T, Frégnac Y, Markram H, Destexhe A (2008).</b> Minimal Hodgkin–Huxley type models for different classes of cortical and thalamic neurons. <i>Biological Cybernetics</i> 99:427–441. <a href="https://doi.org/10.1007/s00422-008-0263-8" target="_blank" rel="noopener">doi:10.1007/s00422-008-0263-8</a><br><span class="why">The one-compartment model neurons used here (regular-spiking and fast-spiking).</span></li>
+        <li><b>Burke D (2016).</b> Clinical uses of H reflexes of upper and lower limb muscles. <i>Clinical Neurophysiology Practice</i> 1:9–17. <a href="https://doi.org/10.1016/j.cnp.2016.02.003" target="_blank" rel="noopener">doi:10.1016/j.cnp.2016.02.003</a><br><span class="why">How the reflex’s latency and size are measured in the clinic.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card calc" id="lat-calc">
+  <div class="calc-head">
+    <span class="sect-title">Reflex latency calculator</span>
+  </div>
+  <p class="caption">Set the nerve’s length, the two conduction speeds and the delays, and see how long each step of the reflex takes and what they add up to.</p>
+  <div class="calc-body">
+    <div class="gsliders">
+      <div class="gion">
+        <div class="gh">The nerve</div>
+        <div class="gr"><label for="kL">L</label><input type="range" id="kL" min="0.2" max="1.2" step="0.01" value="0.6"><output id="kLo" for="kL"></output></div>
+        <span class="caption">length, each way, between the muscle and the spinal cord</span>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot cl"></i> Up: the Ia fibre</div>
+        <div class="gr"><label for="kVIa">θ<sub>Ia</sub></label><input type="range" id="kVIa" min="10" max="120" step="1" value="80"><output id="kVIao" for="kVIa"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh"><i class="dot acc"></i> Down: the motor axon</div>
+        <div class="gr"><label for="kVa">θ<sub>α</sub></label><input type="range" id="kVa" min="10" max="120" step="1" value="60"><output id="kVao" for="kVa"></output></div>
+      </div>
+      <div class="gion">
+        <div class="gh">Delays</div>
+        <div class="gr"><label for="kSp">spindle</label><input type="range" id="kSp" min="0" max="6" step="0.5" value="3"><output id="kSpo" for="kSp"></output></div>
+        <div class="gr"><label for="kCord">cord</label><input type="range" id="kCord" min="0.5" max="5" step="0.1" value="2"><output id="kCordo" for="kCord"></output></div>
+        <div class="gr"><label for="kNmj">junction</label><input type="range" id="kNmj" min="0.5" max="4" step="0.1" value="2"><output id="kNmjo" for="kNmj"></output></div>
+        <span class="caption">the spindle firing after the tap; the synapse and the motor neuron reaching threshold; the neuromuscular junction and the muscle’s own spike</span>
+      </div>
+    </div>
+    <div class="calc-out">
+      <div class="out"><span class="big" id="kTot">—</span><span class="caption">tap to the muscle’s electrical response</span></div>
+      <div class="es"><span>up, L/θ<sub>Ia</sub> <b id="kUp">—</b></span><span>down, L/θ<sub>α</sub> <b id="kDown">—</b></span><span>delays <b id="kDel">—</b></span><span>share spent travelling <b id="kShare">—</b></span></div>
+      <div class="gformula" id="kFormula" aria-live="polite"></div>
+      <div class="budget" id="kBudget" aria-label="Where the time goes"></div>
+      <div class="legend"><span><i class="dot" style="background:var(--cl);opacity:.55"></i>spindle</span><span><i class="dot cl"></i>up the Ia fibre</span><span><i class="dot k"></i>cord</span><span><i class="dot acc"></i>down the motor axon</span><span><i class="dot na"></i>junction</span></div>
+      <div class="tabs" role="tablist" aria-label="Calculator chart">
+        <button type="button" role="tab" id="tab-kplot" aria-controls="pane-kplot" aria-selected="true">Latency against…</button>
+        <button type="button" role="tab" id="tab-khelp" aria-controls="pane-khelp" aria-selected="false" tabindex="-1">How to read</button>
+      </div>
+      <div class="stage" role="tabpanel" id="pane-kplot" aria-labelledby="tab-kplot">
+        <div class="segrow"><label for="kX" class="sect-title">Plot the latency against</label>
+          <select id="kX"><option value="">Choose…</option><option value="L">nerve length</option><option value="vIa">Ia fibre speed</option><option value="va">motor axon speed</option></select></div>
+        <canvas id="kChart" aria-label="Reflex latency against the quantity chosen"></canvas>
+        <p class="caption" id="kCap"></p>
+      </div>
+      <div class="help" role="tabpanel" id="pane-khelp" aria-labelledby="tab-khelp" hidden>
+        <ul>
+          <li><b>The bar</b> is the latency split into its steps, in proportion: which ones take the time?</li>
+          <li><b>The chart:</b> choose one quantity to vary over its slider’s range, keeping all the others as set. The dot is the value set now. Before you choose, think about the shape you expect: a straight line, or a curve?</li>
+          <li>Length enters the latency as L/θ, so the latency grows in a straight line with length; speed is in the denominator, so slowing a nerve that is already slow costs much more than slowing a fast one.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ---------- shared: colours, numbers, canvas text with subscripts, charts ----------
+const $ = id => document.getElementById(id);
+let C = {};
+const colorHooks = [];
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg','surface','ink','muted','line','accent','k','na','cl','syn','ea','a','pos','neg','cyto','bath','mem','memdark','warm','skin','musc','bone','grey']
+    .forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+  colorHooks.forEach(f => f());
+}
+function rgb(hex) { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const mixc = (a, b, t) => { const p = rgb(a), q = rgb(b); return `rgb(${p.map((v, i) => Math.round(v * t + q[i] * (1 - t))).join(',')})`; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = (v, d = 1) => isFinite(v) ? (+v.toFixed(d)).toFixed(d).replace('-', '−') : '—';
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// Canvas text with real subscripts: "θ_Ia" and "g_{Na}" draw Ia and Na lowered and smaller.
+function fillSub(g, text, x, y, align = 'left') {
+  const parts = String(text).split(/_(\{[^}]*\}|[^\s_,;:)]+)/);
+  const size = parseFloat(/([\d.]+)px/.exec(g.font)[1]) || 12, base = g.font, small = base.replace(/[\d.]+px/, (size * 0.75).toFixed(1) + 'px');
+  const w = parts.reduce((a, p, i) => { g.font = i % 2 ? small : base; return a + g.measureText(p.replace(/[{}]/g, '')).width; }, 0);
+  let cx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  const saveAlign = g.textAlign; g.textAlign = 'left';
+  parts.forEach((p, i) => {
+    const t = p.replace(/[{}]/g, ''); if (!t) return;
+    g.font = i % 2 ? small : base;
+    g.fillText(t, cx, y + (i % 2 ? size * 0.28 : 0));
+    cx += g.measureText(t).width;
+  });
+  g.font = base; g.textAlign = saveAlign;
+}
+function nice(a, b, n = 5) {
+  const span = Math.abs(b - a) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(Math.min(a, b) / step) * step; v <= Math.max(a, b) + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+const tickTxt = v => (+v.toFixed(6)).toString().replace('-', '−');
+
+// One chart, drawn now. s: { h, w (default: the canvas's width), x:[a,b], y:[lo,hi], xlab, ylab,
+// lines:[{x,y,color,w,dash,alpha}], vlines:[{x,label,color,row}], dots:[{x,y,color,r}],
+// upTo: draw the lines only up to this x (a recording in progress), cursor: a line at upTo }
+function plot(cv, s) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2), W = s.w || cv.clientWidth || cv.parentElement.clientWidth || 600, H = s.h || 220;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  cv.style.height = H + 'px';
+  if (s.w) cv.style.width = W + 'px';
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+  const L = s.left ?? 54, R = s.right ?? 14, T = 16, B = s.xlab === '' ? 22 : 36;
+  const [x0, x1] = s.x, [y0, y1] = s.y;
+  const X = v => L + (v - x0) / (x1 - x0) * (W - L - R), Y = v => T + (y1 - v) / (y1 - y0) * (H - T - B);
+  const mono = '11px ' + (C.mono || '"IBM Plex Mono", monospace');
+  g.font = mono; g.lineWidth = 1;
+  const xt = s.xticks || nice(x0, x1, Math.max(3, Math.round((W - L - R) / 90)));
+  const yt = s.yticks || nice(y0, y1, Math.max(3, Math.round((H - T - B) / 40)));
+  g.strokeStyle = C.line; g.fillStyle = C.muted;
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  for (const v of xt) { const x = Math.round(X(v)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.fillText(tickTxt(v), x, H - B + 5); }
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (const v of yt) { const y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke(); g.fillText(tickTxt(v), L - 6, y); }
+  g.strokeStyle = C.muted; g.beginPath(); g.moveTo(L, H - B + .5); g.lineTo(W - R, H - B + .5); g.moveTo(L - .5, T); g.lineTo(L - .5, H - B); g.stroke();
+  g.font = '12px "IBM Plex Sans", sans-serif';
+  if (s.xlab) { g.textBaseline = 'bottom'; fillSub(g, s.xlab, W - R, H - 1, 'right'); }
+  if (s.ylab) { g.textBaseline = 'top'; fillSub(g, s.ylab, 4, 0, 'left'); }
+  g.save(); g.beginPath(); g.rect(L, T - 2, W - L - R, H - T - B + 4); g.clip();
+  (s.vlines || []).forEach((v, i) => {
+    g.strokeStyle = v.color || C.muted; g.setLineDash(v.dash || [2, 3]); g.lineWidth = v.w || 1;
+    const x = Math.round(X(v.x)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke();
+    if (v.label) { g.setLineDash([]); g.fillStyle = v.color || C.muted; g.textBaseline = 'top'; fillSub(g, v.label, x + 4, T + 2 + 14 * (v.row ?? i), 'left'); }
+  });
+  g.setLineDash([]);
+  const upTo = s.upTo ?? Infinity;
+  for (const l of s.lines || []) {
+    const n = l.y.length; if (!n) continue;
+    g.strokeStyle = l.color; g.lineWidth = l.w || 2; g.lineJoin = 'round'; g.setLineDash(l.dash ? [6, 4] : []);
+    g.globalAlpha = l.alpha ?? 1;
+    g.beginPath();
+    const step = Math.max(1, Math.floor(n / (W * 2)));   // at most two points per pixel
+    for (let i = 0; i < n; i += step) {
+      const xv = l.x[i]; if (xv > upTo) break;
+      const yv = clamp(l.y[i], y0 - (y1 - y0), y1 + (y1 - y0));
+      i ? g.lineTo(X(xv), Y(yv)) : g.moveTo(X(xv), Y(yv));
+    }
+    g.stroke(); g.globalAlpha = 1;
+  }
+  g.setLineDash([]);
+  if (s.cursor && isFinite(upTo)) { g.strokeStyle = C.ink; g.globalAlpha = 0.35; g.lineWidth = 1; const x = Math.round(X(upTo)) + .5; g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.globalAlpha = 1; }
+  for (const d of s.dots || []) { g.fillStyle = d.color || C.accent; g.beginPath(); g.arc(X(d.x), Y(d.y), d.r || 4, 0, 2 * Math.PI); g.fill(); g.strokeStyle = C.surface; g.lineWidth = 1.5; g.stroke(); }
+  g.restore();
+  return { X, Y };
+}
+function bindRange(id, show, onv) {
+  const el = $(id), out = $(id + 'o');
+  const h = () => { const v = parseFloat(el.value); out.textContent = show(v); onv(v); };
+  el.addEventListener('input', h); h();
+}
+// run fn once on the next frame however often it is asked (for slider drags)
+function later(fn) { let queued = false; return () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; fn(); }); } }; }
+readColors();
+
+// ---------- model neurons: Traub and Miles's Na⁺ and K⁺ channels in Pospischil et al.'s one-compartment cells ----------
+// Units: mV, ms, µF/cm², mS/cm², µA/cm². 'rs' regular-spiking, 'fs' fast-spiking.
+const CELLS = {
+  rs: { gL: 0.1, EL: -70, gNa: 50, gK: 5, gM: 0.07, tauM: 1000, VT: -55 },
+  fs: { gL: 0.15, EL: -70, gNa: 50, gK: 10, gM: 0, tauM: 1000, VT: -55 },
+};
+const vtrap = (x, k) => Math.abs(x / k) < 1e-6 ? k * (1 - x / k / 2) : x / (Math.exp(x / k) - 1);
+// several cells at once. o: { n, T, dt, every, cells:[params per cell], I(i,t), extra(i,t,V,Vs) outward current }
+function cells(o) {
+  const N = o.n, dt = o.dt || 0.025, every = o.every || 4, T = o.T || 500, steps = Math.floor(T / dt), keep = Math.floor(steps / every) + 1;
+  const P = o.cells.map(c => Object.assign({ ENa: 50, EK: -90 }, CELLS[c.cell || 'rs'], c));
+  const v = P.map(p => p.V0 ?? p.EL), m = [], h = [], nn = [], pm = [];
+  P.forEach((p, i) => { const u = v[i] - p.VT;
+    const am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5), ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5));
+    const an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+    m[i] = am / (am + bm); h[i] = ah / (ah + bh); nn[i] = an / (an + bn); pm[i] = 1 / (1 + Math.exp(-(v[i] + 35) / 10)); });
+  const t = new Float32Array(keep), V = P.map(() => new Float32Array(keep)), spikes = P.map(() => []), above = P.map(() => false);
+  const I = o.I || (() => 0);
+  let k = 0;
+  for (let s = 0; s <= steps; s++) {
+    const time = s * dt;
+    if (s % every === 0 && k < keep) { t[k] = time; for (let i = 0; i < N; i++) V[i][k] = v[i]; k++; }
+    for (let i = 0; i < N; i++) {
+      const p = P[i], u = v[i] - p.VT, x = v[i];
+      const am = 0.32 * vtrap(13 - u, 4), bm = 0.28 * vtrap(u - 40, 5);
+      const ah = 0.128 * Math.exp(-(u - 17) / 18), bh = 4 / (1 + Math.exp(-(u - 40) / 5));
+      const an = 0.032 * vtrap(15 - u, 5), bn = 0.5 * Math.exp(-(u - 10) / 40);
+      m[i] += (1 - Math.exp(-dt * (am + bm))) * (am / (am + bm) - m[i]);
+      h[i] += (1 - Math.exp(-dt * (ah + bh))) * (ah / (ah + bh) - h[i]);
+      nn[i] += (1 - Math.exp(-dt * (an + bn))) * (an / (an + bn) - nn[i]);
+      if (p.gM) { const pinf = 1 / (1 + Math.exp(-(x + 35) / 10)), taup = p.tauM / (3.3 * Math.exp((x + 35) / 20) + Math.exp(-(x + 35) / 20)); pm[i] += (1 - Math.exp(-dt / taup)) * (pinf - pm[i]); }
+      const iion = p.gNa * m[i] ** 3 * h[i] * (x - p.ENa) + p.gK * nn[i] ** 4 * (x - p.EK) + p.gM * pm[i] * (x - p.EK) + p.gL * (x - p.EL);
+      const ix = o.extra ? o.extra(i, time, x, v) : 0;
+      v[i] = x + dt * (I(i, time) - iion - ix);
+      if (!above[i] && v[i] > 0) { above[i] = true; spikes[i].push(time); }
+      if (above[i] && v[i] < -20) above[i] = false;
+    }
+  }
+  return { t: t.subarray(0, k), V: V.map(a => a.subarray(0, k)), spikes };
+}
+// a double exponential rising with tr and falling with td (ms), peak 1, starting at t0
+function alpha2(t, t0, tr, td) {
+  const d = t - t0; if (d <= 0) return 0;
+  const tp = tr * td / (td - tr) * Math.log(td / tr);
+  return (Math.exp(-d / td) - Math.exp(-d / tr)) / (Math.exp(-tp / td) - Math.exp(-tp / tr));
+}
+</script>
+
+<script>
+// =====================================================================================
+// Part 1: the stretch reflex. The tap is at time 0. The cells are simulated from PRE ms before it, so the
+// hamstring motor neuron is already firing steadily, to TRUN − PRE ms after. The whole tap is computed at once
+// (a few ms of work); time then plays it back, drawing the picture and the charts up to "now".
+// Cell 0: quadriceps motor neuron; 1: Ia inhibitory interneuron; 2: hamstring motor neuron.
+const RX = (() => {
+  const PRE = 60, TRUN = 260, X0 = -20, X1 = TRUN - PRE;
+  const V_ALPHA = 60, T_SPINDLE = 3, ISI = 2.5, T_NMJ = 2, T_SYN = 1, F_BLOCK = 0.45;
+  const P = { n: 4, L: 0.6, v: 80, b: 0, cut: false, gly: false };
+  let D = null, tNow = X1, running = false, speed = 20, dirty = true, need = true;
+
+  function compute() {
+    need = false;
+    const aff = P.L / P.v * 1000, eff = P.L / V_ALPHA * 1000;
+    // a slow (demyelinated) nerve spreads the volley out in time, and some of its fibres fail to conduct at all
+    const spread = 80 / P.v, conducted = Math.min(1, (P.v / 70) ** 2);
+    const nIa = P.cut ? 0 : Math.round(P.n * conducted);
+    const leave = Array.from({ length: P.n }, (_, k) => T_SPINDLE + k * ISI * spread);   // spikes leaving the spindle, ms after the tap
+    const arrive = leave.slice(0, nIa).map(t => PRE + t + aff);                          // ...reaching the cord (simulation time)
+    const inSpk = []; let inAbove = false;
+    const r = cells({ n: 3, T: TRUN, cells: [{ cell: 'rs', gM: 0 }, { cell: 'fs', gM: 0 }, { cell: 'rs', gM: 0 }],
+      I: i => (i === 0 ? P.b : i === 2 ? 2.6 : 0),
+      extra: (i, t, V, Vs) => {
+        if (i === 1) { if (!inAbove && Vs[1] > 0) { inAbove = true; inSpk.push(t); } if (inAbove && Vs[1] < -20) inAbove = false; }
+        let g = 0;
+        if (i < 2) for (const a of arrive) g += (i === 0 ? 0.9 : 1.2) * alpha2(t, a + T_SYN, 0.3, 3);
+        let ix = g * (V - 0);                                   // excitatory synapse, reversal 0 mV
+        if (i === 2 && !P.gly) { let gi = 0; for (const s of inSpk) gi += 2 * alpha2(t, s + 1, 0.5, 10); ix += gi * (V + 75); }   // glycine, Cl⁻ at −75 mV
+        return ix;
+      } });
+    // muscle force: a twitch for each motor neuron spike, after the trip down the motor axon and the junction
+    const twitch = d => d <= 0 ? 0 : (d / 25) * Math.exp(1 - d / 25);
+    const tf = [], fAg = [], fAn = [];
+    for (let t = 0; t <= TRUN; t += 0.5) {
+      tf.push(t - PRE);
+      fAg.push(r.spikes[0].reduce((s, sp) => s + twitch(t - sp - eff - T_NMJ), 0));
+      fAn.push(r.spikes[2].reduce((s, sp) => s + 0.25 * twitch(t - sp - eff - T_NMJ), 0));
+    }
+    const x = Array.from(r.t, t => t - PRE);
+    const ag = arrive.length ? r.spikes[0].filter(t => t > arrive[0]) : [];
+    const early = r.spikes[0].filter(t => !arrive.length || t <= arrive[0]);
+    const onset = ag.length ? ag[0] + eff + T_NMJ - PRE : NaN;
+    // the hamstring pause: the interval around the interneuron's first spike, against the steady interval before the tap
+    const an = r.spikes[2], tIN = inSpk.length ? inSpk[0] : Infinity;
+    const after = an.filter(t => t > tIN), before = an.filter(t => t <= Math.min(tIN, PRE));
+    const lastBefore = an.filter(t => t <= tIN).pop();
+    const pause = isFinite(tIN) && after.length && lastBefore !== undefined ? after[0] - lastBefore : NaN;
+    const isi = before.length > 2 ? (before[before.length - 1] - before[1]) / (before.length - 2) : NaN;
+    const vRest = r.V[0][Math.round((PRE - 1) / 0.1)];
+    D = { r, x, aff, eff, leave, nIa, arrive, inSpk: inSpk.map(t => t - PRE), tf, fAg, fAn, ag, early, onset, pause, isi, vRest,
+          fAn0: fAn[PRE * 2], fMax: Math.max(...fAg),
+          mq: r.spikes[0].map(t => t - PRE), mh: r.spikes[2].map(t => t - PRE) };
+    readouts(); dirty = true;
+  }
+  const later1 = later(() => { if (need) compute(); });
+  const changed = () => { need = true; later1(); };
+
+  function readouts() {
+    const d = D;
+    $('rxLat').textContent = d.ag.length ? fmt(d.onset, 1) + ' ms' : 'no reflex';
+    $('rxAff').textContent = fmt(d.aff, 1) + ' ms';
+    $('rxNIa').textContent = `${d.arrive.length} of ${P.n}`;
+    $('rxNMN').textContent = d.ag.length + (d.early.length ? ` (+${d.early.length} before the volley)` : '');
+    $('rxVr').textContent = fmt(d.vRest, 1) + ' mV';
+    $('rxPause').textContent = isFinite(d.pause) && !P.gly ? `${fmt(d.pause, 0)} ms (${fmt(d.isi, 0)})` : `none (${fmt(d.isi, 0)} ms)`;
+    $('rxF').textContent = fmt(d.fMax, 2) + ' twitches';
+    const why = P.cut ? 'The volley stops at the cut dorsal root, so nothing reaches the cord.'
+      : !d.ag.length ? `${d.arrive.length} Ia spike${d.arrive.length === 1 ? '' : 's'} reached the cord, but their inputs did not add up to threshold: no reflex.`
+      : `The first Ia spike reached the cord ${fmt(d.leave[0] + d.aff, 1)} ms after the tap; the quadriceps motor neuron fired ${fmt(d.ag[0] - PRE, 1)} ms after the tap, and its spike took another ${fmt(d.eff, 1)} ms to reach the muscle.`;
+    $('rxCap').textContent = why + ' The time charts are recordings in the spinal cord; the force includes the trip back down.';
+  }
+
+  // ---------- the picture: a seated leg and a cross-section of the spinal cord, in a 680 × 460 drawing ----------
+  const cv = $('rxPic'), PW = 680, PH = 460;
+  const mk = pts => { const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); return { pts, cum, len: cum[cum.length - 1] }; };
+  function at(p, f) {
+    const d = clamp(f, 0, 1) * p.len; let i = 1;
+    while (i < p.pts.length - 1 && p.cum[i] < d) i++;
+    const a = p.pts[i - 1], b = p.pts[i], u = (d - p.cum[i - 1]) / ((p.cum[i] - p.cum[i - 1]) || 1);
+    return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+  }
+  const CX = 165, CY = 120, CRX = 120, CRY = 86;                // the cord
+  const S = [392, 298], E = [238, 52], CUT = [258, 55];        // spindle, dorsal root entry, where a cut goes
+  const MQ = [212, 162], MH = [186, 166], IN = [186, 130];     // quadriceps and hamstring motor neurons, interneuron
+  const EQ = [356, 292], EH = [292, 356], DRG = [306, 78];     // endplates, dorsal root ganglion
+  const KNEE = [578, 342];
+  const iaA = [S, [370, 290], [340, 276], [311, 262], [316, 236], [310, 206], [314, 150], [312, 108], DRG, [282, 60], CUT];
+  const IA_P = mk([...iaA, E]), F_CUT = mk(iaA).len / IA_P.len;           // muscle → cord, the Ia trip
+  const IA_Q = mk([E, [216, 52], [210, 88], [208, 108], [210, 140], MQ]);   // in the cord, to the motor neuron
+  const IA_I = mk([E, [216, 52], [210, 88], [208, 108], IN]);               // ...and to the interneuron
+  const IN_H = mk([IN, [184, 148], MH]);                                    // interneuron → hamstring motor neuron
+  const AX_Q = mk([MQ, [234, 176], [250, 182], [285, 195], [316, 206], [322, 236], [316, 262], [338, 282], EQ]);
+  const AX_H = mk([MH, [196, 186], [230, 190], [252, 190], [285, 201], [322, 212], [328, 240], [306, 266], [262, 270], [220, 286], [206, 322], [222, 352], [262, 358], EH]);
+
+  // the cord's grey matter: one half of a butterfly, mirrored
+  const HALF = [[0, -12], [14, -18, 24, -50], [36, -54], [34, -22, 44, -2], [60, 20, 54, 42], [40, 56, 18, 44], [6, 26, 0, 22]];
+  function greyMatter(g) {
+    const s = 1.4, P2 = (x, y) => [CX + x * s, CY + y * s];
+    g.beginPath();
+    let p = P2(...HALF[0]); g.moveTo(...p);
+    for (let k = 1; k < HALF.length; k++) { const q = HALF[k]; if (q.length === 2) g.lineTo(...P2(...q)); else g.quadraticCurveTo(...P2(q[0], q[1]), ...P2(q[2], q[3])); }
+    // the left half, the same points mirrored and in reverse
+    for (let k = HALF.length - 1; k >= 1; k--) {
+      const q = HALF[k], prev = HALF[k - 1], end = prev.length === 2 ? prev : [prev[2], prev[3]];
+      if (q.length === 2) g.lineTo(...P2(-end[0], end[1])); else g.quadraticCurveTo(...P2(-q[0], q[1]), ...P2(-end[0], end[1]));
+    }
+    g.closePath();
+  }
+  const fusi = (g, x0, x1, yc, half) => { g.beginPath(); g.moveTo(x0, yc); g.quadraticCurveTo((x0 + x1) / 2, yc - 2 * half, x1, yc); g.quadraticCurveTo((x0 + x1) / 2, yc + 2 * half, x0, yc); g.closePath(); };
+  const strokeP = (g, p) => { g.beginPath(); g.moveTo(...p.pts[0]); for (let i = 1; i < p.pts.length; i++) g.lineTo(...p.pts[i]); g.stroke(); };
+  function label(g, text, x, y, align = 'left', color = C.muted, font = '11px "IBM Plex Sans", sans-serif') {
+    g.font = font; g.textAlign = align; g.textBaseline = 'middle';
+    g.strokeStyle = C.surface; g.lineWidth = 3; g.lineJoin = 'round'; g.strokeText(text, x, y);
+    g.fillStyle = color; g.fillText(text, x, y);
+  }
+  const vcol = V => mixc(C.pos, C.neg, clamp((V + 72) / 30, 0, 1));
+  const Vat = (i, t) => { const k = clamp(Math.round((t + PRE) / 0.1), 0, D.r.V[i].length - 1); return D.r.V[i][k]; };
+  const fAt = (arr, t) => arr[clamp(Math.round((t + PRE) * 2), 0, arr.length - 1)];
+  function spikeDot(g, p, f, color, alpha = 1) {
+    const [x, y] = at(p, f);
+    g.globalAlpha = alpha; g.fillStyle = color; g.strokeStyle = C.surface; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(x, y, 4.2, 0, 2 * Math.PI); g.fill(); g.stroke(); g.globalAlpha = 1;
+  }
+
+  function drawPic() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), cw = cv.clientWidth || cv.parentElement.clientWidth || PW, sc = cw / PW, ch = PH * sc;
+    if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(ch * dpr)) { cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
+    cv.style.height = ch + 'px';
+    const g = cv.getContext('2d');
+    g.setTransform(dpr * sc, 0, 0, dpr * sc, 0, 0);
+    g.fillStyle = C.surface; g.fillRect(0, 0, PW, PH);
+    const t = tNow, d = D;
+    const fq = fAt(d.fAg, t), fh = fAt(d.fAn, t) - d.fAn0;
+    const theta = clamp(0.3 * fq - 0.3 * fh, -0.08, 0.75);
+
+    // --- the leg: thigh, muscles, bone, knee, shin ---
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    g.fillStyle = C.skin; g.strokeStyle = C.line; g.lineWidth = 1.2;
+    g.beginPath(); g.roundRect(190, 262, 400, 118, 46); g.fill(); g.stroke();
+    g.fillStyle = C.bone; g.fillRect(200, 327, 375, 8);
+    const qOn = clamp(fq / 1.5, 0, 1), hOn = clamp(Math.max(0, fAt(d.fAn, t)) / 0.6, 0, 1);
+    fusi(g, 225, 545, 300, 25 * (1 + 0.16 * qOn)); g.fillStyle = mixc(C.accent, C.musc, 0.55 * qOn); g.fill(); g.strokeStyle = C.memdark; g.lineWidth = 1; g.stroke();
+    fusi(g, 225, 535, 353, 17 * (1 + 0.12 * hOn)); g.fillStyle = mixc(C.na, C.musc, 0.5 * hOn); g.fill(); g.stroke();
+    // tendons, the kneecap and the shin (rotated about the knee by theta; positive straightens the knee)
+    const loc = (lx, ly) => [KNEE[0] + lx * Math.cos(theta) + ly * Math.sin(theta), KNEE[1] - lx * Math.sin(theta) + ly * Math.cos(theta)];
+    const pat = [598 + 6 * Math.sin(theta), 306 - 3 * Math.sin(theta)];
+    g.strokeStyle = C.mem; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(545, 300); g.lineTo(pat[0] - 4, pat[1] - 4); g.stroke();
+    g.save(); g.translate(...KNEE); g.rotate(-theta);
+    g.fillStyle = C.skin; g.strokeStyle = C.line; g.lineWidth = 1.2;
+    g.beginPath(); g.roundRect(-16, -8, 32, 102, 12); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(-14, 84); g.lineTo(38, 86); g.quadraticCurveTo(46, 92, 40, 100); g.lineTo(-14, 100); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = C.bone; g.fillRect(-5, 0, 10, 86);
+    g.restore();
+    g.strokeStyle = C.mem; g.lineWidth = 5;
+    const tub = loc(13, 26), hamIns = loc(-13, 20);
+    g.beginPath(); g.moveTo(pat[0], pat[1] + 8); g.lineTo(...tub); g.stroke();
+    g.beginPath(); g.moveTo(535, 353); g.lineTo(...hamIns); g.stroke();
+    g.fillStyle = C.bone; g.strokeStyle = C.memdark; g.lineWidth = 1;
+    g.beginPath(); g.ellipse(pat[0], pat[1], 8, 12, -0.2, 0, 2 * Math.PI); g.fill(); g.stroke();
+    g.fillStyle = C.bone; g.beginPath(); g.arc(...KNEE, 9, 0, 2 * Math.PI); g.fill();
+
+    // --- the hammer: swings in during the 12 ms before the tap, and back out after ---
+    const phi = t < -12 ? 0.55 : t < 0 ? 0.55 * (-t / 12) ** 2 : t < 30 ? 0.55 * (t / 30) : 0.55;
+    const PIV = [660, 236];
+    const tm = [(pat[0] + tub[0]) / 2 + 8, (pat[1] + 8 + tub[1]) / 2];
+    const ang0 = Math.atan2(tm[1] - PIV[1], tm[0] - PIV[0]), len = Math.hypot(tm[0] - PIV[0], tm[1] - PIV[1]) + 4, ang = ang0 - phi;
+    const hx = PIV[0] + len * Math.cos(ang), hy = PIV[1] + len * Math.sin(ang);
+    g.strokeStyle = C.muted; g.lineWidth = 4; g.beginPath(); g.moveTo(...PIV); g.lineTo(hx, hy); g.stroke();
+    g.save(); g.translate(hx, hy); g.rotate(ang + Math.PI / 2); g.fillStyle = C.ea; g.beginPath(); g.roundRect(-17, -6, 34, 13, 5); g.fill(); g.restore();
+
+    // --- the spinal cord ---
+    g.fillStyle = C.cyto; g.strokeStyle = C.line; g.lineWidth = 1.2;
+    g.beginPath(); g.ellipse(CX, CY, CRX, CRY, 0, 0, 2 * Math.PI); g.fill(); g.stroke();
+    greyMatter(g); g.fillStyle = C.grey; g.fill();
+    g.fillStyle = C.surface; g.beginPath(); g.arc(CX, CY + 4, 3, 0, 2 * Math.PI); g.fill();
+
+    // --- fibres ---
+    g.lineWidth = 2.2;
+    g.strokeStyle = C.cl; strokeP(g, IA_P); strokeP(g, IA_Q); strokeP(g, IA_I);
+    g.strokeStyle = C.accent; strokeP(g, AX_Q);
+    g.strokeStyle = C.na; strokeP(g, AX_H);
+    g.strokeStyle = C.k; strokeP(g, IN_H);
+    // dorsal root ganglion, the spindle, the endplates
+    g.fillStyle = C.bath; g.strokeStyle = C.cl; g.lineWidth = 1.5;
+    g.beginPath(); g.ellipse(...DRG, 15, 10, -0.5, 0, 2 * Math.PI); g.fill(); g.stroke();
+    g.fillStyle = C.cl; g.beginPath(); g.arc(DRG[0] + 2, DRG[1] - 7, 4, 0, 2 * Math.PI); g.fill();
+    const stretched = t >= 0 && t <= (d.leave[d.leave.length - 1] ?? 0) + 1;
+    g.fillStyle = C.surface; g.strokeStyle = stretched ? C.cl : C.memdark; g.lineWidth = stretched ? 2 : 1;
+    g.beginPath(); g.ellipse(S[0], S[1], 18 + (stretched ? 2 : 0), 4.5, 0, 0, 2 * Math.PI); g.fill(); g.stroke();
+    g.strokeStyle = C.cl; g.lineWidth = 1.4; g.beginPath();
+    for (let k = 0; k <= 10; k++) { const x = S[0] - 7 + k * 1.4; g.lineTo(x, S[1] + (k % 2 ? -4.5 : 4.5)); } g.stroke();
+    for (const [p, col, spk] of [[EQ, C.accent, d.mq], [EH, C.na, d.mh]]) {
+      const live = spk.some(s => t >= s + d.eff && t < s + d.eff + T_NMJ + 1);
+      g.fillStyle = live ? col : C.surface; g.strokeStyle = col; g.lineWidth = 1.5;
+      g.beginPath(); g.ellipse(...p, 6, 3.5, 0.3, 0, 2 * Math.PI); g.fill(); g.stroke();
+    }
+    // the cut, and blocked glycine
+    if (P.cut) {
+      const [x, y] = at(IA_P, F_CUT);
+      g.fillStyle = C.cyto; g.fillRect(x - 5, y - 7, 10, 14);
+      g.strokeStyle = C.pos; g.lineWidth = 2; g.beginPath(); g.moveTo(x - 6, y - 8); g.lineTo(x - 2, y + 8); g.moveTo(x + 2, y - 8); g.lineTo(x + 6, y + 8); g.stroke();
+      label(g, 'cut', x, y - 16, 'center', C.pos);
+    }
+    // synaptic terminals
+    const knob = (p, col) => { g.fillStyle = col; g.beginPath(); g.arc(...p, 2.8, 0, 2 * Math.PI); g.fill(); };
+    const end = (p, back) => { const a = p.pts[p.pts.length - 2], b = p.pts[p.pts.length - 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]); return [b[0] - (b[0] - a[0]) * back / L, b[1] - (b[1] - a[1]) * back / L]; };
+    knob(end(IA_Q, 10), C.cl); knob(end(IA_I, 8), C.cl); knob(end(IN_H, 10), C.k);
+    if (P.gly) { const [x, y] = end(IN_H, 10); g.strokeStyle = C.pos; g.lineWidth = 2; g.beginPath(); g.moveTo(x - 5, y - 5); g.lineTo(x + 5, y + 5); g.moveTo(x + 5, y - 5); g.lineTo(x - 5, y + 5); g.stroke(); }
+
+    // --- spikes on their way ---
+    d.leave.forEach((tl, k) => {
+      const f = (t - tl) / d.aff;
+      if (f < 0) return;
+      if (P.cut) { if (f < F_CUT) spikeDot(g, IA_P, f, C.cl); return; }
+      if (k >= d.nIa) { if (f < F_BLOCK) spikeDot(g, IA_P, f, C.cl); else if (f < F_BLOCK + 0.08) spikeDot(g, IA_P, F_BLOCK, C.cl, 1 - (f - F_BLOCK) / 0.08); return; }
+      if (f <= 1) spikeDot(g, IA_P, f, C.cl);
+      else { const fc = (t - tl - d.aff) / T_SYN; if (fc <= 1) { spikeDot(g, IA_Q, fc, C.cl); spikeDot(g, IA_I, fc, C.cl); } }
+    });
+    for (const s of d.mq) { const f = (t - s) / d.eff; if (f >= 0 && f <= 1) spikeDot(g, AX_Q, f, C.accent); }
+    for (const s of d.mh) { const f = (t - s) / d.eff; if (f >= 0 && f <= 1) spikeDot(g, AX_H, f, C.na); }
+    for (const s of d.inSpk) { const f = (t - s) / 1; if (f >= 0 && f <= 1) spikeDot(g, IN_H, f, C.k); }
+
+    // --- the cells, coloured by voltage ---
+    for (const [p, i, r, col] of [[MQ, 0, 7.5, C.accent], [MH, 2, 7.5, C.na], [IN, 1, 5.5, C.k]]) {
+      g.fillStyle = vcol(Vat(i, t)); g.strokeStyle = col; g.lineWidth = 2.2;
+      g.beginPath(); g.arc(...p, r, 0, 2 * Math.PI); g.fill(); g.stroke();
+    }
+
+    // --- labels ---
+    label(g, 'spinal cord, in cross-section', CX, 22, 'center');
+    label(g, 'dorsal root ganglion', 324, 104);
+    label(g, 'Ia inhibitory interneuron', 150, 116, 'right');
+    label(g, 'hamstring motor neuron', 150, 158, 'right');
+    label(g, 'quadriceps motor neuron', 168, 198, 'right');
+    g.strokeStyle = C.muted; g.lineWidth = 0.8; g.beginPath();
+    g.moveTo(153, 117); g.lineTo(IN[0] - 6, IN[1] - 2);
+    g.moveTo(153, 159); g.lineTo(MH[0] - 8, MH[1]);
+    g.moveTo(171, 195); g.lineTo(MQ[0] - 6, MQ[1] + 5); g.stroke();
+    label(g, 'muscle spindle', S[0], S[1] + 15, 'center');
+    label(g, 'quadriceps', 470, 300, 'center', C.ink);
+    label(g, 'hamstrings', 440, 353, 'center', C.ink);
+    label(g, 'patellar tendon', 610, 392);
+    label(g, 'ventral root', 268, 210, 'center');
+
+    // --- the clock, and what is happening ---
+    const tS = d.leave[0], tA = tS + d.aff, mq1 = d.ag.length ? d.ag[0] - PRE : NaN;
+    let what;
+    if (t < 0) what = 'the hammer swings in';
+    else if (t < tS) what = 'the tap stretches the quadriceps and its spindles';
+    else if (P.cut) what = t < tS + d.aff * F_CUT + 2 ? 'the Ia volley heads for the cord…' : 'the volley stopped at the cut: no reflex';
+    else if (!d.nIa) what = 'no Ia spike gets through';
+    else if (t < tA) what = 'the Ia volley travels up to the spinal cord';
+    else if (!isFinite(mq1)) what = t < tA + 15 ? 'Ia synapses excite the motor neuron, not enough to fire it' : 'no reflex';
+    else if (t < mq1) what = 'Ia synapses excite the motor neuron and the interneuron';
+    else if (t < mq1 + d.eff) what = 'the motor neuron fired: its spike heads down to the quadriceps';
+    else if (t < mq1 + d.eff + T_NMJ) what = 'neuromuscular junction: the muscle fibres fire';
+    else if (fq > 0.05) what = fq > fAt(d.fAg, t - 1) ? 'the quadriceps contracts and the knee straightens' : 'the quadriceps relaxes again';
+    else what = 'back at rest';
+    g.textBaseline = 'alphabetic'; g.textAlign = 'right';
+    g.font = '500 20px "IBM Plex Mono", monospace'; g.fillStyle = C.ink;
+    g.fillText((t < 0 ? '−' : '') + Math.abs(t).toFixed(1) + ' ms', PW - 12, 30);
+    g.font = '12px "IBM Plex Sans", sans-serif'; g.fillStyle = C.muted;
+    g.fillText(t < 0 ? 'before the tap' : 'after the tap', PW - 12, 46);
+    g.fillStyle = C.ink; g.font = '13px "IBM Plex Sans", sans-serif';
+    g.fillText(what, PW - 12, 66);
+    g.fillStyle = C.muted; g.font = '11.5px "IBM Plex Sans", sans-serif';
+    g.fillText(`${P.L.toFixed(2)} m each way · Ia ${Math.round(P.v)} m/s · motor axons ${V_ALPHA} m/s`, PW - 12, 83);
+  }
+
+  function drawCharts() {
+    const d = D, up = tNow, cur = running || tNow < X1;
+    const vl = d.arrive.length && up >= d.arrive[0] - PRE ? [{ x: d.arrive[0] - PRE, label: 'Ia volley arrives', color: C.cl, dash: [5, 4], row: 1 }] : [];
+    plot($('cvAg'), { h: 170, x: [X0, X1], y: [-90, 50], ylab: 'mV', xlab: '', upTo: up, cursor: cur, vlines: [{ x: 0, label: 'tap', row: 0 }, ...vl],
+      lines: [{ x: d.x, y: d.r.V[1], color: C.k, w: 1.2, alpha: 0.8 }, { x: d.x, y: d.r.V[0], color: C.accent, w: 1.8 }] });
+    plot($('cvAn'), { h: 130, x: [X0, X1], y: [-90, 50], ylab: 'mV', xlab: '', upTo: up, cursor: cur, vlines: [{ x: 0 }], lines: [{ x: d.x, y: d.r.V[2], color: C.na, w: 1.6 }] });
+    plot($('cvF'), { h: 150, x: [X0, X1], y: [0, Math.max(2, d.fMax * 1.15)], ylab: 'force (twitches)', xlab: 'time after the tap (ms)', upTo: up, cursor: cur, vlines: [{ x: 0 }],
+      lines: [{ x: d.tf, y: d.fAn, color: C.na, w: 1.8 }, { x: d.tf, y: d.fAg, color: C.accent, w: 2.2 }] });
+  }
+
+  // ---------- controls ----------
+  bindRange('rxN', v => v + (v === 1 ? ' Ia spike' : ' Ia spikes'), v => { P.n = v; changed(); });
+  bindRange('rxL', v => v.toFixed(2) + ' m', v => { P.L = v; changed(); });
+  bindRange('rxV', v => Math.round(v) + ' m/s', v => { P.v = v; changed(); });
+  bindRange('rxB', v => '+' + v.toFixed(2) + ' µA/cm²', v => { P.b = v; changed(); });
+  $('rxCut').addEventListener('change', e => { P.cut = e.target.checked; changed(); });
+  $('rxGly').addEventListener('change', e => { P.gly = e.target.checked; changed(); });
+  const speedFrom = v => 2 * Math.pow(10, v / 50);              // 2 to 200 ms of the reflex per second
+  bindRange('rxSpeed', v => { const x = speedFrom(v); return (x < 10 ? x.toFixed(1) : Math.round(x)) + ' ms/s'; }, v => speed = speedFrom(v));
+  const playBtn = $('rxPlay');
+  function setRunning(r) {
+    if (r && tNow >= X1) tNow = X0;                              // at the end, Play taps again
+    running = r; playBtn.textContent = r ? 'Pause' : 'Play'; dirty = true;
+  }
+  playBtn.addEventListener('click', () => setRunning(!running));
+  function tap() { if (need) compute(); tNow = X0; setRunning(true); }
+  $('rxTap').addEventListener('click', tap);
+  compute();
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (running) { tNow += dt * speed; if (tNow >= X1) { tNow = X1; setRunning(false); } dirty = true; }
+    if (dirty && D) { dirty = false; drawPic(); drawCharts(); }
+    requestAnimationFrame(loop);
+  }
+  colorHooks.push(() => { dirty = true; });
+  addEventListener('resize', () => { dirty = true; });
+  Frames.sim(() => running, 'rxPlay', ['rxTap']);   // frames.js: starts paused, pauses itself when left alone
+  Frames.onRestore(() => { dirty = true; });
+  requestAnimationFrame(loop);
+
+  // for the Start-here buttons: set every control (others back to the defaults), then tap
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  const check = (id, on) => { const el = $(id); if (el.checked !== on) { el.checked = on; el.dispatchEvent(new Event('change')); } };
+  function setup(o = {}) {
+    set('rxN', o.n ?? 4); set('rxL', o.L ?? 0.6); set('rxV', o.v ?? 80); set('rxB', o.b ?? 0);
+    check('rxCut', !!o.cut); check('rxGly', !!o.gly);
+    tap();
+  }
+  return { setup, get D() { return D; }, P, redraw: () => { dirty = true; } };
+})();
+</script>
+
+<script>
+// =====================================================================================
+// Part 2: lateral inhibition (Hartline and Ratliff): r_i = e_i − Σ_j k_ij r_j on 80 receptors in a row, solved for
+// the steady state by repeating the update. k_ij ∝ exp(−|i−j|/reach), each row of k adding up to K.
+const LI = (() => {
+  const NC = 80;
+  let shape = 'edge', K0 = 0.6, S = 3, sel = 40, Kmat = null, e = [], r = [];
+  function light(i) {
+    if (shape === 'edge') return i < NC / 2 ? 20 : 60;
+    if (shape === 'bar') return i >= 34 && i < 46 ? 60 : 20;
+    return i < 25 ? 20 : i >= 55 ? 60 : 20 + 40 * (i - 25) / 30;
+  }
+  function weights() {
+    Kmat = [];
+    for (let i = 0; i < NC; i++) {
+      const w = Array.from({ length: NC }, (_, j) => (j === i ? 0 : Math.exp(-Math.abs(i - j) / S)));
+      const sum = w.reduce((a, b) => a + b, 0); Kmat.push(w.map(x => K0 * x / sum));
+    }
+  }
+  function solve() {
+    if (!Kmat) weights();
+    e = Array.from({ length: NC }, (_, i) => light(i));
+    r = e.slice();
+    const nr = new Array(NC);
+    for (let it = 0; it < 400; it++) {
+      let change = 0;
+      for (let i = 0; i < NC; i++) { let s = 0; const k = Kmat[i]; for (let j = 0; j < NC; j++) s += k[j] * r[j]; nr[i] = Math.max(0, e[i] - s); }
+      for (let i = 0; i < NC; i++) { const v = 0.5 * r[i] + 0.5 * nr[i]; change = Math.max(change, Math.abs(v - r[i])); r[i] = v; }
+      if (change < 1e-6) break;
+    }
+  }
+  const brightMid = () => shape === 'bar' ? 39 : NC - 6;
+  function readouts() {
+    $('liDark').textContent = fmt(r[5], 1);
+    $('liMin').textContent = fmt(Math.min(...r), 1);
+    $('liBright').textContent = fmt(r[brightMid()], 1);
+    $('liMax').textContent = fmt(Math.max(...r), 1);
+    $('liUni').textContent = `${fmt(20 / (1 + K0), 1)} and ${fmt(60 / (1 + K0), 1)}`;
+  }
+  // the brightness strips: light 0–70 as a grey from near black to near white (the same in light and dark themes)
+  const grey = v => { const c = Math.round(clamp(25 + 210 * v / 70, 0, 255)); return `rgb(${c},${c},${c})`; };
+  const cv = $('liPic');
+  let geom = null;
+  function drawPic() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth || cv.parentElement.clientWidth || 600, H = 200;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    cv.style.height = H + 'px';
+    const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = C.surface; g.fillRect(0, 0, W, H);
+    const L = 8, cw = (W - 2 * L) / NC, xc = i => L + (i + 0.5) * cw;
+    geom = { L, cw };
+    g.font = '11px "IBM Plex Sans", sans-serif'; g.fillStyle = C.muted; g.textBaseline = 'middle'; g.textAlign = 'left';
+    g.fillText('light falling on the row', L, 9);
+    for (let i = 0; i < NC; i++) { g.fillStyle = grey(e[i]); g.fillRect(L + i * cw, 18, cw + 0.6, 30); }
+    // the receptors, and the arcs from the one pointed at to the neighbours it inhibits
+    const yR = 112, rmax = Math.max(1, ...r);
+    const w = Kmat[sel], wmax = Math.max(...w) || 1;
+    g.strokeStyle = C.k;
+    for (let j = 0; j < NC; j++) {
+      const a = w[j] / wmax; if (j === sel || a < 0.04) continue;
+      g.globalAlpha = 0.25 + 0.75 * a; g.lineWidth = 0.6 + 2.2 * a;
+      const xm = (xc(sel) + xc(j)) / 2, hgt = Math.min(48, 8 + Math.abs(j - sel) * cw * 0.45);
+      g.beginPath(); g.moveTo(xc(sel), yR - 5); g.quadraticCurveTo(xm, yR - 5 - 2 * hgt, xc(j), yR - 5); g.stroke();
+    }
+    g.globalAlpha = 1;
+    const rad = Math.max(1.5, Math.min(4.5, cw * 0.4));
+    for (let i = 0; i < NC; i++) {
+      g.fillStyle = mixc(C.accent, C.surface, r[i] / rmax); g.strokeStyle = i === sel ? C.k : C.muted; g.lineWidth = i === sel ? 2 : 0.8;
+      g.beginPath(); g.arc(xc(i), yR, rad, 0, 2 * Math.PI); g.fill(); g.stroke();
+    }
+    g.fillStyle = C.muted; g.textAlign = sel < NC / 2 ? 'left' : 'right';
+    g.fillText(`receptor ${sel + 1}: ${fmt(r[sel], 1)} spikes/s`, sel < NC / 2 ? xc(sel) + 8 : xc(sel) - 8, yR + 14);
+    // what the row reports: rates shaded so that an even field matches the light's grey
+    g.textAlign = 'left'; g.fillText('what the receptors report', L, 142);
+    const rD = 20 / (1 + K0), rB = 60 / (1 + K0);
+    for (let i = 0; i < NC; i++) { const eq = 20 + (r[i] - rD) / (rB - rD) * 40; g.fillStyle = grey(eq); g.fillRect(L + i * cw, 151, cw + 0.6, 30); }
+  }
+  function drawChart() {
+    const xs = Array.from({ length: NC }, (_, i) => i + 1);
+    plot($('cvL'), { h: 260, x: [1, NC], y: [0, 70], ylab: 'spikes/s', xlab: 'receptor, along the row',
+      lines: [{ x: xs, y: e, color: C.muted, w: 1.4, dash: true }, { x: xs, y: r, color: C.accent, w: 2.2 }],
+      dots: [{ x: sel + 1, y: r[sel], color: C.k }] });
+  }
+  const draw = () => { drawPic(); drawChart(); };
+  const update = later(() => { solve(); readouts(); draw(); });
+  bindRange('liK', v => v.toFixed(2), v => { K0 = v; Kmat = null; update(); });
+  bindRange('liS', v => v.toFixed(1) + ' cells', v => { S = v; Kmat = null; update(); });
+  const segBtns = [...document.querySelectorAll('[data-li]')];
+  function setShape(v) { shape = v; segBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.li === v))); update(); }
+  segBtns.forEach(b => b.addEventListener('click', () => setShape(b.dataset.li)));
+  cv.addEventListener('pointermove', ev => {
+    if (!geom) return;
+    const rect = cv.getBoundingClientRect(), i = clamp(Math.floor((ev.clientX - rect.left - geom.L) / geom.cw), 0, NC - 1);
+    if (i !== sel) { sel = i; draw(); }
+  });
+  colorHooks.push(() => requestAnimationFrame(draw));
+  addEventListener('resize', later(draw));
+  Frames.onRestore(draw);
+  solve(); readouts(); draw();
+  const set = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event('input')); };
+  return { setup(o) { if (o.shape) setShape(o.shape); set('liK', o.K ?? 0.6); set('liS', o.S ?? 3); sel = o.sel ?? sel; update(); },
+           get r() { return r; }, get e() { return e; } };
+})();
+</script>
+
+<script>
+// =====================================================================================
+// The latency calculator: the sum of the reflex's steps, and latency against one quantity the student chooses.
+(() => {
+  const ids = ['kL', 'kVIa', 'kVa', 'kSp', 'kCord', 'kNmj'], v = {};
+  const show = { kL: x => x.toFixed(2) + ' m', kVIa: x => Math.round(x) + ' m/s', kVa: x => Math.round(x) + ' m/s', kSp: x => x.toFixed(1) + ' ms', kCord: x => x.toFixed(1) + ' ms', kNmj: x => x.toFixed(1) + ' ms' };
+  const lat = p => p.kSp + p.kL / p.kVIa * 1000 + p.kCord + p.kL / p.kVa * 1000 + p.kNmj;
+  const VARS = { L: ['kL', 'nerve length L (m)'], vIa: ['kVIa', 'Ia speed θ_Ia (m/s)'], va: ['kVa', 'motor axon speed θ_α (m/s)'] };
+  function chart() {
+    const cv = $('kChart'), choice = $('kX').value;
+    const avail = cv.parentElement.clientWidth || 420, W = Math.min(avail, 460), H = W - 68 + 52;   // a square plot area
+    if (!choice) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2), h = 120;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(h * dpr); cv.style.width = W + 'px'; cv.style.height = h + 'px';
+      const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, h);
+      g.strokeStyle = C.line; g.setLineDash([4, 4]); g.strokeRect(0.5, 0.5, W - 1, h - 1); g.setLineDash([]);
+      g.fillStyle = C.muted; g.font = '13px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('Choose what to plot the latency against.', W / 2, h / 2);
+      $('kCap').textContent = '';
+      return;
+    }
+    const [id, xlab] = VARS[choice], el = $(id), lo = +el.min, hi = +el.max;
+    const xs = [], ys = [];
+    for (let k = 0; k <= 200; k++) { const x = lo + (hi - lo) * k / 200; xs.push(x); ys.push(lat({ ...v, [id]: x })); }
+    const ymax = Math.max(...ys), yt = nice(0, ymax * 1.05, 5), top = yt[yt.length - 1] >= ymax ? yt[yt.length - 1] : ymax * 1.05;
+    plot(cv, { w: W, h: H, x: [lo, hi], y: [0, top], ylab: 'latency (ms)', xlab, lines: [{ x: xs, y: ys, color: C.ink, w: 2 }], dots: [{ x: v[id], y: lat(v), color: C.accent, r: 5 }] });
+    const yLo = lat({ ...v, [id]: lo }), yHi = lat({ ...v, [id]: hi });
+    $('kCap').textContent = choice === 'L'
+      ? `A straight line: each extra 0.1 m adds ${fmt(100 / v.kVIa + 100 / v.kVa, 2)} ms. From ${fmt(lo, 1)} to ${fmt(hi, 1)} m the latency goes from ${fmt(yLo, 1)} to ${fmt(yHi, 1)} ms.`
+      : `A curve: speed is in the denominator. Slowing from ${hi} to ${hi / 2} m/s costs ${fmt(lat({ ...v, [id]: hi / 2 }) - yHi, 1)} ms; from 20 to 10 m/s costs ${fmt(lat({ ...v, [id]: 10 }) - lat({ ...v, [id]: 20 }), 1)} ms.`;
+  }
+  function update() {
+    ids.forEach(id => v[id] = +$(id).value);
+    const up = v.kL / v.kVIa * 1000, down = v.kL / v.kVa * 1000, del = v.kSp + v.kCord + v.kNmj, tot = up + down + del;
+    $('kTot').textContent = fmt(tot, 1) + ' ms';
+    $('kUp').textContent = fmt(up, 1) + ' ms'; $('kDown').textContent = fmt(down, 1) + ' ms'; $('kDel').textContent = fmt(del, 1) + ' ms';
+    $('kShare').textContent = Math.round(100 * (up + down) / tot) + '%';
+    $('kFormula').innerHTML =
+      `t = t<sub>spindle</sub> + L/θ<sub>Ia</sub> + t<sub>cord</sub> + L/θ<sub>α</sub> + t<sub>NMJ</sub><br>` +
+      `&nbsp;&nbsp;= ${fmt(v.kSp, 1)} + ${v.kL.toFixed(2)} m ÷ ${v.kVIa} m/s + ${fmt(v.kCord, 1)} + ${v.kL.toFixed(2)} m ÷ ${v.kVa} m/s + ${fmt(v.kNmj, 1)}<br>` +
+      `&nbsp;&nbsp;= ${fmt(v.kSp, 1)} + ${fmt(up, 1)} + ${fmt(v.kCord, 1)} + ${fmt(down, 1)} + ${fmt(v.kNmj, 1)} = <span class="res">${fmt(tot, 1)} ms</span>`;
+    const parts = [[v.kSp, 'var(--cl)', 0.55, 'spindle'], [up, 'var(--cl)', 1, 'up'], [v.kCord, 'var(--k)', 1, 'cord'], [down, 'var(--accent)', 1, 'down'], [v.kNmj, 'var(--na)', 1, 'junction']];
+    $('kBudget').innerHTML = parts.map(([ms, col, op, name]) =>
+      `<span style="flex:${ms} 1 0;background:${col};opacity:${op}" title="${name}: ${fmt(ms, 1)} ms">${ms / tot > 0.09 ? fmt(ms, 1) : ''}</span>`).join('');
+    chart();
+  }
+  ids.forEach(id => bindRange(id, show[id], () => {}));
+  ids.forEach(id => $(id).addEventListener('input', update));
+  $('kX').addEventListener('change', update);
+  colorHooks.push(() => requestAnimationFrame(update));
+  addEventListener('resize', later(chart));
+  Frames.onRestore(update);
+  window.CALC = { redraw: update };
+  update();
+})();
+</script>
+
+<script>
+// ---------- tabs, Start here and Try it buttons ----------
+(() => {
+  function showTab(tab) {
+    tab.parentElement.querySelectorAll('[role=tab]').forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    // a canvas in a pane that was hidden has no size until it is shown
+    requestAnimationFrame(() => { RX.redraw(); CALC.redraw(); });
+  }
+  document.querySelectorAll('[role=tablist]').forEach(list => {
+    const tabs = [...list.querySelectorAll('[role=tab]')];
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => showTab(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { const n = tabs[(k + d + tabs.length) % tabs.length]; showTab(n); n.focus(); }
+      });
+    });
+  });
+  const into = id => $(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const reflex = o => { showTab($('tab-rx')); into('rx-card'); RX.setup(o); };
+  const lateral = o => { showTab($('tab-li')); into('li-card'); LI.setup(o); };
+  const TRY = {
+    tap: () => reflex({}),
+    recip: () => reflex({}),
+    gly: () => reflex({ gly: true }),
+    slow: () => reflex({ v: 40 }),
+    umn: () => reflex({ n: 2, b: 1.8 }),
+    cut: () => reflex({ cut: true }),
+    tall: () => reflex({ L: 0.9 }),
+    weak: () => reflex({ n: 1 }),
+    jend: () => reflex({ n: 1, b: 1.2 }),
+    edge: () => lateral({ shape: 'edge', sel: 40 }),
+    noinh: () => lateral({ shape: 'edge', K: 0, sel: 40 }),
+    reach: () => lateral({ shape: 'edge', S: 8, sel: 40 }),
+    bar: () => lateral({ shape: 'bar', S: 6, sel: 39 }),
+    mach: () => lateral({ shape: 'ramp', K: 0.9, S: 9, sel: 55 }),
+  };
+  document.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', () => TRY[b.dataset.try]()));
+})();
+</script>
+<!-- fill-in boxes for every slider -->
+<script src="sliders.js"></script>
+</body>
+</html>
